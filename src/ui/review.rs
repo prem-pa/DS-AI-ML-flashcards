@@ -33,12 +33,16 @@ pub fn run_with_scope(
     if queue.is_empty() {
         let total = db::count_total_scoped(conn, &scope)?;
         let due_now = db::count_due_scoped(conn, now, &scope)?;
-        println!(
-            "Nothing due in this scope ({}). {} cards total, {} due now.",
+        let msg = format!(
+            "Nothing due in this scope ({}).\n\n{} cards total, {} due now.",
             scope.label(),
             total,
             due_now
         );
+        match held_term {
+            Some(tg) => show_notice(tg, "no due cards", &msg)?,
+            None => println!("{msg}"),
+        }
         return Ok(());
     }
 
@@ -56,6 +60,26 @@ pub fn run_with_scope(
 
     let _ = db::close_session(conn, session_id);
     res
+}
+
+fn show_notice(tg: &mut TermGuard, title: &str, body: &str) -> Result<()> {
+    use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
+    loop {
+        tg.term.draw(|f| {
+            let area = f.area();
+            // center a small modal-ish region
+            let text = ratatui::text::Text::from(format!("{body}\n\npress any key to go back."));
+            let widget = Paragraph::new(text)
+                .wrap(Wrap { trim: false })
+                .block(Block::default().borders(Borders::ALL).title(title.to_string()));
+            f.render_widget(widget, area);
+        })?;
+        if let Event::Key(key) = event::read()? {
+            if key.kind == KeyEventKind::Press {
+                return Ok(());
+            }
+        }
+    }
 }
 
 #[derive(Debug)]

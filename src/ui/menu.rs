@@ -10,7 +10,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use rusqlite::Connection;
 
-use crate::db::{self, Scope, SessionRow};
+use crate::db::{self, Prefs, Scope, SessionRow};
 
 use super::term::TermGuard;
 
@@ -26,14 +26,24 @@ pub enum Action {
 }
 
 pub fn run(tg: &mut TermGuard, conn: &Connection, profile_display: &str) -> Result<Action> {
-    let now = Utc::now().timestamp();
-    let due_total = db::count_due_scoped(conn, now, &Scope::default())?;
-    let active_total = db::count_total_scoped(conn, &Scope::default())?;
-    let last_session = db::most_recent_session(conn)?;
-
     loop {
+        let now = Utc::now().timestamp();
+        let prefs = db::load_prefs(conn)?;
+        let mut scope = Scope::default();
+        db::apply_prefs(&mut scope, &prefs);
+        let due_total = db::count_due_scoped(conn, now, &scope)?;
+        let active_total = db::count_total_scoped(conn, &scope)?;
+        let last_session = db::most_recent_session(conn)?;
+
         tg.term.draw(|f| {
-            draw(f, profile_display, due_total, active_total, last_session.as_ref())
+            draw(
+                f,
+                profile_display,
+                &prefs,
+                due_total,
+                active_total,
+                last_session.as_ref(),
+            )
         })?;
         let Event::Key(key) = event::read()? else { continue };
         if key.kind != KeyEventKind::Press {
@@ -51,6 +61,11 @@ pub fn run(tg: &mut TermGuard, conn: &Connection, profile_display: &str) -> Resu
             KeyCode::Char('b') | KeyCode::Char('4') => return Ok(Action::Browse),
             KeyCode::Char('s') | KeyCode::Char('5') => return Ok(Action::Stats),
             KeyCode::Char('p') | KeyCode::Char('6') => return Ok(Action::SwitchProfile),
+            KeyCode::Char('m') => {
+                db::set_mcq_only(conn, !prefs.mcq_only)?;
+                // re-loop: redraw with updated counts
+                continue;
+            }
             _ => {}
         }
     }
@@ -59,6 +74,7 @@ pub fn run(tg: &mut TermGuard, conn: &Connection, profile_display: &str) -> Resu
 fn draw(
     f: &mut ratatui::Frame,
     profile_display: &str,
+    prefs: &Prefs,
     due_total: i64,
     active_total: i64,
     last_session: Option<&SessionRow>,
@@ -83,6 +99,17 @@ fn draw(
             Span::styled(
                 profile_display.to_string(),
                 Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            ),
+            Span::raw("   "),
+            Span::styled(
+                format!("mcq-only: {}", if prefs.mcq_only { "ON" } else { "off" }),
+                if prefs.mcq_only {
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default().fg(Color::DarkGray)
+                },
             ),
         ]))
         .block(Block::default().borders(Borders::ALL)),
@@ -172,6 +199,18 @@ fn draw(
     lines.push(Line::from(vec![
         Span::styled("  p) ", Style::default().fg(Color::DarkGray)),
         Span::raw("switch profile"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::styled("  m) ", Style::default().fg(Color::DarkGray)),
+        Span::raw("toggle "),
+        Span::styled(
+            "mcq-only",
+            Style::default().add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(
+            format!("  (currently {})", if prefs.mcq_only { "on" } else { "off" }),
+            Style::default().fg(Color::DarkGray),
+        ),
     ]));
     lines.push(Line::from(vec![
         Span::styled("  q) ", Style::default().fg(Color::DarkGray)),

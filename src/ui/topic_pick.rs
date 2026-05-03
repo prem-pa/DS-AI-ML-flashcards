@@ -12,8 +12,16 @@ use crate::db::{self, Difficulty, Scope, TrackTopicCount};
 
 use super::term::TermGuard;
 
+const ALL_DIFFICULTIES: [Difficulty; 4] = [
+    Difficulty::All,
+    Difficulty::Beginner,
+    Difficulty::Intermediate,
+    Difficulty::Advanced,
+];
+
 pub fn run(tg: &mut TermGuard, conn: &Connection) -> Result<Option<Scope>> {
-    let topics = db::list_topics(conn)?;
+    let prefs = db::load_prefs(conn)?;
+    let topics = db::list_topics_filtered(conn, &prefs)?;
     if topics.is_empty() {
         return Ok(None);
     }
@@ -22,6 +30,21 @@ pub fn run(tg: &mut TermGuard, conn: &Connection) -> Result<Option<Scope>> {
     let mut state = State::new(&tracks);
 
     loop {
+        // Recompute the visible difficulty list against the current scope so
+        // we never offer a bucket with zero cards.
+        if state.stage == Stage::Difficulty {
+            state.difficulty_options = difficulty_options(
+                conn,
+                state.track.as_deref(),
+                state.topic.as_deref(),
+                &prefs,
+            )?;
+            // clamp selection if the visible list shrank
+            let n = state.difficulty_options.len().max(1);
+            if state.list.selected().unwrap_or(0) >= n {
+                state.list.select(Some(0));
+            }
+        }
         tg.term.draw(|f| draw(f, &topics, &tracks, &mut state))?;
         let Event::Key(key) = event::read()? else { continue };
         if key.kind != KeyEventKind::Press {
@@ -49,7 +72,7 @@ pub fn run(tg: &mut TermGuard, conn: &Connection) -> Result<Option<Scope>> {
                 let n = match state.stage {
                     Stage::Track => tracks.len() + 1, // +1 for "all tracks"
                     Stage::Topic => state.current_topics(&topics).len() + 1,
-                    Stage::Difficulty => 4,
+                    Stage::Difficulty => state.difficulty_options.len(),
                 };
                 let i = state.list.selected().unwrap_or(0);
                 if i + 1 < n {
@@ -85,16 +108,17 @@ pub fn run(tg: &mut TermGuard, conn: &Connection) -> Result<Option<Scope>> {
                     state.list.select(Some(0));
                 }
                 Stage::Difficulty => {
-                    let diff = match state.list.selected().unwrap_or(0) {
-                        1 => Difficulty::Beginner,
-                        2 => Difficulty::Intermediate,
-                        3 => Difficulty::Advanced,
-                        _ => Difficulty::All,
-                    };
+                    let i = state.list.selected().unwrap_or(0);
+                    let diff = state
+                        .difficulty_options
+                        .get(i)
+                        .map(|(d, _)| *d)
+                        .unwrap_or(Difficulty::All);
                     return Ok(Some(Scope {
                         track: state.track.clone(),
                         topic: state.topic.clone(),
                         difficulty: diff,
+                        kind: None, // re-applied by the caller from prefs
                     }));
                 }
             },
@@ -117,6 +141,8 @@ struct State {
     topic_idx_local: usize,
     track: Option<String>,
     topic: Option<String>,
+    /// Recomputed every frame in Stage::Difficulty — only buckets with >0 cards.
+    difficulty_options: Vec<(Difficulty, i64)>,
 }
 
 impl State {
@@ -130,6 +156,7 @@ impl State {
             topic_idx_local: 0,
             track: None,
             topic: None,
+            difficulty_options: Vec::new(),
         }
     }
     fn current_topics<'a>(&self, topics: &'a [TrackTopicCount]) -> Vec<&'a TrackTopicCount> {
@@ -207,19 +234,26 @@ fn draw(
             ("topic", items)
         }
         Stage::Difficulty => {
-            let labels = [
-                ("all difficulties", Difficulty::All),
-                ("beginner (1-2)", Difficulty::Beginner),
-                ("intermediate (3)", Difficulty::Intermediate),
-                ("advanced (4-5)", Difficulty::Advanced),
-            ];
-            let items: Vec<ListItem> = labels
+            let items: Vec<ListItem> = state
+                .difficulty_options
                 .iter()
-                .map(|(label, _)| {
-                    ListItem::new(Line::from(Span::styled(
-                        label.to_string(),
-                        Style::default().add_modifier(Modifier::BOLD),
-                    )))
+                .map(|(d, n)| {
+                    let label = match d {
+                        Difficulty::All => "all difficulties",
+                        Difficulty::Beginner => "beginner (1-2)",
+                        Difficulty::Intermediate => "intermediate (3)",
+                        Difficulty::Advanced => "advanced (4-5)",
+                    };
+                    ListItem::new(Line::from(vec![
+                        Span::styled(
+                            label.to_string(),
+                            Style::default().add_modifier(Modifier::BOLD),
+                        ),
+                        Span::styled(
+                            format!("   {} card{}", n, if *n == 1 { "" } else { "s" }),
+                            Style::default().fg(Color::DarkGray),
+                        ),
+                    ]))
                 })
                 .collect();
             ("difficulty", items)
@@ -249,6 +283,29 @@ fn draw(
         .block(Block::default().borders(Borders::ALL)),
         chunks[2],
     );
+}
+
+fn difficulty_options(
+    conn: &Connection,
+    track: Option<&str>,
+    topic: Option<&str>,
+    prefs: &db::Prefs,
+) -> Result<Vec<(Difficulty, i64)>> {
+    let mut out: Vec<(Difficulty, i64)> = Vec::new();
+    for d in &ALL_DIFFICULTIES {
+        let mut scope = Scope {
+            track: track.map(str::to_string),
+            topic: topic.map(str::to_string),
+            difficulty: *d,
+            kind: None,
+        };
+        db::apply_prefs(&mut scope, prefs);
+        let n = db::count_total_scoped(conn, &scope)?;
+        if n > 0 {
+            out.push((*d, n));
+        }
+    }
+    Ok(out)
 }
 
 fn build_breadcrumb(state: &State) -> String {

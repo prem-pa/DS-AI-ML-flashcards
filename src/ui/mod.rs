@@ -22,17 +22,27 @@ pub fn run_menu(cli: &Cli) -> Result<()> {
     sync_quietly(&mut conn, cli)?;
     let mut tg = TermGuard::enter()?;
     loop {
+        // Always start the menu draw from a clean buffer — sub-screens may have
+        // left content (or stray println output) that ratatui's diffing won't
+        // overwrite on its own.
+        let _ = tg.term.clear();
         let action = menu::run(&mut tg, &conn, &display)?;
+        let prefs = db::load_prefs(&conn)?;
         match action {
             menu::Action::Quit => return Ok(()),
             menu::Action::ReviewAllDue => {
-                review::run_with_scope(&mut conn, cli, Scope::default(), Some(&mut tg))?;
+                let mut scope = Scope::default();
+                db::apply_prefs(&mut scope, &prefs);
+                review::run_with_scope(&mut conn, cli, scope, Some(&mut tg))?;
             }
             menu::Action::ContinueLast(s) => {
-                review::run_with_scope(&mut conn, cli, s.scope.clone(), Some(&mut tg))?;
+                let mut scope = s.scope.clone();
+                db::apply_prefs(&mut scope, &prefs);
+                review::run_with_scope(&mut conn, cli, scope, Some(&mut tg))?;
             }
             menu::Action::PickTopic => {
-                if let Some(scope) = topic_pick::run(&mut tg, &conn)? {
+                if let Some(mut scope) = topic_pick::run(&mut tg, &conn)? {
+                    db::apply_prefs(&mut scope, &prefs);
                     review::run_with_scope(&mut conn, cli, scope, Some(&mut tg))?;
                 }
             }

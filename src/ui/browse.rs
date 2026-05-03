@@ -23,7 +23,10 @@ pub fn run_with_term(
     cli: &Cli,
     held_term: Option<&mut TermGuard>,
 ) -> Result<()> {
-    let cards = db::fetch_all(conn, 10_000)?;
+    let prefs = db::load_prefs(conn)?;
+    let mut scope = db::Scope::default();
+    db::apply_prefs(&mut scope, &prefs);
+    let cards = db::fetch_all_scoped(conn, &scope, 10_000)?;
     if cards.is_empty() {
         println!("No cards in DB. Run `flashcards sync` first.");
         return Ok(());

@@ -174,11 +174,24 @@ pub fn fetch_due(conn: &Connection, now: i64, limit: usize) -> Result<Vec<CardVi
 
 /// All non-suspended cards, ordered for browsing. Cap large because the vault is bounded.
 pub fn fetch_all(conn: &Connection, limit: usize) -> Result<Vec<CardView>> {
+    fetch_all_scoped(conn, &Scope::default(), limit)
+}
+
+pub fn fetch_all_scoped(
+    conn: &Connection,
+    scope: &Scope,
+    limit: usize,
+) -> Result<Vec<CardView>> {
+    let (where_extra, scope_params) = scope_where(scope);
     let sql = format!(
-        "{CARD_SELECT} ORDER BY k.track, k.topic, k.title, c.position LIMIT ?1"
+        "{CARD_SELECT} {} ORDER BY k.track, k.topic, k.title, c.position LIMIT ?",
+        where_extra
     );
     let mut stmt = conn.prepare(&sql)?;
-    let rows = stmt.query_map(params![limit as i64], map_card_row)?;
+    let mut all_params: Vec<rusqlite::types::Value> = Vec::with_capacity(scope_params.len() + 1);
+    all_params.extend(scope_params);
+    all_params.push((limit as i64).into());
+    let rows = stmt.query_map(rusqlite::params_from_iter(all_params), map_card_row)?;
     Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
 }
 
@@ -230,6 +243,44 @@ pub struct Scope {
     pub track: Option<String>,
     pub topic: Option<String>,
     pub difficulty: Difficulty,
+    /// "flip" / "mcq" / None (both). Applied via the `mcq_only` preference; not
+    /// persisted in the sessions table — re-applied from current prefs each time.
+    pub kind: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Prefs {
+    pub mcq_only: bool,
+}
+
+pub fn load_prefs(conn: &Connection) -> Result<Prefs> {
+    let v: Option<String> = conn
+        .query_row(
+            "SELECT value FROM profile_meta WHERE key='mcq_only'",
+            [],
+            |r| r.get(0),
+        )
+        .optional()?;
+    Ok(Prefs {
+        mcq_only: matches!(v.as_deref(), Some("1") | Some("true")),
+    })
+}
+
+pub fn set_mcq_only(conn: &Connection, on: bool) -> Result<()> {
+    conn.execute(
+        "INSERT INTO profile_meta(key, value) VALUES ('mcq_only', ?1)
+         ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        params![if on { "1" } else { "0" }],
+    )?;
+    Ok(())
+}
+
+/// Apply current preferences to a scope (e.g. `mcq_only` → `kind = Some("mcq")`).
+/// Idempotent if already constrained.
+pub fn apply_prefs(scope: &mut Scope, prefs: &Prefs) {
+    if prefs.mcq_only && scope.kind.is_none() {
+        scope.kind = Some("mcq".to_string());
+    }
 }
 
 impl Default for Difficulty {
@@ -274,6 +325,10 @@ fn scope_where(scope: &Scope) -> (String, Vec<rusqlite::types::Value>) {
         clauses.push("k.difficulty BETWEEN ? AND ?".to_string());
         params.push((lo as i64).into());
         params.push((hi as i64).into());
+    }
+    if let Some(k) = &scope.kind {
+        clauses.push("c.type = ?".to_string());
+        params.push(k.clone().into());
     }
     let sql = if clauses.is_empty() {
         String::new()
@@ -341,14 +396,21 @@ pub struct TrackTopicCount {
 }
 
 pub fn list_topics(conn: &Connection) -> Result<Vec<TrackTopicCount>> {
-    let mut stmt = conn.prepare(
+    list_topics_filtered(conn, &Prefs::default())
+}
+
+pub fn list_topics_filtered(conn: &Connection, prefs: &Prefs) -> Result<Vec<TrackTopicCount>> {
+    let extra = if prefs.mcq_only { " AND c.type = 'mcq'" } else { "" };
+    let sql = format!(
         "SELECT k.track, k.topic, COUNT(*)
          FROM cards c
          JOIN concepts k ON k.id = c.concept_id AND k.deleted_at IS NULL
-         WHERE c.suspended = 0
+         WHERE c.suspended = 0{}
          GROUP BY k.track, k.topic
          ORDER BY k.track, k.topic",
-    )?;
+        extra
+    );
+    let mut stmt = conn.prepare(&sql)?;
     let rows = stmt.query_map([], |r| {
         Ok(TrackTopicCount {
             track: r.get(0)?,
@@ -420,6 +482,7 @@ pub fn most_recent_session(conn: &Connection) -> Result<Option<SessionRow>> {
                     difficulty: Difficulty::from_db_token(
                         r.get::<_, Option<String>>(5)?.as_deref(),
                     ),
+                    kind: None,
                 };
                 Ok(SessionRow {
                     id: r.get(0)?,

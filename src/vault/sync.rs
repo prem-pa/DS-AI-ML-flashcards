@@ -136,6 +136,16 @@ pub fn sync_vault(conn: &mut Connection, vault_root: &Path) -> Result<SyncReport
         suspended_cards += n;
     }
 
+    // Suspend cards that came in with an empty front. Some research-agent
+    // outputs in early waves omitted the question stem; those cards aren't
+    // useful to review until the data is repaired. Idempotent across syncs.
+    let bad_suspended = tx.execute(
+        "UPDATE cards SET suspended = 1, updated_at = ?1
+         WHERE suspended = 0 AND TRIM(front) = ''",
+        params![now],
+    )?;
+    suspended_cards += bad_suspended;
+
     // Resolve wikilinks: write concept_links rows (idempotent: clear + reinsert per concept).
     {
         let mut clear = tx.prepare("DELETE FROM concept_links WHERE src_id = ?1")?;

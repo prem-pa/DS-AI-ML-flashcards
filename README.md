@@ -81,8 +81,11 @@ Launching `flashcards` (no subcommand) opens a menu with:
 | `t` | Pick topic / difficulty — three-stage picker (track → topic → difficulty) |
 | `b` | Browse cards                                                            |
 | `s` | Stats                                                                   |
+| `m` | Toggle **mcq-only** — global per-profile filter; when on, every queue, count, and picker only sees auto-graded MCQ cards |
 | `p` | Switch profile (relaunches the picker)                                  |
 | `q` | Quit                                                                    |
+
+The `mcq-only` state shows in the header (`mcq-only: ON` / `mcq-only: off`), persists in `profile_meta`, and applies everywhere — `due`/`active` counts on the menu, browse list, topic-picker counts (topics and difficulties with no MCQs are hidden), and review queue. Flip cards aren't deleted, just filtered out while the toggle is on.
 
 ### Topic / difficulty picker
 

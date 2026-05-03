@@ -1,0 +1,128 @@
+{
+  "track": "data-scientist",
+  "track_label": "DATA SCIENTIST",
+  "topic": "foundational-statistics-probability",
+  "topic_label": "Foundational Statistics & Probability",
+  "concept_count": 17,
+  "concepts": [
+    {
+      "slug": "measures-of-central-tendency-mean-median-mode",
+      "title": "Measures of central tendency (mean, median, mode)",
+      "difficulty": "beginner",
+      "hook": "Understand data location; critical for detecting when to use robust statistics.",
+      "subtopic": "Descriptive Statistics"
+    },
+    {
+      "slug": "measures-of-spread-variance-std-dev-iqr",
+      "title": "Measures of spread (variance, std-dev, IQR)",
+      "difficulty": "beginner",
+      "hook": "Quantify data dispersion; essential for identifying outliers.",
+      "subtopic": "Descriptive Statistics"
+    },
+    {
+      "slug": "skewness-and-kurtosis",
+      "title": "Skewness and kurtosis",
+      "difficulty": "intermediate",
+      "hook": "Detect non-normal distributions; shapes downstream model assumptions.",
+      "subtopic": "Descriptive Statistics"
+    },
+    {
+      "slug": "covariance-and-correlation",
+      "title": "Covariance and correlation",
+      "difficulty": "intermediate",
+      "hook": "Measure linear relationships; foundation for feature engineering.",
+      "subtopic": "Descriptive Statistics"
+    },
+    {
+      "slug": "bayes-theorem-and-conditional-probability",
+      "title": "Bayes' theorem and conditional probability",
+      "difficulty": "intermediate",
+      "hook": "Core to hypothesis testing and classification interpretability.",
+      "subtopic": "Probability Fundamentals"
+    },
+    {
+      "slug": "frequentist-vs-bayesian-interpretation",
+      "title": "Frequentist vs Bayesian interpretation",
+      "difficulty": "intermediate",
+      "hook": "Defines how you construct confidence intervals and credible intervals differently.",
+      "subtopic": "Probability Fundamentals"
+    },
+    {
+      "slug": "law-of-large-numbers-and-central-limit-theorem",
+      "title": "Law of large numbers and Central Limit Theorem",
+      "difficulty": "intermediate",
+      "hook": "Justifies why sample means are normal; critical for hypothesis tests.",
+      "subtopic": "Probability Fundamentals"
+    },
+    {
+      "slug": "prior-likelihood-posterior-bayesian-framework",
+      "title": "Prior, likelihood, posterior (Bayesian framework)",
+      "difficulty": "intermediate",
+      "hook": "Foundation for Bayesian stats, A/B test interpretation, and generative models.",
+      "subtopic": "Probability Fundamentals"
+    },
+    {
+      "slug": "normal-distribution-and-its-properties",
+      "title": "Normal distribution and its properties",
+      "difficulty": "beginner",
+      "hook": "Most common assumption in statistics; basis for linear regression inference.",
+      "subtopic": "Distributions"
+    },
+    {
+      "slug": "binomial-and-poisson-distributions",
+      "title": "Binomial and Poisson distributions",
+      "difficulty": "intermediate",
+      "hook": "Model discrete counts; used in conversion modeling.",
+      "subtopic": "Distributions"
+    },
+    {
+      "slug": "beta-distribution",
+      "title": "Beta distribution",
+      "difficulty": "intermediate",
+      "hook": "Prior for proportions; underpins empirical Bayes and online learning.",
+      "subtopic": "Distributions"
+    },
+    {
+      "slug": "exponential-and-weibull-distributions",
+      "title": "Exponential and Weibull distributions",
+      "difficulty": "intermediate",
+      "hook": "Model time-to-event; used in survival analysis and failure rate modeling.",
+      "subtopic": "Distributions"
+    },
+    {
+      "slug": "students-t-distribution",
+      "title": "Student's t-distribution",
+      "difficulty": "intermediate",
+      "hook": "Accounts for small samples; basis for t-tests and regression inference.",
+      "subtopic": "Distributions"
+    },
+    {
+      "slug": "sampling-bias-and-representative-samples",
+      "title": "Sampling bias and representative samples",
+      "difficulty": "beginner",
+      "hook": "Selection bias contaminates inference; critical to study design.",
+      "subtopic": "Sampling & Experimental Design"
+    },
+    {
+      "slug": "power-analysis-and-sample-size-calculation",
+      "title": "Power analysis and sample size calculation",
+      "difficulty": "intermediate",
+      "hook": "Determines how large a sample you need for adequate statistical power.",
+      "subtopic": "Sampling & Experimental Design"
+    },
+    {
+      "slug": "stratified-sampling-and-blocking",
+      "title": "Stratified sampling and blocking",
+      "difficulty": "intermediate",
+      "hook": "Reduces variance in RCTs; improves experiment efficiency.",
+      "subtopic": "Sampling & Experimental Design"
+    },
+    {
+      "slug": "observational-vs-experimental-data",
+      "title": "Observational vs experimental data",
+      "difficulty": "intermediate",
+      "hook": "Only RCTs enable causal inference without strong assumptions.",
+      "subtopic": "Sampling & Experimental Design"
+    }
+  ]
+}

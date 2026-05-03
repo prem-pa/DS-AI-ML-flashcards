@@ -1,0 +1,212 @@
+{
+  "track": "data-scientist",
+  "track_label": "DATA SCIENTIST",
+  "topic": "classical-machine-learning",
+  "topic_label": "Classical Machine Learning",
+  "concept_count": 29,
+  "concepts": [
+    {
+      "slug": "linear-regression-ols",
+      "title": "Linear regression (OLS)",
+      "difficulty": "beginner",
+      "hook": "Baseline supervised learning; understand bias-variance tradeoff.",
+      "subtopic": "Regression"
+    },
+    {
+      "slug": "assumptions-of-linear-regression-linearity-homoscedasticity-normality-independen",
+      "title": "Assumptions of linear regression (linearity, homoscedasticity, normality, independence)",
+      "difficulty": "intermediate",
+      "hook": "Violations affect inference; use diagnostics.",
+      "subtopic": "Regression"
+    },
+    {
+      "slug": "regularization-ridge-lasso-elastic-net",
+      "title": "Regularization (Ridge, Lasso, Elastic Net)",
+      "difficulty": "intermediate",
+      "hook": "Prevents overfitting; Lasso performs feature selection.",
+      "subtopic": "Regression"
+    },
+    {
+      "slug": "logistic-regression",
+      "title": "Logistic regression",
+      "difficulty": "intermediate",
+      "hook": "Binary classification; log-odds interpretation is key.",
+      "subtopic": "Regression"
+    },
+    {
+      "slug": "polynomial-and-spline-regression",
+      "title": "Polynomial and spline regression",
+      "difficulty": "intermediate",
+      "hook": "Capture nonlinearity; basis expansion approach.",
+      "subtopic": "Regression"
+    },
+    {
+      "slug": "generalized-linear-models-glm",
+      "title": "Generalized Linear Models (GLM)",
+      "difficulty": "intermediate",
+      "hook": "Extends linear regression to non-normal outcomes.",
+      "subtopic": "Regression"
+    },
+    {
+      "slug": "classification-metrics-precision-recall-f1-auc-specificity",
+      "title": "Classification metrics (precision, recall, F1, AUC, specificity)",
+      "difficulty": "intermediate",
+      "hook": "Different metrics suit different business goals; understand tradeoffs.",
+      "subtopic": "Classification"
+    },
+    {
+      "slug": "confusion-matrix-and-threshold-selection",
+      "title": "Confusion matrix and threshold selection",
+      "difficulty": "intermediate",
+      "hook": "ROC curves show threshold tradeoffs; choose threshold based on cost.",
+      "subtopic": "Classification"
+    },
+    {
+      "slug": "imbalanced-classification",
+      "title": "Imbalanced classification",
+      "difficulty": "intermediate",
+      "hook": "Accuracy is misleading; use appropriate metrics and resampling.",
+      "subtopic": "Classification"
+    },
+    {
+      "slug": "naive-bayes",
+      "title": "Naive Bayes",
+      "difficulty": "intermediate",
+      "hook": "Assumes feature independence; surprisingly effective despite strong assumption.",
+      "subtopic": "Classification"
+    },
+    {
+      "slug": "decision-trees",
+      "title": "Decision trees",
+      "difficulty": "intermediate",
+      "hook": "Interpretable; prone to overfitting without pruning.",
+      "subtopic": "Classification"
+    },
+    {
+      "slug": "random-forests",
+      "title": "Random forests",
+      "difficulty": "intermediate",
+      "hook": "Ensemble of trees; reduces variance via bagging.",
+      "subtopic": "Classification"
+    },
+    {
+      "slug": "gradient-boosting-xgboost-lightgbm",
+      "title": "Gradient Boosting (XGBoost, LightGBM)",
+      "difficulty": "intermediate",
+      "hook": "Sequential tree building; strong baseline for tabular data.",
+      "subtopic": "Classification"
+    },
+    {
+      "slug": "support-vector-machines-svm",
+      "title": "Support Vector Machines (SVM)",
+      "difficulty": "intermediate",
+      "hook": "Max-margin classifier; kernel trick enables nonlinear boundaries.",
+      "subtopic": "Classification"
+    },
+    {
+      "slug": "k-nearest-neighbors-knn",
+      "title": "K-Nearest Neighbors (KNN)",
+      "difficulty": "beginner",
+      "hook": "Simple baseline; sensitive to scaling and curse of dimensionality.",
+      "subtopic": "Classification"
+    },
+    {
+      "slug": "k-means-and-initialization",
+      "title": "K-means and initialization",
+      "difficulty": "intermediate",
+      "hook": "Minimizes within-cluster variance; k-means++ improves initialization.",
+      "subtopic": "Clustering"
+    },
+    {
+      "slug": "hierarchical-clustering",
+      "title": "Hierarchical clustering",
+      "difficulty": "intermediate",
+      "hook": "Produces dendrograms; interpretable but computationally expensive.",
+      "subtopic": "Clustering"
+    },
+    {
+      "slug": "dbscan",
+      "title": "DBSCAN",
+      "difficulty": "intermediate",
+      "hook": "Density-based; handles non-convex clusters and noise.",
+      "subtopic": "Clustering"
+    },
+    {
+      "slug": "gaussian-mixture-models-gmm",
+      "title": "Gaussian Mixture Models (GMM)",
+      "difficulty": "intermediate",
+      "hook": "Probabilistic clustering; EM algorithm fits the model.",
+      "subtopic": "Clustering"
+    },
+    {
+      "slug": "dimensionality-reduction-for-clustering",
+      "title": "Dimensionality reduction for clustering",
+      "difficulty": "intermediate",
+      "hook": "Curse of dimensionality; reduce d before clustering.",
+      "subtopic": "Clustering"
+    },
+    {
+      "slug": "principal-component-analysis-pca",
+      "title": "Principal Component Analysis (PCA)",
+      "difficulty": "intermediate",
+      "hook": "Orthogonal linear combination of features; maximizes variance.",
+      "subtopic": "Dimensionality Reduction"
+    },
+    {
+      "slug": "t-sne-and-umap",
+      "title": "t-SNE and UMAP",
+      "difficulty": "intermediate",
+      "hook": "Nonlinear manifold learning; useful for visualization.",
+      "subtopic": "Dimensionality Reduction"
+    },
+    {
+      "slug": "feature-selection-vs-feature-extraction",
+      "title": "Feature selection vs feature extraction",
+      "difficulty": "intermediate",
+      "hook": "Selection preserves interpretability; extraction creates new features.",
+      "subtopic": "Dimensionality Reduction"
+    },
+    {
+      "slug": "variance-explained-and-scree-plots",
+      "title": "Variance explained and scree plots",
+      "difficulty": "beginner",
+      "hook": "How many components to keep; elbow method is heuristic.",
+      "subtopic": "Dimensionality Reduction"
+    },
+    {
+      "slug": "trainvalidationtest-splits",
+      "title": "Train/validation/test splits",
+      "difficulty": "beginner",
+      "hook": "Train learns parameters; validation tunes hyperparameters; test estimates generalization.",
+      "subtopic": "Evaluation & Validation"
+    },
+    {
+      "slug": "cross-validation-k-fold-stratified",
+      "title": "Cross-validation (k-fold, stratified)",
+      "difficulty": "intermediate",
+      "hook": "More stable estimates than single holdout; stratification for imbalanced data.",
+      "subtopic": "Evaluation & Validation"
+    },
+    {
+      "slug": "learning-curves",
+      "title": "Learning curves",
+      "difficulty": "intermediate",
+      "hook": "Diagnose bias (high training error) vs variance (gap between train and test).",
+      "subtopic": "Evaluation & Validation"
+    },
+    {
+      "slug": "hyperparameter-tuning-grid-search-random-search-bayesian-optimization",
+      "title": "Hyperparameter tuning (grid search, random search, Bayesian optimization)",
+      "difficulty": "intermediate",
+      "hook": "Random search often beats grid; Bayesian methods are sample-efficient.",
+      "subtopic": "Evaluation & Validation"
+    },
+    {
+      "slug": "overfitting-underfitting-and-regularization",
+      "title": "Overfitting, underfitting, and regularization",
+      "difficulty": "beginner",
+      "hook": "Classic bias-variance tradeoff visualized in learning curves.",
+      "subtopic": "Evaluation & Validation"
+    }
+  ]
+}

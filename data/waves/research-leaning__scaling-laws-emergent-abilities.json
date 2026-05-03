@@ -1,0 +1,730 @@
+[
+  {
+    "slug": "compute-optimal-scaling-chinchilla-llama-paper-scaling-laws",
+    "title": "Compute optimal scaling (Chinchilla, LLaMA paper scaling laws)",
+    "track": "research-leaning",
+    "topic": "scaling-laws-emergent-abilities",
+    "difficulty": "advanced",
+    "tags": [
+      "scaling-laws",
+      "compute-efficiency",
+      "training-dynamics",
+      "model-architecture",
+      "hyperparameters"
+    ],
+    "aliases": [
+      "Chinchilla scaling",
+      "compute-optimal training",
+      "Hoffmann ratio"
+    ],
+    "wikilinks": [
+      "scaling-laws",
+      "transformer-architecture",
+      "training-loss",
+      "model-parameters",
+      "data-efficiency",
+      "inference-cost"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2203.15556",
+        "label": "Hoffmann et al., Training Compute-Optimal Large Language Models (NeurIPS 2022)"
+      },
+      {
+        "url": "https://proceedings.neurips.cc/paper_files/paper/2022/file/c1e2faff6f588870935f114ebe04a3e5-Paper-Conference.pdf",
+        "label": "DeepMind Chinchilla Scaling Laws"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nThe Chinchilla scaling law answers a fundamental question: given a fixed compute budget, how should you allocate it between model size and training data? Contrary to earlier assumptions (like Kaplan et al.'s Scaling Laws for Neural Language Models), Hoffmann et al. found that models were vastly undertrained—the optimal ratio is roughly equal scaling: double model size, double data.\n\nThe magic number: approximately **20 tokens per parameter** for compute-optimal training.\n\n## Detail\n\nHoffmann et al. (2022) trained 400+ language models ranging from 70M to 16B parameters on 5B–500B tokens. They discovered:\n\n- For a fixed compute budget C, optimal model size N and token count D should satisfy: **N ≈ D/20**\n- Chinchilla (70B params, ~1.4T tokens) matches Gopher's (280B params) compute but vastly outperforms it on downstream tasks\n- The relationship is empirically smooth: loss follows power laws L = α/N^β + ε across model sizes\n- Implications: Most large models (GPT-3, Jurassic, MT-NLG) were compute-inefficient; data-starved relative to parameter count\n\nKey insight: **Compute budget is not just about FLOPs; training data matters equally.** A 7B-parameter model trained on 140B tokens beats a 280B model trained on 140B tokens at equivalent compute cost.\n\n## Common gotchas / interview framings\n\n- **\"But Chinchilla predicted we'd train models on trillions of tokens—does that match practice?\"** → LLaMA, Gemini confirmed the 20-token-per-parameter rule empirically, validating Hoffmann's estimates. Real models often train past the Chinchilla point for downstream performance or instruction-tuning gains.\n- **\"What compute budget are we optimizing?\"** → Total FLOPs for training (6ND, where N is parameters, D is tokens). Inference cost, memory, and wall-clock time are separate optimization targets.\n- **\"Is the 20-token ratio universal?\"** → Empirically holds across model families; slight variation with architecture (attention patterns, tokenizer), but the order of magnitude is robust.\n- **Critique:** Recent work (2024–2025) questions tight confidence intervals in Hoffmann's data; practical considerations (instruction-tuning, preference data) push models beyond Chinchilla-optimal data quantities.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "State the Hoffmann et al. compute-optimal scaling rule (Chinchilla) in one sentence.",
+        "back": "For a fixed training compute budget, model size (N) and data tokens (D) should scale equally: D ≈ 20N, i.e., approximately 20 tokens per parameter."
+      },
+      {
+        "type": "mcq",
+        "front": "Hoffmann et al. trained Chinchilla (70B params) using the same compute budget as Gopher. Why did Chinchilla outperform Gopher despite being 4× smaller?",
+        "back": "Chinchilla's key advantage was allocating compute toward data instead of model size. The Hoffmann et al. paper shows that scaling data equally with model size yields superior downstream performance, contradicting earlier assumptions that larger models with less data were optimal.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Chinchilla used a better optimizer (Adam vs SGD).",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Chinchilla was trained on 4× more tokens, making it less data-starved and more compute-efficient.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Chinchilla used a fundamentally different architecture with more heads and wider hidden layers.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Chinchilla benefited from instruction-tuning, while Gopher used only base pre-training.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What was the prevailing assumption about compute allocation *before* Chinchilla, and how did Hoffmann et al. challenge it?",
+        "back": "Before Chinchilla, researchers (e.g., Kaplan et al.) believed models should be data-efficient and parameter-heavy. Hoffmann et al. showed models were severely undertrained—data allocation was too low. Optimal scaling requires equal growth in both N (parameters) and D (tokens)."
+      },
+      {
+        "type": "mcq",
+        "front": "If you have a fixed compute budget C for training, and you decide to double model size from 70B to 140B parameters, how should you adjust training tokens (under Chinchilla)?",
+        "back": "Chinchilla's core finding is that to maintain compute-optimality, both N and D should scale proportionally. Doubling N (700B → 1.4T tokens) keeps the compute budget C = 6ND roughly constant while moving along the Pareto frontier of the loss-compute curve.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Keep tokens fixed; larger models learn from the same data faster.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Double tokens to approximately 2.8T (roughly matching the 20 tokens-per-parameter rule).",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Reduce tokens by 50% to stay within compute budget.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Increase tokens by 4× to match the parameter increase.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "loss-scaling-laws-and-extrapolation",
+    "title": "Loss scaling laws and extrapolation",
+    "track": "research-leaning",
+    "topic": "scaling-laws-emergent-abilities",
+    "difficulty": "advanced",
+    "tags": [
+      "scaling-laws",
+      "loss-prediction",
+      "extrapolation",
+      "power-laws",
+      "empirical-methods"
+    ],
+    "aliases": [
+      "scaling law prediction",
+      "loss curves",
+      "power-law fitting"
+    ],
+    "wikilinks": [
+      "training-loss",
+      "loss-landscape",
+      "generalization-gap",
+      "downstream-performance",
+      "model-capacity",
+      "data-regime"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2203.15556",
+        "label": "Hoffmann et al., Loss scaling in compute-optimal models (NeurIPS 2022)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1907.04165",
+        "label": "Kaplan et al., Scaling Laws for Neural Language Models (OpenAI 2020)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nLoss scaling laws describe smooth, predictable relationships between model size (N), data quantity (D), and language modeling loss (L). Empirically, these relationships follow power laws: L ∝ N^{-α} or L ∝ D^{-β}, allowing you to predict loss at scales you haven't trained yet—critical for planning billion-dollar GPU clusters.\n\n## Detail\n\nTraining loss typically obeys a power-law relationship:\n\n**L(N) = α N^{-β} + ε** (model-size dependence)\n**L(D) = γ D^{-δ} + ε** (data dependence)\n\nWhere:\n- β ≈ 0.08 (loss improves by ~8% for every 10× increase in parameters)\n- δ ≈ 0.09 (loss improves by ~9% for every 10× increase in data)\n- ε = floor loss (irreducible loss, often near zero for large C)\n\nKey properties:\n- **Smoothness**: No phase transitions or sudden jumps in loss; continuous improvement\n- **Universality**: Exponents hold across model families and datasets (within same domain)\n- **Joint scaling**: L(N, D) combines both terms; compute budget C = 6ND constrains the frontier\n- **Extrapolation**: Fit small models (1M–1B params), predict loss for 100B–1T param models with reasonable accuracy\n\n## Common gotchas / interview framings\n\n- **\"If loss scales smoothly, how do emergent abilities happen suddenly?\"** → Loss and task accuracy are different metrics. Smooth loss improvement can produce discontinuous task performance if evaluation uses nonlinear metrics (e.g., threshold-based accuracy). This is central to the \"emergence mirage\" debate.\n- **\"Can you extrapolate loss indefinitely?\"** → Power laws work well within ~2–3 orders of magnitude. Very large extrapolations (1B→1T params) accumulate error; breaking assumptions (new architectures, tokenizers) invalidate the fit.\n- **\"Why is β ≈ δ (both ~0.08–0.09)?\"** → This is why Chinchilla says N and D scale equally; Compute budget C = 6ND is optimal when ∂L/∂N ≈ ∂L/∂D, which occurs when exponents match.\n- **Practical challenge:** Floor loss ε is hard to estimate accurately, leading to overoptimistic extrapolations for very large models.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Write a power-law formula for how training loss L scales with model size N.",
+        "back": "L(N) = α N^{-β} + ε, where β ≈ 0.07–0.09 and ε is floor loss. For every 10× increase in N, loss decreases by roughly 8–9%."
+      },
+      {
+        "type": "mcq",
+        "front": "Why are loss scaling laws useful for planning very large model training runs?",
+        "back": "Loss scaling laws are empirically smooth and predictable. Researchers can fit small models (10M–1B params), identify the power-law exponent β, and predict loss for 100B+ parameter models—critical for compute budgeting before spending millions on GPUs.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "They allow researchers to fit power laws on small models and extrapolate loss for vastly larger models before training them.",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "They guarantee that all models will reach the same final loss regardless of size.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "They prove that larger models always generalize better on downstream tasks.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "They eliminate the need to tune hyperparameters like learning rate.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Approximately what is the power-law exponent β for model size N? (i.e., L ∝ N^{-β})",
+        "back": "β ≈ 0.07–0.09. This means loss decreases by roughly 8–9% for every 10× increase in model parameters."
+      },
+      {
+        "type": "mcq",
+        "front": "If you fit a power law L = α N^{-0.08} + ε on small models and extrapolate to predict loss for a 1T-parameter model, what is the main risk?",
+        "back": "Power laws work well for 1–3 orders of magnitude extrapolation, but large jumps (1B→1T) accumulate error. Real models may use different architectures, tokenizers, or domain shifts, breaking the fitted relationship.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The model will train slower than predicted.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Accumulated fitting error and violated assumptions (new architecture, tokenizer changes) can make the prediction inaccurate.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The floor loss ε will become negative.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Inference latency increases, invalidating loss predictions.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "downstream-scaling-laws",
+    "title": "Downstream scaling laws",
+    "track": "research-leaning",
+    "topic": "scaling-laws-emergent-abilities",
+    "difficulty": "advanced",
+    "tags": [
+      "scaling-laws",
+      "transfer-learning",
+      "downstream-tasks",
+      "generalization",
+      "few-shot-learning"
+    ],
+    "aliases": [
+      "task-specific scaling",
+      "transfer scalability",
+      "downstream generalization"
+    ],
+    "wikilinks": [
+      "pre-training-loss",
+      "fine-tuning",
+      "zero-shot-learning",
+      "few-shot-prompting",
+      "multi-task-learning",
+      "task-transfer"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2203.15556",
+        "label": "Hoffmann et al., downstream task evaluation in compute-optimal models (NeurIPS 2022)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1910.07324",
+        "label": "Kaplan et al., Scaling Laws II: Downstream tasks (OpenAI 2020)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nA model's pre-training loss is just a proxy for real capability. The core question is: **how much do improvements in pre-training loss translate to improvements on real downstream tasks?** Downstream scaling laws quantify this transfer, showing whether a 10% reduction in pre-training loss yields 10% improvement on MMLU, code, or instruction-following—or if the relationship is weaker.\n\n## Detail\n\nDownstream scaling laws show that task performance typically improves as a power law with model size:\n\n**Accuracy(N) ∝ N^{α_{task}}** (for zero-shot or few-shot evaluation)\n\nKey findings:\n- **Not all tasks scale equally:** Hard tasks (rare patterns, reasoning) show steep slopes (α_task ≈ 0.07–0.1); easy tasks (token classification) show shallow slopes (α_task ≈ 0.01–0.03)\n- **Pre-training loss is predictive but imperfect:** A model with lower pre-training loss usually performs better on downstream tasks, but the relationship is noisy\n- **Few-shot learning benefits more:** Zero-shot accuracy plateaus faster than few-shot; few-shot improves steeply with model size (reflects emergent ICL)\n- **Task-specific phenomena:** Some tasks show sudden jumps (apparent emergence), others scale smoothly—often due to evaluation metrics (continuous vs. binary accuracy)\n\n## Common gotchas / interview framings\n\n- **\"If pre-training loss is smooth, why do downstream tasks show sudden jumps?\"** → Task-level metrics (threshold accuracy, multiple-choice scoring) can amplify small loss changes into large accuracy jumps. A 5% loss improvement might cause 50% of borderline examples to flip from wrong to right.\n- **\"Should we always optimize for pre-training loss?\"** → Yes, as a proxy, but downstream performance can diverge. Instruction-tuning and RLHF add task-specific alignment that pre-training loss doesn't capture.\n- **\"How do we know if a model is 'undertrained' on downstream tasks?\"** → Compare actual downstream performance to pre-training loss predictions. Large gaps suggest the model needs fine-tuning or task-specific adaptation.\n- **Practical note:** Different downstream datasets (MMLU, MATH, HumanEval) may have different scaling exponents; no single exponent fits all tasks.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define downstream scaling law and explain why it matters beyond pre-training loss.",
+        "back": "A downstream scaling law quantifies how task-specific metrics (e.g., MMLU accuracy) improve with model size. It matters because pre-training loss is only a proxy; actual performance on real tasks may not improve smoothly even if loss does, and different tasks have different scaling rates."
+      },
+      {
+        "type": "mcq",
+        "front": "Why do some downstream tasks show 'sudden jumps' in performance while pre-training loss improves smoothly?",
+        "back": "Task performance often uses threshold-based metrics (multiple-choice scoring, exact-match accuracy). When these metrics are applied to smooth underlying improvements, small changes in loss can cause large jumps in accuracy if they push examples across the decision boundary.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Larger models have qualitatively different internal representations.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The evaluation metric (e.g., binary accuracy) is nonlinear; small loss improvements can push borderline examples over a threshold.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Pre-training loss and task accuracy are fundamentally unrelated.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Downstream tasks require different training data that doesn't follow power laws.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Approximately how much do zero-shot and few-shot downstream task accuracies differ in their dependence on model size?",
+        "back": "Few-shot learning typically shows steeper scaling (larger exponent α_task) with model size than zero-shot; this is interpreted as emergent in-context learning. Zero-shot plateaus faster; few-shot improves steeply, suggesting ICL is a learned capability."
+      },
+      {
+        "type": "mcq",
+        "front": "You observe that a model has lower pre-training loss than a baseline but worse downstream accuracy on MMLU. What is the most likely explanation?",
+        "back": "Lower pre-training loss is necessary but not sufficient for downstream performance. Instruction-tuning, RLHF, and prompt engineering are critical for converting raw language understanding into task-specific capability. Downstream scaling laws hold on average but have high variance for individual models.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The model overfitted to the pre-training dataset.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The model needs instruction-tuning or task-specific adaptation to convert pre-training knowledge into task performance.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Pre-training loss is useless for predicting downstream performance.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The model is larger but uses a worse tokenizer.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "scaling-laws-for-long-context",
+    "title": "Scaling laws for long context",
+    "track": "research-leaning",
+    "topic": "scaling-laws-emergent-abilities",
+    "difficulty": "advanced",
+    "tags": [
+      "scaling-laws",
+      "context-length",
+      "long-range-dependencies",
+      "attention-mechanisms",
+      "token-efficiency"
+    ],
+    "aliases": [
+      "context scaling",
+      "long-sequence modeling",
+      "context-dependent loss"
+    ],
+    "wikilinks": [
+      "attention-mechanism",
+      "transformer-architecture",
+      "loss-scaling",
+      "extrapolation",
+      "information-density",
+      "compression"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2402.17268",
+        "label": "Context length scaling in modern language models (2024)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2406.04522",
+        "label": "On the efficiency of scaling long-context learning (2024)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDoes the power-law scaling (L ∝ N^{-β}, L ∝ D^{-δ}) still hold when you extend context length (L_ctx)? The question is critical: as models support longer contexts (4K → 32K → 100K tokens), does loss scale linearly with context, or do models hit efficiency cliffs?\n\n## Detail\n\nRecent work (2024–2025) shows:\n\n- **Context length does affect loss, but not always proportionally.** Models often show sub-linear or logarithmic improvement with context length (especially for sparse, reference-heavy tasks)\n- **Quality-context tradeoff:** The ability to leverage context (in-context learning, retrieval) requires both model size and sufficient data. Larger models extract more value from extended context\n- **Attention efficiency:** Transformers with linear/efficient attention (ALiBi, Ring Attention) maintain scaling laws better as context grows; full attention becomes a compute bottleneck\n- **Task-dependent scaling:** Tasks that benefit from long-range coherence (story generation, code with imports) show steeper context-loss slopes; token classification shows weaker dependence\n\n## Common gotchas / interview framings\n\n- **\"Can I predict loss for a 100K-context model using a 4K-context fit?\"** → Extrapolating context is risky. Context scaling is often nonlinear and task-dependent. Some models show logarithmic improvement; others hit plateaus beyond a certain window\n- **\"Does longer context always help?\"** → No. If information is uniformly random or already compressed in the first few tokens, extended context adds noise. Task structure matters: code with imports benefits; language translation may not\n- **\"What about position bias and Rotary Embeddings (RoPE)?\"** → RoPE generalizes well to longer contexts (ALiBi, YaRN interpolation), but models must be trained with exposure to those lengths to scale efficiently\n- **\"Why don't we just train on max possible context?\"** → Compute cost scales ≥ linearly with context length (O(L^2) for standard attention, O(L) for efficient attention). Diminishing returns often kick in beyond task-relevant context length.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Does loss scale linearly with context length in modern transformers? Explain.",
+        "back": "No, scaling is often sub-linear or logarithmic. Models show weaker loss improvement as context extends, especially for tasks without strong long-range dependencies. Task structure and attention efficiency heavily influence the scaling relationship."
+      },
+      {
+        "type": "mcq",
+        "front": "You want to compare a 4K-context and 32K-context version of the same model. What is the primary risk of naively extrapolating loss scaling laws?",
+        "back": "Context length scaling is empirically messier than parameter/data scaling. Some tasks show logarithmic improvement; others plateau. Models may be undertrained at long contexts or have architectural inefficiencies that violate power-law assumptions.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The tokenizer will break.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Context scaling is often nonlinear and task-dependent, breaking power-law assumptions that work for model size.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Longer context always linearly improves loss by a constant factor.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Position embeddings are incompatible with extended contexts.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Name one architectural technique that helps maintain good scaling as context length increases.",
+        "back": "Efficient attention mechanisms (Linear Attention, Ring Attention) or rotary position embeddings (RoPE) with interpolation (ALiBi, YaRN). These reduce compute costs from O(L^2) to O(L) or improve generalization to unseen lengths, maintaining scaling law properties."
+      },
+      {
+        "type": "mcq",
+        "front": "A task involves token classification (labeling each token independently). How would you expect loss to scale with context length?",
+        "back": "Token classification depends primarily on local context (maybe 50–100 tokens). Extended context adds irrelevant information; models may not efficiently ignore it, leading to sublinear or plateauing loss improvements beyond task-relevant window sizes.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Linear improvement; longer context always helps.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Logarithmic or plateau; token classification doesn't benefit from long-range dependencies.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Loss actually increases because longer context adds noise.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Context length is irrelevant for this task.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "in-context-learning-as-emergence",
+    "title": "In-context learning as emergence",
+    "track": "research-leaning",
+    "topic": "scaling-laws-emergent-abilities",
+    "difficulty": "advanced",
+    "tags": [
+      "emergent-abilities",
+      "in-context-learning",
+      "phase-transition",
+      "few-shot-learning",
+      "metalearning"
+    ],
+    "aliases": [
+      "ICL emergence",
+      "prompt adaptation",
+      "few-shot generalization"
+    ],
+    "wikilinks": [
+      "transformer-dynamics",
+      "gradient-descent",
+      "metalearning",
+      "prompt-engineering",
+      "capability-jumps",
+      "scaling-laws"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2511.06232",
+        "label": "Scaling Laws and In-Context Learning: A Unified Theoretical Framework (2025)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2211.02621",
+        "label": "Emergent In-Context Learning in LLMs (Transformers as Implicit Gradient Descent)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nIn-context learning (ICL) is the ability to adapt to a task by seeing examples in the prompt without weight updates. At small scales, models can't do this; at scale, they suddenly \"get it.\" Is this emergence fundamental, or does loss improve smoothly while the task metric jumps?\n\n## Detail\n\nRecent theoretical work (2024–2025) reveals:\n\n- **ICL as implicit metalearning:** Transformers implement gradient-based metalearning in the forward pass. Attention mechanisms compute an effective learning rate and update representations based on in-context examples\n- **Phase transitions in ICL:** Sharp transitions occur at critical model depths and widths. ICL requires sufficient capacity (width) to represent task diversity and depth for iterative refinement\n- **Power-law scaling:** ICL performance scales as a power law with model depth (d), width (w), context length (L_ctx), and training data:\n  - L_icl ∝ d^{-α} (depth exponent ≈ 0.5–1.0)\n  - L_icl ∝ w^{-β} (width exponent ≈ 0.2–0.5)\n  - L_icl ∝ L_ctx^{-γ} (context exponent ≈ 0.1–0.3)\n- **Task-dependent emergence:** Hard tasks (unseen distributions) emerge later than easy ones (memorization-like patterns)\n\n## Common gotchas / interview framings\n\n- **\"Is ICL emergence real or a measurement artifact?\"** → Loss can improve smoothly while ICL accuracy jumps due to nonlinear metrics. But theoretical analysis shows genuine phase transitions in the ability to learn tasks in-context; very small models provably cannot implement ICL\n- **\"What's the minimum model size for ICL?\"** → Empirically, small models (≤1B) show limited ICL; GPT-3 (175B) shows strong ICL. Theoretical lower bounds depend on task complexity; there's no universal threshold.\n- **\"How does ICL relate to fine-tuning?\"** → ICL is a form of implicit gradient descent; fine-tuning is explicit SGD. Larger models prefer ICL (low rank adaptation); smaller models may require fine-tuning. The tradeoff depends on context length vs. weight updates.\n- **\"Can you predict which tasks will emerge at which scales?\"** → Partially. Pre-training loss is predictive; tasks with rare patterns emerge later. But task-specific structure (e.g., in-distribution vs. out-of-distribution examples) heavily influences emergence scale.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define in-context learning and explain what it means for it to be an 'emergent' ability.",
+        "back": "In-context learning is the ability to adapt to tasks from examples in the prompt without weight updates. It's emergent because smaller models show near-zero ICL performance; at a critical scale, performance jumps sharply. This may reflect true capability phase transitions or nonlinear metrics on smooth loss improvements."
+      },
+      {
+        "type": "mcq",
+        "front": "Recent theoretical work suggests transformers implement ICL through which mechanism?",
+        "back": "Scaling Laws and In-Context Learning (2025) and earlier work show transformers implement gradient-based metalearning implicitly. Attention computes effective learning rates and representation updates analogous to SGD steps, enabling task adaptation without weight changes.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Storing examples in attention keys and retrieving them at inference.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Implicit gradient descent in the forward pass; attention updates representations like SGD updates weights.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "A separate 'meta-learning head' trained on few-shot examples.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Pre-training on exactly similar few-shot tasks guarantees memorization.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "ICL performance scales as a power law with model depth d. Approximately what is the depth exponent α in L_icl ∝ d^{-α}?",
+        "back": "The depth exponent α ≈ 0.5–1.0, meaning ICL improves significantly with depth. Deeper models can implement more iterative refinement steps, enabling stronger task adaptation in context."
+      },
+      {
+        "type": "mcq",
+        "front": "Why might smaller models (1B params) fail at in-context learning while larger models (100B+) succeed, according to scaling-law theory?",
+        "back": "Theoretical analysis shows ICL requires critical depths and widths to represent task-relevant feature spaces and iterative refinement. Very small models provably cannot implement implicit gradient descent with sufficient capacity; scaling (especially depth) enables emergent ICL.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Smaller models weren't pre-trained on few-shot tasks.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Smaller models lack sufficient depth and width to represent task diversity and implement iterative adaptation in context.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Smaller models use different tokenizers incompatible with few-shot prompts.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The difference is purely an evaluation metric artifact; loss improves smoothly at all scales.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "grokking-phenomenon",
+    "title": "Grokking phenomenon",
+    "track": "research-leaning",
+    "topic": "scaling-laws-emergent-abilities",
+    "difficulty": "advanced",
+    "tags": [
+      "grokking",
+      "generalization-dynamics",
+      "phase-transitions",
+      "feature-learning",
+      "optimization"
+    ],
+    "aliases": [
+      "delayed generalization",
+      "sudden generalization",
+      "late-stage learning"
+    ],
+    "wikilinks": [
+      "loss-landscape",
+      "memorization",
+      "generalization",
+      "weight-decay",
+      "training-dynamics",
+      "feature-emergence"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2509.21519",
+        "label": "Provable Scaling Laws of Feature Emergence from Learning Dynamics of Grokking (2025)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2201.02177",
+        "label": "Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets (Power et al.)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nGrokking is a striking phenomenon: a model trains for a very long time (1000s of steps) with high training loss and near-zero test accuracy, then suddenly (in a few steps) test accuracy jumps to 100% while training loss plateaus. The model \"grok\"s the pattern—discovers the underlying algorithm rather than memorizing examples.\n\n## Detail\n\nKey observations (Power et al., 2019; recent 2025 theory):\n\n- **Grokking occurs on algorithmic tasks** (modular arithmetic, sorting, algorithmic patterns), especially with weight decay and small batch sizes\n- **Three phases (Li2 framework, 2025):**\n  1. *Lazy learning* (steps 0–T₁): Model memorizes training examples; overfits. Loss decreases, generalization gap large\n  2. *Independent feature learning* (steps T₁–T₂): Model begins extracting features (e.g., parity, divisibility) independently; still poor generalization\n  3. *Interactive feature learning* (steps T₂–T₃): Features interact and compose; sudden generalization. Test loss drops sharply\n- **Grokking threshold:** Model size and weight decay jointly determine when grokking occurs. Larger models grok earlier (fewer steps), with O(M log M) data samples sufficient for modular arithmetic of order M\n- **Not a loss phenomenon:** Pre-grokking, training loss may be quite low (model has memorized). Grokking is about generalization (test loss), not training loss\n\n## Common gotchas / interview framings\n\n- **\"Why don't models always grok? Why does it fail on some tasks?\"** → Grokking requires tasks with clear underlying structure (algorithmic, rule-based). Real-world tasks with high noise or multiple valid heuristics often don't grok; models memorize and never generalize\n- **\"Is grokking relevant to LLM training?\"** → Controversial. LLMs train on diverse, noisy, unstructured text. Grokking-like phenomena may occur on specific sub-distributions (e.g., arithmetic reasoning), but it's not universal\n- **\"Why is weight decay crucial for grokking?\"** → Weight decay penalizes memorization (which requires large weights). It forces the model to find simpler, generalizable solutions—the underlying algorithm rather than example-specific weights\n- **\"How long should I train to see grokking?\"** → Depends on task complexity and model size. Algorithmic tasks: 10–1000s of epochs. Real data: grokking is rare or imperceptible. Design of the task and hyperparameters (learning rate, weight decay) are critical",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define grokking and distinguish it from standard overfitting → generalization.",
+        "back": "Grokking is sudden generalization after long periods of memorization. A model trains with high training loss and poor test accuracy for 1000s of steps, then test accuracy jumps sharply (often to near-perfect) in a few steps. It reflects the discovery of an underlying algorithm, not gradual refinement."
+      },
+      {
+        "type": "mcq",
+        "front": "According to the Li2 framework (2025), what are the three phases of grokking?",
+        "back": "The Li2 framework decomposes grokking into three phases: (I) lazy learning, where the model memorizes examples; (II) independent feature learning, where salient features emerge; and (III) interactive feature learning, where features compose and generalization occurs suddenly.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Pre-training, fine-tuning, inference",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Lazy learning (memorization), independent feature learning, interactive feature learning (sudden generalization)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Underfitting, optimal fit, overfitting",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Early stopping, convergence, divergence",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is weight decay essential for grokking to occur?",
+        "back": "Weight decay penalizes large weights, making memorization (which requires large, example-specific weights) costly. Without decay, models memorize indefinitely. Decay forces discovery of simpler, generalizable solutions—the underlying algorithm."
+      },
+      {
+        "type": "mcq",
+        "front": "In the context of grokking, what is the relationship between model size, data size, and grokking threshold?",
+        "back": "Recent theory shows larger models can grok faster due to greater representational capacity. For algorithmic tasks (e.g., modular arithmetic), O(M log M) training samples are necessary and sufficient for a model to learn the underlying rule, with grokking timing depending on both N and data size.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Larger models grok later; more data speeds up grokking.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Larger models grok earlier; O(M log M) data samples suffice for modular arithmetic of order M.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Model size is irrelevant; only learning rate matters.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Grokking time is constant regardless of model and data size.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "superposition-and-interpretability-crisis",
+    "title": "Superposition and interpretability crisis",
+    "track": "research-leaning",
+    "topic": "scaling-laws-emergent-abilities",
+    "difficulty": "advanced",
+    "tags": [
+      "interpretability",
+      "superposition",
+      "feature-decomposition",
+      "mechanistic-interpretability",
+      "scaling"
+    ],
+    "aliases": [
+      "feature superposition",
+      "distributed representations",
+      "interpretability at scale"
+    ],
+    "wikilinks": [
+      "neural-network-representations",
+      "feature-learning",
+      "polysemanticity",
+      "attention-heads",
+      "scaling-laws",
+      "mechanistic-understanding"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2210.08378",
+        "label": "Anthropic's Superposition Hypothesis: Features, Polysemanticity, and Model Scaling"
+      },
+      {
+        "url": "https://www.anthropic.com/news/scaling-laws-interpretability",
+        "label": "Scaling Laws for Superposition (Anthropic, 2023)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nNaive interpretability assumes each neuron represents a single feature (e.g., \"detector for face edges\" in vision). In reality, large language models achieve efficiency through **superposition**: neurons encode multiple features simultaneously, each weakly and in different subspaces. As models scale, superposition increases—features become harder to disentangle. This is the 'interpretability crisis': we lose the ability to explain which features drive outputs.\n\n## Detail\n\nSuperposition arises because:\n\n- **Dimensionality mismatch:** Models have ~100x more features (concepts) than neurons/dimensions. Encoding each feature separately would require massive overparameterization\n- **Sparsity exploitation:** Most features are inactive on any given token (sparse feature activation). By reusing dimensions for sparse features, models pack more features into fewer neurons\n- **Polysemanticity:** A single neuron activates for multiple, seemingly unrelated features (e.g., \"Great Britain\" and \"Bill Gates\" activate the same neuron). This is not a bug; it's efficient compression\n- **Scaling relationship:** As models grow, superposition increases (higher feature density per neuron). Scaling laws show the interpretability gap widens—feature decomposition becomes exponentially harder\n\n## Common gotchas / interview framings\n\n- **\"Can't we just do PCA or factorize hidden states to extract features?\"** → Possible on toy models (≤1B params). Large LLMs require adversarial examples or complex decomposition to identify features; polysemantic neurons resist linear decomposition\n- **\"Is polysemanticity a fundamental property or a training artifact?\"** → Likely fundamental. Models with superposition are compute-efficient. Eliminating polysemanticity would require either: (a) expanding network width massively or (b) accepting computation overhead. Emergent from optimization\n- **\"Does superposition explain why scaling laws work?\"** → Partially. Superposition allows models to scale to large feature spaces without proportional parameter growth. But it creates an interpretability-capability tradeoff: as models become more capable, they become less interpretable\n- **\"Can mechanistic interpretability scale?\"** → Challenging research question. Anthropic's SAE (Sparse Autoencoders) aim to disentangle superposition at scale, but computational cost scales with model size. Interpretability-at-scale remains an open problem",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define superposition in the context of neural network representations.",
+        "back": "Superposition is the encoding of multiple features in shared, overlapping neural dimensions. Rather than one neuron = one feature, many features are weakly encoded across multiple neurons/dimensions in different subspaces, enabling efficient compression."
+      },
+      {
+        "type": "mcq",
+        "front": "Why does superposition arise naturally in large language models?",
+        "back": "Models must represent 100x more features than neurons to be efficient. Sparse feature activation allows reuse of dimensions: different features activate on different tokens, packing multiple sparse features into the same neural subspace.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Models are trained to be interpretable by design.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Models have far more features (concepts) than neurons, so they reuse dimensions for sparse features to pack more capability into fixed parameter budgets.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Superposition is a training artifact caused by poor optimization.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Large models deliberately hide features to prevent adversarial attacks.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is polysemanticity and why is it a challenge for mechanistic interpretability?",
+        "back": "Polysemanticity is when a single neuron/dimension activates for multiple, seemingly unrelated features (e.g., both 'Great Britain' and 'Bill Gates'). It makes feature decomposition and neuron-level interpretation difficult; simple inspection of neuron weights reveals nothing about the features it encodes."
+      },
+      {
+        "type": "mcq",
+        "front": "As models scale (more parameters, more data), how does superposition change, and what is the consequence for interpretability?",
+        "back": "Scaling laws for superposition show that as models grow, feature packing increases (higher feature density per neuron). This is efficient for capability but creates an interpretability crisis: understanding large models requires tools like SAEs (Sparse Autoencoders) to disentangle superposition.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Superposition decreases; interpretability improves.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Superposition increases; features become more densely packed, making disentanglement harder and interpretability worse.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Superposition stays constant; scaling doesn't affect feature encoding.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Superposition decreases; models become less efficient.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  }
+]

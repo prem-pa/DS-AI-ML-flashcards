@@ -1,0 +1,72 @@
+{
+  "track": "research-leaning",
+  "track_label": "RESEARCH-LEANING",
+  "topic": "recent-architectures-techniques",
+  "topic_label": "Recent Architectures & Techniques",
+  "concept_count": 9,
+  "concepts": [
+    {
+      "slug": "mamba-and-state-space-models-ssms",
+      "title": "Mamba and state-space models (SSMs)",
+      "difficulty": "advanced",
+      "hook": "Selective SSM; linear complexity with strong performance.",
+      "subtopic": "Post-Transformer Research"
+    },
+    {
+      "slug": "jamba-and-hybrid-architectures",
+      "title": "Jamba and hybrid architectures",
+      "difficulty": "advanced",
+      "hook": "Mix attention and SSM; what's the right composition?",
+      "subtopic": "Post-Transformer Research"
+    },
+    {
+      "slug": "vision-transformer-improvements-and-efficiency",
+      "title": "Vision transformer improvements and efficiency",
+      "difficulty": "advanced",
+      "hook": "Patches, efficient tokens, hierarchical designs.",
+      "subtopic": "Post-Transformer Research"
+    },
+    {
+      "slug": "constitutional-ai-and-scalable-oversight",
+      "title": "Constitutional AI and scalable oversight",
+      "difficulty": "advanced",
+      "hook": "Self-improving with principles; beyond RLHF.",
+      "subtopic": "Training & Alignment Research"
+    },
+    {
+      "slug": "representation-alignment-across-models",
+      "title": "Representation alignment across models",
+      "difficulty": "advanced",
+      "hook": "When do different models learn similar features?",
+      "subtopic": "Training & Alignment Research"
+    },
+    {
+      "slug": "inverse-scaling-and-capability-collapse",
+      "title": "Inverse scaling and capability collapse",
+      "difficulty": "advanced",
+      "hook": "When do larger models perform worse?",
+      "subtopic": "Training & Alignment Research"
+    },
+    {
+      "slug": "multimodal-fusion-architectures",
+      "title": "Multimodal fusion architectures",
+      "difficulty": "advanced",
+      "hook": "How to fuse vision, language, audio; what fusion works?",
+      "subtopic": "Multimodal & Reasoning Research"
+    },
+    {
+      "slug": "chain-of-thought-in-theory",
+      "title": "Chain-of-thought in theory",
+      "difficulty": "advanced",
+      "hook": "Why does step-by-step reasoning work? Capacity arguments.",
+      "subtopic": "Multimodal & Reasoning Research"
+    },
+    {
+      "slug": "test-time-compute-research",
+      "title": "Test-time compute research",
+      "difficulty": "advanced",
+      "hook": "Optimal allocation of compute at test vs train time.",
+      "subtopic": "Multimodal & Reasoning Research"
+    }
+  ]
+}

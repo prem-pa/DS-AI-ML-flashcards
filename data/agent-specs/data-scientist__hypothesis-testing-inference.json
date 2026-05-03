@@ -1,0 +1,100 @@
+{
+  "track": "data-scientist",
+  "track_label": "DATA SCIENTIST",
+  "topic": "hypothesis-testing-inference",
+  "topic_label": "Hypothesis Testing & Inference",
+  "concept_count": 13,
+  "concepts": [
+    {
+      "slug": "null-and-alternative-hypotheses-p-values",
+      "title": "Null and alternative hypotheses, p-values",
+      "difficulty": "beginner",
+      "hook": "Core framework; p < 0.05 convention often misunderstood.",
+      "subtopic": "Classical Hypothesis Testing"
+    },
+    {
+      "slug": "type-i-and-type-ii-errors-power",
+      "title": "Type I and Type II errors, power",
+      "difficulty": "intermediate",
+      "hook": "Tradeoff in test design; business cost of false positives vs false negatives varies.",
+      "subtopic": "Classical Hypothesis Testing"
+    },
+    {
+      "slug": "parametric-tests-t-test-anova-chi-squared",
+      "title": "Parametric tests (t-test, ANOVA, chi-squared)",
+      "difficulty": "intermediate",
+      "hook": "Assumes specific distributions; when assumptions hold, most powerful.",
+      "subtopic": "Classical Hypothesis Testing"
+    },
+    {
+      "slug": "nonparametric-tests-mann-whitney-kruskal-wallis-permutation-tests",
+      "title": "Nonparametric tests (Mann-Whitney, Kruskal-Wallis, permutation tests)",
+      "difficulty": "intermediate",
+      "hook": "Distribution-free; robust when assumptions fail.",
+      "subtopic": "Classical Hypothesis Testing"
+    },
+    {
+      "slug": "multiple-comparison-correction-bonferroni-fdr",
+      "title": "Multiple comparison correction (Bonferroni, FDR)",
+      "difficulty": "intermediate",
+      "hook": "Adjusting for multiple tests; critical in genomics and high-dimensional screening.",
+      "subtopic": "Classical Hypothesis Testing"
+    },
+    {
+      "slug": "confidence-intervals-and-their-interpretation",
+      "title": "Confidence intervals and their interpretation",
+      "difficulty": "intermediate",
+      "hook": "NOT \"95% chance parameter is in interval\"; rather, 95% of similarly-constructed intervals contain the true value.",
+      "subtopic": "Confidence Intervals & Estimation"
+    },
+    {
+      "slug": "bootstrap-methods",
+      "title": "Bootstrap methods",
+      "difficulty": "intermediate",
+      "hook": "Distribution-free confidence intervals; works for any estimator.",
+      "subtopic": "Confidence Intervals & Estimation"
+    },
+    {
+      "slug": "maximum-likelihood-estimation-mle",
+      "title": "Maximum likelihood estimation (MLE)",
+      "difficulty": "intermediate",
+      "hook": "Principled parameter estimation; asympotically efficient.",
+      "subtopic": "Confidence Intervals & Estimation"
+    },
+    {
+      "slug": "method-of-moments",
+      "title": "Method of moments",
+      "difficulty": "intermediate",
+      "hook": "Simple parameter estimation; sometimes more robust than MLE.",
+      "subtopic": "Confidence Intervals & Estimation"
+    },
+    {
+      "slug": "posterior-estimation-and-credible-intervals",
+      "title": "Posterior estimation and credible intervals",
+      "difficulty": "intermediate",
+      "hook": "Bayesian analog of confidence intervals; direct probability interpretation.",
+      "subtopic": "Bayesian Inference"
+    },
+    {
+      "slug": "conjugate-priors",
+      "title": "Conjugate priors",
+      "difficulty": "intermediate",
+      "hook": "Closed-form posteriors; simplify computation.",
+      "subtopic": "Bayesian Inference"
+    },
+    {
+      "slug": "bayesian-hypothesis-testing-and-bayes-factors",
+      "title": "Bayesian hypothesis testing and Bayes factors",
+      "difficulty": "intermediate",
+      "hook": "Alternative to p-values; directly compares model support.",
+      "subtopic": "Bayesian Inference"
+    },
+    {
+      "slug": "markov-chain-monte-carlo-mcmc",
+      "title": "Markov Chain Monte Carlo (MCMC)",
+      "difficulty": "advanced",
+      "hook": "Sample from intractable posteriors; enables Bayesian inference at scale.",
+      "subtopic": "Bayesian Inference"
+    }
+  ]
+}

@@ -1,0 +1,1028 @@
+[
+  {
+    "slug": "mamba-and-state-space-models-ssms",
+    "title": "Mamba and state-space models (SSMs)",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "difficulty": "advanced",
+    "tags": [
+      "sequence-modeling",
+      "linear-time-complexity",
+      "selective-computation",
+      "state-space-models",
+      "transformers-alternative"
+    ],
+    "aliases": [
+      "selective-SSM",
+      "linear attention",
+      "structured state spaces"
+    ],
+    "wikilinks": [
+      "ssm",
+      "transformer",
+      "sequence-length-scaling",
+      "linear-recurrent-models",
+      "mamba-2",
+      "mamba-3",
+      "selective-state-transitions"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2312.00752",
+        "label": "Mamba: Linear-Time Sequence Modeling with Selective State Spaces"
+      },
+      {
+        "url": "https://github.com/state-spaces/mamba",
+        "label": "Official Mamba GitHub"
+      },
+      {
+        "url": "https://goombalab.github.io/blog/2024/mamba2-part1-model/",
+        "label": "State Space Duality (Mamba-2)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMamba reformulates SSMs by making their state transition matrices input-dependent, allowing the model to selectively propagate or forget information based on current tokens. Unlike traditional Transformers with quadratic attention, Mamba achieves linear time complexity in sequence length while maintaining competitive or superior performance on real data.\n\n## Detail\n\nCore innovation: SSM parameters (A, B, C matrices) become explicit functions of input at each sequence position. This selectivity enables:\n- O(n) time complexity vs O(n²) for attention\n- 5× higher inference throughput than Transformers\n- Strong performance on long sequences (up to 1M tokens)\n- Applications across language, audio, genomics, vision\n\nMamba-2 (2024) introduced state space duality showing connections to Transformers and enabling efficient algorithms. Mamba-3 extended with improved sequence modeling.\n\n## Common gotchas / interview framings\n- Q: \"Isn't linear attention already O(n)?\" A: True, but Mamba's selectivity maintains accuracy where other linear attention schemes degrade\n- Q: \"How does Mamba handle bidirectional context?\" A: Single-pass causal by design; bidirectional variants use state merging\n- Q: \"When should you use Mamba vs Transformers?\" A: Mamba excels on very long sequences; Transformers still better for short dense sequences requiring fine-grained dependencies\n- Scaling behavior: Performance improves with sequence length (unlike some alternatives)\n- MoE integration: Recent work combines Mamba with mixture-of-experts routing",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key architectural innovation that makes Mamba faster than Transformers, and what is its time complexity?",
+        "back": "Mamba makes SSM parameters (A, B, C matrices) input-dependent (selective), allowing the model to decide which information to propagate per token. This enables O(n) linear time complexity vs Transformer's O(n²) attention, while maintaining performance on information-dense tasks. Selectivity is the mechanism that preserves accuracy where other linear models fail."
+      },
+      {
+        "type": "mcq",
+        "front": "In Mamba SSMs, what is the relationship between selectivity and performance degradation on long sequences?",
+        "back": "Selectivity is the core mechanism that allows Mamba to maintain performance as sequences grow. By making state transitions input-dependent, the model learns when to propagate information and when to reset state, mimicking attention gating but at linear cost.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Selectivity causes performance degradation as sequences get longer",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Selectivity prevents degradation by allowing the model to forget irrelevant information",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Selectivity is orthogonal to sequence length; performance depends only on model size",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Selectivity is a post-hoc regularization applied only to very long sequences",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does Mamba-2's state space duality relate to Transformers, and what efficiency gain does it unlock?",
+        "back": "Mamba-2 proved that Transformers can be understood as special cases of SSMs through state space duality. This theoretical connection enables structured algorithms that combine the efficiency of SSMs with the expressiveness of attention, improving both memory and computational efficiency."
+      },
+      {
+        "type": "mcq",
+        "front": "Which of these modalities has Mamba been successfully applied to with state-of-the-art or competitive results?",
+        "back": "Mamba has demonstrated strong performance across multiple modalities: language (LLMs), audio (speech, music), genomics (DNA sequences), and vision tasks. This suggests SSM selectivity is a general principle for sequence modeling, not language-specific.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Language modeling only",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Language and audio only",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Language, audio, genomics, and vision",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Language, vision, and medical imaging, but not audio",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What inference throughput advantage does Mamba achieve over Transformers, and why?",
+        "back": "Mamba achieves 5× higher inference throughput compared to Transformers. This stems from: (1) linear scaling without KV cache quadratic growth, (2) single-pass generation without attention matrix materialization, (3) reduced memory bandwidth requirements for longer sequences."
+      }
+    ]
+  },
+  {
+    "slug": "jamba-and-hybrid-architectures",
+    "title": "Jamba and hybrid architectures",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "difficulty": "advanced",
+    "tags": [
+      "hybrid-models",
+      "attention-and-SSM",
+      "composition-design",
+      "MoE-routing",
+      "KV-cache-efficiency"
+    ],
+    "aliases": [
+      "hybrid-Transformer-SSM",
+      "attention-SSM composition",
+      "mixed-layer-types"
+    ],
+    "wikilinks": [
+      "mamba",
+      "transformer-attention",
+      "moe",
+      "kv-cache",
+      "long-context-models",
+      "architectural-composition"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2403.19887",
+        "label": "Jamba: A Hybrid Transformer-Mamba Language Model"
+      },
+      {
+        "url": "https://www.ai21.com/blog/announcing-jamba/",
+        "label": "AI21 Jamba Announcement"
+      },
+      {
+        "url": "https://www.ai21.com/blog/rise-of-hybrid-llms/",
+        "label": "The Rise of Hybrid LLMs"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nJamba answers: \"What if we combine Transformer attention and Mamba SSMs in one model?\" By mixing layers strategically—1 attention layer per 8 total layers—it retains attention's reasoning capability while gaining SSM's efficiency. The name stands for Joint Attention and Mamba architecture.\n\n## Detail\n\nJamba architecture:\n- Repeating blocks with 1 Transformer attention layer + 7 Mamba SSM layers\n- Mixture-of-Experts (MoE) after each layer for selective parameter routing\n- 52B total parameters, 12B active at inference\n- 256K context window with 8× smaller KV cache than vanilla Transformers\n- 3× throughput vs Mixtral-8x7B on long contexts\n\nDesign rationale: Attention excels at dense, token-level dependencies (reasoning); SSM excels at long-range, sparse patterns (efficiency). Hybrid composition lets each handle what it's best at.\n\nJamba 1.5 extends this with improved layer composition and performance scaling.\n\n## Common gotchas / interview framings\n- Q: \"Why only 1/8 attention layers?\" A: Empirical sweep; 1/8 balances reasoning (attention) with efficiency (SSM). More attention = worse throughput; less = worse reasoning\n- Q: \"Does KV cache advantage disappear with hybrid?\" A: No; KV cache only needed for 1/8 layers, so 8× reduction vs pure Transformer\n- Q: \"Is this just Transformer+Mamba concatenation?\" A: No; interleaved layer design allows information fusion mid-pass, not post-hoc fusion\n- MoE interaction: Not obvious how to route across hybrid layers; Jamba uses global routing\n- Context window tradeoff: 256K is large but uses more SSM memory than 4K windows",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core composition principle of Jamba, and why is the 1-attention-per-8-layers ratio chosen?",
+        "back": "Jamba uses 1 Transformer attention layer per every 8 total layers (1/8 ratio). This ratio balances two opposing forces: attention for dense, token-level reasoning (where it excels) and Mamba SSM layers for efficient long-range dependencies. The 1/8 ratio emerged from empirical sweeps; more attention reduces throughput too much, less attention hurts reasoning quality."
+      },
+      {
+        "type": "mcq",
+        "front": "How much smaller is Jamba's KV cache compared to a vanilla Transformer with equivalent context window?",
+        "back": "Since only 1/8 of layers require KV cache (the attention layers), and SSM layers don't cache key-value pairs, Jamba achieves 8× reduction in KV cache size. This is a major practical advantage for long-context inference with memory-constrained hardware.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "2× smaller",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "4× smaller",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "8× smaller",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "16× smaller",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In Jamba, what are the active and total parameters, and why use Mixture-of-Experts (MoE)?",
+        "back": "Jamba has 52B total parameters but only 12B active parameters at inference due to MoE routing. MoE selection allows sparse activation: each token is routed to a subset of expert MLPs, reducing compute per token. This makes the model efficient despite large total capacity, enabling better performance on diverse reasoning tasks."
+      },
+      {
+        "type": "mcq",
+        "front": "Which architectural property gives Jamba its 3× throughput advantage over Mixtral-8x7B on long sequences?",
+        "back": "The throughput gain comes from the hybrid design: SSM layers are extremely fast (linear complexity), and the reduced KV cache (only 1/8 layers need it) cuts memory bandwidth. On long contexts where attention KV cache dominates cost, this hybrid approach wins decisively.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Larger model size (52B vs 47B)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "SSM layers for most positions + 8× smaller KV cache from reduced attention",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Better MoE router training",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Hardware-optimized attention kernels",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the claimed context window length of Jamba, and how does it challenge the traditional Transformer scaling pattern?",
+        "back": "Jamba achieves a 256K context window, which is competitive with long-context Transformers but with significantly lower memory cost due to the hybrid design. This challenges the assumption that context length requires a tradeoff with efficiency; hybrid models can have both."
+      }
+    ]
+  },
+  {
+    "slug": "vision-transformer-improvements-and-efficiency",
+    "title": "Vision transformer improvements and efficiency",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "difficulty": "advanced",
+    "tags": [
+      "vision-transformers",
+      "ViT",
+      "patch-embeddings",
+      "hierarchical-vision",
+      "efficient-tokens",
+      "vision-efficiency"
+    ],
+    "aliases": [
+      "ViT optimization",
+      "visual attention efficiency",
+      "dense-prediction-transformers"
+    ],
+    "wikilinks": [
+      "vision-transformer",
+      "attention-mechanism",
+      "image-patches",
+      "hierarchical-architectures",
+      "token-pruning",
+      "sparse-vision"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2010.11929",
+        "label": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"
+      },
+      {
+        "url": "https://arxiv.org/abs/2203.09556",
+        "label": "Vision Transformers Need Registers"
+      },
+      {
+        "url": "https://arxiv.org/abs/2307.08248",
+        "label": "Vision Transformers are Robust Learners"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nVision Transformers (ViTs) apply pure Transformer architecture to images by dividing them into non-overlapping patches and treating patches as sequence tokens. Recent improvements focus on three angles: (1) making patches adaptive/hierarchical, (2) pruning redundant tokens, (3) improving efficiency without sacrificing accuracy.\n\n## Detail\n\nKey improvements in 2024-2025:\n\n**Patch efficiency:**\n- Non-overlapping patches reduce token count vs dense embeddings\n- Adaptive/variable-sized patches based on image regions\n- Hierarchical designs (e.g., Swin, BEiT) reduce computation in early layers\n\n**Token efficiency:**\n- Token pruning: removing redundant patches mid-forward pass\n- Sparse attention: only attending to nearby spatial regions\n- Efficient token selection: learned routing of which patches matter\n\n**Architectural patterns:**\n- Hierarchical ViTs with downsampling (multi-scale representations)\n- Register tokens as learnable buffers for stability\n- Combining local (CNN-like) and global (Transformer) paths\n\n**Performance gains:**\n- Competitive with CNNs on ImageNet while handling variable resolutions\n- Superior to CNNs on fine-grained tasks (medical imaging, remote sensing)\n- Better transfer learning to downstream tasks\n\n## Common gotchas / interview framings\n- Q: \"Why not just use CNNs for vision?\" A: ViTs scale better to large datasets, have better transfer learning, no inductive bias toward locality\n- Q: \"Aren't 16×16 patches too coarse?\" A: Patches are flexible; can use 8×8 or variable sizes. Hierarchical designs use smaller patches early\n- Q: \"How does ViT handle variable resolution inputs?\" A: Needs retraining or position interpolation; patch-based design is flexible but position encoding isn't adaptive by default\n- Token pruning overhead: deciding which tokens to prune adds computation; net gains emerge only for longer sequences\n- Efficiency vs accuracy tradeoff: aggressive pruning hurts dense tasks like segmentation",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the fundamental insight of Vision Transformers (ViTs), and how do they differ from CNNs in terms of inductive bias?",
+        "back": "ViTs treat images as sequences of patches (e.g., 16×16 tokens), enabling pure Transformer-based processing. Unlike CNNs which have built-in locality (local filters) and translation invariance, ViTs have no spatial inductive bias. This makes them weaker on small datasets but stronger on large-scale pretraining where they learn their own spatial structure."
+      },
+      {
+        "type": "mcq",
+        "front": "Which technique improves ViT efficiency by removing redundant patches during forward pass?",
+        "back": "Token pruning dynamically removes patches deemed unimportant (e.g., uniform background) mid-forward pass, reducing attention computation. This is particularly effective for high-resolution images where many patches are redundant. The tradeoff is the cost of computing importance scores.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Patch aggregation",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Token pruning",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Sparse embeddings",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Patch downsampling",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What are register tokens in Vision Transformers, and why were they introduced?",
+        "back": "Register tokens are learnable token buffers added to the sequence during ViT forward pass (not tied to image patches). They were introduced to prevent activation collapse in deep ViTs, providing stable attention targets and improving representation quality in later layers. They act as a stabilization mechanism for deep vision models."
+      },
+      {
+        "type": "mcq",
+        "front": "What architectural pattern do hierarchical Vision Transformers (e.g., Swin) use to improve efficiency?",
+        "back": "Hierarchical ViTs like Swin use local window attention (restricting attention to spatial neighborhoods) and shifted windows to enable cross-window communication, reducing complexity from O(n²) to O(n log n). They also downsample tokens across layers for multi-scale representations, making them much more efficient than naive ViTs.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Global attention at all layers with dropout",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Local window attention with shifted windows, multi-scale resolution",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Convolutional layers interleaved with attention",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Sparse global attention using learned importance scores",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Compared to CNNs, what are the key advantages of ViTs on transfer learning tasks, and what is the main limitation?",
+        "back": "Advantage: ViTs transfer much better from large-scale pretraining (ImageNet-21K, proprietary datasets) because they learn less dataset-specific inductive bias. Limitation: ViTs require more data to train from scratch and are weaker on small datasets where CNN's locality inductive bias is beneficial. This makes ViTs preferable for transfer learning scenarios."
+      }
+    ]
+  },
+  {
+    "slug": "constitutional-ai-and-scalable-oversight",
+    "title": "Constitutional AI and scalable oversight",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "difficulty": "advanced",
+    "tags": [
+      "constitutional-AI",
+      "scalable-oversight",
+      "RLAIF",
+      "self-improvement",
+      "AI-feedback",
+      "alignment-training"
+    ],
+    "aliases": [
+      "CAI",
+      "RLAIF",
+      "principle-based-alignment",
+      "AI-feedback-training"
+    ],
+    "wikilinks": [
+      "rlhf",
+      "alignment",
+      "reward-modeling",
+      "self-critique",
+      "harmlessness",
+      "constitutional-principles"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2212.08073",
+        "label": "Constitutional AI: Harmlessness from AI Feedback"
+      },
+      {
+        "url": "https://www.anthropic.com/research/constitutional-ai-harmlessness-from-ai-feedback",
+        "label": "Anthropic Constitutional AI Research"
+      },
+      {
+        "url": "https://rlhfbook.com/c/13-cai",
+        "label": "RLHF Book: Constitutional AI"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nConstitutional AI (CAI) flips the alignment problem: instead of humans labeling outputs as good/bad, encode principles (\"constitution\") and let the model critique its own outputs using those principles. This enables scaling alignment beyond human labeling capacity. The model learns self-improvement without direct human feedback.\n\n## Detail\n\n**Core mechanism:**\n1. Start with a base pretrained LLM\n2. Define a \"constitution\"—a set of principles (e.g., \"Be helpful\", \"Avoid harm\", \"Be honest\")\n3. Red teaming: generate adversarial prompts\n4. Self-critique: model critiques its own responses against constitution\n5. RLAIF (Reinforcement Learning from AI Feedback): train reward model on model-generated critiques, then RL fine-tune to maximize reward\n\n**Advantages over RLHF:**\n- Scales to unlimited feedback (model critiques itself infinitely)\n- Easier to encode principles than label thousands of comparisons\n- Transparent: constituents can audit what principles are being enforced\n- Faster iteration: no human labeling latency\n\n**Recent evolution (2024-2025):**\n- Claude 3 (March 2024): integrated CAI-based character training\n- OpenAI integrated AI models into RLHF labeling pipeline (June 2024)\n- Meta Self-Taught Evaluator (Oct 2024): uses AI-generated feedback at scale\n- Hybrid approaches: combine constitutional principles + human RLHF + additional fine-tuning (Claude 4/4.5 approach)\n\n## Common gotchas / interview framings\n- Q: \"Doesn't the model just learn to satisfy the constitution, not be actually helpful?\" A: True risk (Goodharting); mitigated by diverse constitution and downstream validation\n- Q: \"How does CAI handle conflicting principles?\" A: Constitution design is crucial; principles should be compatible. Conflicts surface during training\n- Q: \"Is CAI as effective as human feedback?\" A: No clear winner; depends on constitution quality and human annotator quality. Likely complementary\n- Constitutional bias: the constitution encodes values; different cultures/teams may have different constitutions\n- Scalable oversight paradox: if model generates feedback, how do you know it's correct? Still needs some ground truth validation",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core innovation of Constitutional AI (CAI) compared to traditional RLHF, and how does it scale?",
+        "back": "CAI replaces human feedback with AI self-critique: instead of humans labeling good/bad outputs, the model critiques its own responses against a constitution (set of principles). This scales feedback generation indefinitely since the model can critique itself repeatedly, whereas RLHF is bottlenecked by human annotation capacity."
+      },
+      {
+        "type": "mcq",
+        "front": "In the Constitutional AI pipeline, what does RLAIF stand for and what does it optimize?",
+        "back": "RLAIF (Reinforcement Learning from AI Feedback) is the training procedure where: (1) a reward model is trained on AI-generated critiques of outputs, (2) the language model is fine-tuned via RL to maximize this reward. This closes the loop: model critiques itself, learns from own critique, improves.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Reinforcement Learning from AI Feedback; trains reward model on AI-generated critiques, then RL fine-tunes to maximize this reward",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Reinforcement Learning from Aligned Feedback; trains humans to provide aligned feedback",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Resilience Learning with Adversarial Intervention Feedback; focuses on robustness",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Recursive Language Alignment Iterative Fine-tuning; iteratively refines responses",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is a 'constitution' in Constitutional AI, and what role does it play in scaling oversight?",
+        "back": "A constitution is an explicit set of principles/rules (e.g., 'Be helpful', 'Avoid harmful content', 'Be honest') that guide model self-critique. It scales oversight because it codifies human values upfront, then the model applies these principles to critique unlimited outputs. This avoids the need to label every output individually."
+      },
+      {
+        "type": "mcq",
+        "front": "Which major AI labs have adopted or integrated Constitutional AI / RLAIF approaches as of 2024?",
+        "back": "Constitutional AI was pioneered by Anthropic (2022). By 2024-2025, OpenAI and Meta have adopted RLAIF ideas: OpenAI uses AI models in RLHF labeling, Meta released Self-Taught Evaluator. Each implements variants, showing the broad industry adoption of AI feedback principles.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Anthropic only",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Anthropic and OpenAI",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Anthropic, OpenAI, and Meta",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "All major labs have identical approaches",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the 'scalable oversight' challenge that Constitutional AI addresses, and what remaining limitations exist?",
+        "back": "Scalable oversight: how do you align and supervise systems too complex for direct human evaluation? CAI addresses this by using the model's own critique (cheaper than human labels). Remaining limitation: if the model's critique is wrong, RLAIF amplifies the error. Ground truth validation is still needed periodically to prevent drift."
+      }
+    ]
+  },
+  {
+    "slug": "representation-alignment-across-models",
+    "title": "Representation alignment across models",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "difficulty": "advanced",
+    "tags": [
+      "representation-learning",
+      "model-alignment",
+      "feature-similarity",
+      "mechanistic-interpretability",
+      "transfer-learning",
+      "cross-model-alignment"
+    ],
+    "aliases": [
+      "feature-alignment",
+      "representational-similarity",
+      "activation-alignment"
+    ],
+    "wikilinks": [
+      "linear-probes",
+      "representation-similarity-analysis",
+      "mechanistic-interpretability",
+      "transfer-learning",
+      "neural-network-alignment",
+      "feature-learning"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2106.09573",
+        "label": "Representation Learning in Deep Networks: What We Know and What We Don't"
+      },
+      {
+        "url": "https://arxiv.org/abs/2305.10062",
+        "label": "Similarity of Neural Networks with Random Labels"
+      },
+      {
+        "url": "https://arxiv.org/abs/2304.06871",
+        "label": "Emergent Abilities of Large Language Models"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDifferent neural networks trained on the same task often develop similar internal representations (learned features), even if they have different architectures or random initializations. Representation alignment measures this similarity and has implications for interpretability, transfer learning, and understanding what models learn.\n\n## Detail\n\n**Core questions:**\n- Do models trained independently learn aligned representations?\n- Can we measure alignment (similarity of learned features)?\n- What factors cause or prevent alignment (architecture, data, training procedure)?\n\n**Key findings (2023-2024):**\n1. **Convergence**: Models trained on the same data often converge to similar representations in intermediate/later layers, even with different architectures\n2. **Alignment metrics**: Representation Similarity Analysis (RSA), Centered Kernel Alignment (CKA), and linear probe transfer measure alignment\n3. **Layer-wise patterns**: Early layers diverge (task-specific initialization effects); middle/late layers align (convergence to optimal features)\n4. **Generalization link**: Models with better cross-model representation alignment often generalize better\n5. **Scale effects**: Larger models show stronger representation alignment, suggesting scaling leads to more universal features\n\n**Implications:**\n- **Mechanistic interpretability**: if models align, we can study one model and generalize to others\n- **Transfer learning**: aligned representations enable effective transfer; misalignment hurts transfer\n- **Model compression**: aligning student-teacher representations (distillation) improves compression\n- **Robustness**: models with aligned robust features are more transferable\n\n## Common gotchas / interview framings\n- Q: \"Do all models learn the same features?\" A: No; alignment is partial and layer-dependent. Early layers are very different, late layers partially aligned\n- Q: \"What breaks alignment?\" A: Different architectures, small datasets, mismatched training procedures, different loss functions\n- Q: \"Can we force alignment?\" A: Yes, via distillation or explicit alignment losses, but often at a cost to accuracy\n- Causality confusion: alignment correlates with generalization, but doesn't prove alignment causes generalization\n- Benchmark dependency: alignment patterns differ across datasets; ImageNet alignment ≠ speech alignment",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does representation alignment mean, and why would we expect different models to learn aligned representations?",
+        "back": "Representation alignment is the similarity of learned features across independently trained models. We'd expect alignment because: (1) data constrains which features are useful (data manifold), (2) optimization converges to local optima in feature space, (3) good features are generalizable across architectures. If alignment occurs, insights from one model generalize to others."
+      },
+      {
+        "type": "mcq",
+        "front": "Which layer-wise pattern emerges when comparing representations across aligned models?",
+        "back": "Early layers learn task-specific, initialization-dependent features and show high divergence. Middle and late layers learn more universal, task-relevant features and show stronger alignment. This pattern suggests that learning progresses from specific to general features.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "All layers have equal alignment",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Early layers diverge; middle/late layers align",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Only the final layer aligns; internal layers always differ",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Alignment is random and unpredictable",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What are three metrics used to measure representation alignment between neural networks?",
+        "back": "1. **Representation Similarity Analysis (RSA)**: correlate pairwise distances of activations\n2. **Centered Kernel Alignment (CKA)**: measure alignment of Gram matrices of representations\n3. **Linear probe transfer**: train linear classifier on one model's representations and test on another's; high accuracy indicates alignment"
+      },
+      {
+        "type": "mcq",
+        "front": "According to recent research, what is the relationship between scale and representation alignment?",
+        "back": "Larger models exhibit stronger representation alignment, suggesting that scaling leads to convergence toward universal, generalizable features. This supports the idea that sufficiently large models learn optimal feature hierarchies that are robust across architectural variations.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Larger models have less alignment due to overfitting",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Scale has no effect on alignment",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Larger models show stronger representation alignment, suggesting universal features emerge with scale",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Alignment is independent of model size",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is a key implication of representation alignment for mechanistic interpretability?",
+        "back": "If models learn aligned representations, studying mechanisms in one model (e.g., circuit analysis) can generalize to other models. This makes interpretability research more tractable: you don't have to study every model separately. Conversely, if alignment is weak, mechanistic insights are architecture-specific and less broadly applicable."
+      }
+    ]
+  },
+  {
+    "slug": "inverse-scaling-and-capability-collapse",
+    "title": "Inverse scaling and capability collapse",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "difficulty": "advanced",
+    "tags": [
+      "inverse-scaling",
+      "capability-collapse",
+      "emergent-behavior",
+      "scaling-laws",
+      "model-scaling",
+      "pathological-behavior"
+    ],
+    "aliases": [
+      "inverse-scaling-laws",
+      "performance-degradation",
+      "capability-cliff"
+    ],
+    "wikilinks": [
+      "scaling-laws",
+      "double-descent",
+      "phase-transitions",
+      "emergent-capabilities",
+      "grokking",
+      "model-scale"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2306.02817",
+        "label": "The Inverse Scaling Prize: A Challenge to Find Surprising Failures of Scaling"
+      },
+      {
+        "url": "https://arxiv.org/abs/2211.02011",
+        "label": "Inverse Scaling Can Become U-Shaped"
+      },
+      {
+        "url": "https://arxiv.org/abs/2305.10625",
+        "label": "Weak-to-Strong Generalization"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nInverse scaling: the counterintuitive observation that larger models sometimes perform *worse* than smaller ones on certain tasks. This violates the common assumption that \"bigger is better.\" Capability collapse refers to sudden drops in performance on specific task categories as models scale.\n\n## Detail\n\n**Historical observations:**\n- Early 2023: AI2 launched the Inverse Scaling Prize, offering bounties for tasks where larger models fail more\n- Found tasks where 175B-parameter models (GPT-3) perform worse than 7B models (GPT-2 scale)\n- Examples: \"quote aversion\" (avoiding quoting in certain contexts), \"sycophancy\" (agreeing with user even if wrong)\n\n**Mechanisms behind inverse scaling:**\n1. **Distribution shift**: larger models exploit patterns in pretraining that don't generalize to the specific task\n2. **Capability competition**: multiple strategies learned; scaling amplifies wrong strategy for this task\n3. **Instruction following pathologies**: large models follow user intent too literally, missing context\n4. **Memorization vs. reasoning**: larger models may memorize adversarial patterns from training data\n\n**U-shaped scaling patterns:**\n- Some tasks show inverse scaling (large models worse), then scaling recovers (U-shape)\n- Happens when a task has two phases: initial scaling helps, then hurts, then helps again\n- Example: code generation with comments (model learns to follow comments verbatim, then learns context)\n\n**Distinction from double descent:**\n- Double descent: test loss decreases, then increases, then decreases again (at different parameter scales)\n- Inverse scaling: performance (e.g., accuracy) goes down as model size increases\n- Related but not identical phenomena\n\n## Common gotchas / interview framings\n- Q: \"Doesn't this contradict scaling laws?\" A: No; scaling laws describe average trends. Inverse scaling is per-task deviation from average\n- Q: \"How do we fix inverse scaling?\" A: (1) better prompting/instruction tuning, (2) RL fine-tuning to override bad behavior, (3) architectural changes\n- Q: \"Is inverse scaling a sign of misalignment?\" A: Sometimes; some examples (sycophancy) suggest models learn to please rather than help\n- Not universal: most tasks show normal positive scaling; inverse scaling is notable because it's rare and surprising\n- Prompt sensitivity: inverse scaling often depends heavily on how you prompt the model; rephrasing can eliminate the effect",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is inverse scaling, and why is it surprising in the context of modern LLM development?",
+        "back": "Inverse scaling is when larger models perform *worse* than smaller models on certain tasks, violating the assumption that scale improves performance. It's surprising because scaling has been so successful across language modeling that seeing it fail suggests: (1) capability differences beyond just more compute, (2) emergent pathologies in large models, (3) task-dependent scaling patterns."
+      },
+      {
+        "type": "mcq",
+        "front": "Which of these is a documented example of inverse scaling discovered in the Inverse Scaling Prize?",
+        "back": "Both are documented examples from the 2023 Inverse Scaling Prize. Quote aversion: GPT-3 (175B) refuses to quote, but GPT-2 (1.5B) does so fine. Sycophancy: larger models are more likely to agree with obviously wrong user statements. These suggest learned pathologies that amplify with scale.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Quote aversion: larger models avoid quoting, even when appropriate",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Sycophancy: larger models agree with users even when users are wrong",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Both quote aversion and sycophancy are documented examples",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Neither has been validated as true inverse scaling",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between inverse scaling and double descent, and how are they related?",
+        "back": "**Inverse scaling**: performance (e.g., accuracy on a task) decreases as model size increases, on a single dataset/task.\n**Double descent**: test loss exhibits a non-monotonic curve (decreases, increases, decreases) as parameters increase, typically studied at different scales on the same data.\n\nRelated but distinct: inverse scaling is task/prompt-specific performance degradation; double descent is a regularization/overparameterization phenomenon at scale."
+      },
+      {
+        "type": "mcq",
+        "front": "What is one proposed mechanism for inverse scaling in language models?",
+        "back": "Larger models may have learned broad patterns in pretraining (e.g., 'follow user intent literally') that backfire on specific tasks (e.g., tasks requiring context sensitivity). The model's pretraining distribution doesn't match the evaluation distribution, and larger models exploit this distribution mismatch more.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Larger models have fewer parameters, reducing capacity",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Distribution shift: larger models exploit patterns in pretraining that don't generalize to the specific task",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Larger models always memorize, never generalize",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Inverse scaling is a myth; scaling always improves performance",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How can U-shaped scaling curves occur, and what do they tell us about learning dynamics?",
+        "back": "U-shaped curves happen when: (1) small models fail (task too hard), (2) medium models learn a wrong-but-tempting pattern (inverse scaling phase), (3) large models learn to override the pattern and solve correctly (recovery phase). This suggests multiple learning strategies compete, and scaling determines which wins. It indicates non-monotonic learning dynamics where bigger models eventually \"unlearn\" bad solutions."
+      }
+    ]
+  },
+  {
+    "slug": "multimodal-fusion-architectures",
+    "title": "Multimodal fusion architectures",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "difficulty": "advanced",
+    "tags": [
+      "multimodal-learning",
+      "fusion-strategies",
+      "vision-language-audio",
+      "cross-modal-alignment",
+      "unified-architectures",
+      "modal-interaction"
+    ],
+    "aliases": [
+      "cross-modal-fusion",
+      "vision-language-models",
+      "audiovisual-fusion"
+    ],
+    "wikilinks": [
+      "vision-transformers",
+      "language-models",
+      "clip",
+      "attention-mechanism",
+      "token-embedding",
+      "representation-fusion"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/pdf/2411.17040",
+        "label": "Multimodal Alignment and Fusion: A Survey"
+      },
+      {
+        "url": "https://arxiv.org/pdf/2504.02477",
+        "label": "Multimodal Fusion and Vision-Language Models: A Survey for Robot Vision"
+      },
+      {
+        "url": "https://mbrenndoerfer.com/writing/multimodal-integration-unified-architectures-cross-modal-ai-understanding",
+        "label": "Multimodal Integration: Unified Architectures for Cross-Modal Understanding"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMultimodal fusion combines information from multiple input modalities (vision, language, audio) into a unified representation or output. The question: \"How do we best combine signals from different modalities?\" has several answers, each with tradeoffs.\n\n## Detail\n\n**Fusion strategies:**\n\n1. **Early fusion**: Combine raw modalities before processing (concatenate embeddings)\n   - Pro: Exploits cross-modal correlations early\n   - Con: Different modalities have different scales/dimensions; requires careful alignment\n\n2. **Late fusion**: Process modalities separately, then combine predictions/representations\n   - Pro: Modular; easy to add/remove modalities\n   - Con: Misses early cross-modal interactions\n\n3. **Hybrid/intermediate fusion**: Mix early and late fusion (fuse at multiple levels)\n   - Pro: Balances interaction and modularity\n   - Con: More complex architecture\n\n**Attention-based fusion (2024 breakthrough):**\n- Learn how much to attend to each modality dynamically\n- Use cross-attention mechanisms to let modalities query each other\n- Soft gating: learned importance weights per modality\n- Examples: CLIP-style models, LLaVA (vision-language), Unified-io 2 (vision-language-audio-action)\n\n**Recent models (2024):**\n- **LLaVA**: VIT + LLM with simple projection; strong vision-language understanding\n- **Unified-io 2**: Unified transformer handling vision, language, audio, action as tokens\n- **Qwen-Audio**: Multimodal model with strong audio understanding\n- **Moshi**: Real-time audio-language model (streaming)\n- **TextBind**: Audio-text alignment via contrastive learning\n\n**Hierarchical/multi-level fusion:**\n- Fuse at multiple depths of the network\n- Early levels: low-level multimodal features\n- Late levels: semantic-level fusion\n- Improves task performance on dense prediction tasks\n\n## Common gotchas / interview framings\n- Q: \"Is multimodal just concatenating embeddings?\" A: That's early fusion; works but naive. Modern approaches use attention, gating, and hierarchical fusion\n- Q: \"How do you handle modality imbalance?\" A: Loss weighting, curriculum learning, or attention-based soft selection\n- Q: \"Which modality dominates?\" A: Language often dominates (easier to supervise); proper attention design gives all modalities voice\n- Q: \"Can you drop a modality at test time?\" A: Depends on design; some architectures handle missing modalities better than others\n- Fusion efficiency: late fusion is computationally cheaper; early/hierarchical fusion may be more accurate but slower",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are the three main fusion strategies for combining multimodal inputs, and what is the key tradeoff between early and late fusion?",
+        "back": "1. **Early fusion**: concatenate modalities before processing → exploits cross-modal interactions early but requires careful modality alignment\n2. **Late fusion**: process modalities separately, combine predictions → modular and simple but misses early interactions\n3. **Hybrid fusion**: mix early and late → balances interaction and modularity at the cost of complexity\n\nTradeoff: early fusion captures interactions but is less flexible; late fusion is modular but may miss important early signals."
+      },
+      {
+        "type": "mcq",
+        "front": "What is the advantage of attention-based fusion over simple concatenation in multimodal models?",
+        "back": "Attention-based fusion learns soft gating/weights that determine how much each modality contributes. This is much more powerful than fixed concatenation because it allows the model to emphasize, suppress, or suppress modalities based on context. For example, in a noisy audio-visual task, attention can downweight unreliable audio.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Faster computation due to fewer parameters",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Learns dynamic importance of each modality; allocates compute based on task and input",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "No advantage; concatenation and attention are equivalent",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Attention-based fusion requires no alignment between modalities",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Name three multimodal models from 2024 and their primary modality combination.",
+        "back": "1. **LLaVA**: Vision + Language (VIT encoder + LLM decoder via projection)\n2. **Unified-io 2**: Vision + Language + Audio + Action (unified transformer treating all as tokens)\n3. **Qwen-Audio**: Audio + Language (strong audio understanding with text generation)\n\nOther notable: Moshi (audio-language streaming), TextBind (audio-text contrastive alignment)"
+      },
+      {
+        "type": "mcq",
+        "front": "In hierarchical multimodal fusion, at which level do early-fused features typically provide the most benefit?",
+        "back": "Hierarchical fusion is most effective at multiple levels: early layers fuse low-level features (edges in images, phonemes in audio), intermediate layers fuse semantic features (objects, words), late layers fuse task-specific representations. This multi-level approach improves performance on dense tasks like segmentation.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Only at the final output layer",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "At early network layers where low-level multimodal features interact",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Hierarchical fusion provides no benefit; flat late fusion is superior",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "At random layers with no consistent pattern",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the 'modality imbalance problem' in multimodal learning, and how can attention-based fusion address it?",
+        "back": "Modality imbalance: some modalities have more supervision, different noise levels, or are easier to predict from. This causes models to ignore weaker modalities. Attention-based fusion addresses this by learning soft weights that can suppress unreliable modalities when appropriate. Combined with loss weighting and curriculum learning, this ensures all modalities contribute meaningfully."
+      }
+    ]
+  },
+  {
+    "slug": "chain-of-thought-in-theory",
+    "title": "Chain-of-thought in theory",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "difficulty": "advanced",
+    "tags": [
+      "chain-of-thought",
+      "step-by-step-reasoning",
+      "capacity-arguments",
+      "emergent-behavior",
+      "reasoning-tokens",
+      "scaling-behavior"
+    ],
+    "aliases": [
+      "CoT",
+      "step-by-step-prompting",
+      "intermediate-steps",
+      "reasoning-process"
+    ],
+    "wikilinks": [
+      "in-context-learning",
+      "emergent-capabilities",
+      "prompt-engineering",
+      "reasoning-ability",
+      "language-modeling"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2201.11903",
+        "label": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models"
+      },
+      {
+        "url": "https://arxiv.org/abs/2305.06204",
+        "label": "Why Does Chain-of-Thought Help with Large Language Models?"
+      },
+      {
+        "url": "https://arxiv.org/abs/2305.14992",
+        "label": "The Role of Intermediate Token Predictions in Language Model Behavior"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nChain-of-thought (CoT): asking models to \"think step-by-step\" dramatically improves reasoning performance. Example: \"Solve the math problem step-by-step\" yields much higher accuracy than \"Solve the math problem.\"\n\nWhy? Three competing hypotheses:\n1. **Capacity argument**: more tokens allow the model to allocate computation to harder reasoning steps\n2. **Implicit bootstrapping**: intermediate steps provide better gradient signals during training (if CoT is trained)\n3. **Calibration**: step-by-step format makes the model's reasoning legible, improving verifiability\n\n## Detail\n\n**Core empirical findings (2022-2023):**\n- Wei et al. 2022: CoT prompting dramatically improves math, logic, common-sense reasoning\n- Benefit increases with model scale; small models don't benefit much from CoT\n- Works with few-shot prompts (\"Here's an example with steps...\")\n- Benefits hold across languages and modalities\n\n**Competing theories:**\n\n1. **Capacity hypothesis**: CoT works because it provides more intermediate tokens, allowing the model to allocate computation.\n   - Evidence: CoT helps even with random intermediate steps (Wang et al.)\n   - Counter-evidence: model must still predict correct final answer; extra tokens alone insufficient\n\n2. **Implicit training signal**: If you train on CoT data, intermediate steps act as auxiliary tasks, improving representation learning.\n   - Evidence: training on CoT improves downstream reasoning\n   - Counter-evidence: prompting alone (no training) still helps\n\n3. **Tokenization effect**: reasoning tasks benefit from more tokens due to vocabulary/compression bottlenecks.\n   - Evidence: CoT decomposes complex operations into token-sized steps\n   - Counter-evidence: doesn't explain why random steps help\n\n4. **Mechanism transparency**: step-by-step reasoning makes outputs verifiable and interpretable (but not why it improves *correctness*)\n\n**Recent developments (2024-2025):**\n- **Test-time scaling with CoT**: using more reasoning steps at test time (not training time) scales performance\n- **Process vs. outcome supervision**: supervision on intermediate steps (process) vs. final answer (outcome)\n- **Latent reasoning**: recent models (OpenAI o1, DeepSeek) hide reasoning steps, suggesting internal CoT without explicit tokens\n- **Optimal allocation**: not all reasoning steps are equally useful; some tasks benefit from more steps, others plateau\n\n## Common gotchas / interview framings\n- Q: \"Does CoT always help?\" A: No; depends on task complexity and model scale. Simple classification tasks don't benefit\n- Q: \"Is CoT just a prompt engineering trick?\" A: Partially; but underlying capacity/computation allocation is real\n- Q: \"Can we use CoT at test time without training on it?\" A: Yes; prompting helps. But training on CoT amplifies the benefit\n- Confounding factors: CoT changes tokenization, model behavior, and gradient flow; hard to isolate the mechanism\n- Correctness vs. plausibility: models can produce plausible-sounding CoT reasoning that's actually wrong; extra tokens help but don't guarantee correctness",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is chain-of-thought (CoT) prompting, and what is the empirical observation that motivated its study?",
+        "back": "CoT is asking models to reason step-by-step before answering: \"Think through this problem step-by-step...\" Wei et al. (2022) observed that this simple prompt modification dramatically improves performance on math, logic, and reasoning tasks, especially for larger models. This suggests scale unlocks reasoning ability when given proper prompting."
+      },
+      {
+        "type": "mcq",
+        "front": "Which of these is evidence for the 'capacity hypothesis' as an explanation for CoT's effectiveness?",
+        "back": "The capacity hypothesis claims CoT works because more tokens allow higher computation allocation. Evidence: (1) random intermediate steps help (suggesting token count matters), (2) benefit scales with model size (larger models can use extra tokens better), (3) few-shot helps (provides more total context). However, the fact that models must still predict the correct answer despite random steps suggests capacity alone is insufficient.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "CoT helps even with random intermediate steps",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "CoT benefit increases with model scale",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "CoT benefit is stronger with few-shot prompts",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above could support the capacity hypothesis",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between 'implicit' and 'latent' reasoning in recent LLMs, and what does this tell us about CoT mechanisms?",
+        "back": "**Implicit reasoning**: models produce explicit step-by-step text (visible CoT)\n**Latent reasoning**: models do reasoning internally, hidden from the user (e.g., OpenAI o1, DeepSeek, Claude Thinking)\n\nLatent reasoning suggests the underlying mechanism isn't the *visibility* of steps but rather the model allocating computation. This supports the capacity hypothesis: what matters is that the model does reasoning, not that we see it."
+      },
+      {
+        "type": "mcq",
+        "front": "Why does CoT prompting benefit scale-dependent? (i.e., why do larger models see bigger improvements from CoT?)",
+        "back": "Larger models can better utilize extra reasoning tokens because they have more capacity to allocate computation dynamically. A 7B parameter model can't use 100 extra reasoning steps effectively; a 700B model can. This aligns with the capacity hypothesis: scaling unlocks the ability to benefit from more reasoning compute.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Larger models have larger vocabularies and understand 'step-by-step' better",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Larger models have more capacity to allocate computation across tokens; extra reasoning tokens are used effectively",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Larger models need more tokens to avoid overfitting",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Smaller models are better at step-by-step reasoning; larger models benefit less",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the distinction between 'process supervision' and 'outcome supervision' in training models for reasoning, and how does this relate to CoT?",
+        "back": "**Outcome supervision**: supervise only the final answer (standard RLHF approach)\n**Process supervision**: supervise intermediate steps/reasoning path (reward each step, not just final answer)\n\nCoT enables process supervision because it makes reasoning steps explicit. Training with process supervision improves reasoning more than outcome alone, suggesting that feedback on intermediate steps helps models learn better reasoning mechanisms. This supports the view that CoT works partly through improved training signals."
+      }
+    ]
+  },
+  {
+    "slug": "test-time-compute-research",
+    "title": "Test-time compute research",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "difficulty": "advanced",
+    "tags": [
+      "test-time-scaling",
+      "compute-allocation",
+      "reasoning-at-test-time",
+      "inference-scaling",
+      "process-reward-models",
+      "optimal-scaling"
+    ],
+    "aliases": [
+      "test-time-scaling",
+      "inference-time-compute",
+      "best-of-N-search",
+      "verification"
+    ],
+    "wikilinks": [
+      "chain-of-thought",
+      "reward-modeling",
+      "scaling-laws",
+      "inference-optimization",
+      "parameter-efficiency"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2408.03314",
+        "label": "Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters"
+      },
+      {
+        "url": "https://arxiv.org/abs/2502.05171",
+        "label": "Scaling up Test-Time Compute with Latent Reasoning"
+      },
+      {
+        "url": "https://arxiv.org/abs/2412.09078",
+        "label": "Forest-of-Thought: Scaling Test-Time Compute for Enhancing LLM Reasoning"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nTest-time compute: instead of spending all compute during training, allocate some to inference (test time). Key insight: **spending 10× more compute at test time can be more efficient than training a 10× larger model**, especially for reasoning tasks.\n\nExample: For a math problem, use a fixed (small) model and generate 100 candidate solutions, verify them, return the best. This \"best-of-N\" approach uses less total compute than a single-pass larger model.\n\n## Detail\n\n**Test-time compute mechanisms:**\n\n1. **Best-of-N search**: generate N outputs, score with verifier, pick the best\n   - Advantage: simple; leverages existing models\n   - Disadvantage: requires N forward passes (expensive); verifier might be wrong\n\n2. **Iterative refinement**: generate initial solution, refine/revise multiple times\n   - Advantage: more direct than sampling; leverages chain-of-thought\n   - Disadvantage: might converge to local optima\n\n3. **Process-based verification**: use reward model to guide reasoning during generation\n   - Advantage: online feedback (not post-hoc); more sample-efficient\n   - Disadvantage: reward model must be accurate; adds inference cost\n\n4. **Compute-optimal allocation**: balance between these strategies based on prompt difficulty\n   - Hard prompts: allocate more test-time compute\n   - Easy prompts: use single-pass inference\n   - Dynamic: adjust based on estimated difficulty\n\n**Key empirical findings (2024):**\n- OpenAI research: test-time compute scaling for math reasoning improves efficiency 4× over best-of-N\n- Different tasks benefit from different strategies (no one-size-fits-all)\n- Prompt difficulty matters: hard prompts benefit from more steps; easy prompts plateau\n- Test-time scaling can improve accuracy more efficiently than pretraining scaling in FLOPs-matched setting\n\n**Recent models (2024-2025):**\n- **OpenAI o1**: inference-time reasoning; spends more tokens on harder problems\n- **DeepSeek r1**: similar approach; hidden reasoning, long chain-of-thought at test time\n- **Claude Thinking**: process-based reward model (works on intermediate steps)\n\n**Optimal allocation strategy:**\n- Learn difficulty score per prompt (can use initial forward pass loss or learned difficulty classifier)\n- Allocate test-time compute proportional to difficulty\n- For math: harder problems get 100+ reasoning tokens; easy get 10-20\n- Gains: 4× efficiency vs. uniform best-of-N\n\n## Common gotchas / interview framings\n- Q: \"Isn't test-time scaling just brute force?\" A: Naive best-of-N is; smart allocation and process-based verification are more efficient\n- Q: \"How do you ensure the verifier is correct?\" A: You don't; verifiers are imperfect. Ensemble multiple weak verifiers or use dense verification\n- Q: \"Can test-time scaling replace pretraining?\" A: No; you need a capable base model first. Test-time scales the final 5-10% of performance efficiently\n- Difficulty estimation: hard to estimate difficulty without some computation; requires careful experimental design\n- Generalization: hard prompts on train set ≠ hard prompts on test set; domain shifts can break difficulty estimation",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is test-time compute scaling, and what is the key insight that motivates it?",
+        "back": "Test-time compute scaling: allocating extra computation during inference (testing) rather than training. Key insight: FLOPs spent at test time can be more efficient than pretraining FLOPs for certain tasks (especially reasoning). For example, generating 100 solutions and verifying can use less total FLOPs than training a 10× larger model."
+      },
+      {
+        "type": "mcq",
+        "front": "According to recent research (2024), how much more efficient is smart test-time scaling compared to naive best-of-N search?",
+        "back": "OpenAI's 2024 research (arXiv:2408.03314) shows that using a compute-optimal strategy (allocating more steps to harder prompts) achieves 4× efficiency gains over best-of-N. This involves learning prompt difficulty and adaptively routing compute, not just uniform sampling.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "No significant difference; both are equally efficient",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "2× more efficient",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "4× more efficient with compute-optimal allocation",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "10× more efficient; test-time scaling always dominates",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What are three test-time compute mechanisms, and what distinguishes process-based verification from outcome-based verification?",
+        "back": "Three mechanisms:\n1. **Best-of-N search**: sample N, score with outcome verifier, pick highest\n2. **Iterative refinement**: generate, refine iteratively\n3. **Process-based verification**: score intermediate reasoning steps during generation\n\n**Process vs. outcome:** Outcome verification scores only the final answer (cheap but indirect). Process verification scores reasoning steps (catches reasoning errors early, guides generation, but more expensive)."
+      },
+      {
+        "type": "mcq",
+        "front": "Why does test-time compute allocation depend on prompt difficulty?",
+        "back": "Hard prompts benefit from more test-time compute (reasoning steps, candidates to search) because they require more computation to solve correctly. Easy prompts can be solved with fewer steps. Compute-optimal allocation exploits this: estimate difficulty, allocate proportionally. This achieves 4× efficiency gains over uniform allocation.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Easy prompts require more steps; hard prompts require fewer",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "All prompts benefit equally from extra steps",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Hard prompts benefit from more reasoning steps; easy prompts plateau with fewer steps",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Difficulty doesn't affect allocation; only model size matters",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How do recent models like OpenAI o1 and Claude Thinking implement test-time compute scaling differently from older best-of-N approaches?",
+        "back": "Traditional best-of-N: generates N complete outputs independently, then picks the best (wasteful duplication).\n\nRecent models: use process-based rewards to guide generation during reasoning. The model learns where to spend reasoning tokens (harder parts get more). Reasoning can be hidden (latent) or shown (explicit). This is more efficient than post-hoc selection because compute is directed where needed, not spread uniformly."
+      }
+    ]
+  }
+]

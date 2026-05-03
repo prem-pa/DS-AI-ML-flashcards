@@ -1,0 +1,1508 @@
+[
+  {
+    "slug": "measures-of-central-tendency-mean-median-mode",
+    "title": "Measures of central tendency (mean, median, mode)",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "beginner",
+    "tags": [
+      "descriptive-statistics",
+      "location-parameter",
+      "data-summary",
+      "robust-statistics",
+      "outliers"
+    ],
+    "aliases": [
+      "central-location",
+      "point-of-centrality",
+      "central-values"
+    ],
+    "wikilinks": [
+      "mean",
+      "median",
+      "mode",
+      "outlier-detection",
+      "robust-statistics"
+    ],
+    "sources": [
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Introduction to Probability and Statistics"
+      },
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 2)"
+      }
+    ],
+    "explainer_md": "## Intuition\nMeasures of central tendency answer: where is the \"center\" of the data? The mean is the arithmetic average (sensitive to outliers); the median is the middle value (robust to extremes); the mode is the most frequent value (useful for categorical data). In ML contexts, choosing the right measure determines whether you're detecting typical behavior or protecting against asymmetric distributions.\n\n## Detail\nThe **mean** $\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} x_i$ is optimal under squared loss and is unbiased but can be pulled by extreme values. The **median** partitions ordered data at the 50th percentile, minimizing absolute deviations and having breakdown point 50% (more robust). The **mode** identifies the highest-density region—critical for multimodal distributions where mean/median mask the true structure.\n\nFor skewed distributions (e.g., income, time-to-event), mean > median (right skew) or mean < median (left skew). This tells you whether your model's expectations (often using mean) align with typical observations (median).\n\n## Common gotchas / interview framings\n- The mean can be non-representative in skewed data; Simpson's paradox shows aggregated means can reverse direction from within-group means\n- Median is not affected by extreme values but is harder to work with mathematically\n- \"Center\" depends on your loss function: L₂ → mean, L₁ → median, L₀ → mode",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is the sample mean $\\bar{x}$ the optimal unbiased estimator under squared loss?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "When analyzing salary data, the mean is \\$95k but the median is \\$65k. What does this tell you?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Explain Simpson's Paradox with central tendency measures.",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "Which measure of central tendency is least affected by a single extreme outlier?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Mean",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Median",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Mode",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Range",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "mcq",
+        "front": "For a bimodal distribution, which statistic might be misleading?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Mode",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Median",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Mean",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "All of the above",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "measures-of-spread-variance-std-dev-iqr",
+    "title": "Measures of spread (variance, std-dev, IQR)",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "beginner",
+    "tags": [
+      "descriptive-statistics",
+      "dispersion",
+      "variability",
+      "outlier-detection",
+      "scale-parameter"
+    ],
+    "aliases": [
+      "dispersion",
+      "scale",
+      "spread-metrics"
+    ],
+    "wikilinks": [
+      "variance",
+      "standard-deviation",
+      "iqr",
+      "quartiles",
+      "outlier-detection"
+    ],
+    "sources": [
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Introduction to Probability and Statistics"
+      },
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 2)"
+      }
+    ],
+    "explainer_md": "## Intuition\nVariance and standard deviation measure how spread out data is around the mean. The IQR (interquartile range) measures spread using percentiles, making it robust to outliers. In ML, dispersion controls regularization strength, affects confidence interval width, and determines when you need stratified sampling or heteroscedasticity adjustments.\n\n## Detail\nVariance is $\\sigma^2 = E[(X - \\mu)^2] = E[X^2] - (E[X])^2$; the second form is useful computationally. Standard deviation $\\sigma = \\sqrt{\\sigma^2}$ scales back to original units. The sample estimate $s^2 = \\frac{1}{n-1}\\sum_{i=1}^n(x_i - \\bar{x})^2$ divides by $n-1$ (Bessel correction) to be unbiased.\n\nThe IQR = Q₃ - Q₁ (75th percentile minus 25th) contains the middle 50% and is unaffected by values beyond 1.5 × IQR (standard outlier cutoff). Low variance ($\\sigma^2 \\to 0$) means tight clustering; high variance signals dispersed data requiring larger sample sizes for inference.\n\n## Common gotchas / interview framings\n- Variance increases with squared units (hard to interpret); use std-dev for comparability\n- Sample variance divides by $n-1$, not $n$, to correct for estimating the mean (loss of 1 degree of freedom)\n- IQR can hide bimodality: check both dispersion metrics and the actual distribution shape\n- Heteroscedasticity (variance changing across the domain) violates OLS assumptions and inflates type-I error rates",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Show that Var(X) = E[X²] - (E[X])².",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Why do we divide by n-1 instead of n when computing sample variance?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "You measure two datasets: A has σ = 5, B has σ = 20. What inference challenge might Dataset B present?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Your regression model shows constant variance in residuals up to X=100, then doubles. What problem is this?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "Which spread measure is unaffected by extreme outliers?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Variance",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Standard deviation",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "IQR",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Range",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "skewness-and-kurtosis",
+    "title": "Skewness and kurtosis",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "distribution-shape",
+      "higher-moments",
+      "non-normality",
+      "model-diagnostics",
+      "tail-behavior"
+    ],
+    "aliases": [
+      "asymmetry",
+      "tail-weight",
+      "distribution-moments"
+    ],
+    "wikilinks": [
+      "skewness",
+      "kurtosis",
+      "normality-tests",
+      "higher-moments",
+      "tail-risk"
+    ],
+    "sources": [
+      {
+        "url": "https://www.statlearning.com/",
+        "label": "James et al. An Introduction to Statistical Learning"
+      },
+      {
+        "url": "https://hastie.su.domains/ElemStatLearn/",
+        "label": "Hastie, Tibshirani, Friedman. Elements of Statistical Learning (Ch. 2)"
+      }
+    ],
+    "explainer_md": "## Intuition\nSkewness measures asymmetry: right-skewed distributions have a long tail on the right (mean > median), left-skewed have it on the left. Kurtosis measures tail weight relative to a normal: high kurtosis means fatter tails (more extreme values), low kurtosis means lighter tails. Both shape hypothesis test validity and affect model assumptions (e.g., linear regression assumes normality).\n\n## Detail\nSkewness: $\\gamma_1 = E\\left[\\left(\\frac{X - \\mu}{\\sigma}\\right)^3\\right]$. For normal data, $\\gamma_1 \\approx 0$; right skew $> 0$; left skew $< 0$. Excess kurtosis: $\\gamma_2 = E\\left[\\left(\\frac{X - \\mu}{\\sigma}\\right)^4\\right] - 3$. Normal has $\\gamma_2 = 0$; high $\\gamma_2$ (leptokurtic, fat tails); low $\\gamma_2$ (platykurtic, thin tails).\n\nThese are 3rd and 4th standardized moments. Real datasets often deviate from normality: income and firm sizes are right-skewed; financial returns have high kurtosis (crash risk). Non-normality can invalidate t-tests, confidence intervals, and regression inference unless sample size is large (CLT rescue).\n\n## Common gotchas / interview framings\n- Skewness $\\neq$ multimodality; a unimodal distribution can be heavily skewed\n- High kurtosis is often called \"leptokurtic\" (peaked + fat tails) vs. normal's mesokurtic shape\n- Sample skewness/kurtosis are noisy estimators; use formal tests (Shapiro-Wilk, Anderson-Darling) for small n\n- Transformations (log, square root, Box-Cox) can reduce skewness and improve model fit",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "A dataset has skewness = 1.5 and kurtosis = 4. Is it close to normal? What issues might arise in hypothesis testing?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Write the formula for skewness and explain why it's zero for a symmetric distribution.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "You fit a linear regression and the residuals show excess kurtosis = 5. What does this indicate?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "Right-skewed income data often has skewness > 0 and high kurtosis. Which transformation typically helps?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Square",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Exponential",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Log",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Inverse",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "mcq",
+        "front": "Excess kurtosis > 0 means:",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Lighter tails than normal",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Fatter tails than normal",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "More symmetric",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Bimodal",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "covariance-and-correlation",
+    "title": "Covariance and correlation",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "association",
+      "linear-relationship",
+      "feature-engineering",
+      "dimensionality-reduction",
+      "multicollinearity"
+    ],
+    "aliases": [
+      "joint-variation",
+      "linear-dependence",
+      "association-strength"
+    ],
+    "wikilinks": [
+      "covariance",
+      "pearson-correlation",
+      "multicollinearity",
+      "feature-selection",
+      "causation"
+    ],
+    "sources": [
+      {
+        "url": "https://www.statlearning.com/",
+        "label": "James et al. An Introduction to Statistical Learning"
+      },
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 5)"
+      }
+    ],
+    "explainer_md": "## Intuition\nCovariance measures how two variables move together (units: product of variable units). Correlation standardizes this to [-1, 1], making it scale-free and interpretable: +1 = perfect positive, -1 = perfect negative, 0 = independent (for linear relationships). In ML, high correlation signals redundant features; high covariance between features and target signals predictive power.\n\n## Detail\nCovariance: $\\text{Cov}(X, Y) = E[(X - \\mu_X)(Y - \\mu_Y)] = E[XY] - E[X]E[Y]$. Pearson correlation: $\\rho = \\frac{\\text{Cov}(X,Y)}{\\sigma_X \\sigma_Y}$. Sample versions use $n-1$ divisors: $r = \\frac{\\sum(x_i - \\bar{x})(y_i - \\bar{y})}{\\sqrt{\\sum(x_i - \\bar{x})^2 \\sum(y_i - \\bar{y})^2}}$.\n\nKey properties: Cov is bilinear (linear in each argument); Var(X) = Cov(X, X); Cov(aX, bY) = ab Cov(X,Y). Correlation only captures linear dependence—two variables can be strongly nonlinearly related (e.g., Y = X²) yet have ρ ≈ 0. High multicollinearity ($|r| > 0.9$) inflates regression standard errors and destabilizes coefficients.\n\n## Common gotchas / interview framings\n- Correlation ≠ causation; confounding variables can induce spurious correlation\n- Correlation is zero does not imply independence (e.g., $(X, X^2)$ are dependent but uncorrelated if X ~ symmetric)\n- Outliers dramatically affect sample correlation; use Spearman's rank correlation for robustness\n- High feature correlation requires feature selection or regularization (Lasso, Ridge) to stabilize estimates",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Prove that correlation coefficient ρ ∈ [-1, 1] using Cauchy-Schwarz inequality.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Two features have Pearson r = 0.92. How does this affect linear regression and what remedies exist?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "You compute r = 0 between X and Y. Can you conclude they are independent?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Explain how Simpson's Paradox can occur in correlation: r is positive overall but negative within subgroups.",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "Which correlation is robust to outliers?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Pearson",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Spearman rank",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Kendall tau",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Both B and C",
+            "correct": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "bayes-theorem-and-conditional-probability",
+    "title": "Bayes' theorem and conditional probability",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "probability-rules",
+      "conditional-probability",
+      "theorem",
+      "inference",
+      "classification"
+    ],
+    "aliases": [
+      "bayes-rule",
+      "posterior",
+      "posterior-odds"
+    ],
+    "wikilinks": [
+      "conditional-probability",
+      "bayes-theorem",
+      "likelihood",
+      "posterior-odds",
+      "classification"
+    ],
+    "sources": [
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Introduction to Probability and Statistics"
+      },
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 1)"
+      }
+    ],
+    "explainer_md": "## Intuition\nConditional probability $P(A|B)$ is the probability of A given B has occurred. Bayes' theorem inverts this: $P(B|A) = \\frac{P(A|B)P(B)}{P(A)}$, enabling us to update beliefs from evidence. In ML, this is core to classification (posterior prob. of class given features), medical diagnostics (risk given test result), and Bayesian inference (posterior given data).\n\n## Detail\nConditional probability: $P(A|B) = \\frac{P(A \\cap B)}{P(B)}$ (assuming $P(B) > 0$). Bayes' theorem: $P(H|E) = \\frac{P(E|H)P(H)}{P(E)}$, where H is hypothesis (class), E is evidence (data). The law of total probability gives $P(E) = \\sum_i P(E|H_i)P(H_i)$. In words: posterior $\\propto$ likelihood × prior. Chain rule: $P(A, B, C) = P(A)P(B|A)P(C|A,B)$.\n\nKey: $P(A|B) = 1$ does not imply $P(B|A) = 1$ (inverse fallacy). Example: $P(\\text{positive test}|\\text{disease}) = 0.99$ does not mean $P(\\text{disease}|\\text{positive test}) = 0.99$ if disease is rare (low prior). This is why screening tests have high false positive rates in low-prevalence populations.\n\n## Common gotchas / interview framings\n- Confusing $P(A|B)$ with $P(B|A)$: the \"inverse fallacy\" appears in medical test interpretation, legal reasoning, and model evaluation\n- Ignoring base rates (priors): high likelihood alone doesn't guarantee high posterior without strong prior\n- Independence vs. conditional independence: X ⊥ Y does not imply X ⊥ Y | Z (or vice versa)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Derive Bayes' theorem from the definition of conditional probability.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "A medical test has sensitivity 99% (true positive rate) and specificity 98%. Disease prevalence is 0.1%. What is P(disease | positive)?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "A lawyer argues: 'The defendant's DNA matches the crime scene (match prob. = 0.01%). Therefore, guilt probability = 99.99%.' What's wrong?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Write the law of total probability for P(E) in Bayes' theorem context with hypotheses H₁, H₂, H₃.",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "Which statement is true for independent events A and B?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "P(A|B) = P(A)",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "P(A∩B) = P(A) + P(B)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "P(A|B) = P(B|A)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "P(A∪B) = 1",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "frequentist-vs-bayesian-interpretation",
+    "title": "Frequentist vs Bayesian interpretation",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "inference-paradigm",
+      "probability-interpretation",
+      "hypothesis-testing",
+      "confidence-intervals",
+      "credible-intervals"
+    ],
+    "aliases": [
+      "frequentism",
+      "bayesianism",
+      "inference-philosophy"
+    ],
+    "wikilinks": [
+      "frequentist-inference",
+      "bayesian-inference",
+      "confidence-intervals",
+      "credible-intervals",
+      "p-values"
+    ],
+    "sources": [
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 9-10)"
+      },
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Probability and Statistics (Bayesian material)"
+      }
+    ],
+    "explainer_md": "## Intuition\nFrequentist: probability is the long-run frequency of repeating an experiment; parameters are fixed unknowns; a 95% CI means if you repeat the procedure infinitely, 95% of intervals contain the true parameter. Bayesian: probability is a degree of belief; parameters are random variables; a 95% credible interval is the interval where the posterior probability is 95%. The choice affects how you report uncertainty, interpret results, and design experiments.\n\n## Detail\nFrequentist inference conditions on the **true parameter** (fixed): construct estimators (e.g., MLE) and quantify sampling variability via confidence intervals, standard errors, and p-values. A p-value is $P(\\text{data}|H_0)$, not $P(H_0|\\text{data})$. Bayesian inference puts a prior on the parameter and updates to a posterior given data: $P(\\theta|\\text{data}) \\propto P(\\text{data}|\\theta)P(\\theta)$. The posterior integrates uncertainty about $\\theta$.\n\nConfidence intervals are frequentist (coverage guarantee); credible intervals are Bayesian (probability the true value is inside). A 95% CI means: if you repeated the experiment, 95% of computed CIs would bracket the true value. A 95% credible interval means the posterior probability that $\\theta$ lies in the interval is 0.95—a direct probability statement about the unknown parameter.\n\n## Common gotchas / interview framings\n- A 95% CI does NOT mean P(θ ∈ [a,b]) = 0.95 (frequentist CI is not a Bayesian credible interval)\n- The p-value is NOT the probability the null hypothesis is true; it's the probability of observing the data (or more extreme) assuming the null\n- Bayesian priors can be subjective, but they make assumptions explicit; frequentist methods hide assumptions in study design\n- Multiple testing inflation (p-hacking) affects frequentist Type-I error; Bayesian methods are more robust if priors are set a priori",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the correct meaning of a 95% frequentist confidence interval for the mean.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Explain the correct meaning of a 95% Bayesian credible interval for the mean.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "A researcher reports: 'Our result is significant (p = 0.03), so the null hypothesis is false with 97% confidence.' What's wrong?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Write the Bayesian formula relating prior, likelihood, and posterior probabilities.",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "In frequentist inference, which statement is correct?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The parameter is a random variable",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The parameter is fixed; the data is random",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The p-value is P(H₀|data)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All statements are equivalent",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "law-of-large-numbers-and-central-limit-theorem",
+    "title": "Law of large numbers and Central Limit Theorem",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "convergence",
+      "limit-theorems",
+      "sample-size",
+      "normality",
+      "asymptotics"
+    ],
+    "aliases": [
+      "LLN",
+      "CLT",
+      "asymptotic-normality"
+    ],
+    "wikilinks": [
+      "law-of-large-numbers",
+      "central-limit-theorem",
+      "convergence-in-probability",
+      "convergence-in-distribution",
+      "asymptotic-theory"
+    ],
+    "sources": [
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 4-5)"
+      },
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Lecture Notes (Limit Theorems)"
+      }
+    ],
+    "explainer_md": "## Intuition\nThe **Law of Large Numbers (LLN)** says the sample mean converges to the true mean as n → ∞: $\\bar{X}_n \\to \\mu$ in probability. This justifies using sample statistics to estimate population parameters. The **Central Limit Theorem (CLT)** says the (properly scaled) sample mean is approximately normal for large n, regardless of the underlying distribution. This is the foundation for confidence intervals, hypothesis tests, and why normal approximations work so broadly.\n\n## Detail\n**Weak LLN**: $P(|\\bar{X}_n - \\mu| > \\epsilon) \\to 0$ as $n \\to \\infty$ (convergence in probability). **Strong LLN**: $\\bar{X}_n \\to \\mu$ almost surely. Implies that sample moments converge to population moments.\n\n**CLT**: If $X_1, X_2, \\ldots$ are iid with mean $\\mu$ and variance $\\sigma^2$, then $\\frac{\\bar{X}_n - \\mu}{\\sigma/\\sqrt{n}} \\xrightarrow{d} N(0,1)$ as $n \\to \\infty$. Equivalently, $\\bar{X}_n \\approx N(\\mu, \\sigma^2/n)$ for large n. This holds **even if the underlying distribution is not normal** (uniform, exponential, etc.)—one of the most powerful results in statistics.\n\nImplications: t-tests are valid even on non-normal data if n is large enough; confidence intervals based on the normal distribution work broadly; sample sums are approximately normal. The \"large enough\" depends on skewness/kurtosis (more skewed → larger n needed).\n\n## Common gotchas / interview framings\n- CLT does NOT say the data are normal; it says the **sample mean's distribution** is normal\n- Heavy-tailed distributions (infinite variance) violate CLT assumptions; convergence is slower\n- Dependent data (time series) has different asymptotics; CLT needs modification\n- Multiple testing: CLT justifies normal approximation for individual tests, but not for controlling FWER across many tests",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain why the Central Limit Theorem allows us to use t-tests on non-normal data.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "State the Central Limit Theorem formally and explain what $\\xrightarrow{d}$ (convergence in distribution) means.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "A dataset has n=30, mean=100, and SD=50. Can you assume the mean is normally distributed?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "You compute a 95% CI using the normal approximation on n=1000 non-normal data and it's too narrow. Why?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "If a population is exponentially distributed, the Central Limit Theorem tells us:",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Sample data will be approximately normal",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Sample means will be approximately normal",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "All samples must be very large",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The median will follow the normal distribution",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "prior-likelihood-posterior-bayesian-framework",
+    "title": "Prior, likelihood, posterior (Bayesian framework)",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "bayesian-inference",
+      "probabilistic-modeling",
+      "update-mechanism",
+      "generative-models",
+      "probabilistic-programming"
+    ],
+    "aliases": [
+      "bayesian-updating",
+      "posterior-distribution",
+      "bayesian-computation"
+    ],
+    "wikilinks": [
+      "prior-distribution",
+      "likelihood-function",
+      "posterior-distribution",
+      "bayesian-inference",
+      "conjugacy"
+    ],
+    "sources": [
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 10)"
+      },
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Bayesian Inference (Lecture Notes)"
+      }
+    ],
+    "explainer_md": "## Intuition\nBayesian inference treats unknown parameters as random variables with beliefs encoded in a **prior** $P(\\theta)$. Given data, we compute the **likelihood** $P(\\text{data}|\\theta)$ (how probable the data under each $\\theta$), then **update** via Bayes' rule to get the **posterior** $P(\\theta|\\text{data})$. The posterior combines prior belief with evidence from data. This is the foundation for Bayesian neural networks, empirical Bayes, A/B testing, and online learning algorithms.\n\n## Detail\nBayes' rule: $P(\\theta|\\text{data}) = \\frac{P(\\text{data}|\\theta)P(\\theta)}{P(\\text{data})}$ where $P(\\text{data}) = \\int P(\\text{data}|\\theta)P(\\theta)d\\theta$ (marginal likelihood, the normalizing constant). The prior encodes domain knowledge or regularization (e.g., Gaussian prior on regression coefficients ~ Ridge regression). The likelihood is determined by the model and data. The posterior is a distribution reflecting residual uncertainty about $\\theta$ after observing data.\n\nKey insight: posterior $\\propto$ likelihood × prior. A weak prior (flat, diffuse) lets data dominate; a strong prior pulls inference toward the prior mean. **Conjugacy**: when prior and likelihood form a conjugate pair, the posterior is in the same family as the prior (e.g., Beta prior on a binomial parameter → Beta posterior). This enables efficient sequential updating and is used in many practical algorithms.\n\n## Common gotchas / interview framings\n- Priors are not arbitrary; they reflect prior belief or regularization. Weak priors can behave like frequentist methods asymptotically\n- Posterior is not the likelihood; posterior is normalized probability distribution over $\\theta$, likelihood is not\n- Marginal likelihood $P(\\text{data})$ is hard to compute (integral over parameter space); MCMC and variational inference are approximation strategies\n- Empirical Bayes: use data to estimate the prior (e.g., hierarchical hyperparameters), mixing frequentist and Bayesian ideas",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You place a Beta(1,1) prior (uniform) on a coin's bias p and observe 10 heads, 0 tails. What is the posterior distribution?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Compare two scenarios: (A) weak prior + weak evidence, (B) strong prior + weak evidence. Which posterior is closer to the prior?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Derive the posterior for a Gaussian likelihood N(μ, σ²) with Gaussian prior N(μ₀, τ²) on μ. What is the posterior mean?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Your Bayesian model has posterior P(θ|data) = Beta(0.5, 0.5), which is U-shaped with high density at the extremes. Does this mean θ is likely at 0 or 1?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "What is the relationship between regularization in frequentist methods and priors in Bayesian methods?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "They are unrelated",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Ridge regression (L2 penalty) is equivalent to Gaussian priors",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Lasso (L1 penalty) is equivalent to Laplace priors",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Both B and C",
+            "correct": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "normal-distribution-and-its-properties",
+    "title": "Normal distribution and its properties",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "beginner",
+    "tags": [
+      "gaussian",
+      "probability-distribution",
+      "inference-foundation",
+      "regression-assumption",
+      "bell-curve"
+    ],
+    "aliases": [
+      "gaussian-distribution",
+      "gaussian-curve",
+      "standard-normal"
+    ],
+    "wikilinks": [
+      "normal-distribution",
+      "standard-normal",
+      "z-scores",
+      "tail-probabilities",
+      "empirical-rule"
+    ],
+    "sources": [
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Introduction to Probability and Statistics"
+      },
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 2-3)"
+      }
+    ],
+    "explainer_md": "## Intuition\nThe normal distribution (Gaussian) is the most important in statistics because (1) many natural phenomena approximate it, (2) the CLT says sample means are normal, and (3) it is mathematically tractable. It is defined by two parameters: mean $\\mu$ and standard deviation $\\sigma$. The empirical rule: ~68% of data within $\\mu \\pm \\sigma$, ~95% within $\\mu \\pm 2\\sigma$, ~99.7% within $\\mu \\pm 3\\sigma$. Used in linear regression inference, confidence intervals, and hypothesis testing.\n\n## Detail\nProbability density function: $f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} \\exp\\left(-\\frac{(x-\\mu)^2}{2\\sigma^2}\\right)$. Standardizing: $Z = \\frac{X - \\mu}{\\sigma} \\sim N(0,1)$ (standard normal). Key properties: (1) sum of independent normals is normal; (2) linear combinations of independent normals are normal; (3) maximum entropy distribution with given mean and variance; (4) invertible transformation via Box-Muller to generate normal samples. CDF $\\Phi(z)$ and quantiles are tabled and used throughout statistics.\n\nImportance: Linear regression assumes residuals are $N(0, \\sigma^2)$; this enables exact inference (not just asymptotic). Multivariate normal $N(\\mu, \\Sigma)$ is foundational for multivariate inference and graphical models. Heavy-tailed alternatives (t-distribution, Cauchy) are used when normality fails.\n\n## Common gotcha / interview framings\n- Not all bell-shaped distributions are normal (e.g., t-distribution, logistic)\n- Empirical rule (~95% within 2σ) only applies to normal; other distributions may differ significantly\n- Transformation (log, sqrt, Box-Cox) can improve normality, but transforming the response variable in regression changes the interpretation of predictions\n- Normality of residuals ≠ normality of raw data; what matters for regression inference is the former",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "A dataset follows N(100, 15²). Using the empirical rule, approximately what fraction of data fall between 85 and 115?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Write the normal distribution's PDF and explain why it's symmetric around μ.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Linear regression output shows 'Residuals approximately normal.' Is the raw dependent variable also approximately normal?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Your data are N(0, 1), and you observe X = 6. The normal density at 6 is very low. Does this mean the observation is impossible?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "If X ~ N(μ, σ²), then Z = (X - μ)/σ follows:",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "N(μ, σ²)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "N(0, 1)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Uniform(0, 1)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Exponential(1)",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "binomial-and-poisson-distributions",
+    "title": "Binomial and Poisson distributions",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "discrete-distribution",
+      "count-data",
+      "success-failure",
+      "rare-events",
+      "conversion-modeling"
+    ],
+    "aliases": [
+      "bernoulli-trials",
+      "discrete-counts",
+      "failure-rate"
+    ],
+    "wikilinks": [
+      "binomial-distribution",
+      "poisson-distribution",
+      "discrete-probability",
+      "logistic-regression",
+      "poisson-regression"
+    ],
+    "sources": [
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 3)"
+      },
+      {
+        "url": "https://www.statlearning.com/",
+        "label": "James et al. An Introduction to Statistical Learning (Ch. 4)"
+      }
+    ],
+    "explainer_md": "## Intuition\nThe **binomial distribution** models the number of successes in n independent Bernoulli trials (coin flips). Used in A/B testing (conversions), classification (positive class count), quality control. The **Poisson distribution** models counts of rare events in a fixed interval (time, space), assuming events are independent and occur at a constant rate. Used in call center modeling, web traffic, disease incidence. Both are discrete (integer-valued); both have manageable formulas and are computationally friendly.\n\n## Detail\n**Binomial**: $P(X = k) = \\binom{n}{k} p^k (1-p)^{n-k}$, where X ~ Binomial(n, p) has mean $\\mu = np$ and variance $\\sigma^2 = np(1-p)$. For large n and moderate p, Binomial → Normal (normal approximation). When np and n(1-p) both > 5, the normal approximation is excellent.\n\n**Poisson**: $P(X = k) = \\frac{\\lambda^k e^{-\\lambda}}{k!}$, where X ~ Poisson(λ) has mean and variance both equal to λ. Arises as the limit of Binomial(n, p) when n → ∞, p → 0, np → λ (rare events limit). Used for count data; common in generalized linear models (GLM) with log link.\n\nConnection: Poisson is the binomial limit when p is very small and n very large; Poisson approximates binomial when n > 20 and p < 0.05. Both are used in hypothesis tests (exact binomial test) and confidence intervals for proportions.\n\n## Common gotchas / interview framings\n- Poisson assumes mean = variance; overdispersion (variance > mean) signals unobserved heterogeneity or mixture of Poissons\n- Binomial assumes independence and constant p; violation (clustering, time-dependence) requires mixed models\n- Normal approximation fails if p near 0 or 1, or n small; use exact binomial or continuity correction\n- In logistic regression, each observation is implicitly Bernoulli(p); aggregated data (Y = number of successes out of n) uses binomial likelihood",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "An A/B test has 500 users in each group. Group A: 45 conversions (9%). Group B: 60 conversions (12%). Is the difference significant at α = 0.05?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Derive the mean and variance of a Binomial(n, p) distribution.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Emails arrive at a rate of 30 per hour on average. Model the count in a 10-minute window as Poisson. What is the probability of receiving exactly 3 emails?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Your Poisson regression model for count data has mean = 8 but residual variance = 25. What problem might this indicate?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "When is the Poisson approximation to the Binomial valid?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "n large, p large",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "n large, p small, np = λ",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "n small, p any value",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "p = 0.5 always",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "beta-distribution",
+    "title": "Beta distribution",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "continuous-distribution",
+      "proportion-prior",
+      "conjugate-prior",
+      "empirical-bayes",
+      "online-learning"
+    ],
+    "aliases": [
+      "beta-prior",
+      "proportion-distribution",
+      "conjugate-family"
+    ],
+    "wikilinks": [
+      "beta-distribution",
+      "conjugate-prior",
+      "binomial-beta-conjugacy",
+      "empirical-bayes",
+      "bayesian-ab-testing"
+    ],
+    "sources": [
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 3, 10)"
+      },
+      {
+        "url": "https://www.statlearning.com/",
+        "label": "James et al. An Introduction to Statistical Learning"
+      }
+    ],
+    "explainer_md": "## Intuition\nThe Beta distribution is defined on [0, 1], making it ideal for modeling proportions, probabilities, and rates. It is the conjugate prior for the Binomial likelihood: if you use Beta(α, β) as a prior on a success probability p and observe k successes out of n trials, the posterior is Beta(α + k, β + n - k)—still a Beta. This conjugacy enables efficient sequential updating and is used in online learning, Thompson sampling, and empirical Bayes. The shape parameters α and β control the distribution's skew and concentration.\n\n## Detail\nPDF: $f(p) = \\frac{\\Gamma(\\alpha + \\beta)}{\\Gamma(\\alpha)\\Gamma(\\beta)} p^{\\alpha-1} (1-p)^{\\beta-1}$. Mean: $E[p] = \\frac{\\alpha}{\\alpha + \\beta}$. Variance: $\\text{Var}(p) = \\frac{\\alpha\\beta}{(\\alpha+\\beta)^2(\\alpha+\\beta+1)}$. Special cases: Beta(1,1) = Uniform[0,1]; Beta(α, α) is symmetric around 0.5; large α, β concentrates around the mean.\n\n**Conjugacy**: Binomial likelihood $P(k|n, p) \\propto p^k(1-p)^{n-k}$ times Beta(α, β) prior gives Beta(α+k, β+n-k) posterior. This is computationally elegant: update sequential data by incrementing α and β. Used in click-through rate estimation, conversion optimization (Thompson sampling), and hierarchical Bayesian models (empirical Bayes hyperparameters).\n\n## Common gotchas / interview framings\n- Beta(α, β) is not uniform for all α, β; it requires the Gamma function and is not simple to sample without specialized methods\n- Large α, β relative to sample size can dominate the posterior (regularization); small α, β let data speak louder\n- Thompson sampling uses the Beta posterior to balance exploration-exploitation in online A/B tests\n- Empirical Bayes: estimate α, β from data (marginal likelihood) rather than specifying them subjectively",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You use a Beta(2, 2) prior on a coin's bias p. This is equivalent to observing 1 head and 1 tail before seeing any real data. Why?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Show that Beta(α, β) is the conjugate prior for Binomial(n, p) likelihood.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "In Thompson sampling for A/B testing, why do we sample from the posterior Beta distribution rather than just using the posterior mean?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "You observe 100 clicks out of 1000 impressions. Beta(1,1) prior gives posterior Beta(101, 901). Beta(10,10) prior gives posterior Beta(110, 910). Are the posteriors the same?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "Which prior produces the most uniform distribution on [0,1]?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Beta(0.5, 0.5)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Beta(1, 1)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Beta(5, 5)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Beta(100, 100)",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "exponential-and-weibull-distributions",
+    "title": "Exponential and Weibull distributions",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "time-to-event",
+      "survival-analysis",
+      "reliability",
+      "failure-rate",
+      "continuous-distribution"
+    ],
+    "aliases": [
+      "waiting-time",
+      "survival-distribution",
+      "lifetime-modeling"
+    ],
+    "wikilinks": [
+      "exponential-distribution",
+      "weibull-distribution",
+      "survival-analysis",
+      "memoryless-property",
+      "hazard-rate"
+    ],
+    "sources": [
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 3)"
+      },
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Introduction to Probability and Statistics"
+      }
+    ],
+    "explainer_md": "## Intuition\nThe **Exponential distribution** models time until a rare event (failures, customer churn, webpage load time) with a constant hazard rate (memoryless). The **Weibull distribution** generalizes exponential to allow hazard rate to increase, decrease, or stay constant with time—used in reliability engineering (component lifetimes), survival analysis, and financial risk. Both are right-skewed with heavier tails than normal, reflecting realistic time-to-event scenarios where most events cluster early but rare long-duration outcomes are possible.\n\n## Detail\n**Exponential**: $f(t) = \\lambda e^{-\\lambda t}$ for $t \\geq 0$. Mean $E[T] = 1/\\lambda$, variance $\\text{Var}(T) = 1/\\lambda^2$. **Memoryless property**: $P(T > s + t | T > s) = P(T > t)$—the past does not affect future; used in queueing theory. Survival function: $S(t) = P(T > t) = e^{-\\lambda t}$. Hazard rate: $h(t) = \\lambda$ (constant).\n\n**Weibull**: $f(t) = \\frac{k}{\\lambda}\\left(\\frac{t}{\\lambda}\\right)^{k-1} e^{-(t/\\lambda)^k}$. Shape parameter k controls hazard: k < 1 (decreasing, e.g., \"infant mortality\"), k = 1 (constant, same as exponential), k > 1 (increasing, e.g., aging). Mean $\\approx \\lambda \\Gamma(1 + 1/k)$. Used in reliability; components fail more frequently as they age (k > 1).\n\nConnection: Exponential is Weibull with k = 1. Weibull accommodates a wider range of failure-rate patterns, making it more flexible for real-world time-to-event data.\n\n## Common gotchas / interview framings\n- Exponential's memoryless property is unrealistic for many survival scenarios (disease recurrence, equipment aging); use Weibull instead\n- Censoring (partial observation) is common in survival analysis: if a patient leaves the study alive, we know T > observation time but not T exactly\n- Hazard rate ≠ density; hazard is the instantaneous rate of failure given survival to that time\n- Right-skew and heavy tails mean outliers are expected; transformation (log T) may help with model diagnostics",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Customer churn times follow an exponential distribution with λ = 0.1/month. What is the mean lifetime?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Prove the memoryless property of exponential: P(T > s+t | T > s) = P(T > t).",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Component lifetimes follow Weibull(k=2, λ=5). Is the failure rate increasing or decreasing with time?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "In a clinical trial, 100 patients enroll. After 2 years, 40 experience the event; 60 have not yet experienced it and are still enrolled (censored data). Can you use a simple mean calculation to estimate E[T]?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "The Weibull distribution reduces to exponential when:",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "k → 0",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "k = 1",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "k → ∞",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "λ = 0",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "students-t-distribution",
+    "title": "Student's t-distribution",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "inference-distribution",
+      "small-sample",
+      "t-test",
+      "robust-estimator",
+      "degrees-of-freedom"
+    ],
+    "aliases": [
+      "t-distribution",
+      "student-t",
+      "heavy-tails"
+    ],
+    "wikilinks": [
+      "t-distribution",
+      "t-test",
+      "degrees-of-freedom",
+      "confidence-intervals",
+      "normality"
+    ],
+    "sources": [
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Introduction to Probability and Statistics"
+      },
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 7-9)"
+      }
+    ],
+    "explainer_md": "## Intuition\nThe t-distribution is a fat-tailed version of the normal, used for inference when sample size is small and variance is estimated. If you have small n, the sample standard deviation s is noisy (underestimates σ), so normal-based confidence intervals are too narrow. The t-distribution has heavier tails (higher probability of extreme values) to account for this extra uncertainty. As n → ∞, t → normal. It is the basis of t-tests (comparing means) and t-based confidence intervals, which are valid even for non-normal data if n is moderately large (CLT).\n\n## Detail\nStudent's t with ν degrees of freedom: $f(t) = \\frac{\\Gamma(\\frac{\\nu+1}{2})}{\\sqrt{\\nu\\pi}\\Gamma(\\frac{\\nu}{2})} \\left(1 + \\frac{t^2}{\\nu}\\right)^{-(\\nu+1)/2}$. Mean = 0, variance = $\\nu/(\\nu-2)$ for $\\nu > 2$. As $\\nu \\to \\infty$, variance → 1 (standard normal).\n\nArises when sampling from normal: if $X_1, \\ldots, X_n \\sim N(\\mu, \\sigma^2)$ are iid, then $T = \\frac{\\bar{X} - \\mu}{s/\\sqrt{n}} \\sim t_{n-1}$ where $s^2 = \\frac{1}{n-1}\\sum(X_i - \\bar{X})^2$. This is the one-sample t-test statistic. The degrees of freedom ν = n - 1 account for estimating the mean (loss of 1 degree of freedom).\n\nTwo-sample t-test for comparing means of independent groups uses $t_{n_1+n_2-2}$ (or Welch's adjustment for unequal variances). Paired t-test uses differences and has ν = n - 1 (n pairs).\n\n## Common gotchas / interview framings\n- t-test assumes normality; for large n, CLT rescues you (Central Limit Theorem applies), but for small n and severe non-normality, use Mann-Whitney U (nonparametric)\n- Degrees of freedom (ν) determine tail weight; ν = 1 (Cauchy, undefined mean/variance), ν = 30 (very close to normal). Small ν gives wider CIs, protecting against small-sample noise\n- Unequal variances violate t-test assumption; use Welch's t-test (adjusts SE for unequal variance) instead of standard t-test\n- Multiple t-tests (p-hacking) inflate type-I error; use Bonferroni or false discovery rate (FDR) correction",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "When should you use t-test vs. z-test for comparing a sample mean to a population mean?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Explain why T = (X̄ - μ)/(s/√n) follows a t-distribution with n-1 degrees of freedom.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "You compare two groups: n₁ = 10, n₂ = 50. Should you use standard t-test or Welch's t-test?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "A one-sample t-test on n = 5 observations gives t = 2.0, p-value = 0.10 (two-tailed). What does this mean for practical significance?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "As sample size n increases, the t-distribution approaches:",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Chi-square",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Normal",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Exponential",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Uniform",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "sampling-bias-and-representative-samples",
+    "title": "Sampling bias and representative samples",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "beginner",
+    "tags": [
+      "study-design",
+      "sampling-method",
+      "selection-bias",
+      "survey-bias",
+      "external-validity"
+    ],
+    "aliases": [
+      "selection-bias",
+      "non-response-bias",
+      "sampling-error"
+    ],
+    "wikilinks": [
+      "sampling-bias",
+      "selection-bias",
+      "representative-sample",
+      "generalization",
+      "study-design"
+    ],
+    "sources": [
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Introduction to Probability and Statistics"
+      },
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 8)"
+      }
+    ],
+    "explainer_md": "## Intuition\nA sample is representative if it captures the distribution of the population. Sampling bias occurs when the sampling mechanism is not random or is correlated with the outcome, making estimates systematically wrong. Examples: (1) online survey (nonresponse bias: busy people don't respond), (2) clinical trial (selection bias: sickest patients volunteer), (3) historical data (survivorship bias: failed companies disappear). Bias cannot be fixed by collecting more data; it is systematic error in the sampling process itself. Awareness of bias sources drives study design choices and generalization bounds.\n\n## Detail\nRandom sampling: each unit has equal probability of selection, eliminating systematic bias. Stratified sampling: divide population into strata (age groups, regions), then randomly sample within strata to ensure representation. Non-response bias: selected units decline to participate; if refusers differ from responders, estimates are biased. Selection bias: the mechanism for entering the study is correlated with the outcome (e.g., health conscious people buy supplements; confounding treatment effect).\n\nTypes of bias: (1) **Selection bias**: who is sampled. (2) **Measurement bias**: how variables are measured. (3) **Non-response bias**: who doesn't participate. (4) **Survivorship bias**: extinct entities (bankrupt firms) are missing. (5) **Volunteering bias**: voluntary participants differ from population. Bias leads to inconsistent estimators: $\\hat{\\theta} \\not\\to \\theta$ even as n → ∞.\n\n## Common gotchas / interview framings\n- A large sample size does not cure bias; a million responses from a biased survey are still biased\n- Simpson's Paradox arises partly from non-representative subsampling (confounding by group size/composition)\n- Observational data often has selection bias (people self-select treatment); RCTs randomize to break the correlation\n- Data availability is not the same as data quality; convenience samples (Twitter, Reddit) are fast but biased",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "An online survey of 10,000 people finds 80% prefer Product A. Why might this be biased, and how would you investigate?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "A weight-loss study recruits volunteers from a fitness forum. Do you expect the results to generalize to the general population?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "You analyze historical stock returns and find a strong positive abnormal return to a trading strategy. Why might this be spurious?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "A company measures customer satisfaction via their mobile app. What biases might exist?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "Which sampling method best eliminates selection bias?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Convenient sampling",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Volunteer sampling",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Random sampling",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Quota sampling",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "power-analysis-and-sample-size-calculation",
+    "title": "Power analysis and sample size calculation",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "experimental-design",
+      "statistical-power",
+      "type-II-error",
+      "effect-size",
+      "sample-planning"
+    ],
+    "aliases": [
+      "statistical-power",
+      "type-II-error",
+      "sample-size-planning"
+    ],
+    "wikilinks": [
+      "statistical-power",
+      "type-i-error",
+      "type-ii-error",
+      "effect-size",
+      "sample-size"
+    ],
+    "sources": [
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Introduction to Probability and Statistics"
+      },
+      {
+        "url": "https://www.statlearning.com/",
+        "label": "James et al. An Introduction to Statistical Learning (Ch. 13)"
+      }
+    ],
+    "explainer_md": "## Intuition\nPower is the probability of detecting a true effect (rejecting H₀ when it's false): Power = 1 - β, where β is Type-II error (missing a true effect). Before running an experiment, you must determine the minimum sample size needed to achieve desired power (typically 80%) for a target effect size. Underpowered studies (small n, large effect size needed) waste time and resources; overpowered studies waste money. Power analysis trades off Type-I error (α, false positives), Type-II error (β, false negatives), effect size (δ), and sample size (n).\n\n## Detail\nFor a one-sample t-test: power depends on (1) significance level α (usually 0.05), (2) effect size δ = (μ₁ - μ₀)/σ (standardized difference), (3) sample size n, (4) one-tailed vs. two-tailed. Larger δ and n → higher power. Larger α → higher power (but increases false positive risk). For two-sample tests, power also depends on the ratio of sample sizes; balanced designs (n₁ = n₂) are most efficient.\n\nEffect size benchmarks (Cohen): small δ = 0.2, medium δ = 0.5, large δ = 0.8 (for t-tests). Prospectively, choose target effect size based on practical significance, then compute n to achieve desired power. Post-hoc power calculations are discouraged (biased, not predictive) but often requested; instead, report confidence intervals and effect sizes.\n\nSample size formulas: one-sample t-test with power (1 - β) and effect size δ requires $n \\approx 2(z_{\\alpha/2} + z_{\\beta})^2 / \\delta^2$ (for large n). Two-sample tests require 2× this. Higher power or smaller effect size increases n quadratically.\n\n## Common gotchas / interview framings\n- Post-hoc power is not informative; it's determined by the p-value (low p-value → high post-hoc power by definition)\n- Statistical significance ≠ practical significance; a large n can detect a tiny effect that doesn't matter\n- Multiple testing inflates Type-I error; Bonferroni correction requires smaller p-values, reducing power for individual tests\n- Underpowered studies produce inflated effect sizes (winners' curse) due to selection bias (only large effects reach significance)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You design an A/B test to detect a 5% lift in conversion rate. Baseline = 10%, Target = 10.5%. How does sample size scale with desired power?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Sketch the relationship between sample size n, effect size δ, significance level α, and power (1 - β) for a t-test.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Your underpowered study (80% power for medium effect) finds a significant result (p = 0.02). Should you trust the effect size estimate?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "You run an A/A test (same group vs. itself) with n = 1,000 and find p = 0.30 (not significant). The post-hoc power is 5%. What does this mean?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "To detect a smaller effect size while maintaining 80% power, you must:",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Increase sample size",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Increase α",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Decrease α",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Increase Type-II error",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "stratified-sampling-and-blocking",
+    "title": "Stratified sampling and blocking",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "experimental-design",
+      "variance-reduction",
+      "randomization",
+      "confounding",
+      "efficiency"
+    ],
+    "aliases": [
+      "stratification",
+      "blocking",
+      "design-of-experiments"
+    ],
+    "wikilinks": [
+      "stratified-sampling",
+      "blocking",
+      "randomized-controlled-trial",
+      "confounder-control",
+      "experimental-design"
+    ],
+    "sources": [
+      {
+        "url": "https://ocw.mit.edu/courses/18-05-introduction-to-probability-and-statistics-spring-2022/",
+        "label": "MIT 18.05: Introduction to Probability and Statistics"
+      },
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 8)"
+      }
+    ],
+    "explainer_md": "## Intuition\nStratified sampling partitions the population into known subgroups (strata: age groups, regions, income levels) and samples randomly within each stratum. This ensures representation and reduces variance compared to simple random sampling. Blocking in experiments divides participants into blocks (e.g., by hospital, day, baseline severity) and randomly assigns treatments within each block. Both reduce noise from known confounders, improving precision and power without increasing sample size. Used in RCTs, surveys, and observational studies to isolate causal effects from confounding.\n\n## Detail\nStratified sampling: if stratum i has size $N_i$ and you allocate $n_i$ samples proportionally ($n_i = n \\cdot N_i / N$), the stratified estimator $\\hat{\\mu}_{st} = \\sum_i W_i \\bar{x}_i$ (weighted average of stratum means) has lower variance than simple random sampling if strata have different means. Variance reduction is $\\text{Var}(\\hat{\\mu}_{st}) = \\frac{\\sigma^2_w}{n} - \\frac{\\sigma^2_b}{N}$ where $\\sigma^2_w$ is within-stratum variance and $\\sigma^2_b$ is between-stratum variance. Large $\\sigma^2_b$ → large variance reduction.\n\nBlocking (in experiments): randomize treatments within blocks so treatment assignment is balanced across block levels. Example: if patients differ in disease severity (low, medium, high), block by severity and randomize treatment within each block. This ensures both treatment and control groups have similar severity distribution, eliminating severity as a confounder. Equivalent to including block as a covariate in regression.\n\nPros: Reduced variance, balanced covariate distribution, more precise treatment effect estimates. Cons: Requires knowing stratification variable in advance; if many strata, sample sizes within strata become small.\n\n## Common gotchas / interview framings\n- Stratification is not a substitute for randomization; bias still occurs if sampling is non-random within strata\n- Over-stratification: too many strata → small stratum sample sizes → loss of precision (curse of dimensionality)\n- Blocking by a post-treatment variable (measured after treatment) induces bias (collider bias)\n- Post-stratification (adjusting after data collection) can improve estimates if strata are defined a priori, but risks p-hacking if multiple post-strata are tried",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You want to estimate the average height of people in a country. The population has 60% female, 40% male. Should you use stratified sampling?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "In an RCT, you block by baseline disease severity (mild, moderate, severe). How does this improve causal inference?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Show that stratified sampling has lower variance than simple random sampling when strata have different means.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "You conduct an RCT and block by baseline severity. After treatment, you find severity has changed. Should you re-block by post-treatment severity?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "Stratified sampling reduces variance most when:",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Strata have similar means",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Strata have very different means",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Sample sizes are equal",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Strata are small",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "observational-vs-experimental-data",
+    "title": "Observational vs experimental data",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "difficulty": "intermediate",
+    "tags": [
+      "causal-inference",
+      "confounding",
+      "randomization",
+      "rct",
+      "study-design"
+    ],
+    "aliases": [
+      "causal-data",
+      "rct-vs-obs",
+      "confounding-control"
+    ],
+    "wikilinks": [
+      "randomized-controlled-trial",
+      "observational-study",
+      "confounding",
+      "causal-inference",
+      "do-calculus"
+    ],
+    "sources": [
+      {
+        "url": "https://link.springer.com/book/10.1007/978-0-387-21736-9",
+        "label": "Wasserman, L. All of Statistics (Ch. 8)"
+      },
+      {
+        "url": "https://www.statlearning.com/",
+        "label": "James et al. An Introduction to Statistical Learning (Ch. 13)"
+      }
+    ],
+    "explainer_md": "## Intuition\nRCTs (Randomized Controlled Trials) randomly assign treatment, breaking the link between confounders and treatment—enabling causal inference. Observational studies measure naturally occurring treatment/exposure without randomization; treatment is often correlated with confounders, so association ≠ causation. Example: online learners (treatment) have better job outcomes; but they're self-selected (motivated, educated), so confounding makes treatment seem effective. Only RCTs reliably isolate causal effects. When RCTs are infeasible (long-term health, ethical constraints), researchers use observational data with causal inference methods (propensity score matching, instrumental variables, difference-in-differences), but assumptions are required and results are sensitive to unobserved confounding.\n\n## Detail\nRCT: treatment T is assigned independently of potential outcomes and confounders. Estimand: Average Treatment Effect (ATE) = E[Y(1)] - E[Y(0)] (difference in potential outcomes). By randomization, $E[Y(1)] = E[Y(1)|T=1]$ (observable), so ATE is identified. Standard errors come from sampling variability; confidence intervals are straightforward.\n\nObservational: treatment is correlated with confounders Z. Estimand remains ATE, but $E[Y(1)|T=1] \\neq E[Y(1)]$ because treated units differ from untreated. Methods: (1) **Stratification**: within each level of Z, treatment is quasi-randomized. (2) **Propensity score**: model P(T=1|X), then match/weight treated and untreated by propensity (pseudo-randomization). (3) **Instrumental variables**: find a variable Z that affects T but not Y (except via T), enabling causal inference. (4) **Difference-in-differences**: use parallel trends and panel data to difference out unobserved confounders.\n\nKey limitation of observational methods: requires no hidden (unmeasured) confounding. Unobserved confounders (ability, motivation) still bias estimates; robustness checks (sensitivity analysis) quantify bias risk.\n\n## Common gotchas / interview framings\n- Correlation ≠ causation; observational associations can reverse direction if you control for the right confounder (Simpson's Paradox)\n- RCTs have high internal validity (estimates are causal) but may lack external validity (sample is non-representative)\n- Propensity score matching doesn't handle unobserved confounding; neither do other observational methods\n- Selection bias in RCTs (differential attrition) can reintroduce confounding; analyze by intention-to-treat (ITT) rather than per-protocol",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "An observational study finds that people who exercise have 20% lower mortality. Does this mean exercise causes 20% lower mortality?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "An RCT randomizes students to online vs. in-person learning. Online students have better outcomes. Can you conclude online learning is better?",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Explain why randomization breaks confounding and enables causal inference. Write E[Y(1)] in terms of observables.",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "An RCT recruits from a university; 20% of randomized participants drop out. Does ITT (Intention-To-Treat) analysis still give causal estimates?",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "Which method can identify causal effects without randomization?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Multiple regression on confounders",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Propensity score matching (assuming no hidden confounders)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Observational study with observed confounders only",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above assume no hidden confounding",
+            "correct": true
+          }
+        ]
+      }
+    ]
+  }
+]

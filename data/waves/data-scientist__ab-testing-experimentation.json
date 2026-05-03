@@ -1,0 +1,1594 @@
+[
+  {
+    "slug": "randomization-and-control-groups",
+    "title": "Randomization and control groups",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "beginner",
+    "tags": [
+      "causal-inference",
+      "experiment-design",
+      "confounding",
+      "treatment-assignment",
+      "statistical-validity"
+    ],
+    "aliases": [
+      "RCT",
+      "random assignment",
+      "treatment allocation"
+    ],
+    "wikilinks": [
+      "causal-inference",
+      "confounding-variables",
+      "internal-validity",
+      "randomized-controlled-trial"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: A/B Testing and Beyond"
+      },
+      {
+        "url": "https://research.netflix.com/research-area/experimentation-and-causal-inference",
+        "label": "Netflix Research: Experimentation & Causal Inference"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nRandomization is the gold standard for causal inference because it breaks the link between confounders (unobserved variables) and treatment assignment. If users are randomly assigned to treatment or control, then on average across many experiments, any differences in outcomes are causally attributable to the treatment, not to pre-existing differences.\n\n## Detail\n\nWhen you randomly assign users to control (no treatment) or treatment, you ensure that:\n- **Covariate balance**: Both arms start with similar characteristics on average\n- **No selection bias**: Sicker users don't preferentially enter treatment\n- **Valid statistical inference**: Standard t-tests, confidence intervals apply\n\nControl groups can be:\n1. **Business-as-usual**: The current experience (most common)\n2. **Placebo**: A fake treatment (rare online, common in medicine)\n3. **No-change**: Explicitly holding old behavior\n\nRandomization must happen at the correct unit (user, session, account) before treatment is assigned. Post-treatment selection invalidates causality.\n\n## Common gotchas / interview framings\n- \"If we randomize users but some never see treatment, is it still causal?\" → ITT (intention-to-treat) remains causal; per-protocol is biased\n- \"Why not just compare treated users to others?\" → Selection bias: treated users may be different (more engaged, different day-of-week)\n- \"Can we randomize at session level if users see both arms?\" → Yes if session effects dominate; no if memory/network effects exist\n- \"What if randomization is imperfect?\" → Use adjusted analysis (ANCOVA/CUPED) to correct imbalance",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Compare all treated vs all control users",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Compare only adopters vs control",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Weight treated non-adopters as 0.5 treated",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use propensity score matching on adoption",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "treatment-and-control-selection",
+    "title": "Treatment and control selection",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "experiment-design",
+      "treatment-arm",
+      "control-arm",
+      "placebo",
+      "business-as-usual"
+    ],
+    "aliases": [
+      "arm selection",
+      "control definition",
+      "treatment vs control"
+    ],
+    "wikilinks": [
+      "randomization-and-control-groups",
+      "novelty-effects-and-long-term-impact",
+      "instrumentation-and-logging"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: A/B Testing Best Practices"
+      },
+      {
+        "url": "https://www.abtasty.com/blog/sample-size-calculation/",
+        "label": "AB Tasty: Sample Size Calculation Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nThe control arm defines what you're measuring change *against*. A poorly chosen control makes your experiment useless: a bad control-treatment comparison doesn't isolate the feature's true effect.\n\n## Detail\n\n**Business-as-usual (BAU) control**: Users see the current experience. Most common online because:\n- Directly measurable: no ambiguity about what users see\n- Relevant to business: we care about vs. today, not vs. nothing\n- No novelty bias: control isn't new, so no placebo effect\n\n**Placebo control**: Users see a fake treatment (e.g., button relocation that does nothing). Rare online but useful for:\n- Isolating psychological effects (e.g., \"did the red button *really* work, or did users expect it to?\")\n- Medicine and psychology (expected effect vs. true pharmacology)\n\n**No-exposure control**: Users see nothing (e.g., no notification). Risky because:\n- Feels bad to users (they're denied)\n- Unfair comparison if baseline is a notification\n\n**Best practice**: Choose BAU. Be explicit about what \"control\" sees. If users are skeptical of your idea, use placebo to rule out expectancy.\n\n## Common gotchas / interview framings\n- \"Should we use a smaller control (10%) to save traffic?\" → No, fixed 50-50 is standard; use holdout rates for ramp-ups, not for power\n- \"Can we use historical data as control?\" → Risky: temporal confounds, seasonality, user drift. Better: concurrent randomization\n- \"What if control is the 'old' product version?\" → Works if product is stable. Problem: old code may have bugs, introducing unfair variance\n- \"Placebo: isn't that unethical?\" → Ethical if duration is short and effect is known. Disclose to stakeholders.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Selection bias (control users are less engaged)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Novelty effect (treatment users are excited)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Expectancy effect (control users are frustrated)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Network interference (control affects treatment)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "randomization-units-user-session-account",
+    "title": "Randomization units (user, session, account)",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "experiment-design",
+      "randomization-unit",
+      "session-vs-user",
+      "clustering",
+      "statistical-power"
+    ],
+    "aliases": [
+      "unit of analysis",
+      "randomization level",
+      "clustering"
+    ],
+    "wikilinks": [
+      "interference-and-network-effects",
+      "survivorship-bias",
+      "randomization-and-control-groups"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/sequential-a-b-testing-keeps-the-world-streaming-netflix-part-1-continuous-data-cba6c7ed49df",
+        "label": "Netflix: Sequential A/B Testing"
+      },
+      {
+        "url": "https://www.statsig.com/perspectives/ab-test-sample-size",
+        "label": "Statsig: A/B Test Sample Size"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nThe randomization unit is the entity you assign to treatment or control. Choosing the wrong unit wastes power (sample size) or introduces bias (interference between treated and untreated).\n\n## Detail\n\n**User-level**: Randomize each user once, they stay in arm for duration. Pros: simple, matches most metrics (user revenue, retention). Cons: can't measure session/visit effects well; network effects cause interference.\n\n**Session-level**: Randomize each visit independently. Pros: captures visit variance; useful for web (each session is fresh). Cons: same user may see both arms → confusing experience; need more samples (higher variance).\n\n**Account-level**: Randomize at account/workspace level. Pros: clean for B2B; avoids user confusion. Cons: fewer units, less power.\n\n**Matched pairs/cluster**: Group users by similar past behavior, randomize pairs. Pros: reduces variance (CUPED-like). Cons: complex implementation.\n\n**Key decision**: \n- If metric is user-aggregate (lifetime value, retention) → user-level\n- If metric is session-aggregate (CTR, conversion per visit) → session-level\n- If interference exists (e.g., recommendation feed affects other users) → cluster-level\n\n## Common gotchas / interview framings\n- \"If we randomize session-level, doesn't the same user see both?\" → Yes, problem: they may compare and be confused. Good if test duration is short or user doesn't notice\n- \"Why does randomization unit matter for power?\" → Intra-user correlation inflates variance. Randomizing sessions gives more samples but noisier (same user repeated → correlated)\n- \"Should we randomize at the platform level (e.g., iOS vs Android)?\" → Only if the treatment applies to entire platform; risks confounding with device effects\n- \"What if we randomize users but measure sessions?\" → Valid but noisy. Better to use user-level metrics or switch to session randomization",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Selection bias",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Interference / spillover",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Survivorship bias",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Temporal confounding",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "pre-registration-and-redd-registered-experiment-design-document",
+    "title": "Pre-registration and REDD (Registered Experiment Design Document)",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "p-hacking",
+      "harking",
+      "statistical-validity",
+      "experiment-governance",
+      "transparency"
+    ],
+    "aliases": [
+      "pre-registration",
+      "registered design",
+      "experiment plan",
+      "protocol registration"
+    ],
+    "wikilinks": [
+      "sequential-testing-and-peek-penalties",
+      "confidence-intervals-vs-bayesian-posterior",
+      "effect-size-estimation-and-practical-significance"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/experimentation-is-a-major-focus-of-data-science-across-netflix-f67923f8e985",
+        "label": "Netflix: Experimentation as Core Data Science"
+      },
+      {
+        "url": "https://research.netflix.com/research-area/experimentation-and-causal-inference",
+        "label": "Netflix Research: Experimentation Infrastructure"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nPre-registration means you write down your analysis plan *before* running the experiment. This prevents **p-hacking** (testing many hypotheses until one is significant) and **HARKing** (Hypothesizing After Results are Known). It locks you into one primary metric and one stopping rule.\n\n## Detail\n\n**REDD** (Registered Experiment Design Document) includes:\n1. **Primary metric**: The one outcome you care most about\n2. **Hypothesis**: Expected direction and size of effect\n3. **Sample size & duration**: How long until decision\n4. **Stopping rule**: Fixed horizon (2 weeks), sequential (peek penalties), or Bayesian\n5. **Subgroup analyses**: If pre-planned, not p-hacking\n6. **Sanity checks**: Did randomization work? Did treatment reach users?\n\n**Benefits**:\n- Prevents p-hacking: lock in alpha (0.05) and primary metric upfront\n- Increases trust: stakeholders see the plan was fair, not cherry-picked\n- Speeds decisions: no debate over which metric to use\n\n**Rigorous firms** (Netflix, Microsoft, Doordash) require REDDs before running tests. Looser shops skip it and face p-hacking risk.\n\n## Common gotchas / interview framings\n- \"But what if we discover a new interesting result in the data?\" → Document it as exploratory, not primary. Replicate in future test.\n- \"Can we add metrics mid-experiment?\" → Yes, as secondary. But primary must be locked. Adding primary metrics = p-hacking\n- \"Do we need REDD for small internal tests?\" → No, not worth bureaucracy. But for customer-facing launches, yes.\n- \"What if the REDD prediction is wrong?\" → OK. Pre-registration is about preventing p-hacking, not perfect forecasting",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, five comparisons is reasonable",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, 5 metrics = multiple comparisons problem (inflate error rate)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Only if you pre-registered all 5 as primary",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Only if you Bonferroni-correct (alpha = 0.05/5)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "velocity-sample-size-per-day",
+    "title": "Velocity (sample size per day)",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "sample-size",
+      "time-to-decision",
+      "experiment-duration",
+      "traffic",
+      "power-analysis"
+    ],
+    "aliases": [
+      "daily velocity",
+      "sample rate",
+      "throughput",
+      "units per day"
+    ],
+    "wikilinks": [
+      "duration-and-seasonal-bias",
+      "holdout-and-holdback-rates",
+      "variance-reduction-techniques-cuped-stratification"
+    ],
+    "sources": [
+      {
+        "url": "https://www.statsig.com/perspectives/power-analysis-ab-testing",
+        "label": "Statsig: Power Analysis for A/B Testing"
+      },
+      {
+        "url": "https://guessthetest.com/calculating-sample-size-in-a-b-testing-everything-you-need-to-know/",
+        "label": "GuessTheTest: Sample Size Calculation"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nVelocity is how many users (or events) you collect per day. High velocity = fast decisions. Low velocity = experiment runs forever.\n\n## Detail\n\n**Velocity = daily active users (DAU) × fraction randomized**\n\nExample:\n- 10M DAU, randomize 1% → 100k users/day\n- 10M DAU, randomize 50% → 5M users/day\n\n**Impact on duration**:\n- Need 200k total samples (calculated from MDE, power, alpha)\n- Velocity = 100k/day → 2 days to reach sample size\n- Velocity = 10k/day → 20 days\n\n**Trade-offs**:\n- **High velocity**: Reach decision faster; but may overwhelm servers, annoy users\n- **Low velocity**: Slow decision; but save resources, reduce user disruption\n\n**Key decisions**:\n1. How much traffic can we afford to randomize? (Engineering constraint)\n2. How fast must we decide? (Business urgency)\n3. Can we use CUPED or other variance reduction? (Increase effective velocity)\n\n## Common gotchas / interview framings\n- \"Our DAU is 100k but we need 1M samples. Can we run the test for 10 days?\" → Only if you randomize 100% traffic, which risks stability\n- \"Should we increase velocity by reducing holdback?\" → No, holdbacks are separate from randomization fraction. Adjust randomization % instead\n- \"Can we increase velocity by using session-level randomization?\" → Yes, sessions are more frequent than users, but introduces bias if same user sees both arms\n- \"Velocity is too low. Use CUPED?\" → Yes, CUPED reduces variance, allowing smaller sample size, thus faster completion",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "1 day (you have enough)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "2 days (100k → 200k)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "7 days (full week to avoid seasonality)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "14 days (always 2 weeks minimum)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "duration-and-seasonal-bias",
+    "title": "Duration and seasonal bias",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "experiment-duration",
+      "seasonal-effects",
+      "day-of-week",
+      "temporal-confounds",
+      "time-to-decision"
+    ],
+    "aliases": [
+      "run duration",
+      "seasonality",
+      "temporal bias",
+      "day-of-week effect"
+    ],
+    "wikilinks": [
+      "velocity-sample-size-per-day",
+      "instrumentation-and-logging",
+      "novelty-effects-and-long-term-impact"
+    ],
+    "sources": [
+      {
+        "url": "https://blog.analytics-toolkit.com/2022/statistical-power-mde-and-designing-statistical-tests/",
+        "label": "Analytics Toolkit: Statistical Power & MDE"
+      },
+      {
+        "url": "https://www.abtasty.com/blog/sample-size-calculation/",
+        "label": "AB Tasty: Sample Size Best Practices"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nUser behavior varies by day-of-week (weekday vs weekend) and season (summer vs winter). Running an experiment over too short a time risks capturing anomalies, not true effects.\n\n## Detail\n\n**Day-of-week effects**:\n- Weekends: different traffic, engagement, revenue (e.g., shopping surge, gaming)\n- Weekdays: work users vs leisure users\n- Monday: bounce-back effect; Tuesday-Thursday: steady; Friday: plans shift\n\n**Seasonal effects**:\n- Summer/winter: vacation patterns, shopping seasons\n- Holidays: holidays change behavior\n- Academic calendar: back-to-school, graduation\n- Weather: rain vs sun\n\n**Solution**: Run experiments for **at least 1-2 weeks** (one full cycle of Mon-Sun).\n- 1 week: captures one cycle; better than 1-2 days\n- 2 weeks: captures two cycles; more robust\n- 4+ weeks: captures longer seasonality (payday cycles, habit formation)\n\n**Minimum duration**: 1 week minimum (7 days); 2 weeks recommended; never 2-3 days.\n\n**Why not just adjust for day-of-week?** You could stratify or block by day, but:\n- Adds complexity\n- Assumes day effect is the same in treatment and control (interaction effects)\n- Best practice: run through the natural cycle\n\n## Common gotchas / interview framings\n- \"We have enough power; can we stop at day 3?\" → No. Day 3 might be a lucky day (e.g., viral news boosted traffic). Run the full week\n- \"Should we exclude weekends from the test?\" → No, your users shop on weekends. Keep them in; just ensure test spans both\n- \"How do we test during holidays?\" → Avoid running on holidays (Black Friday, Christmas) unless that's your target season. Otherwise, holiday effects confound the test\n- \"Can we use last year's data as control to speed up?\" → Risky: user base, seasonality, product changes between years",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "No effect doesn't mean absence of effect; test might be underpowered",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "You didn't test weekends; B2B users may behave differently on weekends",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "You only tested weekdays; weekend behavior might differ",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The test was too short; you need at least 2 weeks",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "holdout-and-holdback-rates",
+    "title": "Holdout and holdback rates",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "traffic-allocation",
+      "experiment-design",
+      "ramp-up",
+      "risk-mitigation",
+      "sample-size"
+    ],
+    "aliases": [
+      "holdout group",
+      "control holdout",
+      "traffic split",
+      "ramp fraction"
+    ],
+    "wikilinks": [
+      "velocity-sample-size-per-day",
+      "randomization-and-control-groups",
+      "guardrail-metrics"
+    ],
+    "sources": [
+      {
+        "url": "https://www.statsig.com/perspectives/ab-test-sample-size",
+        "label": "Statsig: A/B Test Sample Size Planning"
+      },
+      {
+        "url": "https://www.mida.so/blog/how-to-calculate-power-statistics-for-ab-testing",
+        "label": "Mida: Power Statistics for A/B Testing"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nA **holdout** is a group of users permanently kept out of treatment, used as an ongoing control. **Holdback** is the fraction of users not randomized (kept on old version). Both are tools for risk mitigation and understanding long-term effects.\n\n## Detail\n\n**Holdout** (1-10% of users):\n- Permanent control group, never receives updates\n- Used to measure **causal effect of all changes over time** (\"would users be different if we reverted everything?\")\n- Detects slow-moving effects (habit formation, churn acceleration)\n- Requires careful monitoring: holdout users may be an artifact over time (old app version, stale data)\n\n**Holdback** (0-50% of users not randomized in current test):\n- Users excluded from this specific A/B test\n- Reasons: engineering constraints, risk mitigation, incremental ramp-up\n- Example: test feature on 50% traffic (50% holdback, 25% control, 25% treatment)\n- Helps if feature is risky; ramp up from 25% → 50% → 100% as you gain confidence\n\n**Holdout vs holdback**:\n- **Holdout**: Long-term, never updated; measures cumulative effect of all launches\n- **Holdback**: Short-term, same users as usual; protects against this test's failures\n\n**Best practice**:\n- Keep 1% permanent holdout for causal accounting\n- Use 50-50 control/treatment for individual tests (no holdback needed if infrastructure is stable)\n- Only holdback if feature is very risky or infrastructure can't handle full rollout\n\n## Common gotchas / interview framings\n- \"We have a 10% holdout. Does that reduce our power?\" → No, holdout is separate. 50% control/treatment within the other 90% is still valid power-wise\n- \"Can we use the holdout as control for this test?\" → No, holdout is stale (old code). Use concurrent randomization\n- \"Should we holdback 90% traffic because we're nervous?\" → No, that's wasting data. If nervous, run on smaller % (10% treatment) but still 50-50 split\n- \"Holdout users are churning. Should we remove it?\" → Investigate: are they churning because feature prevented something? If so, holdout is working. If they're just old, refresh cohort",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Holdback inflates variance",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "250k per arm is smaller sample size than 500k",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Holdback users have different characteristics",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No, power is the same if split is 50-50",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "instrumentation-and-logging",
+    "title": "Instrumentation and logging",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-quality",
+      "metrics",
+      "logging",
+      "event-tracking",
+      "observability"
+    ],
+    "aliases": [
+      "event logging",
+      "tracking",
+      "instrumentation",
+      "data collection"
+    ],
+    "wikilinks": [
+      "primary-vs-secondary-metrics",
+      "guardrail-metrics",
+      "metric-construction-ratios-counts-timing"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: A/B Testing Infrastructure"
+      },
+      {
+        "url": "https://research.netflix.com/research-area/experimentation-and-causal-inference",
+        "label": "Netflix: Experimentation Research"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nGarbage in, garbage out. If logging is buggy, metrics are wrong, and your experiment conclusions are meaningless.\n\n## Detail\n\n**Core instrumentation questions**:\n1. **Is the event fired?** Does the code trigger an event when the action happens?\n2. **Is it tagged correctly?** Does the event include user ID, treatment arm, timestamp?\n3. **Is timing right?** Is the event logged *when* the action happens (not hours later)?\n4. **Is it complete?** Do all users/sessions send events, or do some drop?\n5. **Is it validated?** Are counts reasonable? (e.g., if you expect 1M clicks/day, do you see 1M?)\n\n**Common issues**:\n- **Missing user ID**: Can't link events to users/arms\n- **Client-side logging**: Events can fail (blocked by adblocker, network latency)\n- **Backfill delays**: Events logged 1 day late → metric looks lower on day 1\n- **Sample-based logging**: Only log 1% of events → noisy metrics\n- **Off-by-one errors**: \"Clicks\" includes click+drag+release (3 events, not 1)\n\n**Best practice**:\n- Log server-side (more reliable than client-side)\n- Log immediately (sub-second latency)\n- Include user_id, experiment_id, treatment_arm, timestamp, event_value\n- Validate counts daily (sanity checks)\n- Test logging before experiment (run 1% test, verify event counts match expected)\n\n## Common gotchas / interview framings\n- \"We see a 10% lift in 'clicks,' but all other metrics are flat. Is logging broken?\" → Investigate: are clicks logged differently? Are they duplicated? Did treatment change click firing?\n- \"Events are delayed by 1 hour. Does that bias results?\" → If delay is the same for treatment and control, no bias. But it delays decision-making\n- \"We use client-side logging. Do we need to worry?\" → Yes, if clients have adblockers, slow connections, or crash. Better: server-side. But can supplement with client-side for UX metrics\n- \"Should we sample events to save costs?\" → Only if uniform sampling (e.g., 1% of all events). Biased sampling (sample only certain users) breaks experiments",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Client-side logging is unreliable",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Button clicks are sampled; adds are 100%",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Clicks include failed adds (network error)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Events are deduplicated incorrectly",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "primary-vs-secondary-metrics",
+    "title": "Primary vs secondary metrics",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "metrics",
+      "hypothesis-testing",
+      "effect-measurement",
+      "multiple-testing",
+      "business-impact"
+    ],
+    "aliases": [
+      "primary metric",
+      "secondary metric",
+      "metric hierarchy",
+      "outcome metric"
+    ],
+    "wikilinks": [
+      "guardrail-metrics",
+      "metric-construction-ratios-counts-timing",
+      "effect-size-estimation-and-practical-significance"
+    ],
+    "sources": [
+      {
+        "url": "https://www.statsig.com/perspectives/ab-test-sample-size",
+        "label": "Statsig: A/B Test Design"
+      },
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: A/B Testing Best Practices"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nPrimary metric is the one outcome you care most about and will use to decide launch/no-launch. Secondary metrics provide context but don't override primary decision.\n\n## Detail\n\n**Primary metric**:\n- **One metric** (sometimes 2 if closely related, e.g., CTR and conversion rate)\n- **Business-aligned**: directly reflects business goal (revenue, retention, engagement)\n- **Locked before test**: Can't change after seeing results (prevents p-hacking)\n- **Drives decision**: If primary is significant, launch; if not, don't\n\n**Secondary metrics**:\n- **2-5 metrics** providing context\n- **Check for side effects**: E.g., primary is engagement; secondary is latency (make sure we didn't slow down)\n- **Exploratory**: interesting findings but don't override primary\n- **Can be added mid-test**: Document as secondary, not primary\n\n**Examples**:\n- Feature to increase engagement (primary: DAU). Secondaries: retention, revenue, latency\n- Feature to reduce latency (primary: median load time). Secondaries: p99 latency, engagement\n- New search algorithm (primary: engagement). Secondaries: revenue, user satisfaction\n\n**Multiple testing correction**:\n- If testing 5 primary metrics, apply Bonferroni correction: alpha = 0.05/5 = 0.01\n- Or pre-register one primary, secondaries are exploratory (no correction needed)\n\n**Trade-off**:\n- One primary = faster decision, clear governance\n- Multiple primaries = richer picture, but complicates decisions (what if metrics disagree?)\n\n## Common gotchas / interview framings\n- \"Metric A is significant, metric B is not. Which drives launch?\" → Metric A if it's primary. Metric B is secondary context. Launch if primary is positive and no guardrails violated\n- \"Can we demote metric A from primary to secondary because it's not significant?\" → No, that's p-hacking. Chose A before test; must live with result\n- \"Should we use revenue as primary for every test?\" → No, revenue is slow to move. Use engagement (faster signal), but monitor revenue as secondary\n- \"We have 5 secondary metrics, none significant, but primary is significant. Launch?\" → Yes. Secondaries are context, not blocking. Launched feature didn't harm secondary goals (on average), even if no clear benefit",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "One metric is always significant by chance",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Multiple primary metrics inflate Type I error",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "You need Bonferroni correction: 0.05/3 = 0.017 per metric",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "guardrail-metrics",
+    "title": "Guardrail metrics",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "metrics",
+      "risk-mitigation",
+      "monitoring",
+      "side-effects",
+      "business-impact"
+    ],
+    "aliases": [
+      "guard rails",
+      "metric thresholds",
+      "red lines",
+      "harm detection"
+    ],
+    "wikilinks": [
+      "primary-vs-secondary-metrics",
+      "metric-construction-ratios-counts-timing",
+      "survivorship-bias"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: A/B Testing and Guardrails"
+      },
+      {
+        "url": "https://research.netflix.com/research-area/experimentation-and-causal-inference",
+        "label": "Netflix: Experimentation Best Practices"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nA guardrail metric is a metric you'll **block the launch on if it gets worse**, even if primary succeeds. Guardrails prevent launching features that win on one metric but break something critical.\n\n## Detail\n\n**Common guardrail metrics**:\n- **Revenue**: Don't launch if revenue drops >2%\n- **Latency**: Don't launch if p99 latency increases >10%\n- **Crash rate**: Don't launch if crashes increase >0.1pp\n- **Churn rate**: Don't launch if 30-day churn increases >1pp\n- **Support tickets**: Don't launch if support volume increases >5%\n- **User satisfaction**: Don't launch if NPS drops >3 points\n\n**Types of guardrails**:\n1. **Absolute guardrail**: Set a threshold (e.g., \"crash rate < 0.5%\")\n2. **Relative guardrail**: Set a % change (e.g., \"no more than -5% revenue\")\n3. **Trending guardrail**: Watch for trends (e.g., \"latency increasing day-over-day\")\n\n**Key principle**: Guardrails are **binary blocks**, not context. If guardrail is violated, don't launch, period. If primary is +10% but revenue is -3%, don't launch.\n\n**Setting guardrails**:\n- Consult stakeholders: What are the absolute no-nos? (Revenue, latency, safety)\n- Set realistic thresholds: Don't set -0.1% revenue if variance is ±1%\n- Use historical data: \"What's a material change?\" e.g., -2% revenue is 1 week of company revenue loss\n\n## Common gotchas / interview framings\n- \"Primary is +5%, but guardrail (revenue) is -1%. Launch?\" → No, guardrail blocks. Re-examine feature: does it cannibalize revenue? Iterate design\n- \"Should we tighten guardrails to reduce risk?\" → Yes, but too tight → tests fail to launch (false negatives). Balance: set at 2-3x minimum detectable change\n- \"If guardrail is triggered, do we run the test longer?\" → No, longer test won't fix a true harm. Better: fix the feature or revert\n- \"Guardrail keeps bouncing around 0. Do we interpret as violated?\" → If confidence interval includes the threshold, it's inconclusive. Wait for more samples or increase guardrail tolerance",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, point estimate (0.8) is below 1",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, confidence interval includes 1.4 pp",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Yes, we're 95% confident crash rate increase is < 1.4 pp",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No, the upper bound exceeds the guardrail",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "metric-construction-ratios-counts-timing",
+    "title": "Metric construction (ratios, counts, timing)",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "metrics",
+      "ratio-metrics",
+      "variance",
+      "statistical-properties",
+      "metric-design"
+    ],
+    "aliases": [
+      "ratio metric",
+      "count metric",
+      "binomial metric",
+      "metric calculation"
+    ],
+    "wikilinks": [
+      "primary-vs-secondary-metrics",
+      "variance-reduction-techniques-cuped-stratification",
+      "instrumentation-and-logging"
+    ],
+    "sources": [
+      {
+        "url": "https://www.statsig.com/perspectives/ab-test-sample-size",
+        "label": "Statsig: Ratio Metrics in A/B Testing"
+      },
+      {
+        "url": "https://medium.com/@QuarkAndCode/power-analysis-for-a-b-tests-metrics-mde-sample-size-8a107625c791",
+        "label": "QuarkAndCode: Power Analysis for A/B Tests"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nHow you calculate a metric affects its variance, power, and interpretability. Ratio metrics (e.g., CTR) are noisier than count metrics (e.g., clicks).\n\n## Detail\n\n**Count metrics**:\n- Simple: total clicks per user\n- Variance scales with count\n- Example: E[clicks] = 10, Var[clicks] = 10 (Poisson-like)\n- Power: higher (fewer samples needed)\n\n**Ratio metrics** (CTR, conversion rate, ARPU):\n- Ratio = numerator / denominator (e.g., conversions / visitors)\n- Variance is higher: depends on both numerator and denominator variance\n- Example: CTR = 10% with std dev 5% (higher variance than count)\n- Power: lower (more samples needed for same effect size)\n- Sensitivity: small changes in denominator amplify noise\n\n**Cumulative metrics**:\n- Count across a time window (e.g., 7-day revenue)\n- Higher variance: longer window = more noise\n- Better power if measuring user-lifetime (7-day revenue vs daily revenue)\n\n**Timing**:\n- **Event-level**: measure at moment of event (e.g., clicks per session) → captures fine-grained effects\n- **Batch-level**: aggregate to user-day or user-week → captures sustained effects, less noisy\n- **Post-experiment**: measure after experiment ends (e.g., 7-day retention after test) → captures long-term effects but slow decision\n\n**Best practice**:\n- Use count metrics if possible (lower variance)\n- If ratio metric, ensure denominator is stable (e.g., CTR is clicks/impressions; if impressions vary wildly, CTR is noisy)\n- Use longer aggregation windows (user-week vs user-day) to reduce variance\n- Combine counts: instead of CTR = conversions/visitors, use click rate (clicks/user) separately\n\n## Common gotchas / interview framings\n- \"Our click metric has high variance. Should we use CTR instead?\" → No, CTR might have *even higher* variance if impression count varies. Better: use CUPED or longer aggregation window\n- \"We measure daily revenue, but it's noisy. Should we measure monthly revenue?\" → Yes, longer windows reduce variance. Trade-off: slower to detect short-term effects\n- \"CTR is up 2%, conversion rate is down 1%. Did the feature work?\" → Investigate: did clicks increase but conversions decrease? That's a red flag (more engagement, less conversion). Check denominator stability\n- \"Can we truncate ratio metrics (e.g., cap CTR at 100% to reduce outliers)?\" → Only if outliers are errors. If real, truncation introduces bias",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Use 'monthly revenue per user' instead",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Use CUPED (variance reduction)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Switch to a count metric (e.g., transactions per user)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "variance-reduction-techniques-cuped-stratification",
+    "title": "Variance reduction techniques (CUPED, stratification)",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "advanced",
+    "tags": [
+      "variance-reduction",
+      "cuped",
+      "covariate-adjustment",
+      "statistical-efficiency",
+      "power-increase"
+    ],
+    "aliases": [
+      "CUPED",
+      "covariate adjustment",
+      "stratified randomization",
+      "pre-experiment data"
+    ],
+    "wikilinks": [
+      "velocity-sample-size-per-day",
+      "variance-reduction-techniques-cuped-stratification",
+      "sequential-testing-and-peek-penalties"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.statsig.com/experiments/statistical-methods/methodologies/cuped",
+        "label": "Statsig: CUPED Documentation"
+      },
+      {
+        "url": "https://medium.com/@garret.oconnell/cuped-for-switchback-tests-9e5b924ce1b0",
+        "label": "Medium: CUPED for Switchback Tests"
+      },
+      {
+        "url": "https://www.geteppo.com/blog/cuped-bending-time-in-experimentation",
+        "label": "Eppo: CUPED and CUPED++ Bending Time"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nCUPED (Controlled-experiment Using Pre-Experiment Data) reduces variance by predicting each user's metric using historical data, then measuring treatment effect *relative to prediction*. This can speed up experiments by 25-65%.\n\n## Detail\n\n**CUPED mechanism**:\n1. Collect pre-experiment metric for each user (e.g., last 7 days of revenue)\n2. For each user in test, predict their metric under control using the pre-experiment data\n3. Measure adjusted metric = observed - predicted\n4. Run t-test on adjusted metric\n\n**Why it works**: If past revenue correlates with current revenue (ρ > 0.5), then prediction reduces noise. Adjustment removes user-level baseline differences, focusing on *change* induced by treatment.\n\n**Formula**: Adjusted_metric = observed_metric - β × (pre_experiment_metric - mean_pre)\n- β = correlation between pre and post\n- Variance reduction ~ 1 / (1 - ρ²)\n- If ρ = 0.7 (high correlation), variance drops by 51%\n\n**Stratification**:\n- Divide users into strata (e.g., high/medium/low spenders)\n- Randomize within each stratum (balanced design)\n- Reduces variance if strata differ in metric\n\n**When to use**:\n- CUPED: When historical data is stable and correlated with outcome (e.g., revenue, engagement)\n- Stratification: When you have discrete user segments and want balanced power\n\n**Risks**:\n- CUPED assumes pre-experiment and post-experiment relationship is stable (may break if user behavior shifts)\n- Stratification can backfire if strata are misaligned with actual variance\n\n## Common gotchas / interview framings\n- \"We use CUPED and got 50% variance reduction. Can we halve our sample size?\" → No, variance reduction ≠ sample size reduction. You can run tests 50% faster (same sample size in less time). If you halve sample size, you get partial variance reduction, but combined effect is weaker power\n- \"Should we always use CUPED?\" → No, only if pre-experiment data is correlated. For rare events (conversions), pre-data has ~0 correlation. Use CUPED for stable metrics (revenue, engagement)\n- \"CUPED assumes linear relationship. What if non-linear?\" → CUPED assumes linearity. If relationship is non-linear (e.g., saturation), machine learning variants (e.g., CUPAC, MLCV) better\n- \"Can we use CUPED on all metrics?\" → No, risky for guardrails (crash rate, latency) where relationship is unstable. Better for engagement/revenue",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Variance reduction = 1 - 0.3² = 91%",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Variance reduction = 0.3² = 9%",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "No variance reduction, might add noise",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Need more info about metric distribution",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "sequential-testing-and-peek-penalties",
+    "title": "Sequential testing and peek penalties",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "advanced",
+    "tags": [
+      "multiple-testing",
+      "early-stopping",
+      "type-i-error",
+      "sequential-analysis",
+      "peek-penalty"
+    ],
+    "aliases": [
+      "optional stopping",
+      "early stopping",
+      "alpha spending",
+      "Pocock boundaries"
+    ],
+    "wikilinks": [
+      "confidence-intervals-vs-bayesian-posterior",
+      "pre-registration-and-redd-registered-experiment-design-document"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/sequential-a-b-testing-keeps-the-world-streaming-netflix-part-1-continuous-data-cba6c7ed49df",
+        "label": "Netflix: Sequential A/B Testing"
+      },
+      {
+        "url": "https://blog.analytics-toolkit.com/2022/statistical-power-mde-and-designing-statistical-tests/",
+        "label": "Analytics Toolkit: Sequential Testing"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Peeking** (looking at results before the test ends) inflates Type I error. If you peek at day 3 and day 5 and day 7, the true false positive rate is ~20%, not 5%. **Peek penalties** correct for this inflation.\n\n## Detail\n\n**The peeking problem**:\n- Fixed-horizon test: alpha = 0.05, Type I error = 5%\n- Peek once at day 3: alpha = 0.05 at day 3 → inflates error to ~8% (if you stop early)\n- Peek at days 1, 2, 3, ..., 7: error inflates to ~15-20%\n- **Cause**: Each peek is an independent test; multiple tests inflate Type I error\n\n**Solutions**:\n\n1. **Fixed horizon**: Don't peek. Run full duration (7 days, 14 days), then analyze once. Simple, controls Type I error at α=0.05\n\n2. **Sequential testing with corrections**:\n   - **Bonferroni**: alpha_per_peek = 0.05 / number_of_peeks\n   - **Pocock**: more permissive boundaries; adjust alpha at each peek\n   - **O'Brien-Fleming**: tight early, loose late (good for early stopping)\n\n3. **Truly sequential methods**:\n   - **Likelihood ratio test** (sequential probability ratio test, SPRT): continuously monitor, stop when evidence is strong\n   - **Bayesian sequential**: posterior reaches decision threshold\n   - More efficient (faster decisions) but complex to implement\n\n**Best practice**:\n- **Default**: Fixed horizon (no peeking). Run the full duration, analyze once. Simple, robust.\n- **If you must peek**: Use Bonferroni correction (conservative) or O'Brien-Fleming (moderate)\n- **If you want early stopping**: Use truly sequential methods (SPRT, Bayesian), not manual peeking with corrections\n\n## Common gotchas / interview framings\n- \"Our PM wants to look at metrics daily. What do you say?\" → \"We can look, but won't make decisions until day 7 or 14. Daily looks are for monitoring (crashes, bugs), not for statistical inference. If we make decisions daily, we inflate Type I error from 5% to 50%+\"\n- \"We peeked and saw significance at day 3. Can we stop?\" → Only if you pre-registered sequential testing (SPRT, Bayesian). If you didn't, waiting until day 7 controls error. Stopping early without pre-registration = p-hacking\n- \"Should we use Bonferroni for 100 peeks?\" → No, alpha = 0.05/100 = 0.0005 is too strict, you'll never detect real effects. Better: use O'Brien-Fleming or truly sequential method\n- \"Bayesian sequential testing doesn't have Type I error.\" → Wrong. Bayesian can still have false positives if prior is misspecified or stopping rule is biased",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, p<0.05",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, you pre-registered day 7; stopping early = p-hacking",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Yes, if you use Bonferroni correction (α = 0.05/2 = 0.025)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Need more info about number of metrics",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "confidence-intervals-vs-bayesian-posterior",
+    "title": "Confidence intervals vs Bayesian posterior",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "statistical-inference",
+      "confidence-intervals",
+      "bayesian",
+      "interpretation",
+      "posterior-distribution"
+    ],
+    "aliases": [
+      "CI vs Bayesian",
+      "frequentist vs Bayesian",
+      "credible interval",
+      "posterior distribution"
+    ],
+    "wikilinks": [
+      "sequential-testing-and-peek-penalties",
+      "effect-size-estimation-and-practical-significance"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: A/B Testing Frameworks"
+      },
+      {
+        "url": "https://research.netflix.com/research-area/experimentation-and-causal-inference",
+        "label": "Netflix: Experimentation Research"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Confidence interval (frequentist)**: \"If we repeated this experiment 100 times, the true effect would fall in this interval ~95 times.\"\n\n**Bayesian posterior**: \"Given the data and our prior belief, the effect is most likely in this range, and here's the probability distribution.\"\n\n## Detail\n\n**Confidence interval (95% CI)**:\n- **Interpretation**: Frequentist. If you ran experiment infinitely, 95% of computed CIs would contain the true effect\n- **Decision rule**: If CI doesn't cross 0, effect is significant (p < 0.05)\n- **Limitation**: CI is either fully in one region or not; no probability statement about true effect\n- **Advantage**: No prior needed; based only on data\n- **Example**: CI = [1.2%, 3.5%]. We're 95% confident true effect is between 1.2% and 3.5%\n\n**Bayesian posterior**:\n- **Interpretation**: Bayesian. Distribution of the effect given data and prior\n- **Decision rule**: If posterior is mostly > 0, effect is likely positive; report P(effect > 0)\n- **Limitation**: Requires choosing a prior (can bias results)\n- **Advantage**: Direct probability statement (\"95% chance effect is >1%\"); easier to interpret; can incorporate prior knowledge\n- **Example**: Posterior = Normal(2.0%, 0.8%). 92% of posterior mass is >0%, so effect is likely positive\n\n**Trade-offs**:\n- **CI**: Mechanistic, repeatable, no prior bias. But binary decision (significant or not)\n- **Bayesian**: Richer information (full distribution), but requires prior choice\n\n**Practical use**:\n- Most companies use CI + frequentist stats (standard, well-understood)\n- Some use Bayesian for decision-making (posterior above threshold = go)\n- Hybrid: use Bayesian for planning (priors) and frequentist for reporting (CIs)\n\n## Common gotchas / interview framings\n- \"Our 95% CI is [-1%, 3%], it includes 0, so no effect.\" → Correct interpretation: we can't rule out zero (not significant). But effect could still be real (just uncertain)\n- \"Posterior shows 85% chance effect > 0%. Should we launch?\" → Depends on your threshold. If threshold is 90%, no. If 80%, yes. Bayesian requires a decision threshold, not just significance\n- \"CI is [-1%, 3%] but posterior mean is 1%. Why the difference?\" → Posterior is influenced by prior; CI is not. If prior was strong, posterior pulls toward prior\n- \"Can we compare two CIs to see which effect is bigger?\" → Only if non-overlapping. Overlapping CIs might still show significantly different effects (depends on correlation). Better: test interaction directly",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "95% (if mean is 2 SD from 0)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "97-99% (roughly)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Depends on the prior used",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Can't answer without more info",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "effect-size-estimation-and-practical-significance",
+    "title": "Effect size estimation and practical significance",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "effect-size",
+      "practical-significance",
+      "business-impact",
+      "statistical-significance",
+      "mde"
+    ],
+    "aliases": [
+      "effect size",
+      "practical vs statistical significance",
+      "business impact",
+      "economic significance"
+    ],
+    "wikilinks": [
+      "primary-vs-secondary-metrics",
+      "confidence-intervals-vs-bayesian-posterior"
+    ],
+    "sources": [
+      {
+        "url": "https://swenotes.com/2025/10/04/minimum-detectable-effect-mde-in-a-b-testing/",
+        "label": "Software Engineer's Notes: MDE in A/B Testing"
+      },
+      {
+        "url": "https://www.abtasty.com/blog/sample-size-calculation/",
+        "label": "AB Tasty: Sample Size and Effect Size"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Statistical significance** = \"result is unlikely due to chance (p < 0.05).\" **Practical significance** = \"result is big enough to matter for business.\" A statistically significant effect might be too small to care about.\n\n## Detail\n\n**Statistical significance**:\n- Depends on sample size\n- Large sample → small effects become significant\n- Example: 100k users, +0.1% CTR increase, p=0.02 (significant but tiny)\n\n**Practical significance**:\n- Does effect size matter for business?\n- Example: +0.1% CTR = 100k × 0.001 = 100 more clicks/day\n  - If 100 clicks = $1000 revenue, meaningful\n  - If 100 clicks = $1 revenue, probably not\n- Depends on context: for retention, 0.1pp is huge; for CTR, 0.1% is tiny\n\n**Effect size**:\n- **Absolute effect**: difference in metric (e.g., +2% CTR)\n- **Relative effect**: % change (e.g., +5% relative to baseline)\n- **Cohen's d**: standardized effect (effect size / std dev) — used in power calculations\n- **Practical rule**: interpret effect size against MDE (minimum detectable effect)\n\n**Minimum Detectable Effect (MDE)**:\n- Smallest effect you care about detecting\n- Set based on business impact: \"What's the smallest change worth launching?\"\n- Example: \"Only launch if conversion rate increases >1%\"\n- MDE drives sample size: smaller MDE → larger sample size needed\n\n**When significant ≠ practical**:\n- Large sample size, tiny effect size\n- Example: 1M users, +0.05% engagement increase, p=0.02 → statistically significant but doesn't justify engineering effort\n\n**When practical > significant**:\n- Small sample size, large effect size but not yet p<0.05\n- Example: 1k users, +5% conversion, p=0.08 → not yet statistically significant but promising; run longer\n\n## Common gotchas / interview framings\n- \"Effect is not significant. So no real effect?\" → Inconclusive, not proven null. If underpowered, real effect might exist\n- \"We should only launch when effect is >2% lift and p<0.05.\" → Good, tie practical (2%) to statistical (p<0.05) thresholds. Prevents both false positives and false negatives\n- \"Why do we set MDE upfront? Shouldn't we wait and see?\" → MDE determines sample size. If you wait and see, you're p-hacking (biased effect size). Set MDE based on business impact, lock it in\n- \"Small effect size but statistically significant. Launch?\" → Depends on business ROI. If cost to launch < benefit of 0.1% lift, yes. If cost is high, maybe not",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, effect is significant and exceeds MDE",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, confidence interval includes 0.5%, below MDE",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Yes, p=0.01 is strong evidence",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Need more info about guardrails",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "multiple-arms-and-multi-armed-bandit-mab",
+    "title": "Multiple arms and multi-armed bandit (MAB)",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "advanced",
+    "tags": [
+      "multi-arm-test",
+      "mab",
+      "exploration-exploitation",
+      "bandit-algorithms",
+      "multiple-variants"
+    ],
+    "aliases": [
+      "A/B/C test",
+      "multi-armed bandit",
+      "exploration-exploitation",
+      "thompson-sampling"
+    ],
+    "wikilinks": [
+      "multiple-arms-and-multi-armed-bandit-mab",
+      "sequential-testing-and-peek-penalties"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: Beyond A/B Testing"
+      },
+      {
+        "url": "https://www.statsig.com/perspectives/power-analysis-ab-testing",
+        "label": "Statsig: Multiple Arms Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**A/B test**: one treatment vs control. **A/B/C test**: two treatments vs control. **MAB (multi-armed bandit)**: test many variants and adaptively allocate traffic to winners.\n\n## Detail\n\n**Multiple arms (A/B/C, A/B/C/D)**:\n- Test 2+ variants against control\n- Fixed allocation: 20% each arm\n- Pros: test multiple ideas, captures interactions\n- Cons: higher sample size needed per arm; multiple comparisons inflate error\n- Example: test 3 colors of button (red, blue, green) with control (gray)\n- Sample size: 4 arms × 25% = 100k users per arm (400k total for same power as 2-arm test)\n\n**Multiple comparisons correction**:\n- If testing k comparisons at α=0.05, family-wise error ≈ 1 - (1-0.05)^k\n- Example: 3 comparisons → ~14% error (not 5%)\n- Correction: Bonferroni (α = 0.05/3 = 0.017 per comparison), more lenient: Tukey, FDR\n\n**Multi-armed bandit (MAB)**:\n- Adaptive allocation: shift traffic toward winners as they emerge\n- Algorithms: Thompson sampling, UCB, epsilon-greedy\n- Pros: maximize learning + exploitation (win from winners while testing), faster decision\n- Cons: complex, requires continuous monitoring, can miss good arms if unlucky early\n- Example: start 25% each arm, after 1 week, shift to 10% / 40% / 30% / 20% as you learn\n\n**Thompson sampling**:\n- Assume each arm has a true reward\n- Maintain posterior for each arm\n- At each step, sample from posteriors, pick highest\n- Naturally balances exploration (tries bad arms sometimes) and exploitation (mostly picks good arms)\n\n**When to use**:\n- **A/B/C test**: Test 2-3 strategic variants, want unbiased comparison, have power budget\n- **MAB**: Want to maximize total reward during learning (less lost traffic on losers), can't wait for full test\n\n## Common gotchas / interview framings\n- \"We test 5 variants. Should we compare all to control or pairwise?\" → Compare all to control; multiple comparisons. Use Bonferroni or pre-register which comparisons matter (e.g., only variants 1,2 vs control)\n- \"MAB is better than A/B testing because it exploits winners.\" → MAB exploits during test (learn faster), but A/B test gives cleaner statistical answer. A/B better for decision-making; MAB better for revenue during test\n- \"Can we use MAB and then apply frequentist stats?\" → Careful. Adaptive allocation biases estimates. Need special analysis (inverse probability weighting) or use Bayesian sequential methods built for MAB\n- \"Should we stop arms early if they're clearly bad?\" → Risk: stopping arms removes samples for estimation (bias). Better: keep all arms until end, or use Bayesian decision rule (posterior P(arm > control) < 5% → stop)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Variant A (only one significant)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Variant A if Bonferroni-corrected (α = 0.05/3 = 0.017 per comparison)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Variants A and B together",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "None; multiple comparisons inflate error",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "novelty-effects-and-long-term-impact",
+    "title": "Novelty effects and long-term impact",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "habituation",
+      "novelty-bias",
+      "long-term-effects",
+      "sustained-change",
+      "withdrawal-effects"
+    ],
+    "aliases": [
+      "novelty effect",
+      "Hawthorne effect",
+      "habituation",
+      "long-term impact"
+    ],
+    "wikilinks": [
+      "duration-and-seasonal-bias",
+      "survivorship-bias"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: A/B Testing Long-Term Effects"
+      },
+      {
+        "url": "https://research.netflix.com/research-area/experimentation-and-causal-inference",
+        "label": "Netflix: Experimentation Research"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nUsers may respond to a new feature with initial excitement (novelty effect) that fades over time (habituation). Or they may get worse over time (withdrawal effect if old experience is removed).\n\n## Detail\n\n**Novelty effect**:\n- Users are excited by new feature → short-term boost in engagement/satisfaction\n- Effect fades over 2-4 weeks as they get used to it\n- Example: new feed design, +10% engagement first week, +3% week 4\n- Risk: launch based on week 1, but week 4 shows it's not actually good\n\n**Withdrawal effect**:\n- If old feature is removed (not just hidden), users who relied on it may get worse outcomes\n- Example: removing an easy-access feature → users take longer to find it → engagement drops\n- Opposite of novelty: starts neutral, gets worse\n\n**Habituation**:\n- Users adapt to change; impact diminishes\n- E.g., \"recommended for you\" widget: first day +5% CTR, day 7 +2%, day 14 +1% (adaptation)\n\n**Long-term impact**:\n- True effect may only emerge after weeks/months\n- Example: onboarding change helps retention, but 7-day cohort looks same (30-day cohort shows +3%)\n\n**Detection**:\n1. **Test duration**: Run for 4+ weeks to capture habituation (avoid 1-week tests)\n2. **Holdout cohort**: Keep some users on old experience long-term, compare to updated users\n3. **Cohort analysis**: Split results by week (week 1 vs week 4) to see if effect fades\n\n**Mitigation**:\n- Gradual rollout: ramp up new feature over 4 weeks (lets users adapt, less shock)\n- Compare new-vs-new: if removing old feature, compare new to \"improved old\" not \"no feature\"\n- Measure long-term metrics: retention, churn, LTV instead of just engagement\n\n## Common gotchas / interview framings\n- \"Feature shows +5% lift week 1, we should launch now.\" → Wait 4 weeks to see if novelty fades. Habituation might reduce week-4 lift to +1%\n- \"Holdout users on old version—isn't that unfair?\" → For short tests (1-2 weeks), yes, holdout is stale. For long-term, needed to measure true causal effect (vs novelty)\n- \"How do we distinguish novelty from true preference?\" → Cohort analysis: if all cohorts fading similarly, novelty effect; if effect stable, true preference\n- \"What if users never adapt (novelty = real improvement)?\" → Then 4-week test shows stable lift. Launch confidently",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Novelty effect: real week-2+ effect might be lower",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Confounding: 1 week might have seasonal anomaly",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Measurement lag: 7-day metric is delayed",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "interference-and-network-effects",
+    "title": "Interference and network effects",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "interference",
+      "spillover-effects",
+      "network-effects",
+      "sutva-violation",
+      "treatment-assignment"
+    ],
+    "aliases": [
+      "spillover effects",
+      "SUTVA violation",
+      "peer effects",
+      "cross-user effects"
+    ],
+    "wikilinks": [
+      "randomization-and-control-groups",
+      "randomization-units-user-session-account"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: Handling Interference in Experiments"
+      },
+      {
+        "url": "https://research.netflix.com/research-area/experimentation-and-causal-inference",
+        "label": "Netflix: Causal Inference Research"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**SUTVA** (Stable Unit Treatment Value Assumption) assumes treatment for one user doesn't affect outcomes of other users. But on networks (social, marketplaces), treated users affect untreated users (interference).\n\n## Detail\n\n**SUTVA violation**:\n- Treatment to user A affects user B's outcomes\n- Randomization no longer ensures causality\n- Classic example: recommend treatment to user A → influences user B's feed → B's metrics change\n\n**Types of interference**:\n1. **Direct network effects**: User A is treated; affects friends of A directly\n   - Example: recommendation algorithm change for A → A sends better recommendations → A's friends engage more\n2. **Competitive effects**: User A is treated; affects competing users\n   - Example: seller A gets new tools → sells more → buyer has fewer options from A → shifts to seller B\n3. **Market effects**: Treated users change supply/demand for everyone\n   - Example: price change for A → affects overall price equilibrium → affects untreated users' willingness to pay\n\n**Detection**:\n- **Spillover analysis**: Check if control users near treated users differ from control users far from treated users\n- **Geographic/network analysis**: If treatment propagates (e.g., via recommendations), look for distance decay (effect fades with distance)\n\n**Solutions**:\n1. **Cluster randomization**: Randomize at network/marketplace/geography level (not user)\n   - Pros: avoids interference\n   - Cons: fewer units, less power\n\n2. **Switchback experiments**: Randomize time periods, not users (for two-sided marketplaces like Doordash)\n   - Pros: avoids user interference\n   - Cons: temporal confounds (day-of-week effects)\n\n3. **Ego-network randomization**: Keep treated user's network separate\n   - Example: randomize at friend-group level\n   - Pros: captures direct effects\n   - Cons: complex implementation\n\n4. **IPW (Inverse Probability Weighting) + causal graphs**: Model interference explicitly\n   - Advanced technique, rarely used in practice\n\n## Common gotchas / interview framings\n- \"We randomized users, so no interference.\" → Wrong. If treated users can message/recommend to untreated users, interference exists\n- \"Should we always use cluster randomization to be safe?\" → No, cluster level might be too coarse. Better: diagnose interference first (spillover analysis), then decide\n- \"Switchback experiments avoid user-level interference?\" → Yes, but introduce temporal confounds (Monday users ≠ Friday users). Use within-day switchbacks or carefully control day-of-week\n- \"How do we measure interference effect size?\" → Compare control users near treated vs far treated. Difference ≈ spillover effect",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, buyers are randomized independently",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, buyers interact with both treated and untreated sellers (interference)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Yes, if the marketplace is large enough",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No, pricing algorithm violates SUTVA",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "survivorship-bias",
+    "title": "Survivorship bias",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "survivorship-bias",
+      "attrition",
+      "churn",
+      "intent-to-treat",
+      "selection-bias"
+    ],
+    "aliases": [
+      "survivor cohort bias",
+      "attrition bias",
+      "ITT vs per-protocol"
+    ],
+    "wikilinks": [
+      "randomization-and-control-groups",
+      "novelty-effects-and-long-term-impact"
+    ],
+    "sources": [
+      {
+        "url": "https://research.netflix.com/research-area/experimentation-and-causal-inference",
+        "label": "Netflix: Causal Inference in Experiments"
+      },
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: A/B Testing Methodologies"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nIf treatment causes some users to churn, then only the less-churn-prone users remain in treatment. When you compare remaining treatment users to control, you're comparing different cohorts (survivors), not a fair apples-to-apples comparison.\n\n## Detail\n\n**Survivorship bias occurs when**:\n1. Treatment causes user dropout/churn (e.g., features is so bad, users leave)\n2. You only analyze remaining users (survivors)\n3. Remaining treatment users are systematically different from remaining control users\n\n**Example**:\n- Control: 100 users, 10 churn → 90 remain\n- Treatment: 100 users, 20 churn (treatment is annoying) → 80 remain\n- Remaining treatment users are more engaged/patient (they stayed despite annoyance)\n- Remaining control users are random (normal churn)\n- Comparing 80 vs 90: treatment users *survivors* are *more engaged* → biased upward\n\n**Solution: Intent-to-Treat (ITT)**:\n- Analyze all randomized users, including those who churned\n- Treat churned users as having a metric value of 0 (or their last observation)\n- Maintains causal estimate even if treatment causes dropout\n\n**Per-protocol analysis** (biased, don't use):\n- Only analyze users who complied with assignment (e.g., stayed)\n- Introduces survivor cohort bias\n\n**Measurement options**:\n1. **Engagement metric for remaining users**: P(engaged) = # active / # remaining\n   - Biased if treatment changes churn\n2. **Engagement metric for all users**: P(engaged) = # active / # randomized\n   - ITT: causal, unbiased\n3. **Lifetime value, including churn**: LTV counts revenue of users who stay\n   - Better for detecting churn harm\n\n## Common gotchas / interview framings\n- \"We tested a feature; users in treatment who stayed are more satisfied.\" → Check churn rate. If treatment increased churn, then remaining users are survivors (not representative of all treatment users). Use ITT\n- \"Should we exclude users who churned before the experiment ended?\" → Depends on definition. If they churn during the test, include them (ITT). If they churned before randomization, exclude (that's different)\n- \"ITT is too conservative; it masks true effects.\" → ITT isn't conservative; it's unbiased. You might be measuring different effects: \"effect of feature for all\" (ITT) vs \"effect for engaged users\" (per-protocol, biased)\n- \"Our engagement metric increased but DAU decreased. Which do we trust?\" → DAU decreased is the ITT effect; engagement (%) increased because survivors are more engaged. Trust DAU; it's the causal estimate",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Sample size mismatch (950 vs 990)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Survivorship bias: treatment survivors are more engaged, not all users",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Metric definition is wrong",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Both A and B",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "simpsons-paradox",
+    "title": "Simpson's paradox",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "difficulty": "intermediate",
+    "tags": [
+      "simpson-paradox",
+      "confounding",
+      "stratification",
+      "aggregation-bias",
+      "subgroup-analysis"
+    ],
+    "aliases": [
+      "reversal paradox",
+      "confounding bias",
+      "aggregation bias"
+    ],
+    "wikilinks": [
+      "survivorship-bias",
+      "interference-and-network-effects"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/a-b-testing-and-beyond-improving-the-netflix-streaming-experience-with-experimentation-and-data-5b0ae9295bdf",
+        "label": "Netflix: Handling Simpson's Paradox in Experiments"
+      },
+      {
+        "url": "https://research.netflix.com/research-area/experimentation-and-causal-inference",
+        "label": "Netflix: Experimentation Research"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Simpson's paradox**: An aggregated effect can reverse when stratified (broken into subgroups). Overall, treatment looks good, but in every subgroup, it's bad (or vice versa).\n\n## Detail\n\n**Example (classical)**:\n- **Aggregate**: Treatment +5% (win)\n- **Stratum 1** (high-value users): Treatment -3% (lose)\n- **Stratum 2** (low-value users): Treatment -2% (lose)\n- **Paradox**: Aggregate is positive, but every subgroup is negative\n\n**Why does this happen?**\nUnbalanced group sizes confound the overall result.\n- Treatment has more low-value users than control\n- Low-value users have lower baseline metrics\n- Treatment pulls aggregate down, but weighted average still appears positive due to imbalance\n\n**Mechanism**:\n1. Treatment affects group composition (e.g., treatment attracts low-value users)\n2. Group composition changes the baseline metric\n3. Aggregated metric mixes true effect + composition effect\n\n**Examples in A/B tests**:\n- **Geographic**: Aggregate shows revenue +2%, but every region shows -1%. Why? Treatment is rolled out in low-revenue regions first (geographic confound)\n- **Device**: Aggregate shows engagement +1%, but desktop -2%, mobile -1%. Why? Mobile users increase in treatment (composition change)\n- **Cohort**: Aggregate shows retention +1%, but every cohort-month shows flat. Why? Treatment attracts different cohorts (timing confound)\n\n**Solutions**:\n1. **Stratified analysis**: Break down by subgroup, report stratum-specific effects\n2. **ANCOVA/adjustment**: Adjust for group membership (e.g., covariate for device type)\n3. **Check balance**: Ensure treatment and control have same distribution of subgroups. If not, that's a confound\n4. **Randomize at subgroup level**: Randomize within strata, balance composition\n\n## Common gotchas / interview framings\n- \"Aggregate effect is positive, but desktop is negative. Do we launch?\" → Investigate. If desktop is real confounder (imbalance), report stratum-specific effects. If it's noise, report aggregate. Need to understand *why* desktop differs\n- \"Should we always stratify by subgroup?\" → Only if you suspect confounding. Unnecessary stratification loses power (multiple comparisons). Stratify only on pre-specified confounders\n- \"Our A/A test passed (no difference between control arms), so we don't have confounds.\" → Wrong. A/A test checks randomization, not confounds. Confounds appear when aggregating across subgroups\n- \"Stratum-specific effects contradict aggregate. Which is true?\" → Both are true; depends on perspective. Aggregate is causal for overall population; stratum-specific is causal for subgroup. Report both",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "User tenure is a confounder",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Treatment attracts new users (composition change)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Stratum effects contradict aggregate (Simpson's paradox)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  }
+]

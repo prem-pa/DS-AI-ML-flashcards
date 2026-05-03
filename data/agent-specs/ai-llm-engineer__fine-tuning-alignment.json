@@ -1,0 +1,93 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "fine-tuning-alignment",
+  "topic_label": "Fine-Tuning & Alignment",
+  "concept_count": 12,
+  "concepts": [
+    {
+      "slug": "supervised-fine-tuning-sft-on-instruction-data",
+      "title": "Supervised fine-tuning (SFT) on instruction data",
+      "difficulty": "intermediate",
+      "hook": "Teach model to follow instructions; improves instruction-following.",
+      "subtopic": "Fine-Tuning Approaches"
+    },
+    {
+      "slug": "parameter-efficient-fine-tuning-lora-qlora-llama-adapter",
+      "title": "Parameter-efficient fine-tuning (LoRA, QLoRA, LLaMA-Adapter)",
+      "difficulty": "intermediate",
+      "hook": "LoRA: low-rank updates; QLoRA: 4-bit + LoRA; fits on single GPU.",
+      "subtopic": "Fine-Tuning Approaches"
+    },
+    {
+      "slug": "domain-specific-fine-tuning",
+      "title": "Domain-specific fine-tuning",
+      "difficulty": "intermediate",
+      "hook": "Adapt to domain (medical, legal, code); improves in-domain performance.",
+      "subtopic": "Fine-Tuning Approaches"
+    },
+    {
+      "slug": "continued-pre-training-on-domain-data",
+      "title": "Continued pre-training on domain data",
+      "difficulty": "intermediate",
+      "hook": "Add domain tokens to vocab; pre-train on domain corpus.",
+      "subtopic": "Fine-Tuning Approaches"
+    },
+    {
+      "slug": "reinforcement-learning-from-human-feedback-rlhf",
+      "title": "Reinforcement learning from human feedback (RLHF)",
+      "difficulty": "intermediate",
+      "hook": "Reward model trained on human preferences; policy optimized against reward.",
+      "subtopic": "Alignment & RLHF"
+    },
+    {
+      "slug": "reward-modeling-and-preference-data",
+      "title": "Reward modeling and preference data",
+      "difficulty": "advanced",
+      "hook": "Collect pairwise comparisons; train reward model; must generalize.",
+      "subtopic": "Alignment & RLHF"
+    },
+    {
+      "slug": "policy-optimization-reinforce-ppo",
+      "title": "Policy optimization (REINFORCE, PPO)",
+      "difficulty": "advanced",
+      "hook": "PPO staple; on-policy; clipped objective prevents instability.",
+      "subtopic": "Alignment & RLHF"
+    },
+    {
+      "slug": "kl-divergence-constraint-and-reference-model",
+      "title": "KL divergence constraint and reference model",
+      "difficulty": "intermediate",
+      "hook": "Prevent policy drifting too far from SFT model; reference model in loss.",
+      "subtopic": "Alignment & RLHF"
+    },
+    {
+      "slug": "direct-preference-optimization-dpo",
+      "title": "Direct Preference Optimization (DPO)",
+      "difficulty": "intermediate",
+      "hook": "Skip reward model; optimize pairwise loss directly.",
+      "subtopic": "Modern Preference Optimization"
+    },
+    {
+      "slug": "simpo-orpo-kto-post-dpo-landscape",
+      "title": "SimPO, ORPO, KTO post-DPO landscape",
+      "difficulty": "advanced",
+      "hook": "SimPO: remove reference model; ORPO: merge SFT; KTO: handle unpaired data.",
+      "subtopic": "Modern Preference Optimization"
+    },
+    {
+      "slug": "grpo-group-relative-policy-optimization",
+      "title": "GRPO (Group Relative Policy Optimization)",
+      "difficulty": "advanced",
+      "hook": "Online RL; sample groups, compute advantages within groups.",
+      "subtopic": "Modern Preference Optimization"
+    },
+    {
+      "slug": "iterative-improvement-dpo-new-data-dpo",
+      "title": "Iterative improvement (DPO → new data → DPO)",
+      "difficulty": "advanced",
+      "hook": "Self-play improves model; iterative rounds push capabilities.",
+      "subtopic": "Modern Preference Optimization"
+    }
+  ]
+}

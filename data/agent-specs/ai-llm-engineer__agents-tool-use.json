@@ -1,0 +1,114 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "agents-tool-use",
+  "topic_label": "Agents & Tool Use",
+  "concept_count": 15,
+  "concepts": [
+    {
+      "slug": "langgraph-graph-based-stateful-agents",
+      "title": "LangGraph (graph-based, stateful agents)",
+      "difficulty": "intermediate",
+      "hook": "Define agents as graphs; checkpointing and observability; enterprise standard.",
+      "subtopic": "Agent Frameworks & Architectures"
+    },
+    {
+      "slug": "crewai-role-based-crews",
+      "title": "CrewAI (role-based crews)",
+      "difficulty": "intermediate",
+      "hook": "Simple DSL; 20 lines to start; lower learning curve.",
+      "subtopic": "Agent Frameworks & Architectures"
+    },
+    {
+      "slug": "openai-agents-sdk-handoff-pattern",
+      "title": "OpenAI Agents SDK (handoff pattern)",
+      "difficulty": "intermediate",
+      "hook": "Explicit agent-to-agent handoffs; model-locked to OpenAI.",
+      "subtopic": "Agent Frameworks & Architectures"
+    },
+    {
+      "slug": "anthropic-agent-sdk",
+      "title": "Anthropic Agent SDK",
+      "difficulty": "intermediate",
+      "hook": "Deep Claude integration; safety-focused; lighter on orchestration than LangGraph.",
+      "subtopic": "Agent Frameworks & Architectures"
+    },
+    {
+      "slug": "autogenag2-in-maintenance-mode",
+      "title": "AutoGen/AG2 in maintenance mode",
+      "difficulty": "beginner",
+      "hook": "Legacy; limited future development.",
+      "subtopic": "Agent Frameworks & Architectures"
+    },
+    {
+      "slug": "function-calling-tool-use-patterns",
+      "title": "Function calling / tool use patterns",
+      "difficulty": "intermediate",
+      "hook": "Model calls tools; execute and feed back results.",
+      "subtopic": "Tool Use & Function Calling"
+    },
+    {
+      "slug": "tool-definition-and-validation",
+      "title": "Tool definition and validation",
+      "difficulty": "intermediate",
+      "hook": "JSON schema; parameter validation; error handling.",
+      "subtopic": "Tool Use & Function Calling"
+    },
+    {
+      "slug": "parallel-tool-execution",
+      "title": "Parallel tool execution",
+      "difficulty": "intermediate",
+      "hook": "Call multiple tools in one turn; efficiency.",
+      "subtopic": "Tool Use & Function Calling"
+    },
+    {
+      "slug": "tool-composition-and-chaining",
+      "title": "Tool composition and chaining",
+      "difficulty": "intermediate",
+      "hook": "Use output of one tool as input to another.",
+      "subtopic": "Tool Use & Function Calling"
+    },
+    {
+      "slug": "react-reasoning-acting",
+      "title": "ReAct (Reasoning + Acting)",
+      "difficulty": "intermediate",
+      "hook": "Think, then act; observe results; loop.",
+      "subtopic": "Agent Design Patterns"
+    },
+    {
+      "slug": "hierarchical-agents-and-delegation",
+      "title": "Hierarchical agents and delegation",
+      "difficulty": "advanced",
+      "hook": "Agents managing sub-agents; delegation for complex tasks.",
+      "subtopic": "Agent Design Patterns"
+    },
+    {
+      "slug": "self-correction-and-error-handling",
+      "title": "Self-correction and error handling",
+      "difficulty": "intermediate",
+      "hook": "Detect errors; retry or replan.",
+      "subtopic": "Agent Design Patterns"
+    },
+    {
+      "slug": "agent-evaluation-and-reliability",
+      "title": "Agent evaluation and reliability",
+      "difficulty": "advanced",
+      "hook": "Metrics for agent success; tradeoff: cost vs quality.",
+      "subtopic": "Agent Design Patterns"
+    },
+    {
+      "slug": "model-context-protocol-mcp",
+      "title": "Model Context Protocol (MCP)",
+      "difficulty": "intermediate",
+      "hook": "Standardize agent-tool communication; Anthropic contributes to Linux Foundation.",
+      "subtopic": "Emerging Standards"
+    },
+    {
+      "slug": "agent-to-agent-protocol-a2a",
+      "title": "Agent-to-Agent Protocol (A2A)",
+      "difficulty": "intermediate",
+      "hook": "Enable agents to discover and communicate with other agents.",
+      "subtopic": "Emerging Standards"
+    }
+  ]
+}

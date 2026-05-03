@@ -1,0 +1,58 @@
+{
+  "track": "verticals",
+  "track_label": "Verticals",
+  "topic": "recommender-systems",
+  "topic_label": "Recommender Systems",
+  "concept_count": 7,
+  "concepts": [
+    {
+      "slug": "collaborative-filtering-user-user-item-item-matrix-factorization",
+      "title": "Collaborative filtering (user-user, item-item, matrix factorization)",
+      "difficulty": "intermediate",
+      "hook": "Recommend based on user history.",
+      "subtopic": "Retrieval & Ranking"
+    },
+    {
+      "slug": "content-based-filtering-and-features",
+      "title": "Content-based filtering and features",
+      "difficulty": "intermediate",
+      "hook": "Recommend based on item features.",
+      "subtopic": "Retrieval & Ranking"
+    },
+    {
+      "slug": "learning-to-rank-and-ranking-models",
+      "title": "Learning-to-rank and ranking models",
+      "difficulty": "intermediate",
+      "hook": "Pairwise, listwise objectives.",
+      "subtopic": "Retrieval & Ranking"
+    },
+    {
+      "slug": "two-tower-and-dual-encoder-models",
+      "title": "Two-tower and dual-encoder models",
+      "difficulty": "intermediate",
+      "hook": "Efficient large-scale retrieval.",
+      "subtopic": "Retrieval & Ranking"
+    },
+    {
+      "slug": "temporal-dynamics-and-time-aware-recommendations",
+      "title": "Temporal dynamics and time-aware recommendations",
+      "difficulty": "advanced",
+      "hook": "Users' preferences change; incorporate time.",
+      "subtopic": "Advanced Topics"
+    },
+    {
+      "slug": "cold-start-problem-and-exploration-exploitation",
+      "title": "Cold-start problem and exploration-exploitation",
+      "difficulty": "advanced",
+      "hook": "New users/items; tradeoff exploration vs exploitation.",
+      "subtopic": "Advanced Topics"
+    },
+    {
+      "slug": "embedding-based-retrieval-at-scale",
+      "title": "Embedding-based retrieval at scale",
+      "difficulty": "advanced",
+      "hook": "Efficient nearest-neighbor search in huge item catalogs.",
+      "subtopic": "Advanced Topics"
+    }
+  ]
+}

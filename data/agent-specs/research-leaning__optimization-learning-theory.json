@@ -1,0 +1,58 @@
+{
+  "track": "research-leaning",
+  "track_label": "RESEARCH-LEANING",
+  "topic": "optimization-learning-theory",
+  "topic_label": "Optimization & Learning Theory",
+  "concept_count": 7,
+  "concepts": [
+    {
+      "slug": "sgd-convergence-analysis-convex-and-non-convex",
+      "title": "SGD convergence analysis (convex and non-convex)",
+      "difficulty": "advanced",
+      "hook": "Convergence rates; when does SGD work?",
+      "subtopic": "Optimization Algorithms"
+    },
+    {
+      "slug": "adam-convergence-and-limitations",
+      "title": "Adam convergence and limitations",
+      "difficulty": "advanced",
+      "hook": "Adaptive learning rates; non-convergence in some settings.",
+      "subtopic": "Optimization Algorithms"
+    },
+    {
+      "slug": "sharpness-vs-flatness-of-minima",
+      "title": "Sharpness vs flatness of minima",
+      "difficulty": "advanced",
+      "hook": "Flat minima generalize better; SAM (Sharpness-Aware Minimization).",
+      "subtopic": "Optimization Algorithms"
+    },
+    {
+      "slug": "second-order-optimization-and-hessian-free-methods",
+      "title": "Second-order optimization and Hessian-free methods",
+      "difficulty": "advanced",
+      "hook": "Natural gradient, Newton methods; expensive but fewer iterations.",
+      "subtopic": "Optimization Algorithms"
+    },
+    {
+      "slug": "vc-dimension-and-rademacher-complexity",
+      "title": "VC dimension and Rademacher complexity",
+      "difficulty": "advanced",
+      "hook": "Capacity measures; generalization bounds.",
+      "subtopic": "Learning Theory"
+    },
+    {
+      "slug": "pac-learning-framework",
+      "title": "PAC learning framework",
+      "difficulty": "advanced",
+      "hook": "Probably approximately correct; formal learning theory.",
+      "subtopic": "Learning Theory"
+    },
+    {
+      "slug": "implicit-regularization-of-sgd",
+      "title": "Implicit regularization of SGD",
+      "difficulty": "advanced",
+      "hook": "SGD acts as regularizer; converges to minimum norm solution.",
+      "subtopic": "Learning Theory"
+    }
+  ]
+}

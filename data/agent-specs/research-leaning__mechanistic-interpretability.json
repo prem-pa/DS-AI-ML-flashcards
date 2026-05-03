@@ -1,0 +1,44 @@
+{
+  "track": "research-leaning",
+  "track_label": "RESEARCH-LEANING",
+  "topic": "mechanistic-interpretability",
+  "topic_label": "Mechanistic Interpretability",
+  "concept_count": 5,
+  "concepts": [
+    {
+      "slug": "activation-patching-and-causal-tracing",
+      "title": "Activation patching and causal tracing",
+      "difficulty": "advanced",
+      "hook": "Which components cause outputs; tracing attention flow.",
+      "subtopic": "Probing & Attribution"
+    },
+    {
+      "slug": "layer-wise-relevance-propagation",
+      "title": "Layer-wise relevance propagation",
+      "difficulty": "advanced",
+      "hook": "Decompose predictions into feature contributions.",
+      "subtopic": "Probing & Attribution"
+    },
+    {
+      "slug": "attention-head-interpretability",
+      "title": "Attention head interpretability",
+      "difficulty": "advanced",
+      "hook": "What do attention patterns tell us? Limitations and risks.",
+      "subtopic": "Probing & Attribution"
+    },
+    {
+      "slug": "neuron-and-circuit-level-analysis",
+      "title": "Neuron and circuit level analysis",
+      "difficulty": "advanced",
+      "hook": "Individual neuron computation; circuits of neurons.",
+      "subtopic": "Circuits & Mechanistic Explanation"
+    },
+    {
+      "slug": "sae-sparse-autoencoders-and-superposition-disentanglement",
+      "title": "SAE (Sparse Autoencoders) and superposition disentanglement",
+      "difficulty": "advanced",
+      "hook": "Decompose superposition into interpretable features.",
+      "subtopic": "Circuits & Mechanistic Explanation"
+    }
+  ]
+}

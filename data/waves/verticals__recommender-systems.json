@@ -1,0 +1,820 @@
+[
+  {
+    "slug": "collaborative-filtering-user-user-item-item-matrix-factorization",
+    "title": "Collaborative filtering (user-user, item-item, matrix factorization)",
+    "track": "verticals",
+    "topic": "recommender-systems",
+    "difficulty": "intermediate",
+    "tags": [
+      "collaborative-filtering",
+      "user-similarity",
+      "item-similarity",
+      "matrix-factorization",
+      "latent-factors",
+      "netflix-prize"
+    ],
+    "aliases": [
+      "memory-based filtering",
+      "model-based filtering",
+      "SVD",
+      "SVD++"
+    ],
+    "wikilinks": [
+      "collaborative-filtering",
+      "matrix-factorization",
+      "singular-value-decomposition",
+      "latent-factor-model",
+      "user-item-interactions",
+      "sparsity-problem",
+      "netflix-competition"
+    ],
+    "sources": [
+      {
+        "url": "https://datajobs.com/data-science-repo/Recommender-Systems-%5BNetflix%5D.pdf",
+        "label": "Netflix Matrix Factorization Techniques Paper"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Matrix_factorization_(recommender_systems)",
+        "label": "Wikipedia: Matrix Factorization in Recommender Systems"
+      },
+      {
+        "url": "https://link.springer.com/article/10.1007/s10115-024-02315-z",
+        "label": "Collaborative Filtering Through Netflix Prize Lens"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nCollaborative filtering predicts user preferences by leveraging patterns in user-item interaction history. The core insight: if two users rated similar items similarly, they likely have similar tastes. Matrix factorization decomposes the sparse user-item interaction matrix into low-rank latent factor matrices, revealing hidden preference patterns.\n\n## Detail\n\n**Three main approaches:**\n\n1. **User-user CF:** Find similar users, recommend items liked by neighbors. Computationally expensive for large user bases.\n\n2. **Item-item CF:** Find similar items based on co-rating patterns. More stable than user-user as item relationships are stable.\n\n3. **Matrix Factorization (MF):** Decomposes user-item matrix R into R ≈ U × V^T, where U is (m × k) user latent factors, V is (n × k) item latent factors, k << min(m,n). Learned via SGD minimizing: ||R - UV^T||² + λ(||U||² + ||V||²).\n\n**Advanced variants:**\n- **SVD:** Basic matrix factorization with regularization\n- **SVD++:** Incorporates implicit feedback and temporal dynamics\n- **timeSVD++:** Adds time-aware components for evolving preferences\n\n**Netflix Prize (2006-2009):** Demonstrated SVD improvements from ~0.95 RMSE (Cinematch baseline) to 0.857 RMSE (ensemble). SVD++ → timeSVD++ showed consistent gains with more latent factors.\n\n## Common gotchas / interview framings\n\n- **Cold-start:** MF fails for new users/items with no interaction history. Requires content-based hybrid approach.\n- **Sparsity:** Real-world matrices are 99%+ sparse; efficient computation needed (only factorize known entries).\n- **Scalability:** User-user similarity O(m²), item-item O(n²) can be prohibitive; MF is O(mnk) and more scalable.\n- **Implicit vs explicit:** MF can handle implicit feedback (clicks, watches) differently—common in production.\n- **Overfitting:** Heavy regularization and early stopping critical; k selection is hyperparameter tuning problem.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core assumption in collaborative filtering that makes it work?",
+        "back": "Users with similar past preferences will like similar future items. This is leveraged by either finding similar users (user-user CF) or similar items (item-item CF) based on interaction patterns."
+      },
+      {
+        "type": "mcq",
+        "front": "In matrix factorization R ≈ U × V^T, what do U and V represent?",
+        "back": "U is the user latent factor matrix (m users × k latent dimensions), V is the item latent factor matrix (n items × k latent dimensions). The dot product U_i · V_j predicts user i's preference for item j.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "U = user-item interactions, V = item features",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "U = user latent factors (m × k), V = item latent factors (n × k), where k is the rank",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "U = singular values, V = eigenvectors",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "U = user embeddings, V = video embeddings (YouTube-specific)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is SVD++ an improvement over basic SVD in collaborative filtering?",
+        "back": "SVD++ incorporates implicit feedback (clicks, skips) and explicit ratings together. Netflix Prize results showed SVD++ → timeSVD++ progression: RMSE SVD < SVD++ < timeSVD++. The improvement of SVD++ over SVD was smaller than timeSVD++ over SVD++ because temporal dynamics captured significant preference drift."
+      },
+      {
+        "type": "flip",
+        "front": "What is the main limitation of user-user collaborative filtering compared to matrix factorization?",
+        "back": "User-user CF requires computing similarity between all user pairs, which is O(m²) complexity. For platforms with millions of users, this is computationally prohibitive. Matrix factorization is O(mnk) and can scale better with distributed training."
+      },
+      {
+        "type": "mcq",
+        "front": "Which regularization term prevents overfitting in the MF objective ||R - UV^T||² + λ(||U||² + ||V||²)?",
+        "back": "The λ(||U||² + ||V||²) term is L2 regularization on latent factors. It penalizes large factor values, preventing overfitting. Typical λ values range from 0.01 to 0.1. Combined with early stopping and appropriate k selection, this controls model complexity.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "||R - UV^T||²",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "λ(||U||² + ||V||²)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "The learning rate in SGD",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Early stopping only",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "content-based-filtering-and-features",
+    "title": "Content-based filtering and features",
+    "track": "verticals",
+    "topic": "recommender-systems",
+    "difficulty": "intermediate",
+    "tags": [
+      "content-based-filtering",
+      "feature-engineering",
+      "item-features",
+      "semantic-similarity",
+      "cold-start",
+      "hybrid-systems"
+    ],
+    "aliases": [
+      "content-driven recommendations",
+      "feature-based filtering",
+      "semantic recommendation"
+    ],
+    "wikilinks": [
+      "content-based-filtering",
+      "feature-engineering",
+      "item-metadata",
+      "semantic-similarity",
+      "hybrid-recommenders",
+      "cold-start-problem",
+      "tfidf",
+      "embedding-similarity"
+    ],
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Recommender_system",
+        "label": "Wikipedia: Recommender Systems Overview"
+      },
+      {
+        "url": "https://towardsdatascience.com/recommendation-system-basics-with-collaborative-filtering-and-content-based-filtering-8dbb1925c2f4",
+        "label": "Content-based vs Collaborative Filtering Tutorial"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nContent-based filtering recommends items similar to those a user has liked in the past. Instead of leveraging collaborative patterns, it relies on item features/metadata and user preference profiles. If a user watched action movies, recommend similar action movies.\n\n## Detail\n\n**Approach:**\n1. Extract item features (genre, director, cast, keywords, plot embeddings, etc.)\n2. Build user preference profiles from their rated/interacted items\n3. Compute similarity between user profile and candidate items\n4. Recommend top-k most similar items\n\n**Feature representations:**\n- **Categorical:** One-hot/multi-hot encoding (genres, language, rating)\n- **TF-IDF:** Text features from titles, descriptions, tags\n- **Embeddings:** Learned representations from deep models (plot text → BERT embeddings)\n- **Metadata:** Release date, duration, budget, ratings\n- **Derived:** Trending scores, engagement metrics\n\n**Similarity metrics:**\n- Cosine similarity (most common for embeddings)\n- Euclidean distance\n- Jaccard similarity (categorical features)\n\n**User profile construction:**\n- Average of liked items' features\n- Weighted average (using ratings as weights)\n- Explicit preference vectors (learned from interaction)\n\n**Hybrid approaches:** Combine CF + content by:\n- Learning embeddings jointly on interactions + metadata\n- Ensemble predictions: α·CF_score + (1-α)·content_score\n- Factorization machines incorporating both signal types\n\n## Common gotchas / interview framings\n\n- **Cold-start advantage:** New items with no interaction history can be recommended via content features (unlike CF). This is crucial for platforms with high item churn.\n- **Limited discovery:** Tends to recommend similar items; may create filter bubbles. User who likes one action movie gets recommended only action movies.\n- **Feature engineering burden:** Success depends heavily on feature quality. Poor features → poor recommendations. Requires domain knowledge.\n- **Scalability:** Feature extraction and similarity computation scales with feature dimensionality and catalog size.\n- **Serendipity:** Less likely to surface unexpected/diverse recommendations compared to CF.\n- **Popularity bias in metadata:** If metadata reflects past engagement, content filtering inherits popularity bias.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the fundamental difference between collaborative filtering and content-based filtering?",
+        "back": "CF uses patterns in user-user or item-item interactions: 'users with similar histories like similar items.' Content-based uses item features: 'recommend items similar to ones you liked.' CF requires interaction data; content-based requires item metadata."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is content-based filtering particularly useful for the cold-start problem?",
+        "back": "New items have no user interactions, so CF cannot work. Content-based filtering works immediately if item features (metadata, embeddings) are available, making it ideal for handling new items. This is why most production systems use hybrid: CF for ranked users, content-based for new items.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It trains faster than collaborative filtering",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "It can recommend new items with zero interaction history using their features",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "It requires fewer labeled examples",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It always produces more accurate recommendations",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How would you construct a user preference profile in content-based filtering?",
+        "back": "Common methods: (1) Average features of all liked items, (2) Weighted average using ratings as weights (higher ratings → more influence), (3) Learned preference vectors from logistic regression on liked/disliked items, (4) Recency-weighted average (recent interactions weighted higher)."
+      },
+      {
+        "type": "flip",
+        "front": "What is the main limitation of content-based filtering regarding recommendation diversity?",
+        "back": "It tends to recommend items very similar to past liked items, creating filter bubbles. Users get trapped in narrow recommendation silos (e.g., someone who watches one action movie gets only action recommendations). CF is better for serendipitous discoveries."
+      },
+      {
+        "type": "mcq",
+        "front": "Which similarity metric is most appropriate for comparing dense learned embeddings in content-based systems?",
+        "back": "Cosine similarity is the standard for dense vector embeddings. It measures angle between vectors, ignoring magnitude. For categorical one-hot features, Jaccard is better. For TF-IDF vectors, cosine is also optimal. Euclidean distance can work but cosine is more numerically stable for high-dimensional sparse embeddings.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Jaccard similarity",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Cosine similarity",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Manhattan distance",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Hamming distance",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "learning-to-rank-and-ranking-models",
+    "title": "Learning-to-rank and ranking models",
+    "track": "verticals",
+    "topic": "recommender-systems",
+    "difficulty": "intermediate",
+    "tags": [
+      "learning-to-rank",
+      "listwise-loss",
+      "pairwise-loss",
+      "pointwise-loss",
+      "dcn",
+      "dlrm",
+      "ctr-prediction",
+      "feature-interaction"
+    ],
+    "aliases": [
+      "LTR",
+      "ranking-optimization",
+      "rank-learning",
+      "pointwise-ranking"
+    ],
+    "wikilinks": [
+      "learning-to-rank",
+      "dcn-deep-cross-network",
+      "dlrm-deep-learning-recommendation",
+      "ctr-prediction",
+      "feature-interaction",
+      "loss-functions",
+      "lambdamart",
+      "gradient-boosting"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2008.13535",
+        "label": "DCN V2: Improved Deep & Cross Network Paper"
+      },
+      {
+        "url": "https://arxiv.org/pdf/1906.00091",
+        "label": "DLRM: Deep Learning Recommendation Model (Facebook)"
+      },
+      {
+        "url": "https://engineering.fb.com/2024/11/19/data-infrastructure/sequence-learning-personalized-ads-recommendations/",
+        "label": "Meta: Sequence Learning for Ads Recommendations (2024)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nLearning-to-rank (LTR) optimizes the ranking order of items given a query/user context. Unlike binary classification (clicked/not-clicked), LTR directly optimizes ranking metrics: NDCG, MAP, MRR. Two main approaches: pointwise (predict individual scores) and listwise (optimize ranking order directly).\n\n## Detail\n\n**Three loss formulations:**\n\n1. **Pointwise:** Treat each query-item pair independently. Predict relevance score or click probability.\n   - Loss: Cross-entropy for binary (click/no-click) or MSE for relevance score\n   - Pros: Simple, works with any classifier\n   - Cons: Ignores ranking order; high-scored items at bottom still incur loss\n\n2. **Pairwise:** Compare relative rankings of item pairs\n   - Loss: BPR (Bayesian Personalized Ranking), margin-based ranking loss\n   - Optimize: P(item_i ranked > item_j | clicked(i) AND not clicked(j))\n   - Pros: More ranking-aware\n   - Cons: O(n²) pair comparisons\n\n3. **Listwise:** Optimize entire ranking list jointly\n   - Loss: LambdaMART, LambdaRank (differentiable approximations of NDCG, MAP)\n   - Optimize ranking metrics directly via gradient of rank loss\n   - Pros: Directly optimizes ranking quality\n   - Cons: Complex, less stable gradient signals\n\n**Modern architectures:**\n\n- **DCN (Deep & Cross Network):** Proposed by Google for web-scale LTR. Two parallel towers: deep MLP learns non-linear patterns; cross network explicitly models feature interactions via r_l = r_{l-1} ⊙ (w_l · r_0) + r_{l-1}. DCN-V2 improves expressiveness and training efficiency.\n\n- **DLRM (Deep Learning Recommendation Model):** Facebook's architecture. Hypothesis: feature interactions are paramount. Sparse features → embeddings, dense features normalized, then factorization machine (FM) layer computes pairwise interactions: ∑_i<j (e_i ⊙ e_j), concatenated with raw embeddings into MLP for final score.\n\n**In production (Meta 2024):**\nMeta transitioned from manual feature engineering in DLRM to **sequence learning models** (replacing DLRM architecture). New approach: learn representations directly from engagement/conversion events in sequences. Achieved 2-4% conversion lift on select segments.\n\n## Common gotchas / interview framings\n\n- **Metric mismatch:** Optimizing cross-entropy (pointwise) ≠ optimizing NDCG (ranking quality). Especially problematic when tail items matter.\n- **Position bias:** Higher-ranked items get more clicks regardless of relevance. LTR must use inverse propensity weighting or counterfactual approaches.\n- **Feature engineering:** DLRM's original success relied on thousands of manually engineered features. Now shifting toward learned representations.\n- **Training-serving skew:** LTR models trained on logged interactions (with position bias) but deployed ranking fresh items with no logged clicks.\n- **Computational cost:** DCN-V2 and DLRM are expressive but require careful optimization at scale (distributed training, batching).\n- **Scalability of interaction learning:** Factorization machine component O(kn) where k is embedding dim, n is number of features.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key difference between pointwise and listwise learning-to-rank loss functions?",
+        "back": "Pointwise: Treats each query-item pair independently, predicting relevance score. Simple but ignores ranking order.\nListwise: Optimizes the entire ranking list jointly, directly optimizing ranking metrics like NDCG. More complex but better ranking quality. LambdaMART is a popular listwise approach."
+      },
+      {
+        "type": "mcq",
+        "front": "What is the core architectural innovation of DCN (Deep & Cross Network)?",
+        "back": "DCN's key innovation is the cross network, which explicitly models feature interactions via r_l = r_{l-1} ⊙ (w_l · r_0) + r_{l-1}. This is more efficient than dense MLPs for learning crossing patterns. The deep tower learns non-linear patterns. DCN-V2 improved expressiveness and made it more efficient for web-scale systems.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Using two separate towers for user and item embeddings",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Combining a deep MLP with an explicit cross network layer for feature interactions",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Replacing dense layers with embeddings",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Using attention mechanisms for feature weighting",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In DLRM, why is the factorization machine (FM) layer important?",
+        "back": "FM layer computes pairwise feature interactions: ∑_i<j (e_i ⊙ e_j). This captures how sparse feature embeddings interact (e.g., user_id × item_id interaction). DLRM's core hypothesis is that these interactions are paramount for recommendations, so FM-based interaction modeling is essential."
+      },
+      {
+        "type": "mcq",
+        "front": "Why does position bias pose a challenge in learning-to-rank for recommender systems?",
+        "back": "Position bias: items ranked higher get more clicks due to visibility, not relevance. When training LTR on logged clicks, the model learns position bias as relevance signal. Mitigation: inverse propensity weighting (IPW), controlled experiments with randomized ranking, or causal inference approaches.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Higher-ranked items have naturally better features",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Higher-ranked items receive more clicks regardless of relevance, biasing LTR training",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Lower-ranked items are always clicked less frequently",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Position bias only affects implicit feedback systems",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What major shift did Meta announce in 2024 for their recommendation system architecture?",
+        "back": "Meta moved from DLRM with manual feature engineering to sequence learning models. The new approach learns representations directly from engagement and conversion event sequences, replacing the traditional DLRM neural network architecture. This achieved 2-4% conversion improvement on select segments."
+      }
+    ]
+  },
+  {
+    "slug": "two-tower-and-dual-encoder-models",
+    "title": "Two-tower and dual-encoder models",
+    "track": "verticals",
+    "topic": "recommender-systems",
+    "difficulty": "intermediate",
+    "tags": [
+      "two-tower",
+      "dual-encoder",
+      "candidate-generation",
+      "embedding-retrieval",
+      "approximate-nearest-neighbor",
+      "scalability",
+      "youtube",
+      "pinterest"
+    ],
+    "aliases": [
+      "dual-tower",
+      "siamese-networks",
+      "embedding-based-retrieval",
+      "neural-collaborative-filtering"
+    ],
+    "wikilinks": [
+      "two-tower-model",
+      "dual-encoder-architecture",
+      "approximate-nearest-neighbor-search",
+      "candidate-generation",
+      "embedding-space",
+      "inner-product-similarity",
+      "cosine-similarity",
+      "scann",
+      "faiss"
+    ],
+    "sources": [
+      {
+        "url": "https://cloud.google.com/blog/products/ai-machine-learning/scaling-deep-retrieval-tensorflow-two-towers-architecture",
+        "label": "Google Cloud: Scaling Deep Retrieval with Two Towers"
+      },
+      {
+        "url": "https://towardsdatascience.com/two-tower-networks-and-negative-sampling-in-recommender-systems-fdc88411601b/",
+        "label": "Two-Tower Networks and Negative Sampling (Towards Data Science)"
+      },
+      {
+        "url": "https://www.shaped.ai/blog/the-two-tower-model-for-recommendation-systems-a-deep-dive",
+        "label": "The Two-Tower Model: Deep Dive (Shaped)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nTwo-tower models enable efficient large-scale candidate generation by learning separate dense embeddings for users and items. During inference, retrieve items via approximate nearest neighbor (ANN) search in embedding space. In production pipelines: two-tower for candidate generation (millions → thousands), then ranking models for final ordering.\n\n## Detail\n\n**Architecture:**\n- **User tower:** Neural network consuming user features/context (id, history, demographics, context)\n- **Item tower:** Neural network consuming item features (id, metadata, embeddings)\n- **Output:** user_embedding (d-dim) and item_embedding (d-dim)\n- **Similarity:** Inner product or cosine similarity score_ij = user_i · item_j^T\n\n**Training objective:**\nMax likelihood with in-batch negatives or sampled negatives:\n- Positive: (user_i, item_i) with label 1\n- Negatives: (user_i, item_j where j != i) with label 0\n- Loss: Cross-entropy or triplet loss\n- Hard negative mining: Sample negatives similar to positive to harder optimization\n\n**Inference pipeline:**\n1. Encode all items offline: item_embeddings = item_tower(item_features) → shape (n_items, d)\n2. Quantize/index embeddings using FAISS, ScaNN, or other ANN libraries\n3. For a user query: user_embedding = user_tower(user_features)\n4. ANN search: retrieve top-k items by nearest neighbors (O(d log n) vs O(n) naive)\n5. Pass top-k to ranker for final scoring\n\n**Production at scale (Pinterest, YouTube, Meta):**\n- Two-tower + ANN retrieves hundreds/thousands from billions of items\n- Supports sequence models in user tower (e.g., GRU over recent history)\n- Can modify loss for diversity: decrease negative sampling probability for retrieved items to increase variety\n- Handles position bias in ranking stage separately\n\n**Negative sampling strategies:**\n- **Random:** Simple but inefficient\n- **In-batch negatives:** Use other positive pairs in batch as negatives (cheap)\n- **Hard negatives:** Mine difficult examples (similar embeddings, false negatives) → better optimization\n- **Sampled softmax:** Efficient approximation of full softmax\n\n## Common gotchas / interview framings\n\n- **Embedding collapse:** Both towers learn to output similar embeddings for all items → no discrimination. Mitigated by regularization, hard negative mining, or batch size tuning.\n- **Training-serving gap:** Two-tower trained on implicit feedback (logged interactions) with position bias. Ranker should handle position-corrected scoring.\n- **Embedding staleness:** User/item embeddings precomputed → real-time behavior (e.g., trending item) requires online encoding or refresh.\n- **ANN approximation error:** Approximate search (FAISS, ScaNN) may miss true nearest neighbors, reducing coverage. Tradeoff: speed vs recall.\n- **Calibration:** Inner product assumes embedding norms are calibrated. If not, similar items can have very different scores. Consider normalizing embeddings or using cosine similarity.\n- **Cold-start:** New items/users without embedding history. Mitigate with content-based features or hybrid warm-start.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why are two-tower models essential in production recommendation systems at scale?",
+        "back": "Two-tower models enable efficient candidate generation from massive catalogs (billions of items). User embeddings are compared against precomputed item embeddings using approximate nearest neighbor (ANN) search, reducing O(n) complexity to O(d log n). This makes it feasible to retrieve top candidates in milliseconds."
+      },
+      {
+        "type": "mcq",
+        "front": "How is the two-tower model typically trained?",
+        "back": "Two-tower uses contrastive learning: maximize sim(user_i, item_i) while minimizing sim(user_i, item_j) for negatives. Loss is typically cross-entropy with in-batch negatives or sampled softmax. Hard negative mining (sampling difficult negatives) improves training efficiency.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Minimize MSE between user and item embeddings",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Maximize inner product of positive pairs while minimizing inner product of negative pairs (contrastive learning)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Ranking loss on pairwise item comparisons",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Classification loss on binary click prediction",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the role of approximate nearest neighbor (ANN) search in two-tower inference?",
+        "back": "During inference, instead of computing similarities between user embedding and all n items (O(n)), ANN search retrieves top-k nearest items in O(d log n) time. Libraries like FAISS and ScaNN index precomputed item embeddings for fast lookup, making real-time retrieval feasible."
+      },
+      {
+        "type": "flip",
+        "front": "What is the 'embedding collapse' problem in two-tower training, and how is it mitigated?",
+        "back": "Embedding collapse occurs when both towers learn to output nearly identical embeddings for all items, destroying discriminative power. Mitigation: (1) Hard negative mining to force distinction, (2) Regularization on embeddings, (3) Proper batch size to ensure diverse negative samples, (4) In-batch negatives strategy, (5) Temperature scaling in similarity scores."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is there often a gap between two-tower training and ranking model inference in production pipelines?",
+        "back": "Two-tower is trained on logged interactions (clicks) which have position bias: items ranked higher get more clicks. Ranker uses a smaller subset of candidates and can incorporate position-correction signals (IPW, causal inference) for unbiased ranking. Also, two-tower embeddings may not reflect real-time trending, while ranker can use fresh signals.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Two-tower is trained on implicit feedback with position bias, while ranker sees unbiased data",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Ranker requires more real-time signals than two-tower",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Two-tower embeddings become stale after training",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Two-tower uses different features than ranker",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "temporal-dynamics-and-time-aware-recommendations",
+    "title": "Temporal dynamics and time-aware recommendations",
+    "track": "verticals",
+    "topic": "recommender-systems",
+    "difficulty": "advanced",
+    "tags": [
+      "temporal-dynamics",
+      "time-aware",
+      "seasonality",
+      "trend-shift",
+      "recency-bias",
+      "timedsvd",
+      "session-based",
+      "sequence-models"
+    ],
+    "aliases": [
+      "time-dependent-recommendations",
+      "drift-aware-systems",
+      "trending-items",
+      "popularity-evolution"
+    ],
+    "wikilinks": [
+      "temporal-dynamics",
+      "concept-drift",
+      "timedsvd",
+      "session-based-recommendation",
+      "rnn-for-recommendations",
+      "gru4rec",
+      "attention-mechanisms",
+      "trend-detection"
+    ],
+    "sources": [
+      {
+        "url": "https://link.springer.com/article/10.1007/s10115-024-02315-z",
+        "label": "Netflix Prize: Temporal Effects in Recommendation"
+      },
+      {
+        "url": "https://arxiv.org/html/2403.00802v1",
+        "label": "Towards a Theoretical Understanding of Two-Stage Recommender Systems"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nUser preferences and item popularity are not static. Users' tastes evolve over time; items trend and decline. Temporal modeling captures these dynamics: trending items surge briefly, seasonal patterns repeat yearly, user interests drift gradually. Time-aware systems adapt rankings to reflect current state.\n\n## Detail\n\n**Temporal phenomena:**\n\n1. **User-level drift:** User tastes change (graduation, marriage, job change). Recency bias—recent interactions more predictive than old ones.\n\n2. **Item-level popularity:** New releases spike, classics decline. Seasonal content (holiday movies, sports). Viral/trending items have short lifespans.\n\n3. **Interaction patterns:** Different interaction distributions at different times (e.g., music streaming varies by day-of-week, time-of-day).\n\n**Modeling approaches:**\n\n**timeSVD++** (Netflix Prize):\n- Extends SVD++ by adding time-aware parameters\n- r_ui(t) = μ + b_u(t) + b_i(t) + q_i^T(p_u + |I_u|^{-1/2}Σ_{j∈I_u} y_j)\n- User bias b_u(t) = b_u + α_u · dev_u(t) + b_ut · days_since_start\n- Item bias b_i(t) = b_i + b_it · (t - t_i) / days\n- Captures damping of user effects over time and item popularity drift\n- Netflix Prize results: timeSVD++ >> SVD++ >> SVD (RMSE: 0.87 vs 0.90 vs 0.95)\n\n**Session-based models:**\n- RNN/GRU4Rec: Sequence model over user's recent session interactions\n- Predict next item given sequence of previous items\n- Captures item-to-item transitions and short-term context\n\n**Attention mechanisms:**\n- Transformer-based: SASRec (Self-Attention with Relative Position Encoding), BERT4Rec\n- Weight recent interactions more heavily\n- Learn which past interactions are relevant to current prediction\n\n**Collaborative Filtering with temporal decay:**\n- Weight older interactions less: interaction at time t_i gets weight e^{-λ(t_now - t_i)}\n- Simpler than timeSVD++ but captures recency bias\n\n**Embedding refresh strategies:**\n- Offline: Retrain embeddings daily/weekly (batch refresh)\n- Online: Continuous learning as new interactions arrive\n- Hybrid: Core embeddings learned offline, fine-tuned online for trending items\n\n## Common gotchas / interview framings\n\n- **Concept drift:** User distribution shifts over time. Model trained on old data performs poorly. Continuous retraining essential; sliding window training common (e.g., retrain weekly on last 3 months).\n- **Evaluation protocol:** Standard train-test split violates temporal ordering. Must use time-forward validation: train on [t1, t2], test on (t2, t3].\n- **Trend overfitting:** Model chases trending items that are about to decline. Require ensemble with long-term signals or regularization.\n- **Cold-start recency:** Very new items have no history. Cannot use temporal factors. Fall back to content-based or collaborative signals.\n- **Staleness in batch systems:** Offline trained embeddings become stale. Real-time queries need adaptive ranking (position-aware, context-aware).\n- **Computational cost of retraining:** Large-scale systems must balance update frequency vs compute cost. Often use importance weighting instead of full retraining.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does timeSVD++ add to basic SVD to capture temporal effects?",
+        "back": "timeSVD++ adds time-dependent bias terms for users and items. User bias b_u(t) varies with deviation from user's typical rating date and global time trend. Item bias b_i(t) decays as item ages. Netflix Prize showed timeSVD++ RMSE 0.87 vs SVD++ 0.90, demonstrating significant improvement from temporal modeling."
+      },
+      {
+        "type": "mcq",
+        "front": "Which temporal phenomenon is NOT effectively captured by timeSVD++?",
+        "back": "timeSVD++ models user and item bias drift but operates on explicit ratings and global time. It doesn't capture short-term session-level item sequences (e.g., user watches action-thriller then sci-fi). Session-based models (GRU4Rec, RNNs) or attention mechanisms (SASRec) are needed for sequential patterns.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "User taste drift over years",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Item popularity decline as it ages",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Short-term item-to-item transitions within a session",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "User bias variation over time",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is time-forward validation essential for evaluating temporal recommendation models?",
+        "back": "Standard train-test split violates temporal order: model sees future data during training. Time-forward validation trains on [t1, t2], tests on (t2, t3]. This simulates realistic deployment where model predicts future interactions from past data. Essential for accurately assessing real-world performance."
+      },
+      {
+        "type": "flip",
+        "front": "How does recency weighting differ from timeSVD++ in handling temporal dynamics?",
+        "back": "Recency weighting: Simple decay e^{-λ(t_now - t_i)} applied to older interactions, reducing their influence. timeSVD++: Explicit temporal bias terms b_u(t), b_i(t) learned during training. Recency is faster and simpler; timeSVD++ is more sophisticated but computationally expensive."
+      },
+      {
+        "type": "mcq",
+        "front": "What is the main challenge with using offline-trained embeddings in a temporal recommendation system?",
+        "back": "Offline embeddings are fixed until retraining. If trained weekly on last 3 months, they miss today's trending items, recent user interest shifts, and viral content. Mitigations: frequent retraining (daily), online/continuous learning, or mixing offline embeddings with real-time ranking signals.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "They require more GPU memory",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "They become stale and do not reflect trending items or recent user behavior shifts",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "They cannot be used for content-based recommendations",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "They have lower training accuracy than online embeddings",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "cold-start-problem-and-exploration-exploitation",
+    "title": "Cold-start problem and exploration-exploitation",
+    "track": "verticals",
+    "topic": "recommender-systems",
+    "difficulty": "advanced",
+    "tags": [
+      "cold-start",
+      "exploration",
+      "exploitation",
+      "multi-armed-bandit",
+      "thompson-sampling",
+      "epsilon-greedy",
+      "new-items",
+      "new-users",
+      "diversity"
+    ],
+    "aliases": [
+      "cold-start-items",
+      "cold-start-users",
+      "bandit-algorithms",
+      "contextual-bandits",
+      "diversity-exploration"
+    ],
+    "wikilinks": [
+      "cold-start-problem",
+      "exploration-exploitation",
+      "multi-armed-bandit",
+      "thompson-sampling",
+      "epsilon-greedy",
+      "upper-confidence-bound",
+      "contextual-bandits",
+      "diversity-metrics"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1706.07856",
+        "label": "Contextual Bandits in Recommendation (Research)"
+      },
+      {
+        "url": "https://towardsdatascience.com/building-a-recommendation-system-with-multi-armed-bandit-approach-b27b30a2c6b5",
+        "label": "Multi-armed Bandits for Recommendations (Towards Data Science)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nNew users/items lack interaction history. Collaborative filtering fails. Cold-start forces a choice: exploit (recommend popular/safe items) vs explore (test new items to learn preferences). Exploration-exploitation tradeoff: learn user preferences quickly while maximizing immediate reward.\n\n## Detail\n\n**Cold-start scenarios:**\n\n1. **New user, warm items:** User has no history; items are popular. Solution: recommend popular items, content-based on signup features (demographics, stated interests), social features (friends' preferences).\n\n2. **Warm user, new item:** Item has no history; user is established. Solution: rank by content similarity to user's liked items, explore with small probability to learn new item's appeal.\n\n3. **New user, new item (worst case):** No signal on either side. Solution: hybrid: popularity baseline + content features + random exploration.\n\n**Exploration-exploitation framework:**\n\n**Multi-armed bandit (MAB):**\n- K arms: K possible items/recommendations\n- Each pull: receive reward (e.g., click, watch-time)\n- Goal: maximize cumulative reward while learning arm quality\n- Regret: cumulative difference vs oracle always choosing best arm\n\n**Algorithms:**\n\n1. **Epsilon-greedy:** With probability ε, explore (random item); with prob 1-ε, exploit (highest predicted score)\n   - Simple, common in production\n   - ε typically 0.05-0.2 (5-20% exploration)\n\n2. **Thompson sampling:** Maintain Bayesian posterior over arm rewards. Sample arm from posterior, play it.\n   - Natural exploration: high-uncertainty arms explored more\n   - Theoretical: minimum regret bound (log n)\n   - Better than epsilon-greedy empirically\n\n3. **Upper confidence bound (UCB):** Play arm with highest optimistic reward estimate (mean + confidence interval)\n   - score_i = mean_i + c * sqrt(log(n) / count_i)\n   - Deterministic, theoretically optimal\n   - Less effective with many arms (recommender systems)\n\n4. **Contextual bandits:** Include context (user features, item features)\n   - LinUCB: Linear arm payoff as function of context\n   - Thompson sampling with context\n   - More realistic for large catalogs\n\n**Production strategies:**\n\n- **Exploration budget:** Allocate small fraction (5%) of impressions to exploring new items\n- **Diversity in ranking:** Return diverse recommendations, some novel, some safe\n- **Hybrid exploration:** Use contextual bandits + ranker; bandit chooses which items to explore, ranker refines\n- **Learning from failures:** Failed explorations (low engagement) provide signal; update posterior\n\n## Common gotchas / interview framings\n\n- **Exploration cost:** Exploring poor items reduces short-term metrics (CTR, engagement). Requires commitment to long-term metric (coverage, diversity, user satisfaction).\n- **Regret vs exploration tradeoff:** Aggressive exploration (high ε) increases regret; timid exploration (low ε) learns slowly. Optimal ε depends on problem horizon.\n- **Context quality:** Contextual bandits assume features are predictive. Poor context → poor exploration.\n- **Poisoning attacks:** Adversarial users can game exploration; recommend irrelevant items to new accounts, artificially inflate engagement to manipulate ranking.\n- **Evaluation of exploration:** A/B testing required; logged data has inherent exploration bias. Inverse propensity weighting or causal inference needed for unbiased eval.\n- **Scaling:** UCB is O(K log n); infeasible for K=billions. Need approximations or clustering (e.g., explore popular items, new items, user's preference cluster).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define the cold-start problem in recommender systems and distinguish the three main variants.",
+        "back": "Cold-start: System lacks data to make predictions. Three variants: (1) New user, warm items—user has no history, items are popular; use demographics/content. (2) Warm user, new item—user is known, item has no history; use content similarity. (3) New user, new item (worst case)—no signal on either side; use popularity baseline + random exploration."
+      },
+      {
+        "type": "mcq",
+        "front": "In the multi-armed bandit framework for exploration, what does the 'arm' represent?",
+        "back": "In MAB, an 'arm' is a possible action/choice. In recommendations, each arm represents a candidate item. Pulling an arm means recommending/showing that item. Reward is the resulting engagement (click, watch-time, purchase). Goal: balance pulling high-reward arms (exploitation) vs exploring uncertain arms (learning).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "A user preference weight",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "A possible item/recommendation choice",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "A feature in the recommendation model",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "A temporal time step",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Compare epsilon-greedy and Thompson sampling as exploration strategies. Which is theoretically superior?",
+        "back": "Epsilon-greedy: Deterministically explore with probability ε, exploit with 1-ε. Simple, easy to tune. Regret: O(n log n).\nThompson sampling: Sample arm from Bayesian posterior of rewards. Natural exploration via uncertainty. Regret: O(log n), theoretically optimal. More complex but empirically outperforms epsilon-greedy."
+      },
+      {
+        "type": "flip",
+        "front": "Why is inverse propensity weighting (IPW) necessary when evaluating exploration in logged recommendation data?",
+        "back": "Logged data is biased: items with higher exploration probability are overrepresented in click logs, while ignored items are underrepresented. IPW corrects for this by reweighting samples inversely to their logging probability: weight = 1 / P(recommendation). Without it, evaluation is biased toward the exploration policy used in production."
+      },
+      {
+        "type": "mcq",
+        "front": "In contextual bandits, what does LinUCB assume about the relationship between context and arm payoff?",
+        "back": "LinUCB assumes linear payoff: r_ia = θ_i^T x_a + noise, where θ_i is arm-specific coefficient, x_a is context. UCB score balances mean reward θ_i^T x_a (exploitation) and confidence interval (exploration via uncertainty). More general than non-contextual MAB, scales better to many arms with context.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Non-linear interactions captured by neural network",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Linear relationship: payoff_i(context) = θ_i^T context + noise",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Payoff depends only on arm, not context",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Payoff is random and independent of context",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "embedding-based-retrieval-at-scale",
+    "title": "Embedding-based retrieval at scale",
+    "track": "verticals",
+    "topic": "recommender-systems",
+    "difficulty": "advanced",
+    "tags": [
+      "embedding-retrieval",
+      "approximate-nearest-neighbor",
+      "faiss",
+      "scann",
+      "quantization",
+      "hashing",
+      "distributed-search",
+      "scalability"
+    ],
+    "aliases": [
+      "ann-search",
+      "vector-search",
+      "similarity-search",
+      "large-scale-retrieval"
+    ],
+    "wikilinks": [
+      "approximate-nearest-neighbor-search",
+      "faiss-facebook",
+      "scann-google",
+      "locality-sensitive-hashing",
+      "product-quantization",
+      "indexing-structures",
+      "distributed-similarity-search",
+      "recall-latency-tradeoff"
+    ],
+    "sources": [
+      {
+        "url": "https://github.com/facebookresearch/faiss",
+        "label": "FAISS: Facebook AI Similarity Search"
+      },
+      {
+        "url": "https://github.com/google-research/google-research/tree/master/scann",
+        "label": "ScaNN: Google Scalable Nearest Neighbors"
+      },
+      {
+        "url": "https://blog.twitter.com/engineering/en_us/topics/insights/2018/ads-recommendations-machine-learning",
+        "label": "Twitter Ads Recommendation at Scale"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nGiven a user embedding, finding the top-k most similar items from a catalog of billions is a nearest-neighbor search problem. Naive approach (compute similarity to all items) is O(n) time and infeasible. Approximate nearest neighbor (ANN) algorithms trade recall for speed, enabling sub-second latency at scale.\n\n## Detail\n\n**Core problem:**\nGiven query embedding q ∈ ℝ^d and database D = {x_1, ..., x_n} ⊂ ℝ^d, find k items with highest similarity(q, x_i). Naive: O(n·d) similarity computations. With n = billions and d = hundreds, this is prohibitive.\n\n**ANN approaches:**\n\n1. **Locality-Sensitive Hashing (LSH):**\n   - Hash items and query into buckets; retrieve only bucket items\n   - Hash functions preserve similarity: nearby vectors hash to same bucket with high probability\n   - Tradeoff: tuning hash function length (more hashes → higher recall but slower)\n   - Used for minhash (Jaccard similarity), random projection (cosine similarity)\n\n2. **Product Quantization (PQ):**\n   - Decompose d-dimensional space into m subspaces (e.g., d=128 → 8 subspaces of 16 dims)\n   - Quantize each subspace to k centroids (e.g., 256 clusters per subspace)\n   - Index stores only quantized values (8 bytes instead of 512 bytes per vector)\n   - Query: compute similarity between query subspaces and each centroid subspace, reconstruct top candidates\n   - Tradeoff: compression ratio vs recall loss\n\n3. **Hierarchical Navigable Small World (HNSW):**\n   - Graph-based index; each item is node; edges connect to nearest neighbors\n   - Multi-layer structure: top layer has few nodes (approximate search), bottom layers dense (refinement)\n   - Query: start from top, greedily navigate to nearest neighbor, descend to lower layers\n   - Fast construction O(n log n); query O(log n) with small constants\n   - Used in libraries like Faiss, Hnswlib\n\n4. **ScaNN (Scalable Nearest Neighbors, Google):**\n   - Combines ANISOTROPIC vector quantization (AQ) with reranking\n   - AQ: Learn quantization codebook adapted to query distribution (unlike PQ which is fixed)\n   - Two-stage: coarse search with AQ (find candidates), fine-grained search with original embeddings\n   - Empirically achieves higher recall than PQ at same latency\n\n**Production systems (FAISS, Hnswlib, Vespa):**\n\n- **FAISS (Facebook):** Open-source library supporting multiple index types (PQ, HNSW, IVF-Flat, etc.)\n  - IVFFlat: Inverted file index, partition space into k clusters, search relevant clusters\n  - Composite index: combine multiple strategies (e.g., IVF + PQ)\n  - Distributed: index sharded across machines, search parallelized\n\n- **ScaNN (Google):** Focus on latency with high recall; tuned for dynamic workloads\n\n**Recall-latency tradeoff:**\n- Parameter tuning: increase number of clusters (IVF) / layers (HNSW) / hash functions (LSH) → higher recall, slower\n- Typical production: 90-98% recall @ 10-50 ms latency\n\n**Embedding dimensionality:**\n- Common: 64-512 dims (higher dim → more expressive but slower, needs more memory)\n- Tradeoff: model accuracy vs latency\n\n## Common gotchas / interview framings\n\n- **Cold-start:** New items without embeddings or insufficient embedding history. Fall back to content features or random exploration.\n- **Embedding drift:** If user/item towers retrain frequently, index becomes stale. Need refresh strategy (periodic rebuild vs incremental updates).\n- **Dimensionality curse:** High-dimensional spaces are sparse; nearest neighbors less meaningful. Require dimensionality reduction (PCA, learned compression) or re-embedding.\n- **Query-specific optimization:** LSH, PQ, ScaNN all optimize differently. Choice depends on hardware (CPU vs GPU), query patterns (batch vs streaming), and SLA.\n- **Recall vs diversity:** Top-k ANN results are highly correlated (all similar to query). May need post-processing (diversity reranking) to avoid filter bubbles.\n- **Index synchronization:** Embedding databases must stay in sync with model versions. Managing multiple index versions/canary deployments is non-trivial.\n- **Distributed scalability:** Single-machine indices (HNSW) don't scale to billions; require sharding strategies, distributed graph construction, and careful rebalancing.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why can't naive similarity search (computing dot product with all n items) scale to billions of items?",
+        "back": "Naive search is O(n·d) where n=items, d=embedding dimension. With n=billions, d=hundreds, this requires trillions of operations per query. At typical speeds (1B ops/sec), that's 1000+ seconds per query—infeasible. ANN algorithms reduce to O(d log n) or O(d·polylog(n)) via indexing."
+      },
+      {
+        "type": "mcq",
+        "front": "What is the core idea behind Product Quantization (PQ) for efficient similarity search?",
+        "back": "PQ splits embedding space: d=128 dims → 8 subspaces of 16 dims. Each subspace is quantized to k centroids (e.g., 256). Each vector stored as 8 bytes (one index per subspace) instead of 512 bytes. Query computes similarity via subspace lookups. Tradeoff: 16x compression vs some recall loss from quantization.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Train multiple similarity models and ensemble their predictions",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Decompose the d-dimensional space into m subspaces, quantize each to k centroids",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Hash items into buckets based on locality-sensitive hash functions",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Build a graph index where nodes are items and edges connect neighbors",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does ScaNN (Scalable Nearest Neighbors) improve upon Product Quantization?",
+        "back": "ScaNN uses Anisotropic Vector Quantization (AQ): quantization codebook is adapted to the query distribution, not fixed. Also uses a two-stage approach: coarse search with AQ (find candidates), fine-grained reranking with original embeddings. This achieves higher recall at same latency compared to standard PQ."
+      },
+      {
+        "type": "flip",
+        "front": "What is the recall-latency tradeoff in production ANN systems, and how is it typically tuned?",
+        "back": "Higher recall (find true nearest neighbors) requires more computation: more clusters (IVF), more layers (HNSW), more hash functions (LSH) → increased latency. Production systems typically target 90-98% recall at 10-50ms latency for serving SLAs. Parameters tuned based on hardware, query batch size, and business tradeoffs."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is embedding staleness a problem in large-scale ANN retrieval systems?",
+        "back": "If embeddings are retrained but the ANN index isn't rebuilt, queries use new embeddings against old indexed embeddings → mismatch → degraded recall. Mitigation: periodic index refreshes (daily/weekly), incremental updates (add new embeddings, remove old ones), or maintaining multiple index versions during canary rollouts.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Old embeddings have lower dimensionality",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "If user/item towers retrain, the index is built from old embeddings and becomes suboptimal",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Stale embeddings always have zero recall",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Embedding staleness only affects batch processing",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  }
+]

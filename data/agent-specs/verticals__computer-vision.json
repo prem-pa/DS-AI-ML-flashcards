@@ -1,0 +1,65 @@
+{
+  "track": "verticals",
+  "track_label": "Verticals",
+  "topic": "computer-vision",
+  "topic_label": "Computer Vision",
+  "concept_count": 8,
+  "concepts": [
+    {
+      "slug": "cnn-architectures-resnet-efficientnet-vision-transformers",
+      "title": "CNN architectures (ResNet, EfficientNet, Vision Transformers)",
+      "difficulty": "intermediate",
+      "hook": "Know tradeoffs: accuracy, latency, size.",
+      "subtopic": "Image Classification & Detection"
+    },
+    {
+      "slug": "object-detection-yolo-faster-r-cnn-retinanet",
+      "title": "Object detection (YOLO, Faster R-CNN, RetinaNet)",
+      "difficulty": "intermediate",
+      "hook": "Bounding boxes; speed vs accuracy tradeoff.",
+      "subtopic": "Image Classification & Detection"
+    },
+    {
+      "slug": "data-augmentation-for-vision-autoaugment-randaugment",
+      "title": "Data augmentation for vision (AutoAugment, RandAugment)",
+      "difficulty": "intermediate",
+      "hook": "Proven to improve robustness and generalization.",
+      "subtopic": "Image Classification & Detection"
+    },
+    {
+      "slug": "semantic-segmentation-fcn-u-net-deeplab",
+      "title": "Semantic segmentation (FCN, U-Net, DeepLab)",
+      "difficulty": "intermediate",
+      "hook": "Per-pixel classification; downsampling + upsampling.",
+      "subtopic": "Segmentation & Dense Prediction"
+    },
+    {
+      "slug": "instance-segmentation-mask-r-cnn-detr",
+      "title": "Instance segmentation (Mask R-CNN, DETR)",
+      "difficulty": "intermediate",
+      "hook": "Per-object + per-pixel; more complex than semantic.",
+      "subtopic": "Segmentation & Dense Prediction"
+    },
+    {
+      "slug": "clip-and-vision-language-pre-training",
+      "title": "CLIP and vision-language pre-training",
+      "difficulty": "intermediate",
+      "hook": "Contrastive learning; zero-shot capabilities.",
+      "subtopic": "Vision-Language & Multimodal"
+    },
+    {
+      "slug": "visual-question-answering-vqa",
+      "title": "Visual question answering (VQA)",
+      "difficulty": "intermediate",
+      "hook": "Understand images + answer questions.",
+      "subtopic": "Vision-Language & Multimodal"
+    },
+    {
+      "slug": "document-understanding-and-ocr",
+      "title": "Document understanding and OCR",
+      "difficulty": "intermediate",
+      "hook": "Extract text and structure from documents.",
+      "subtopic": "Vision-Language & Multimodal"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "track": "ml-engineer",
+  "track_label": "ML ENGINEER",
+  "topic": "model-monitoring-mlops",
+  "topic_label": "Model Monitoring & MLOps",
+  "concept_count": 12,
+  "concepts": [
+    {
+      "slug": "latency-throughput-error-rates",
+      "title": "Latency, throughput, error rates",
+      "difficulty": "beginner",
+      "hook": "SLOs: p99 latency < Xms, uptime > 99.9%.",
+      "subtopic": "Production Monitoring"
+    },
+    {
+      "slug": "prediction-drift-and-label-shift",
+      "title": "Prediction drift and label shift",
+      "difficulty": "advanced",
+      "hook": "Model input distribution changes (drift) or output distribution changes (label shift).",
+      "subtopic": "Production Monitoring"
+    },
+    {
+      "slug": "model-performance-degradation-accuracy-drop-calibration-shift",
+      "title": "Model performance degradation (accuracy drop, calibration shift)",
+      "difficulty": "intermediate",
+      "hook": "Compare predictions against held-out validation set.",
+      "subtopic": "Production Monitoring"
+    },
+    {
+      "slug": "resource-utilization-gpu-memory-cpu-io",
+      "title": "Resource utilization (GPU memory, CPU, I/O)",
+      "difficulty": "intermediate",
+      "hook": "Detect inefficiencies; predict capacity needs.",
+      "subtopic": "Production Monitoring"
+    },
+    {
+      "slug": "feature-distribution-monitoring",
+      "title": "Feature distribution monitoring",
+      "difficulty": "intermediate",
+      "hook": "Alert if feature mean/std deviate from training; causes model degradation.",
+      "subtopic": "Data Quality Monitoring"
+    },
+    {
+      "slug": "missing-value-and-anomaly-monitoring",
+      "title": "Missing value and anomaly monitoring",
+      "difficulty": "intermediate",
+      "hook": "Incomplete or corrupted features cause errors.",
+      "subtopic": "Data Quality Monitoring"
+    },
+    {
+      "slug": "data-freshness",
+      "title": "Data freshness",
+      "difficulty": "beginner",
+      "hook": "Ensure data pipeline hasn't stalled; outdated data degrades predictions.",
+      "subtopic": "Data Quality Monitoring"
+    },
+    {
+      "slug": "schema-drift-and-pipeline-monitoring",
+      "title": "Schema drift and pipeline monitoring",
+      "difficulty": "intermediate",
+      "hook": "Upstream changes break downstream; version data schemas.",
+      "subtopic": "Data Quality Monitoring"
+    },
+    {
+      "slug": "retraining-triggers-periodic-drift-based-performance-based",
+      "title": "Retraining triggers (periodic, drift-based, performance-based)",
+      "difficulty": "intermediate",
+      "hook": "When to update model? Cost vs benefit; detect degradation.",
+      "subtopic": "Retraining & Model Refresh"
+    },
+    {
+      "slug": "online-learning-and-incremental-updates",
+      "title": "Online learning and incremental updates",
+      "difficulty": "advanced",
+      "hook": "Update model with new data without full retraining; works for some models.",
+      "subtopic": "Retraining & Model Refresh"
+    },
+    {
+      "slug": "experiment-tracking-and-model-registry",
+      "title": "Experiment tracking and model registry",
+      "difficulty": "beginner",
+      "hook": "MLflow, Weights & Biases; track experiments, models, parameters.",
+      "subtopic": "Retraining & Model Refresh"
+    },
+    {
+      "slug": "reproducibility-and-versioning",
+      "title": "Reproducibility and versioning",
+      "difficulty": "beginner",
+      "hook": "Track code, data, seeds; reproduce results.",
+      "subtopic": "Retraining & Model Refresh"
+    }
+  ]
+}

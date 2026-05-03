@@ -1,0 +1,142 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "serving-infrastructure-inference-optimization",
+  "topic_label": "Serving Infrastructure & Inference Optimization",
+  "concept_count": 19,
+  "concepts": [
+    {
+      "slug": "vllm-paged-attention-continuous-batching",
+      "title": "vLLM (paged attention, continuous batching)",
+      "difficulty": "intermediate",
+      "hook": "Production standard; PagedAttention reduces KV cache fragmentation; continuous batching high throughput.",
+      "subtopic": "Inference Engines"
+    },
+    {
+      "slug": "tensorrt-llm-nvidias-compiled-inference",
+      "title": "TensorRT-LLM (NVIDIA's compiled inference)",
+      "difficulty": "intermediate",
+      "hook": "Maximum performance on NVIDIA GPUs; 28-min compilation cost; best for stable models.",
+      "subtopic": "Inference Engines"
+    },
+    {
+      "slug": "sglang-and-radixattention",
+      "title": "SGLang and RadixAttention",
+      "difficulty": "intermediate",
+      "hook": "Shared prefix optimization; ideal for multi-turn and structured generation.",
+      "subtopic": "Inference Engines"
+    },
+    {
+      "slug": "ollama-for-local-inference",
+      "title": "Ollama for local inference",
+      "difficulty": "beginner",
+      "hook": "Simplified model serving; good for prototyping on CPU/GPU.",
+      "subtopic": "Inference Engines"
+    },
+    {
+      "slug": "other-frameworks-mlc-llm-lm-studio-llamacpp",
+      "title": "Other frameworks: MLC LLM, LM Studio, llama.cpp",
+      "difficulty": "intermediate",
+      "hook": "Lightweight/portable options; tradeoffs in performance.",
+      "subtopic": "Inference Engines"
+    },
+    {
+      "slug": "token-batching-and-dynamic-batching",
+      "title": "Token batching and dynamic batching",
+      "difficulty": "intermediate",
+      "hook": "Batch requests; balance latency and throughput.",
+      "subtopic": "Inference Optimization Techniques"
+    },
+    {
+      "slug": "speculative-decoding",
+      "title": "Speculative decoding",
+      "difficulty": "advanced",
+      "hook": "Draft model generates tokens; verify with large model; amortizes large model cost.",
+      "subtopic": "Inference Optimization Techniques"
+    },
+    {
+      "slug": "prompt-caching-and-kv-cache-reuse",
+      "title": "Prompt caching and KV cache reuse",
+      "difficulty": "intermediate",
+      "hook": "Cache prompt embeddings/KV for repeated queries; reduces latency and cost.",
+      "subtopic": "Inference Optimization Techniques"
+    },
+    {
+      "slug": "beam-search-vs-greedy-decoding",
+      "title": "Beam search vs greedy decoding",
+      "difficulty": "intermediate",
+      "hook": "Greedy: fast, high variance; beam: slower, better quality.",
+      "subtopic": "Inference Optimization Techniques"
+    },
+    {
+      "slug": "structured-generation-and-constrained-decoding",
+      "title": "Structured generation and constrained decoding",
+      "difficulty": "intermediate",
+      "hook": "Enforce output format (JSON, regex); reduces invalid outputs.",
+      "subtopic": "Inference Optimization Techniques"
+    },
+    {
+      "slug": "post-training-quantization-ptq-vs-quantization-aware-training-qat",
+      "title": "Post-training quantization (PTQ) vs quantization-aware training (QAT)",
+      "difficulty": "intermediate",
+      "hook": "PTQ: no retraining; QAT: slight accuracy loss but better.",
+      "subtopic": "Quantization & Compression"
+    },
+    {
+      "slug": "int8-and-int4-quantization",
+      "title": "INT8 and INT4 quantization",
+      "difficulty": "intermediate",
+      "hook": "INT8: minimal overhead; INT4: 75% memory reduction but accuracy risk.",
+      "subtopic": "Quantization & Compression"
+    },
+    {
+      "slug": "bfloat16-and-mixed-precision",
+      "title": "Bfloat16 and mixed precision",
+      "difficulty": "intermediate",
+      "hook": "Bfloat16 faster than float32 on modern GPUs; reduced precision doesn't hurt much.",
+      "subtopic": "Quantization & Compression"
+    },
+    {
+      "slug": "gptq-awq-gguf-quantization-formats",
+      "title": "GPTQ, AWQ, GGUF quantization formats",
+      "difficulty": "advanced",
+      "hook": "Post-training quantization specific formats; tradeoff inference speed vs model size.",
+      "subtopic": "Quantization & Compression"
+    },
+    {
+      "slug": "quantization-aware-training-with-learned-scaling",
+      "title": "Quantization-aware training with learned scaling",
+      "difficulty": "advanced",
+      "hook": "Quantization scales learned during training; better accuracy.",
+      "subtopic": "Quantization & Compression"
+    },
+    {
+      "slug": "data-parallelism-for-inference",
+      "title": "Data parallelism for inference",
+      "difficulty": "intermediate",
+      "hook": "Replicate model; each GPU processes different request; synchronization minimal.",
+      "subtopic": "Distributed Serving"
+    },
+    {
+      "slug": "tensor-parallelism-tp",
+      "title": "Tensor parallelism (TP)",
+      "difficulty": "advanced",
+      "hook": "Split layers across devices; each device computes part of matmul; reduces latency per token.",
+      "subtopic": "Distributed Serving"
+    },
+    {
+      "slug": "pipeline-parallelism-pp",
+      "title": "Pipeline parallelism (PP)",
+      "difficulty": "advanced",
+      "hook": "Split model layers across devices; temporal pipeline; reduces per-device memory.",
+      "subtopic": "Distributed Serving"
+    },
+    {
+      "slug": "unified-serving-frameworks-vllm-distributed-tensorrt-llm-multi-gpu",
+      "title": "Unified serving frameworks (vLLM distributed, TensorRT-LLM multi-GPU)",
+      "difficulty": "intermediate",
+      "hook": "TP is standard for LLMs; PP less common.",
+      "subtopic": "Distributed Serving"
+    }
+  ]
+}

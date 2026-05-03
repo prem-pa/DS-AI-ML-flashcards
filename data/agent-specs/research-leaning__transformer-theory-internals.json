@@ -1,0 +1,79 @@
+{
+  "track": "research-leaning",
+  "track_label": "RESEARCH-LEANING",
+  "topic": "transformer-theory-internals",
+  "topic_label": "Transformer Theory & Internals",
+  "concept_count": 10,
+  "concepts": [
+    {
+      "slug": "universal-approximation-of-transformers",
+      "title": "Universal approximation of transformers",
+      "difficulty": "advanced",
+      "hook": "Capacity to express any function; attention enables this.",
+      "subtopic": "Theoretical Foundations"
+    },
+    {
+      "slug": "attention-as-kernel-method",
+      "title": "Attention as kernel method",
+      "difficulty": "advanced",
+      "hook": "Formal connection to kernel machines; interpretability.",
+      "subtopic": "Theoretical Foundations"
+    },
+    {
+      "slug": "implicit-regularization-in-transformers",
+      "title": "Implicit regularization in transformers",
+      "difficulty": "advanced",
+      "hook": "SGD trajectory; why transformers generalize without explicit regularization.",
+      "subtopic": "Theoretical Foundations"
+    },
+    {
+      "slug": "theoretical-analysis-of-softmax-bottleneck",
+      "title": "Theoretical analysis of softmax bottleneck",
+      "difficulty": "advanced",
+      "hook": "Rank of softmax output limited; architectural implications.",
+      "subtopic": "Theoretical Foundations"
+    },
+    {
+      "slug": "linear-attention-and-kernel-methods",
+      "title": "Linear attention and kernel methods",
+      "difficulty": "advanced",
+      "hook": "Replace softmax with kernel; linear complexity but rank limitation.",
+      "subtopic": "Attention Variants & Analysis"
+    },
+    {
+      "slug": "efficient-attention-sparse-local",
+      "title": "Efficient attention (sparse, local)",
+      "difficulty": "advanced",
+      "hook": "Approximations; bounds on approximation error.",
+      "subtopic": "Attention Variants & Analysis"
+    },
+    {
+      "slug": "attention-head-specialization",
+      "title": "Attention head specialization",
+      "difficulty": "advanced",
+      "hook": "Different heads do different jobs (position, syntax, semantics); interpretability.",
+      "subtopic": "Attention Variants & Analysis"
+    },
+    {
+      "slug": "gradient-flow-in-deep-transformers",
+      "title": "Gradient flow in deep transformers",
+      "difficulty": "advanced",
+      "hook": "Layer norm and residuals enable stable gradients.",
+      "subtopic": "Gradient Flow & Training"
+    },
+    {
+      "slug": "explodingvanishing-gradient-analysis",
+      "title": "Exploding/vanishing gradient analysis",
+      "difficulty": "advanced",
+      "hook": "When do gradients blow up or shrink?",
+      "subtopic": "Gradient Flow & Training"
+    },
+    {
+      "slug": "normalization-layers-layernorm-rmsnorm-prenorm",
+      "title": "Normalization layers (LayerNorm, RMSNorm, PreNorm)",
+      "difficulty": "advanced",
+      "hook": "Impact on gradient flow and trainability.",
+      "subtopic": "Gradient Flow & Training"
+    }
+  ]
+}

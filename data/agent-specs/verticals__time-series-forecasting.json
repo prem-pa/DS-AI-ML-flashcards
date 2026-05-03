@@ -1,0 +1,58 @@
+{
+  "track": "verticals",
+  "track_label": "Verticals",
+  "topic": "time-series-forecasting",
+  "topic_label": "Time Series & Forecasting",
+  "concept_count": 7,
+  "concepts": [
+    {
+      "slug": "arima-and-exponential-smoothing",
+      "title": "ARIMA and exponential smoothing",
+      "difficulty": "intermediate",
+      "hook": "Stationary models; decomposition into trend/seasonality.",
+      "subtopic": "Classical Methods"
+    },
+    {
+      "slug": "seasonality-and-trend-decomposition",
+      "title": "Seasonality and trend decomposition",
+      "difficulty": "intermediate",
+      "hook": "Separate components; often easier to model separately.",
+      "subtopic": "Classical Methods"
+    },
+    {
+      "slug": "lstmgru-for-sequential-modeling",
+      "title": "LSTM/GRU for sequential modeling",
+      "difficulty": "intermediate",
+      "hook": "RNNs handle variable-length sequences.",
+      "subtopic": "Deep Learning for Time Series"
+    },
+    {
+      "slug": "transformers-for-time-series",
+      "title": "Transformers for time series",
+      "difficulty": "intermediate",
+      "hook": "Attention enables long-range dependencies.",
+      "subtopic": "Deep Learning for Time Series"
+    },
+    {
+      "slug": "temporal-convolutional-networks-tcn",
+      "title": "Temporal convolutional networks (TCN)",
+      "difficulty": "intermediate",
+      "hook": "Causal convolutions; parallel computation.",
+      "subtopic": "Deep Learning for Time Series"
+    },
+    {
+      "slug": "point-forecasts-and-confidence-intervals",
+      "title": "Point forecasts and confidence intervals",
+      "difficulty": "intermediate",
+      "hook": "Quantile regression for intervals.",
+      "subtopic": "Forecasting & Uncertainty"
+    },
+    {
+      "slug": "probabilistic-forecasting",
+      "title": "Probabilistic forecasting",
+      "difficulty": "intermediate",
+      "hook": "Model full distribution; necessary for planning.",
+      "subtopic": "Forecasting & Uncertainty"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "track": "data-scientist",
+  "track_label": "DATA SCIENTIST",
+  "topic": "probability-bayesian-thinking",
+  "topic_label": "Probability & Bayesian Thinking",
+  "concept_count": 7,
+  "concepts": [
+    {
+      "slug": "joint-marginal-and-conditional-distributions",
+      "title": "Joint, marginal, and conditional distributions",
+      "difficulty": "intermediate",
+      "hook": "Foundation for graphical models and probabilistic inference.",
+      "subtopic": "Probabilistic Modeling"
+    },
+    {
+      "slug": "independence-and-conditional-independence",
+      "title": "Independence and conditional independence",
+      "difficulty": "intermediate",
+      "hook": "Enables factorization and dimensionality reduction.",
+      "subtopic": "Probabilistic Modeling"
+    },
+    {
+      "slug": "graphical-models-and-d-separation",
+      "title": "Graphical models and d-separation",
+      "difficulty": "advanced",
+      "hook": "Encode conditional independencies; critical for understanding causal assumptions in DAGs.",
+      "subtopic": "Probabilistic Modeling"
+    },
+    {
+      "slug": "prior-selection-and-sensitivity-analysis",
+      "title": "Prior selection and sensitivity analysis",
+      "difficulty": "advanced",
+      "hook": "\"Objective\" vs \"subjective\" priors; robustness to prior choice matters.",
+      "subtopic": "Bayes in Practice"
+    },
+    {
+      "slug": "empirical-bayes",
+      "title": "Empirical Bayes",
+      "difficulty": "advanced",
+      "hook": "Estimate hyperpriors from data; shrinks estimates toward global mean.",
+      "subtopic": "Bayes in Practice"
+    },
+    {
+      "slug": "hierarchical-models",
+      "title": "Hierarchical models",
+      "difficulty": "advanced",
+      "hook": "Pool information across groups; improves small-sample estimates.",
+      "subtopic": "Bayes in Practice"
+    },
+    {
+      "slug": "model-comparison-and-cross-validation",
+      "title": "Model comparison and cross-validation",
+      "difficulty": "intermediate",
+      "hook": "AIC, BIC, LOO-CV; trade-offs in model selection.",
+      "subtopic": "Bayes in Practice"
+    }
+  ]
+}

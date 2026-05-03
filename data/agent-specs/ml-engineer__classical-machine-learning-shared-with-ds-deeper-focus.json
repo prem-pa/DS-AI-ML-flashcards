@@ -1,0 +1,149 @@
+{
+  "track": "ml-engineer",
+  "track_label": "ML ENGINEER",
+  "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+  "topic_label": "Classical Machine Learning (Shared with DS, deeper focus)",
+  "concept_count": 20,
+  "concepts": [
+    {
+      "slug": "decision-tree-construction-information-gain-gini-impurity",
+      "title": "Decision tree construction (Information Gain, Gini impurity)",
+      "difficulty": "intermediate",
+      "hook": "Understand splitting criteria and why different metrics rank features differently.",
+      "subtopic": "Tree-Based Methods"
+    },
+    {
+      "slug": "tree-depth-and-pruning-strategies",
+      "title": "Tree depth and pruning strategies",
+      "difficulty": "intermediate",
+      "hook": "Manage model complexity; cost-complexity pruning is principled.",
+      "subtopic": "Tree-Based Methods"
+    },
+    {
+      "slug": "random-forest-bagging-and-oob-error",
+      "title": "Random forest: bagging and OOB error",
+      "difficulty": "intermediate",
+      "hook": "Bootstrap aggregation reduces variance; OOB provides free validation.",
+      "subtopic": "Tree-Based Methods"
+    },
+    {
+      "slug": "gradient-boosting-mechanics-loss-gradient-residuals",
+      "title": "Gradient boosting mechanics (loss, gradient, residuals)",
+      "difficulty": "intermediate",
+      "hook": "Sequential residual learning; why gradient boosting works.",
+      "subtopic": "Tree-Based Methods"
+    },
+    {
+      "slug": "lightgbm-and-xgboost-tuning",
+      "title": "LightGBM and XGBoost tuning",
+      "difficulty": "intermediate",
+      "hook": "Leaf-wise vs level-wise growth; learning rate, max depth, subsample tradeoffs.",
+      "subtopic": "Tree-Based Methods"
+    },
+    {
+      "slug": "shap-and-feature-importance",
+      "title": "SHAP and feature importance",
+      "difficulty": "intermediate",
+      "hook": "Explain predictions; distinguish feature importance from selection.",
+      "subtopic": "Tree-Based Methods"
+    },
+    {
+      "slug": "perceptron-and-multi-layer-perceptron-mlp",
+      "title": "Perceptron and multi-layer perceptron (MLP)",
+      "difficulty": "intermediate",
+      "hook": "Single hidden layer universal approximator; deep networks reduce neurons needed.",
+      "subtopic": "Neural Network Fundamentals"
+    },
+    {
+      "slug": "activation-functions-relu-tanh-sigmoid-swish",
+      "title": "Activation functions (ReLU, tanh, sigmoid, Swish)",
+      "difficulty": "intermediate",
+      "hook": "Nonlinearity enables learning complex functions; ReLU dominance due to computational efficiency.",
+      "subtopic": "Neural Network Fundamentals"
+    },
+    {
+      "slug": "loss-functions-mse-cross-entropy-focal-loss",
+      "title": "Loss functions (MSE, cross-entropy, focal loss)",
+      "difficulty": "intermediate",
+      "hook": "Different losses suit different tasks; know why softmax + cross-entropy preferred over softmax + MSE.",
+      "subtopic": "Neural Network Fundamentals"
+    },
+    {
+      "slug": "backpropagation-and-gradient-computation",
+      "title": "Backpropagation and gradient computation",
+      "difficulty": "intermediate",
+      "hook": "Chain rule through layers; computational graph.",
+      "subtopic": "Neural Network Fundamentals"
+    },
+    {
+      "slug": "initialization-strategies-he-xavier",
+      "title": "Initialization strategies (He, Xavier)",
+      "difficulty": "intermediate",
+      "hook": "Poor initialization causes vanishing/exploding gradients; variance of activations matters.",
+      "subtopic": "Neural Network Fundamentals"
+    },
+    {
+      "slug": "learning-rates-and-schedules-cosine-annealing-warm-restarts",
+      "title": "Learning rates and schedules (cosine annealing, warm restarts)",
+      "difficulty": "intermediate",
+      "hook": "Learning rate is most important hyperparameter; schedules improve convergence.",
+      "subtopic": "Neural Network Fundamentals"
+    },
+    {
+      "slug": "optimization-algorithms-sgd-momentum-adam-adamw",
+      "title": "Optimization algorithms (SGD, Momentum, Adam, AdamW)",
+      "difficulty": "intermediate",
+      "hook": "SGD + momentum is still strong; Adam adaptive learning rates help with sparse gradients; AdamW decouples weight decay.",
+      "subtopic": "Neural Network Fundamentals"
+    },
+    {
+      "slug": "gradient-clipping-and-numerical-stability",
+      "title": "Gradient clipping and numerical stability",
+      "difficulty": "intermediate",
+      "hook": "Prevent exploding gradients; especially important in RNNs.",
+      "subtopic": "Neural Network Fundamentals"
+    },
+    {
+      "slug": "dropout-and-batch-normalization",
+      "title": "Dropout and batch normalization",
+      "difficulty": "intermediate",
+      "hook": "Dropout: stochastic regularization; BN: reduces internal covariate shift and acts as regularizer.",
+      "subtopic": "Regularization & Generalization"
+    },
+    {
+      "slug": "l1-and-l2-regularization",
+      "title": "L1 and L2 regularization",
+      "difficulty": "intermediate",
+      "hook": "L2 penalizes all weights; L1 induces sparsity.",
+      "subtopic": "Regularization & Generalization"
+    },
+    {
+      "slug": "early-stopping",
+      "title": "Early stopping",
+      "difficulty": "beginner",
+      "hook": "Simple and effective; use validation set to detect overfitting.",
+      "subtopic": "Regularization & Generalization"
+    },
+    {
+      "slug": "data-augmentation",
+      "title": "Data augmentation",
+      "difficulty": "intermediate",
+      "hook": "Increases effective training set; task-specific (image rotation, text substitution).",
+      "subtopic": "Regularization & Generalization"
+    },
+    {
+      "slug": "mixup-and-cutmix",
+      "title": "Mixup and CutMix",
+      "difficulty": "intermediate",
+      "hook": "Novel augmentations; train on interpolated examples.",
+      "subtopic": "Regularization & Generalization"
+    },
+    {
+      "slug": "label-smoothing",
+      "title": "Label smoothing",
+      "difficulty": "intermediate",
+      "hook": "Soften targets; improves generalization and calibration.",
+      "subtopic": "Regularization & Generalization"
+    }
+  ]
+}

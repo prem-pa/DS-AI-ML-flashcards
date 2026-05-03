@@ -1,0 +1,65 @@
+{
+  "track": "data-scientist",
+  "track_label": "DATA SCIENTIST",
+  "topic": "statistics-in-production",
+  "topic_label": "Statistics in Production",
+  "concept_count": 8,
+  "concepts": [
+    {
+      "slug": "guardrail-metrics-and-alert-thresholds",
+      "title": "Guardrail metrics and alert thresholds",
+      "difficulty": "intermediate",
+      "hook": "Detect performance degradation; avoid false alarms.",
+      "subtopic": "Monitoring & Observability"
+    },
+    {
+      "slug": "seasonality-and-deseasonalization",
+      "title": "Seasonality and deseasonalization",
+      "difficulty": "intermediate",
+      "hook": "Remove seasonal patterns for cleaner signals; use deseasonalized metrics.",
+      "subtopic": "Monitoring & Observability"
+    },
+    {
+      "slug": "anomaly-detection",
+      "title": "Anomaly detection",
+      "difficulty": "intermediate",
+      "hook": "Detect unusual behavior in metrics; statistical or algorithmic approaches.",
+      "subtopic": "Monitoring & Observability"
+    },
+    {
+      "slug": "dashboards-and-real-time-reporting",
+      "title": "Dashboards and real-time reporting",
+      "difficulty": "beginner",
+      "hook": "Visualization; enable rapid decisions.",
+      "subtopic": "Monitoring & Observability"
+    },
+    {
+      "slug": "data-validation-and-schema-checks",
+      "title": "Data validation and schema checks",
+      "difficulty": "intermediate",
+      "hook": "Catch upstream errors; prevent bad data flowing downstream.",
+      "subtopic": "Data Quality"
+    },
+    {
+      "slug": "missing-data-and-imputation",
+      "title": "Missing data and imputation",
+      "difficulty": "intermediate",
+      "hook": "MCAR, MAR, MNAR; listwise deletion vs imputation varies in bias.",
+      "subtopic": "Data Quality"
+    },
+    {
+      "slug": "outlier-detection",
+      "title": "Outlier detection",
+      "difficulty": "intermediate",
+      "hook": "Statistical (z-score, IQR) vs domain (business rule) approaches.",
+      "subtopic": "Data Quality"
+    },
+    {
+      "slug": "data-lineage-and-versioning",
+      "title": "Data lineage and versioning",
+      "difficulty": "intermediate",
+      "hook": "Track how data flows; reproduce results.",
+      "subtopic": "Data Quality"
+    }
+  ]
+}

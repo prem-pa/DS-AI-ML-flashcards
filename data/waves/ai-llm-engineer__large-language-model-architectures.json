@@ -1,0 +1,1004 @@
+[
+  {
+    "slug": "causal-masking-and-autoregressive-generation",
+    "title": "Causal masking and autoregressive generation",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "intermediate",
+    "tags": [
+      "causal-attention",
+      "autoregressive",
+      "left-to-right-generation",
+      "masking",
+      "decoder-only",
+      "next-token-prediction"
+    ],
+    "aliases": [
+      "causal-mask",
+      "left-to-right",
+      "AR-generation",
+      "future-masking"
+    ],
+    "wikilinks": [
+      "decoder-only-vs-encoder-decoder-tradeoff",
+      "gpt-llama-mistral-qwen-architectures",
+      "scaling-laws-for-loss-and-compute"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1706.03762",
+        "label": "Attention Is All You Need (Vaswani et al. 2017)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1810.04805",
+        "label": "BERT: Pre-training of Deep Bidirectional Transformers (Devlin et al. 2018)"
+      },
+      {
+        "url": "https://github.com/openai/gpt-2/blob/master/src/model.py",
+        "label": "GPT-2 Reference Implementation"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nCausal masking prevents tokens from attending to future positions in the sequence. In autoregressive generation, the model predicts the next token given all previous tokens—it must never \"cheat\" by looking ahead. Imagine a person reading left-to-right, making a prediction about the next word: they can't see what comes after. Causal masking enforces this constraint in the attention mechanism.\n\n## Detail\n\nIn a standard attention layer, the softmax over query-key similarities can attend to any position. Causal masking applies a binary mask $M$ where $M_{i,j} = 0$ (true) if $j \\leq i$ and $M_{i,j} = -\\infty$ (masked) if $j > i$. This is implemented in the attention logits before softmax:\n\n$$\\text{Attention}(Q, K, V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}} + M\\right)V$$\n\nDuring training, causal masking allows parallel computation of all token predictions simultaneously while maintaining the autoregressive property. At inference, you generate left-to-right: feed prompt, sample token $n$, append to context, repeat.\n\nKey architectural patterns:\n- **Decoder-only** (GPT, Llama, Mistral): Every layer uses causal attention\n- **Training efficiency**: Parallel loss computation over all positions via causal masking\n- **Inference pattern**: Sequential generation; each forward pass predicts one token\n\n## Common gotchas / interview framings\n\n- **\"Why can't we just use bidirectional attention?\"** → During training we could, but at inference you have no future tokens. Causal masking ensures train-test consistency.\n- **\"Doesn't causal masking hurt performance?\"** → Yes, compared to bidirectional models on understanding tasks, but it's the only option for autoregressive generation. [[decoder-only-vs-encoder-decoder-tradeoff]] explores this tradeoff.\n- **Prompt length matters**: Longer prompts = more context to attend over = better predictions (but also higher inference cost).\n- **Efficiency folklore**: \"We can parallelize training with causal masking.\" True, but inference remains sequential at generation time.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is causal masking and why is it necessary in autoregressive LLMs?",
+        "back": "Causal masking prevents attention to future tokens by setting future logits to $-\\infty$ before softmax. It's necessary because autoregressive generation predicts tokens left-to-right, and the model can't look ahead. At inference, future tokens don't exist yet; at training, we enforce train-test consistency by never exposing them."
+      },
+      {
+        "type": "flip",
+        "front": "How does causal masking enable parallel training while preserving autoregressive inference?",
+        "back": "During training, apply causal mask to the full sequence. Softmax over all positions simultaneously with masked-out future positions → you compute loss for all tokens in parallel (quadratic in sequence length, but still faster than sequential generation). At inference, generate one token at a time, recompute attention with growing context."
+      },
+      {
+        "type": "mcq",
+        "front": "In a causal-masked attention computation, what happens to logits for positions $j > i$ when position $i$ attends?",
+        "back": "Setting future logits to $-\\infty$ ensures softmax converts them to ~0 probability. This is differentiable: the gradient is well-defined (logits are never exactly $-\\infty$ in practice, just very negative). Other options either break the model's ability to learn or violate the autoregressive property.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "They are scaled by a learnable weight parameter",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "They are set to $-\\infty$ before softmax, causing near-zero attention weight",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "They are zeroed out and have no gradient contribution",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "They are replaced with the average of all past position logits",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Contrast the training efficiency of a causal-masked decoder vs. naive sequential token generation during training.",
+        "back": "Causal masking: $O(n^2)$ complexity (n² pairwise attentions for n tokens), but all computed in one pass → high hardware utilization. Naive sequential: must do n forward passes (one per token), each computing attention from scratch → n× slower. Causal masking is why modern LLM training is feasible at scale."
+      }
+    ]
+  },
+  {
+    "slug": "decoder-only-vs-encoder-decoder-tradeoff",
+    "title": "Decoder-only vs encoder-decoder tradeoff",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "intermediate",
+    "tags": [
+      "architecture-design",
+      "decoder-only",
+      "encoder-decoder",
+      "seq2seq",
+      "bidirectional-context",
+      "parameter-efficiency"
+    ],
+    "aliases": [
+      "decoder-only",
+      "encoder-decoder",
+      "seq2seq-models",
+      "architectural-choice"
+    ],
+    "wikilinks": [
+      "causal-masking-and-autoregressive-generation",
+      "gpt-llama-mistral-qwen-architectures",
+      "t5-and-bart-models",
+      "frontier-model-performance-gpt-4-claude-37-gemini-3"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1706.03762",
+        "label": "Attention Is All You Need (Vaswani et al. 2017)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1910.13461",
+        "label": "ELECTRA: Pre-training Text Encoders as Discriminators (Clark et al. 2020)"
+      },
+      {
+        "url": "https://huggingface.co/blog/encoder-decoder",
+        "label": "Hugging Face: Encoder-Decoder Models"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDecoder-only models (GPT-style) read the prompt and generate left-to-right in one pass. Encoder-decoder models (T5-style) explicitly separate input understanding (encoder) from output generation (decoder). The tradeoff: decoder-only is simpler and more parameter-efficient for pure generation; encoder-decoder excels when you need bidirectional reasoning over input.\n\n## Detail\n\n**Decoder-only (autoregressive, causal attention):**\n- Single stack of layers; each layer attends to previous tokens only (causal mask)\n- Token generation: prompt → [predict token 1, append, predict token 2, append, ...]\n- Parameters: All devoted to next-token prediction\n- Example: GPT-2, Llama, Mistral, Claude\n\n**Encoder-decoder (seq2seq with cross-attention):**\n- Encoder: Bidirectional attention over input; processes full context\n- Decoder: Autoregressive, attends to own previous outputs + encoder outputs (cross-attention)\n- Examples: Transformer, T5, BART, mT5\n\n**Parameter comparison:**\nFor same total params $N$:\n- Decoder-only: All $N$ parameters in generation path\n- Encoder-decoder: Split into encoder ($N/2$) and decoder ($N/2$) plus cross-attention layers\n\nDecoders-only dominates modern LLMs because:\n1. Single architecture path = simpler code, training, serving\n2. Everything learned for generation; encoder parameters not reused for context understanding\n3. Works well with large-scale pretraining on unsupervised text\n\nEncoder-decoder advantages:\n- Bidirectional context over input helps constrained tasks (translation, summarization with specific refs)\n- Better for long-context reasoning over structured input\n- Can freeze encoder, fine-tune decoder for transfer learning\n\n## Common gotchas / interview framings\n\n- \"Encoder-decoder is 'better' because bidirectional.\" → True for some tasks, but decoder-only scales better to frontier model sizes.\n- \"Decoder-only can't do bidirectional reasoning.\" → Unfair; it can, just during full prompt processing, not in layers. At inference, prompt is processed bidirectionally (all prompt tokens available).\n- **In-context learning:** Decoder-only excels because the prompt is pure context; no architectural asymmetry.\n- **Modern trend:** 2025 frontier models (GPT-5.5, Claude 4.7, Gemini 3) are all decoder-only with [[causal-masking-and-autoregressive-generation]].",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core architectural difference between decoder-only and encoder-decoder models?",
+        "back": "Decoder-only: single causal stack (all tokens attend left-to-right). Encoder-decoder: encoder has bidirectional attention over input; decoder is autoregressive with cross-attention to encoder outputs. Decoder-only is simpler (single path); encoder-decoder explicitly separates input understanding from output generation."
+      },
+      {
+        "type": "flip",
+        "front": "Why do decoder-only models dominate frontier LLMs (GPT-5, Claude 4.7, Gemini 3) despite encoder-decoder models' bidirectional advantage?",
+        "back": "Decoder-only is simpler (single unified architecture), scales more efficiently (all parameters devoted to generation), and works better with large-scale unsupervised pretraining on plain text. Encoder-decoder's bidirectional advantage is marginal in large models where scale provides equivalent or better reasoning. Decoder-only's unified architecture also enables better in-context learning."
+      },
+      {
+        "type": "mcq",
+        "front": "In an encoder-decoder model, which component is responsible for bidirectional understanding of the input?",
+        "back": "The encoder explicitly computes bidirectional attention (no causal mask) over input tokens. The decoder is autoregressive (causal attention to its own outputs) but attends to encoder outputs via cross-attention, which are already bidirectionally contextualized. This design separates concerns: input understanding (encoder) vs. generation (decoder).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The decoder's causal attention layers",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The encoder's bidirectional self-attention layers",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The cross-attention layer bridging encoder and decoder",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "A separate bidirectional preprocessing module",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "For a given parameter budget N, how does a decoder-only model allocate parameters vs. an encoder-decoder model?",
+        "back": "Decoder-only: all N params in the single causal generation stack. Encoder-decoder: splits into encoder (~N/2), decoder (~N/2), plus cross-attention bridges. This means a decoder-only model has 2× the depth/width in its single generation path, potentially better for scaling laws [[scaling-laws-for-loss-and-compute]]."
+      },
+      {
+        "type": "flip",
+        "front": "Name a task where encoder-decoder's bidirectional design provides a clear advantage over decoder-only.",
+        "back": "Machine translation or abstractive summarization with explicit reference documents. The encoder can bidirectionally understand the source sentence or reference doc all at once, then the decoder generates conditioned on that rich representation. Decoder-only must generate while reading left-to-right, which can miss backward dependencies in the input."
+      }
+    ]
+  },
+  {
+    "slug": "gpt-llama-mistral-qwen-architectures",
+    "title": "GPT, Llama, Mistral, Qwen architectures",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "intermediate",
+    "tags": [
+      "decoder-only",
+      "architecture-variations",
+      "normalization",
+      "activation-functions",
+      "attention-variants",
+      "model-comparison"
+    ],
+    "aliases": [
+      "GPT-family",
+      "Llama-family",
+      "Mistral",
+      "Qwen",
+      "LLM-variants"
+    ],
+    "wikilinks": [
+      "causal-masking-and-autoregressive-generation",
+      "decoder-only-vs-encoder-decoder-tradeoff",
+      "scaling-laws-for-loss-and-compute",
+      "frontier-model-performance-gpt-4-claude-37-gemini-3"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2005.14165",
+        "label": "Language Models are Unsupervised Multitask Learners (Radford et al. 2019, GPT-2)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2302.13971",
+        "label": "LLaMA: Open and Efficient Foundation Language Models (Touvron et al. 2023)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2310.06825",
+        "label": "Mistral 7B (Jiang et al. 2023)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2309.16609",
+        "label": "Qwen Technical Report (2023)"
+      },
+      {
+        "url": "https://www.cosmicjs.com/blog/best-ai-for-developers-claude-vs-gpt-vs-gemini-technical-comparison-2026",
+        "label": "Claude vs GPT-5.2 vs Gemini 3: Technical Comparison 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nAll modern LLMs are decoder-only transformers, but they differ in architectural details: layer normalization placement (pre vs. post), activation function choice (ReLU, GELU, SwiGLU), attention variants (multi-query, grouped-query), and expert routing (sparse MoE). These choices compound in impact at scale, affecting training stability, inference speed, and final performance.\n\n## Detail\n\n**GPT family (OpenAI):**\n- GPT-2 (2019): Pre-LN, GELU activation, standard multi-head attention\n- GPT-3 (2020): Scaled up, similar architecture\n- GPT-4 (2023): Rumored architecture details withheld; frontier performance\n- GPT-5 (2025): Released August 2025; GPT-5.5 (April 2026) with agentic capabilities\n- Signature features: Exceptional in-context learning, instruction-following\n\n**LLaMA (Meta):**\n- Pre-normalization, SwiGLU activation, RoPE positional embeddings\n- Explicit focus on efficiency: strong performance per parameter\n- LLaMA-2 (July 2023): Openly released, enabled massive community models\n- Architecture: Simple, elegant; proven scaling efficiency [[optimal-batch-sizes-and-datacompute-tradeoff]]\n\n**Mistral (Mistral AI):**\n- Grouped-query attention (GQA) for faster inference\n- Sliding-window attention (limited context per layer, efficient for long sequences)\n- Mistral 7B: Outperforms Llama-2 13B on many tasks\n- Mistral Large: MoE variant, Mixture of Experts [[mixture-of-experts-moe]]\n\n**Qwen (Alibaba):**\n- Pre-normalization with layer-wise scaling\n- Rotary positional embeddings (RoPE)\n- Strong multilingual capabilities (default 80+ languages)\n- Qwen-2 (2024): Competitive with Mistral, better for non-English tasks\n\n**Key architectural innovations across models:**\n- **Layer normalization:** Pre-LN (normalize before computation) vs. post-LN (normalize output). Pre-LN is more stable and is standard post-2022.\n- **Activation:** GELU (smooth), ReLU (fast, unstable), SwiGLU (gated, best stability/performance)\n- **Attention variants:** MHA (standard) → GQA (grouped-query, fewer KV heads) → MQA (single KV head, ultra-fast)\n- **Positional embeddings:** Learned → RoPE (rotary, scales to longer sequences better)\n\n**2025-2026 landscape:** All frontier models (GPT-5.5, Claude 4.7, Gemini 3.1) are decoder-only but use proprietary architecture refinements. Open-source leaders (DeepSeek-R1, Qwen) compete on efficiency and reasoning.\n\n## Common gotchas / interview framings\n\n- \"Which architecture is 'best'?\" → Depends on constraints (latency, throughput, long-context). GQA/MQA great for inference; SwiGLU great for training stability.\n- **Grouped-query attention (GQA):** Multiple query heads but fewer key/value heads. Reduces KV-cache size (linear in hidden dim × num heads) without major capacity loss.\n- **Scaling laws hold across architectures:** Core properties (loss ~ 1/N) stable; architecture choice is 10-20% efficiency delta.\n- **RoPE vs. learned embeddings:** RoPE generalizes better to longer sequences than training saw; crucial for long-context models.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Name three architectural differences that distinguish Llama/Mistral/Qwen from GPT-2 era models.",
+        "back": "1. Pre-normalization (compute → normalize) vs post-normalization. Pre-LN is more training-stable. 2. Activation function: SwiGLU (gated, better) vs. GELU. 3. Positional embeddings: RoPE (rotary) generalizes to longer sequences vs. learned absolute positions. All three improve training stability, generalization, and inference efficiency."
+      },
+      {
+        "type": "flip",
+        "front": "What is grouped-query attention (GQA) and why is it critical for inference serving in models like Mistral?",
+        "back": "GQA: multiple query heads but fewer key/value heads. Example: 32 query heads, 8 KV heads. Reduces KV-cache size by 4× (cache is linear in num_heads × d_model) during generation, cutting memory and latency with <1% capability loss. Essential for serving large models on limited VRAM [[inference-scaling-and-test-time-compute-o1-reasoning-models]]."
+      },
+      {
+        "type": "mcq",
+        "front": "Pre-normalization differs from post-normalization in that:",
+        "back": "Pre-norm (compute norm(x), then attention) stabilizes gradients and enables training without warmup. Post-norm (attention(x), then norm) is simpler but risks gradient vanishing in deep models. Post-LN became mainstream after pre-LN proved superior; modern models use pre-LN. Answer (b) is correct; (d) is outdated folklore.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Pre-norm applies layer norm before attention/FFN; post-norm applies it after",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Pre-norm is more training-stable and allows deeper models without warmup",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Pre-norm is used only in decoder-only; post-norm only in encoder-decoder",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Post-norm has better gradient flow; pre-norm has better stability—both used in 2025",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Mistral's sliding-window attention operates over a limited context window per layer. How does this improve efficiency?",
+        "back": "Each attention layer only attends to the last W tokens (e.g., 4K), not the full sequence. This reduces per-layer attention from O(n²) to O(n·W), where W << n. Over deep stacks, lower layers capture local patterns, higher layers compose them. Results in 4-7× faster inference than full attention on long sequences with minimal accuracy loss."
+      },
+      {
+        "type": "flip",
+        "front": "RoPE (Rotary Position Embeddings) has a key advantage over learned absolute positions. What is it?",
+        "back": "RoPE encodes position as rotation in the complex plane. The rotation is relative (invariant to absolute position), so models trained on position $i$ generalize to inference at position $i'$ without retraining. Learned absolute positions don't generalize; RoPE extends naturally to sequences longer than training length (key for long-context)."
+      }
+    ]
+  },
+  {
+    "slug": "encoder-decoder-architecture-and-cross-attention",
+    "title": "Encoder-decoder architecture and cross-attention",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "intermediate",
+    "tags": [
+      "encoder-decoder",
+      "cross-attention",
+      "seq2seq",
+      "bidirectional",
+      "source-target",
+      "attention-mechanism"
+    ],
+    "aliases": [
+      "seq2seq",
+      "cross-attention",
+      "encoder-decoder",
+      "source-target"
+    ],
+    "wikilinks": [
+      "decoder-only-vs-encoder-decoder-tradeoff",
+      "t5-and-bart-models",
+      "causal-masking-and-autoregressive-generation"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1706.03762",
+        "label": "Attention Is All You Need (Vaswani et al. 2017)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1409.0473",
+        "label": "Sequence to Sequence Learning with Neural Networks (Sutskever et al. 2014)"
+      },
+      {
+        "url": "https://huggingface.co/blog/encoder-decoder",
+        "label": "Hugging Face: Understanding Encoder-Decoder Models"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nEncoder-decoder architecture explicitly separates input processing from output generation. The encoder reads the full input bidirectionally, building rich representations. The decoder generates tokens one at a time, conditioning on both its own prior outputs (causal attention) and the encoder's representation (cross-attention). Think of it as: encoder = understanding, decoder = speaking.\n\n## Detail\n\n**Architecture:**\n```\nInput sequence → [Encoder blocks: self-attention (bidirectional)]  \n                    ↓\n              Encoder output (context vectors)\n                    ↓\nTarget prefix → [Decoder blocks: self-attention (causal) + cross-attention to encoder]\n                    ↓\n                Predicted next token\n```\n\n**Encoder:**\n- $N$ stacked transformer layers with **bidirectional** (non-causal) self-attention\n- Each position attends to all other positions; no masking\n- Produces key-value tensors $(K_e, V_e)$ passed to decoder\n\n**Decoder:**\n- $N$ stacked transformer layers, each with two attention sub-layers:\n  1. **Self-attention (causal):** Attends to own previous outputs; standard causal mask\n  2. **Cross-attention:** Queries from decoder states; keys/values from encoder outputs\n\n**Cross-attention mechanism:**\n$$\\text{CrossAttention}(Q_d, K_e, V_e) = \\text{softmax}\\left(\\frac{Q_d K_e^T}{\\sqrt{d_k}}\\right)V_e$$\n\nWhere:\n- $Q_d$: Decoder hidden states (queries)\n- $K_e, V_e$: Encoder hidden states (fixed keys/values for the whole sequence)\n\nCross-attention allows the decoder to \"look up\" relevant parts of the encoded input for each generated token.\n\n**Why it works:**\n- Encoder bidirectional attention captures long-range dependencies in input (no causal constraint)\n- Decoder can focus on relevant input regions via cross-attention without reprocessing\n- Asymmetry mirrors problem structure: understand input fully, then generate output\n\n## Common gotchas / interview framings\n\n- **\"Encoder-decoder is slower because of two stacks.\"** → Not really; encoder runs once, decoder runs autoregressively. Per-token cost similar to decoder-only if depths are comparable.\n- **Cross-attention optimization:** Keys/values are from encoder (fixed), reuse them across all decoder predictions → no need to recompute encoder for each token.\n- **Training vs. inference:** Training uses teacher forcing (feed gold target tokens to decoder); inference generates auto-regressively (decoder output feeds back as input).\n- **Compare to decoder-only:** Decoder-only attends over [prompt, all-generated-so-far]; encoder-decoder attends over [encoded-input, generated-so-far] separately.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the difference between self-attention in the encoder vs. cross-attention in the decoder.",
+        "back": "Encoder self-attention: bidirectional; each token attends to all input tokens (no causal mask). Cross-attention: decoder positions query the encoder's keys/values; it's how the decoder \"looks up\" relevant input information. Decoder also has its own self-attention (causal) to attend to previously generated tokens."
+      },
+      {
+        "type": "flip",
+        "front": "In the cross-attention layer, what are the sources of queries, keys, and values?",
+        "back": "Queries (Q) come from the decoder's hidden states (what we're generating now). Keys (K) and Values (V) come from the encoder's output (the full input representation). The encoder processes the input once and its outputs are reused as K, V for all decoder steps."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is the encoder's bidirectional attention crucial for encoder-decoder models?",
+        "back": "Bidirectional attention lets the encoder see the full input context, capturing dependencies that flow both forward and backward. This is safe because we're not generating tokens yet—we're understanding input. The decoder's autoregressive (causal) generation is conditioned on this rich bidirectional representation.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It allows the encoder to predict future tokens",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "It enables the encoder to capture long-range dependencies in the input without causal constraints",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "It reduces the number of parameters needed in the decoder",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It allows the encoder to generate multiple outputs in parallel",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "During encoder-decoder inference, the encoder is computed once per input. Why is reusing encoder outputs (as K, V in cross-attention) efficient?",
+        "back": "The encoder output is static for a given input. Cross-attention uses this fixed (K, V) pair for every decoder step (generating each output token). If we recomputed the encoder for each generated token, we'd waste compute. Modern deployments cache encoder (K, V) to avoid recomputation; this is critical for serving [[inference-scaling-and-test-time-compute-o1-reasoning-models]]."
+      }
+    ]
+  },
+  {
+    "slug": "t5-and-bart-models",
+    "title": "T5 and BART models",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "intermediate",
+    "tags": [
+      "encoder-decoder",
+      "t5",
+      "bart",
+      "seq2seq",
+      "transfer-learning",
+      "text-to-text"
+    ],
+    "aliases": [
+      "T5",
+      "BART",
+      "seq2seq-models",
+      "text-to-text"
+    ],
+    "wikilinks": [
+      "encoder-decoder-architecture-and-cross-attention",
+      "decoder-only-vs-encoder-decoder-tradeoff",
+      "scaling-laws-for-loss-and-compute"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1910.13461",
+        "label": "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer (Raffel et al. 2020, T5)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1910.13461",
+        "label": "BART: Denoising Sequence-to-Sequence Pre-training (Lewis et al. 2019)"
+      },
+      {
+        "url": "https://huggingface.co/docs/transformers/model_doc/t5",
+        "label": "Hugging Face T5 Documentation"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nT5 and BART are encoder-decoder models designed for sequence-to-sequence tasks (translation, summarization, question answering). T5 treats all NLP tasks as \"text-to-text\"; BART is a denoising autoencoder that corrupts input and reconstructs it. Both leverage large-scale pretraining followed by task-specific fine-tuning, striking a middle ground between [[decoder-only-vs-encoder-decoder-tradeoff]]: bidirectional understanding via encoder, autoregressive generation via decoder.\n\n## Detail\n\n**T5 (Text-to-Text Transfer Transformer):**\n- Unified framework: all tasks reframed as text → text\n  - Translation: \"translate English to German: [en_text]\" → [de_text]\n  - Summarization: \"summarize: [document]\" → [summary]\n  - QA: \"question: [q] context: [c]\" → [answer]\n- Pretraining: Masked language modeling (span corruption) on 750GB of text (C4 corpus)\n- Architecture: Standard encoder-decoder, 12 layers each (base), 24 layers (large), 24 layers (3B)\n- Scaled version: T5-11B\n- Key insight: Unified task prefix + text-to-text paradigm enables few-shot transfer\n\n**BART (Bidirectional and Auto-Regressive Transformers):**\n- Hybrid of BERT (encoder) + GPT (decoder)\n- Pretraining: Corrupt input (delete, mask, permute, rotate) → reconstruct\n- More aggressive corruption than T5's span masking\n- Architecture: 12 encoder + 12 decoder layers (base), 24+24 (large)\n- Strong on summarization and abstractive paraphrase tasks\n- Strengths: Faster training, simpler fine-tuning\n\n**Architectural comparison:**\n\n| Aspect | T5 | BART |\n|--------|-----|------|\n| Encoder | Standard | BERT-like (bidirectional) |\n| Decoder | Standard causal | GPT-like (causal) |\n| Pretraining | Span masking | Denoising |\n| Task format | Text-to-text (unified) | Task-specific fine-tune |\n| Strengths | Scalability, transfer | Summarization, speed |\n\n**Why they matter (2023-2025 context):**\n- Dominated pre-decoder-only era (2019-2021)\n- Still strong for constrained seq2seq (summarization, translation, QA with retrieval)\n- Decoder-only models (GPT-3, Llama) have largely superseded them for open-ended generation\n- T5/BART useful for efficiency on short-range seq2seq tasks\n\n## Common gotchas / interview framings\n\n- \"T5/BART are 'obsolete' because decoder-only models exist.\" → Not obsolete; good for low-latency seq2seq (summarization, translation) and parameter-efficient fine-tuning on specific tasks.\n- **Transfer learning:** Both designed for transfer: pretrain on C4 / unsupervised corruption, fine-tune on downstream tasks (e.g., GLUE, SQuAD) with small labeled data.\n- **Span corruption (T5):** Mask spans of tokens; predict them. Cheaper than predicting every token (BERT style).\n- **Decoder conditioning:** Both use encoder output as cross-attention context; decoder never sees input directly.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is T5's key innovation in how it frames NLP tasks, and why does this matter?",
+        "back": "T5 frames all tasks as \"text-to-text\": input prefix + source text → target text. This unification means one model, one training objective, one fine-tuning approach. Examples: \"translate English to French: Hello\" → \"Bonjour\". This enables transfer learning and few-shot adaptation across diverse tasks with the same architecture."
+      },
+      {
+        "type": "flip",
+        "front": "Compare T5's span-corruption pretraining to BART's denoising corruption strategy.",
+        "back": "T5: masks spans of text (e.g., 10% of positions as spans); predict the spans. More efficient (fewer predictions per token). BART: corrupts input more aggressively (delete, permute, rotate, mask); reconstruct the original. BART's corruption is more diverse, leading to better robustness; T5's is more efficient for large-scale training."
+      },
+      {
+        "type": "mcq",
+        "front": "Why do encoder-decoder models like T5 and BART remain competitive despite the rise of decoder-only models (GPT-3, Llama)?",
+        "back": "For constrained seq2seq tasks (summarization, translation, QA), T5/BART achieve good performance with 2-10× fewer parameters than decoder-only models. This makes them ideal for resource-constrained deployments. Decoder-only models are better for open-ended generation and scale better overall, but T5/BART still win on efficiency for structured tasks.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "They produce higher-quality generations than decoder-only models",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "They require fewer parameters to match decoder-only performance on summarization and translation",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Decoder-only models cannot perform seq2seq tasks",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "They always faster at inference than decoder-only",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the difference between T5's and BART's approach to pretraining and their implications for downstream fine-tuning.",
+        "back": "T5: span masking on clean text; learns to predict masked spans. Task prefix in pretraining. Downstream: append task prefix, fine-tune. BART: aggressive corruption (delete, permute, etc.); learns robust reconstruction. Downstream: standard fine-tuning (loss on target). T5's prefix approach enables more direct transfer; BART's robustness helps with noisy or out-of-distribution inputs."
+      }
+    ]
+  },
+  {
+    "slug": "mixture-of-experts-moe",
+    "title": "Mixture of Experts (MoE)",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "advanced",
+    "tags": [
+      "mixture-of-experts",
+      "sparse-activation",
+      "routing",
+      "conditional-computation",
+      "efficiency",
+      "scaling"
+    ],
+    "aliases": [
+      "MoE",
+      "sparse-experts",
+      "expert-routing",
+      "conditional-computation"
+    ],
+    "wikilinks": [
+      "gpt-llama-mistral-qwen-architectures",
+      "scaling-laws-for-loss-and-compute",
+      "optimal-batch-sizes-and-datacompute-tradeoff",
+      "jamba-and-hybrid-ssm-transformer-models"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1701.06538",
+        "label": "Outrageously Large Neural Networks for Efficient Conditional Computation (Shazeer et al. 2017)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2401.06066",
+        "label": "DeepSeekMoE: Towards Ultimate Expert Specialization (DeepSeek, 2024)"
+      },
+      {
+        "url": "https://www.chipstrat.com/p/deepseek-moe-and-v2",
+        "label": "DeepSeek MoE and V2 Analysis (Austin Lyons, 2024)"
+      },
+      {
+        "url": "https://blogs.nvidia.com/blog/mixture-of-experts-frontier-models/",
+        "label": "Mixture of Experts Powers Most Intelligent Frontier AI Models (NVIDIA, 2025)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMixture of Experts (MoE) replaces dense feed-forward layers with sparse routing: a router network selects a small subset of expert networks for each token. Instead of all parameters being active for every forward pass, only a fraction activate per token. This reduces compute and memory per token while maintaining model capacity, enabling larger effective models at lower training/inference cost. Most frontier models (2025+) use MoE: DeepSeek-R1, Mixtral, Grok, Google's latest models.\n\n## Detail\n\n**Standard dense layer (baseline):**\n$$\\text{FFN}(x) = \\text{ReLU}(xW_1 + b_1)W_2 + b_2$$\nAll parameters active for every token; cost is $O(\\text{hidden\\_dim}^2)$ per token.\n\n**Mixture of Experts layer:**\n$$\\text{MoE}(x) = \\sum_{i=1}^{k} g(x)_i \\cdot \\text{Expert}_i(x)$$\nwhere:\n- $g(x)$: routing logits (learned function of $x$)\n- $\\text{Expert}_i$: independent FFN\n- $k$: typically 2-4 experts active per token (out of 128-256 total)\n\n**Routing mechanisms:**\n1. **Top-k hard routing:** Select top-k experts by $g(x)$ probability; zero-out others. Deterministic, efficient.\n2. **Soft routing:** Weighted sum over all experts (differentiable but dense).\n3. **Load-balancing:** Auxiliary loss encourages balanced token assignment across experts (prevents collapse to few experts).\n\n**Load balancing formula (DeepSeek-MoE):**\nAuxiliary loss prevents expert under-utilization:\n$$\\mathcal{L}_{aux} = \\lambda \\sum_i \\left(\\frac{f_i}{N}\\right)^2$$\nwhere $f_i$ = fraction of tokens routed to expert $i$, $N$ = number of experts.\n\n**Activation patterns (2025 models):**\n- **Mixtral 8x7B**: 46.7B total params, 12.9B active per token (~28% utilization). Outperforms Llama-2 70B at 6× faster inference.\n- **DeepSeek-V3** (Dec 2024): 671B total, 37B active per token, 256 fine-grained experts. Trained on 2.788M H800 GPU hours (~1/3 GPT-4 cost).\n- **DeepSeek-R1** (Jan 2025): 67B total, 37B active, matches o1 at 70% lower cost.\n\n**Advantages:**\n1. **Efficiency:** Sparse activation (k/total experts) scales better than dense networks [[scaling-laws-for-loss-and-compute]]\n2. **Expert specialization:** Each expert learns a different subfunction (e.g., \"math expert,\" \"code expert\")\n3. **Generalization:** Sparser models often generalize better than dense (less overfitting)\n\n**Challenges:**\n1. **Training instability:** Router collapse (all tokens to one expert) if not carefully load-balanced\n2. **Hardware utilization:** Sparse operations hard on GPUs (inefficient unless batched); TPUs better\n3. **Communication overhead:** In distributed training, routing decisions and expert gradients cross device boundaries\n\n## Common gotchas / interview framings\n\n- **\"MoE models are N× faster.\"** → Faster per-token compute, yes. But K-times slower if experts are on different devices (communication). On single GPU, MoE helps with latency, memory; on multi-node, communication dominates.\n- **Load balancing:** Naive routing → all tokens to best expert → that expert becomes bottleneck. Load-balancing loss essential. DeepSeek-MoE's auxiliary-loss-free approach is 2024 innovation.\n- **Comparison to dense scaling:** MoE params $\\gg$ dense params at same activate compute. Trade: capacity for sparsity. Empirically, scales better [[scaling-laws-for-loss-and-compute]].\n- **Fine-grained vs. coarse-grained experts:** Fewer large experts (128) vs. many small experts (256+). DeepSeek-V3 uses 256 fine-grained; offers better specialization and routing flexibility.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core insight of Mixture of Experts, and how does it differ from a standard dense feed-forward layer?",
+        "back": "Standard FFN: all parameters active for every token, cost $O(d_{hidden}^2)$. MoE: router selects k experts (out of E total) per token; only k experts' parameters activate. Results in $O(k/E \\times d_{hidden}^2)$ compute per token while maintaining $E \\times d_{hidden}^2$ total parameters. Trades parameter count for sparsity (reduced FLOPs)."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the role of the load-balancing auxiliary loss in MoE training. Why is it crucial?",
+        "back": "Without load-balancing, the router collapses: all tokens route to the 'best' expert, leaving others unused (dead experts). Auxiliary loss penalizes unbalanced allocation: $\\mathcal{L}_{aux} = \\lambda \\sum_i (f_i/N)^2$, where $f_i$ = fraction routed to expert $i$. Encourages uniform usage. DeepSeek-MoE's innovation: removed auxiliary loss and use fine-grained experts instead (256 vs. 8-16), allowing direct balancing through diversity."
+      },
+      {
+        "type": "mcq",
+        "front": "Why do frontier models in 2025 (DeepSeek-R1, Mixtral, Grok) predominantly use MoE over dense architectures?",
+        "back": "DeepSeek-V3 trained 671B-param model with 37B active using 2.788M GPU hours (~$1/3 typical frontier cost). MoE sparsity means you pay compute only for active experts, scaling better than dense [[scaling-laws-for-loss-and-compute]]. Dense would require ~$3× more GPU hours for equivalent capacity. Training instability (b) and inference speed (d) are challenges, not advantages.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "MoE models always train faster than dense models",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "MoE enables scaling to frontier capability levels at drastically lower training cost while maintaining parameter efficiency",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "MoE is simpler to implement and has no training instability",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "MoE models guarantee equal inference speed regardless of routing",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Compare Mixtral's sparse activation pattern to DeepSeek-V3's in terms of total vs. active parameters and implications for inference.",
+        "back": "Mixtral 8x7B: 46.7B total, 12.9B active (~28%). DeepSeek-V3: 671B total, 37B active (~5.5%). DeepSeek uses more experts (256 fine-grained vs. 8 coarse) but lower activation ratio. Both reduce per-token compute vs. dense. DeepSeek trades slightly higher active params (better expert specialization) for more total params (flexibility)."
+      },
+      {
+        "type": "flip",
+        "front": "What is 'expert collapse' in MoE training, and how do modern approaches (e.g., DeepSeek's auxiliary-loss-free strategy) address it?",
+        "back": "Expert collapse: router learns to route all tokens to a subset of experts (1-2 experts become active, others unused). Reduces effective model capacity despite large parameter count. Traditional fix: auxiliary loss penalizing imbalance. DeepSeek-MoE's innovation: use fine-grained experts (256 small) and simplify routing; with many experts, natural diversity emerges and collapse is less likely even without explicit loss."
+      }
+    ]
+  },
+  {
+    "slug": "jamba-and-hybrid-ssm-transformer-models",
+    "title": "Jamba and hybrid SSM-Transformer models",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "advanced",
+    "tags": [
+      "hybrid-architecture",
+      "state-space-models",
+      "mamba",
+      "ssm-transformer",
+      "long-context",
+      "efficiency"
+    ],
+    "aliases": [
+      "Jamba",
+      "SSM-hybrid",
+      "Mamba-transformer",
+      "state-space-models"
+    ],
+    "wikilinks": [
+      "gpt-llama-mistral-qwen-architectures",
+      "mixture-of-experts-moe",
+      "scaling-laws-for-loss-and-compute"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2403.19887",
+        "label": "Jamba: A Hybrid Transformer-Mamba Language Model (AI21, 2024)"
+      },
+      {
+        "url": "https://www.ai21.com/blog/announcing-jamba/",
+        "label": "Introducing Jamba: AI21's Groundbreaking SSM-Transformer Model"
+      },
+      {
+        "url": "https://github.com/state-spaces/mamba",
+        "label": "Mamba: State-Space Models for Efficient Sequence Modeling (GitHub)"
+      },
+      {
+        "url": "https://gregrobison.medium.com/architectural-evolution-in-large-language-models-a-deep-dive-into-jambas-hybrid-transformer-mamba-c3efa8ca8cae",
+        "label": "Architectural Evolution in Large Language Models: Jamba's Hybrid Design (Medium)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nJamba and similar hybrid models interleave traditional Transformer attention layers with State-Space Model (SSM/Mamba) layers. Transformers excel at in-context learning (dense attention over all tokens) but scale quadratically; SSMs are linear in sequence length but historically weaker on tasks requiring global reasoning. Hybrids combine strengths: attention for complex reasoning, SSMs for efficient long-context. Jamba-1.5 (2025) scales to 398B params with 94B active, supporting 256K context.\n\n## Detail\n\n**State-Space Models (SSM/Mamba) recap:**\n- Model sequence as state-space system: $h_t = Ah_{t-1} + Bx_t$, $y_t = Ch_t$\n- Linear recurrence: $O(n)$ in sequence length (not $O(n^2)$ like attention)\n- Mamba (2023): selective SSM, selective matrix $A_t$ per token → competitive with attention on language modeling\n- Limitation: attention weight per input is implicit in hidden state; no explicit \"which token did I look at?\" like attention\n\n**Hybrid approach (Jamba):**\n- Interleave attention and Mamba layers in a block structure\n- Example: layer sequence: Attention → FFN → Mamba → FFN → Attention → FFN → ...\n- Jamba's ratio: **1 attention layer per 8 total layers** (7 Mamba layers per attention layer)\n- Total: 72 layers (64 Mamba + 8 attention)\n- MoE on both: Mamba layers have sparse experts, attention layers have sparse experts\n\n**Architecture specifics:**\n- **Jamba-1.5** (2025): 398B total params, 94B active (with MoE)\n- **Context window:** 256K tokens (vs. 4K-128K for typical Transformers)\n- **Throughput:** Higher than pure Transformer (Mamba layers are faster)\n- **Memory:** Sub-quadratic vs. Transformer's quadratic (key advantage for long-context)\n\n**Why this ratio?**\n- Empirically, Jamba found **1/8 ratio** (12.5% attention) optimal\n- Surprising finding: Mamba-1 (not Mamba-2) + attention outperforms Mamba-2 + attention\n- Suggests: Mamba-2's improvements (selective state transitions) redundant with attention; Mamba-1's simplicity works in hybrid\n\n**Performance vs. pure architectures:**\n- **Pure Transformer (e.g., Llama):** $O(n^2)$ attention, excellent in-context, but slow at long sequences\n- **Pure Mamba:** $O(n)$ per-token cost, fast, but weaker on reasoning (lower in-context performance)\n- **Jamba:** Hybrid cost: $O(n^2 \\cdot \\frac{1}{8} + n \\cdot \\frac{7}{8}) \\approx O(n^2/8 + 7n/8)$. For n=256K, Mamba cost dominates; for n<4K, attention cost is noticeable but acceptable.\n\n## Common gotchas / interview framings\n\n- **\"SSMs are 'linear' so they're faster.\"** → Linear in theory, but Mamba's selectivity adds overhead. In practice, Mamba is 2-3× faster than attention on long sequences, not 256× faster (because of constant factors and implementation).\n- **Inference scaling:** At 256K context, Jamba's inference is ~100× faster than pure Transformer (quadratic attention). This enables new applications (full-document reasoning, retrieval with context).\n- **Mamba-2 paradox:** Mamba-2 is better in isolation (higher quality SSM), but in Jamba, Mamba-1 works better. Suggests: with explicit attention, SSM doesn't need to do everything.\n- **Training:** Hybrid still requires different initialization, gradient scaling for Mamba vs. attention layers; more complex than pure Transformer [[scaling-laws-for-loss-and-compute]].\n- **When to use:** Jamba excels for long-context tasks (full documents, multi-turn memory, retrieval-augmented generation). For short-context (<4K), pure Transformer likely better per-token.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core motivation for hybrid Transformer-Mamba architectures like Jamba?",
+        "back": "Transformers: $O(n^2)$ attention, strong reasoning (in-context learning), slow at long sequences. Mambas: $O(n)$ per-token cost, fast, but weaker reasoning (no explicit query-key matching). Jamba: interleave both—Mamba layers for efficiency, attention layers for reasoning. Net result: sub-quadratic cost with strong performance."
+      },
+      {
+        "type": "flip",
+        "front": "In Jamba's architecture, what is the layer ratio (attention vs. Mamba), and why was this ratio chosen?",
+        "back": "Jamba uses 1 attention layer per 8 total layers (12.5% attention, 87.5% Mamba). Empirically optimized; this ratio balances reasoning (attention) with efficiency (Mamba). At 256K context, the Mamba-heavy design dominates cost; for shorter sequences, attention layers are occasional but impactful for complex reasoning."
+      },
+      {
+        "type": "mcq",
+        "front": "Jamba empirically found that Mamba-1 + attention outperformed Mamba-2 + attention in the hybrid architecture. What does this suggest?",
+        "back": "Mamba-2 (selective transitions) aims to improve implicit reasoning in pure SSMs. In a hybrid, explicit attention layers handle complex reasoning; the SSM's job is efficient sequence processing. Mamba-1's simplicity and compatibility with attention is sufficient. Mamba-2 shines in pure-SSM settings, not in hybrids.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Mamba-2 is a regression and should not be used",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Mamba-2's selectivity improvements are redundant with explicit attention; Mamba-1's simplicity suffices in hybrid",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Hybrid models should avoid SSMs and use only attention",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Mamba-1 is fundamentally superior to Mamba-2",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Estimate the asymptotic complexity of Jamba's inference as a function of sequence length n, given 1 attention + 7 Mamba layers per 8-layer block.",
+        "back": "Per-token cost: $O(1/8 \\cdot n) + O(7/8 \\cdot 1) = O(n/8 + 7/8)$ (attention is $O(n)$ per new token at inference, Mamba is $O(1)$). For full sequence computation (training): $O(n^2/8 + 7n/8) \\approx O(n^2/8)$. At n=256K, Mamba dominates; at n=4K, attention contributes ~30%."
+      },
+      {
+        "type": "flip",
+        "front": "What practical advantage does Jamba's 256K context window provide compared to typical Transformer models (4K-128K)?",
+        "back": "256K context (256,000 tokens) enables: (1) full documents (papers, books, code repos) in one prompt, (2) long multi-turn conversations with full history, (3) retrieval-augmented generation with large retrieved sets. Practical impact: reduce context switching, improve consistency over long reasoning, enable new use cases."
+      }
+    ]
+  },
+  {
+    "slug": "scaling-laws-for-loss-and-compute",
+    "title": "Scaling laws for loss and compute",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "advanced",
+    "tags": [
+      "scaling-laws",
+      "loss-prediction",
+      "compute-optimal",
+      "power-law",
+      "chinchilla",
+      "empirical"
+    ],
+    "aliases": [
+      "scaling-laws",
+      "loss-scaling",
+      "compute-scaling",
+      "power-law-scaling"
+    ],
+    "wikilinks": [
+      "optimal-batch-sizes-and-datacompute-tradeoff",
+      "inference-scaling-and-test-time-compute-o1-reasoning-models",
+      "gpt-llama-mistral-qwen-architectures"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2001.08361",
+        "label": "Scaling Laws for Neural Language Models (Kaplan et al., OpenAI 2020)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2203.15556",
+        "label": "Training Compute-Optimal Large Language Models (Hoffmann et al., DeepMind 2022, Chinchilla)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2302.13971",
+        "label": "LLaMA: Open and Efficient Foundation Language Models (Touvron et al., 2023)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nScaling laws describe how model loss improves as you increase compute (training FLOPs), model size (parameters), or data size (tokens). Empirically, loss follows power laws: $L(N) \\approx a/N^\\alpha$ where $\\alpha \\in (0.07, 0.15)$ depending on what you scale. This predictability has driven LLM progress: you can forecast how much compute you need for target loss before training. Key insight: optimal training allocates compute equally to model and data (Chinchilla).\n\n## Detail\n\n**Core empirical law (Kaplan et al., 2020):**\n$$L(N, D) = E + \\frac{A}{N^\\alpha} + \\frac{B}{D^\\beta}$$\n\nWhere:\n- $L$: loss (validation perplexity or cross-entropy)\n- $N$: model parameters\n- $D$: training tokens (data)\n- $A, B, E$: constants\n- $\\alpha \\approx 0.076$, $\\beta \\approx 0.103$ (empirically measured)\n\n**Implications:**\n1. **Power-law scaling:** Loss decreases as $\\sim 1/N^{0.076}$. To halve loss, increase $N$ by $2^{1/0.076} \\approx 100×$.\n2. **Data is as important as model:** $\\beta \\approx \\alpha$, so scaling data by 10× ≈ scaling model 10×.\n3. **Compute constraint:** Total FLOPs $= C \\approx 6 \\times N \\times D$ (standard transformer). Allocate C between N and D.\n\n**Chinchilla (Compute-Optimal) scaling (Hoffmann et al., 2022):**\n\nGiven fixed compute budget $C$, what split between $N$ (params) and $D$ (tokens) minimizes loss?\n\n$$C = 6 \\times N \\times D$$\n\nDifferentiate loss w.r.t. $N$ and $D$ subject to constraint → **optimal allocation: equal FLOPs to model and data**\n\n$$N^\\text{opt} = \\frac{C}{6D^\\text{opt}}, \\quad D^\\text{opt} = \\frac{C}{6N^\\text{opt}}$$\n\nResult: $N \\approx D$ (number of params ≈ number of training tokens)\n\n**Concrete example:**\n- Compute budget: $10^{21}$ FLOPs\n- Model size: $N \\approx 7B$ params\n- Data size: $D \\approx 1.4T$ tokens (each token ~1.4 training steps)\n- Classical rule (pre-Chinchilla): $N \\approx 70B$ for this compute → undertrained (not enough data)\n- Chinchilla: reduce N, increase D → same compute, better loss\n\n**Frontier model scaling (2025):**\n- **GPT-5** (2025): $\\sim 10^{24}$ FLOPs, $\\sim 40B$ params (reported), $\\sim 4-5T$ tokens\n- **Claude 4.7** (2026): $\\sim 10^{24}$ FLOPs\n- **DeepSeek-V3** (2024): $671B$ params but sparse MoE ($37B$ active); $14.8T$ tokens; $2.79M$ GPU hours\n\n**Architectural considerations:**\n- Chinchilla law holds across architectures (Transformers, Llama, GPT-style)\n- Sparse models (MoE): effective params lower than total params; scale law still holds on *active* compute\n- Training efficiency: Chinchilla-scaled models train to target loss faster than overparameterized ones\n\n## Common gotchas / interview framings\n\n- **\"Bigger model is always better.\"** → No; overscaling model while underfitting on data wastes compute. Chinchilla forces discipline: scale evenly.\n- **Inference cost vs. training cost:** Scaling laws predict training loss. Inference cost (per-token) scales with model size only, not data. A Chinchilla-scaled model may have higher inference cost (more params) for same training FLOPs.\n- **Double descent / peaking:** Loss follows power law in normal regime; no mysterious second-descent observed in standard supervised learning (common misconception).\n- **Test-time compute changes the game:** [[inference-scaling-and-test-time-compute-o1-reasoning-models]] shows o1/o3 achieve better loss with more reasoning steps (violates training-time scaling law). Separate frontier.\n- **MoE and scaling laws:** Sparse models have different effective compute/param ratios. DeepSeek-V3 scales better than Chinchilla would predict (sparsity gives edge).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "State the empirical power-law scaling relationship for LLM loss as a function of parameters N.",
+        "back": "$L(N) \\approx E + A/N^\\alpha$ where $\\alpha \\approx 0.076$ (Kaplan et al.). This means loss scales as inverse power of model size. To halve loss, multiply N by $2^{1/0.076} \\approx 100×$. Power law is remarkably consistent across architectures and regimes, enabling loss prediction before training."
+      },
+      {
+        "type": "flip",
+        "front": "What is Chinchilla scaling, and what is the key insight about allocating compute between model size and data?",
+        "back": "Chinchilla (Hoffmann et al., 2022) optimizes compute allocation. Given total FLOPs budget $C$: train with $N \\approx D$ (model params ≈ training tokens), not the classical $N \\ll D$ (overparameterize with few tokens). This balances model expressiveness and data diversity, minimizing loss for fixed compute. Implication: data quality/quantity as critical as model size."
+      },
+      {
+        "type": "mcq",
+        "front": "According to Chinchilla scaling, if you have compute budget C and want to train a model, how should you allocate it?",
+        "back": "Chinchilla's optimization shows equal allocation (N ≈ D in tokens) minimizes loss for fixed compute. Pre-Chinchilla (Kaplan et al.) suggested N ≪ D (overparameterize, underfit). Frontier models have adopted Chinchilla-style scaling, leading to better efficiency and loss. D ≈ 10×N (option d) is outdated.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Maximize model size N; minimize data D (few epochs)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Minimize model size N; maximize data D (many epochs over few tokens)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Allocate compute equally: N (params) ≈ D (tokens), roughly equal FLOPs to model and data",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Use 10× more data than model size (D ≈ 10×N)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "A model trained with Chinchilla scaling has higher inference cost per token than an overparameterized model at the same training compute budget. Explain why this is acceptable.",
+        "back": "Chinchilla scales model size and data equally (N ≈ D in tokens). More N → higher inference cost. But: (1) you reach target loss faster in training (fewer wasted FLOPs), (2) generalization is better (less overfitting), (3) inference-time compute is separate from training-time cost [[inference-scaling-and-test-time-compute-o1-reasoning-models]]. The training efficiency gain outweighs inference overhead."
+      },
+      {
+        "type": "flip",
+        "front": "How do sparse models (Mixture of Experts) interact with scaling laws? Does Chinchilla still apply?",
+        "back": "Chinchilla law holds for *active* compute, not total parameters. MoE models (e.g., DeepSeek-V3: 671B params, 37B active) scale better than dense Chinchilla would predict because sparsity reduces effective compute per token. You can train larger models (more total params) with same FLOPs if sparse. This is why MoE dominates 2025 frontier models [[mixture-of-experts-moe]]."
+      }
+    ]
+  },
+  {
+    "slug": "optimal-batch-sizes-and-datacompute-tradeoff",
+    "title": "Optimal batch sizes and data/compute tradeoff",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "advanced",
+    "tags": [
+      "batch-size",
+      "training-dynamics",
+      "gradient-noise",
+      "throughput",
+      "training-efficiency",
+      "chinchilla"
+    ],
+    "aliases": [
+      "batch-size-optimization",
+      "data-compute-tradeoff",
+      "critical-batch-size"
+    ],
+    "wikilinks": [
+      "scaling-laws-for-loss-and-compute",
+      "gpt-llama-mistral-qwen-architectures"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1711.00489",
+        "label": "Don't Decay the Learning Rate, Increase the Batch Size (Smith et al., 2017)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2203.15556",
+        "label": "Training Compute-Optimal Large Language Models (Hoffmann et al., DeepMind 2022)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2001.08361",
+        "label": "Scaling Laws for Neural Language Models (Kaplan et al., OpenAI 2020)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nBatch size determines how many gradients are averaged before a parameter update. Large batches (thousands) reduce gradient noise but require more GPU memory; small batches (tens) are noisier but memory-light. There's a \"critical batch size\" beyond which increasing batch size doesn't improve loss (only throughput). Understanding this tradeoff lets you maximize training efficiency: process more data per unit compute, or hit target loss faster.\n\n## Detail\n\n**Gradient noise and batch size:**\nStochastic gradient descent updates on minibatches:\n$$\\theta_{t+1} = \\theta_t - \\eta \\nabla L(\\theta_t; B_t)$$\nwhere $B_t$ is a batch of size $B$.\n\nGradient noise (variance) scales with batch size:\n$$\\text{Var}[\\nabla L] \\propto 1/B$$\n\nSmall batch → high noise → slow convergence (more steps to reach same loss). Large batch → low noise → faster convergence (fewer steps). But:\n\n**Critical batch size ($B_c$):**\nBeyond $B_c$, increasing batch size doesn't reduce loss further (only speeds up training). This is because the loss landscape has irreducible noise at the boundary. Empirically:\n$$B_c \\approx \\frac{\\text{const} \\times D}{N}$$\nwhere $D$ = training data (tokens), $N$ = model params. Larger models have larger critical batch size (more gradient signal needed).\n\n**Training dynamics (Smith et al.):**\n- Small batch regime: loss decreases with $1/\\sqrt{\\text{steps}} \\propto 1/\\sqrt{B}$ (noise-limited)\n- Large batch regime: loss decreases but plateaus (curvature-limited); diminishing returns\n- Practical: batch sizes 512-4096 for LLMs cover most of the benefit\n\n**Compute efficiency formula (from Chinchilla scaling):**\nTotal compute $C = 6 \\times N \\times D$ (assumes no loss from increased batch size). If batch size $B > B_c$, you're wasting compute (not learning more, just training faster). Optimal: $B \\approx B_c$ or slightly above.\n\n**Practical LLM training (2025):**\n- Global batch size: 1M - 8M tokens per step (accumulate across devices)\n- Gradient accumulation: if per-device batch is 32, and you accumulate 128 steps, effective batch is 32×128\n- Chinchilla rule: allocate FLOPs equally between N and D; batch size adjusts accordingly\n\n**Memory vs. throughput:**\n- Large batch: high GPU utilization, high throughput (tokens/sec), but high memory\n- Small batch: low memory, lower throughput\n- Trade: increase batch within hardware limits; recompute activations (gradient checkpointing) to reduce memory at small cost in compute\n\n## Common gotchas / interview framings\n\n- **\"Always use maximum batch size.\"** → Beyond critical batch size, loss doesn't improve. You just train faster (fewer iterations) but same compute-to-loss relationship. Trade throughput/memory vs. data efficiency.\n- **Batch size and learning rate:** Learning rate often scales with batch size ($\\eta \\propto \\sqrt{B}$). Critical detail: if you double batch, increase LR by $\\sqrt{2}$, not 2×.\n- **Gradient noise vs. curvature:** At small batch, noise dominates loss (stochastic descent helps escape sharp minima). At large batch, curvature dominates (limited by loss landscape). Different optimization regimes.\n- **Distributed training:** Batch size is *global* (sum across all devices/nodes). Local per-device batch might be 32, but global is 32×1000 GPUs = 32K. Gradient accumulation and sync matter.\n- **Critical batch size empirical rule:** $B_c \\approx (\\text{const} \\times D) / N$. For 7B model on 1T tokens, $B_c \\approx 10K$ (rough). Frontier 70B on 1T might have $B_c \\approx 100K$.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the critical batch size in LLM training, and why does loss plateau beyond it?",
+        "back": "Critical batch size ($B_c$) is the threshold beyond which larger batches don't reduce loss further. Gradient noise scales as $1/B$; at $B_c$, noise is low enough that loss is curvature-limited (determined by loss landscape, not gradient variance). Increasing batch further trains faster (fewer steps to same loss) but doesn't improve final loss."
+      },
+      {
+        "type": "flip",
+        "front": "How does batch size relate to learning rate in stochastic gradient descent, and why?",
+        "back": "Learning rate should scale with batch size: $\\eta \\propto \\sqrt{B}$. Intuition: larger batch → lower gradient noise → can take bigger steps. If you double batch, increase LR by $\\sqrt{2}$. This maintains the noise-to-signal ratio, ensuring stable convergence across different batch sizes."
+      },
+      {
+        "type": "mcq",
+        "front": "In Chinchilla-scaled training, what is the relationship between batch size, model size N, and training data D?",
+        "back": "Chinchilla allocates compute equally to model and data (N ≈ D). Critical batch size is $B_c \\sim D/N$. For optimal efficiency, use $B \\approx B_c$: below it, gradient noise limits loss; above it, you're wasting compute. Larger models need larger batches (more gradient signal).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Batch size should equal model size N",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Batch size should equal training data tokens D",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Batch size should be chosen near critical batch size $B_c \\approx (const \\times D)/N$ to balance noise and throughput",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Batch size is independent of N and D; fixed at 4096",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the difference between small-batch and large-batch training regimes in terms of loss convergence and limiting factors.",
+        "back": "Small batch (<$B_c$): loss converges as $1/\\sqrt{\\text{steps}} \\propto 1/\\sqrt{B}$; noise-limited. More gradient samples → faster convergence. Large batch (>$B_c$): loss plateaus; curvature-limited. Increasing batch only speeds up training (fewer steps), not final loss. Trade: small batch is data-efficient but slow; large batch is fast but hits ceiling."
+      },
+      {
+        "type": "flip",
+        "front": "Modern LLM training uses 'gradient accumulation.' How does this relate to batch size constraints and memory?",
+        "back": "Gradient accumulation: run forward+backward for $k$ smaller batches, accumulate gradients, then update parameters. Effective batch size = $k \\times$ per-device batch, but memory footprint ≈ per-device batch (reuse GPU memory). This lets you simulate large batches on hardware with limited VRAM, crucial for training massive models [[scaling-laws-for-loss-and-compute]]."
+      }
+    ]
+  },
+  {
+    "slug": "inference-scaling-and-test-time-compute-o1-reasoning-models",
+    "title": "Inference-scaling and test-time compute (o1, reasoning models)",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "advanced",
+    "tags": [
+      "inference-scaling",
+      "test-time-compute",
+      "reasoning-models",
+      "o1",
+      "o3",
+      "chain-of-thought"
+    ],
+    "aliases": [
+      "test-time-compute",
+      "reasoning-scaling",
+      "o1-o3",
+      "inference-time-compute"
+    ],
+    "wikilinks": [
+      "scaling-laws-for-loss-and-compute",
+      "optimal-batch-sizes-and-datacompute-tradeoff",
+      "frontier-model-performance-gpt-4-claude-37-gemini-3"
+    ],
+    "sources": [
+      {
+        "url": "https://openai.com/index/learning-to-reason-with-llms/",
+        "label": "Learning to Reason with LLMs (OpenAI, 2024, o1)"
+      },
+      {
+        "url": "https://introl.com/blog/inference-time-scaling-research-reasoning-models-december-2025",
+        "label": "Inference-Time Scaling: Reasoning Models in December 2025"
+      },
+      {
+        "url": "https://huggingface.co/blog/Kseniase/testtimecompute",
+        "label": "What is Test-Time Compute (Hugging Face, 2025)"
+      },
+      {
+        "url": "https://markets.financialcontent.com/wral/article/tokenring-2026-1-1-the-reasoning-revolution-how-openais-o3-series-and-the-rise-of-inference-scaling-redefined-artificial-intelligence",
+        "label": "The Reasoning Revolution: How OpenAI's o3 Series Redefined AI (2026)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nTraditional LLM scaling (2017-2023) optimized training compute: larger models, more data, better loss. Inference-scaling (2024-2025) inverts this: spend more compute at test/inference time (reasoning steps, chain-of-thought, search) to improve reasoning on hard problems. o1 (OpenAI, 2024) demonstrated that test-time compute rivals training-time compute in improving performance. o3 (announced Dec 2024, released early 2025) scales this further, achieving frontier reasoning benchmarks (GPQA Diamond: 92%+, ARC-c: 95%+).\n\n## Detail\n\n**Scaling law inversion:**\n- Training-time: more FLOPs (parameters × tokens) → better loss on average\n- Inference-time: more reasoning steps (chain-of-thought, internal search) → better accuracy on hard problems\n\n**Key mechanism: Reinforcement Learning for reasoning**\n- o1: Train with RL to maximize reward (correct answer on test problem)\n- Reward signal: process verification (check intermediate steps), or outcome (final answer correct)\n- Model learns when to \"think longer\" and when to be confident\n- Result: more steps on hard problems, fewer on easy ones (adaptive computation)\n\n**o1 performance characteristics (Oct 2024):**\n- Math (AIME): 92%, Physics (GPQA Diamond): 85%, Coding (Codeforces): 96th percentile\n- Speed: slower than typical LLMs (more reasoning), but faster than human mathematicians\n- Cost: higher per-query (more compute), but solves previously unsolved problems\n\n**o3 progression (Dec 2024 / Jan 2025):**\n- Extended reasoning: longer chains of thought, more internal states\n- GPQA Diamond: 92% (matching specialized tools)\n- ARC-c (science reasoning): 95%+\n- Math Olympiad: ~45% (vs. o1's ~25%, human expert ~50%)\n- Scaling laws suggest: more reasoning steps → higher accuracy, approaching human-expert level\n\n**DeepSeek-R1 (Jan 2025 benchmark):**\n- Pure RL approach (no supervised reasoning data)\n- Matches o1 on math/code at 70% lower inference cost\n- Proves RL alone (no labeled chain-of-thought) can induce reasoning\n- Validates inference-scaling as dominant frontier\n\n**Test-time compute scaling law (empirical 2025):**\n$$\\text{Accuracy}(T) \\approx A_\\infty - B/T^\\gamma$$\nwhere:\n- $T$: test-time compute (reasoning steps, tokens generated)\n- $\\gamma \\approx 0.3 - 0.5$ (empirically measured)\n- Improvement saturates but continues (no hard ceiling observed yet)\n\n**Comparison to training-time scaling:**\n- Training: loss $\\sim 1/N^{0.076}$ (slow power law)\n- Test-time: accuracy $\\sim 1 - B/T^{0.3}$ (faster power law, at least initially)\n- Practical implication: test-time compute more efficient per unit of accuracy improvement (for hard problems)\n\n**Infrastructure impact (2025-2026):**\n- Inference compute projected to exceed training compute by 2026-2027\n- 75% of total AI compute spent on inference by 2030 (analyst estimates)\n- Serverless pricing models: charge per reasoning token, not just output token\n- New optimization: latency vs. quality tradeoff (users can request quick answer vs. thorough reasoning)\n\n## Common gotchas / interview framings\n\n- **\"o1 is just chain-of-thought prompting.\"** → No. o1 is trained with RL to reason; it learns *when* to use reasoning. Naive chain-of-thought (prompt \"Let's think step-by-step\") helps but is much weaker.\n- **Speed vs. quality:** o1 is slower than GPT-4 on easy tasks (always reasons), but much better on hard tasks. Adaptive reasoning (knowing when not to reason) is the real innovation.\n- **Test-time compute != longer outputs:** More internal states and search, not just more text. Hidden reasoning tokens are counted; user doesn't see all of them.\n- **Reasoning generalization:** o1/o3 trained on math/code; unknown how well this transfers to open-ended reasoning (writing, creative tasks). Empirically, transfers well to new domains.\n- **Future frontiers:** o3 sets GPQA Diamond at 92%; humans ~65%. Next frontier: multimodal reasoning, long-horizon planning, embodied reasoning.\n\n## Interview framing\n\n- \"If training-time scaling hits diminishing returns, why does test-time scaling seem fresh?\" → Hard problems have intrinsic difficulty; more reasoning (search, verification) directly addresses it. Easy tasks saturate fast; hard tasks sustain scaling. o1/o3 are trained on hard-task-only distributions.\n- \"Will inference-scaling replace training-scaling?\" → Unlikely. Both are complementary. Larger base models (training) + more reasoning (inference) = optimal frontier.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core difference between training-time scaling and inference-time (test-time) scaling?",
+        "back": "Training-time: increase parameters N, data D, compute FLOPs → better average loss across all tasks. Inference-time: spend more compute during prediction (reasoning steps, search, verification) → better accuracy on hard tasks specifically. o1/o3 show inference-scaling is orthogonal and powerful for reasoning."
+      },
+      {
+        "type": "flip",
+        "front": "How does o1 learn to reason? Describe the training procedure and key insight.",
+        "back": "o1 trained with reinforcement learning (RL): generate reasoning chains, verify answers (outcome reward). Model learns to predict which problems need reasoning and how many steps. Key: RL signal (correct/incorrect) encourages adaptive reasoning—easy problems → quick answers, hard problems → extended chains. This is why o1 is slower but more accurate on difficult tasks."
+      },
+      {
+        "type": "mcq",
+        "front": "DeepSeek-R1 achieved performance comparable to o1 with 70% lower inference cost. What does this suggest about reasoning models?",
+        "back": "DeepSeek-R1 proves pure RL (no labeled chain-of-thought) induces reasoning. Cost difference reflects architectural and scaling choices, not just inference length. Implications: (1) reasoning is learnable from outcome-only signals, (2) efficiency varies by architecture [[gpt-llama-mistral-qwen-architectures]], (3) inference-scaling is orthogonal to model choice.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "o1 is inefficient and should be replaced by DeepSeek-R1",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "RL-based reasoning is fundamentally more efficient than supervised fine-tuning; the architecture and scaling matter more than data source",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Reasoning cannot be learned from pure RL without supervised reasoning data",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "DeepSeek has superior hardware; cost difference is only infrastructure",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Estimate the test-time compute scaling law observed in o1/o3 models. How does it compare to training-time scaling?",
+        "back": "Test-time: $\\text{Accuracy}(T) \\approx A_\\infty - B/T^{\\gamma}$, $\\gamma \\approx 0.3-0.5$ (empirical). Training-time: loss $\\sim 1/N^{0.076}$. Test-time exponent is larger (0.3-0.5 vs. 0.076), meaning test-time scaling is faster initially. Per unit of improvement, test-time compute is more efficient for hard problems [[scaling-laws-for-loss-and-compute]]."
+      },
+      {
+        "type": "flip",
+        "front": "Given that o1 and o3 achieve near-human reasoning on math/science benchmarks, what is the next frontier for inference-scaling?",
+        "back": "Current: hard single-domain reasoning (math, code, GPQA). Next frontiers: (1) multimodal reasoning (image+text), (2) long-horizon planning (multi-step real-world tasks), (3) open-ended reasoning (writing, creative problem-solving, where ground truth is ambiguous), (4) embodied reasoning (robotics, physical interaction). Inference-scaling's applicability to these domains is open research (2025)."
+      }
+    ]
+  },
+  {
+    "slug": "frontier-model-performance-gpt-4-claude-37-gemini-3",
+    "title": "Frontier model performance (GPT-4, Claude 3.7, Gemini 3)",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "difficulty": "intermediate",
+    "tags": [
+      "frontier-models",
+      "gpt-4",
+      "claude-opus",
+      "gemini",
+      "benchmarks",
+      "sota-landscape"
+    ],
+    "aliases": [
+      "GPT-4",
+      "Claude-Opus",
+      "Gemini-3",
+      "frontier-performance",
+      "SOTA"
+    ],
+    "wikilinks": [
+      "gpt-llama-mistral-qwen-architectures",
+      "scaling-laws-for-loss-and-compute",
+      "inference-scaling-and-test-time-compute-o1-reasoning-models"
+    ],
+    "sources": [
+      {
+        "url": "https://www.cosmicjs.com/blog/best-ai-for-developers-claude-vs-gpt-vs-gemini-technical-comparison-2026",
+        "label": "Claude vs GPT-5.2 vs Gemini 3: Technical Comparison 2026"
+      },
+      {
+        "url": "https://lmcouncil.ai/benchmarks",
+        "label": "AI Model Benchmarks May 2026 | LM Council"
+      },
+      {
+        "url": "https://www.buildfastwithai.com/blogs/best-ai-models-april-2026-comparison",
+        "label": "Best AI Models April 2026: GPT-5.5, Claude & Gemini Compared"
+      },
+      {
+        "url": "https://llm-stats.com/llm-updates",
+        "label": "AI Updates Today (May 2026) – Latest AI Model Releases"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nFrontier models (GPT-5.5, Claude 4.7, Gemini 3.1+) represent the state-of-the-art in 2025-2026. They are products of scale ([[scaling-laws-for-loss-and-compute]]), sophisticated architectures ([[gpt-llama-mistral-qwen-architectures]]), and novel training paradigms ([[inference-scaling-and-test-time-compute-o1-reasoning-models]]). Understanding their capabilities, limitations, and tradeoffs is essential for architecting AI systems: which model to use depends on task (reasoning vs. quick response), latency (deadline), cost (budget), and domain (code, language, multimodal).\n\n## Detail\n\n**OpenAI GPT series (2025-2026):**\n\n| Model | Release | Strengths | Weaknesses | Cost |\n|-------|---------|-----------|-----------|------|\n| GPT-4 (Original) | Mar 2023 | General reasoning, long-context | Slower inference, higher cost | High |\n| GPT-5 | Aug 2025 | Larger, more capable | Architecture details not public | High |\n| GPT-5.2 | Dec 2025 | Improved on reasoning, code | Still slow vs. GPT-4o series | High |\n| GPT-5.5 | Apr 2026 | **Agentic** (self-planning, tool-use, correction), computer use, scientific reasoning | Slower (more reasoning), expensive | Highest |\n\nGPT-5.5 key feature: native agentic capability. Can plan multi-step tasks, call tools, verify its work, and recover from errors without explicit prompting.\n\n**Anthropic Claude series (2025-2026):**\n\n| Model | Release | Strengths | Weaknesses | Context |\n|-------|---------|-----------|-----------|----------|\n| Claude 3 Opus | Mar 2024 | Best instruction-following, low hallucination | Slower | 200K |\n| Claude 4 | 2025 (reported) | Improved reasoning | Limited public info | ~200K |\n| Claude 4.7 (Opus 4.7) | Apr 2026 | **SWE-bench Verified 87.6%** (top SOTA), best coding, agentic | Still slower than Claude-3.5-Sonnet for simple tasks | 200K+ |\n| Claude 4.5 | Early 2025 | Balanced reasoning/speed | Between Sonnet and Opus | 200K |\n\nClaude 4.7's breakthrough: SWE-bench (software engineering) performance. Best in class for multi-file code understanding and generation.\n\n**Google Gemini series (2025-2026):**\n\n| Model | Release | Strengths | Weaknesses | Context/Notes |\n|-------|---------|-----------|-----------|---------------|\n| Gemini 2.5 Pro | Early 2026 | Multimodal (vision, audio, video), strong on understanding tasks | Slightly weaker reasoning on math/science vs. GPT-5 | 1M context |\n| Gemini 3 | 2025 (rumored mid-2025) | Improved coding, reasoning | Details scarce | ~1M |\n| Gemini 3.1 Pro | Early 2026 | **GPQA Diamond 94.3%** (best SOTA), multimodal, 1M context window | Inference latency higher | 1M context |\n\nGemini 3.1 Pro's strength: long-context reasoning (entire papers in context) + multimodal understanding (papers with figures).\n\n**Competitive landscape (May 2026):**\n- **Reasoning (o1/o3 level):** o3 (OpenAI) > o1 > Claude 4.7 extended-thinking mode\n- **Coding (SWE-bench):** Claude 4.7 (87.6%) > Gemini 3.1 > GPT-5.5\n- **Math (GPQA Diamond):** Gemini 3.1 (94.3%) > o3 > Claude 4.7 (~90%)\n- **Speed (latency):** GPT-4o > Claude 3.5 Sonnet > GPT-5.5 > Claude 4.7\n- **Cost per token:** GPT-4o < Claude 3.5 Sonnet < Gemini 3.1 < GPT-5.5 < o3\n\n**Emerging patterns (2025-2026):**\n1. **Multi-model deployment:** Organizations use GPT-4o for speed, Claude 4.7 for coding, o3 for reasoning. Router predicts task type, selects model.\n2. **Agentic first:** GPT-5.5 and Claude 4.7 excel at multi-step planning, tool use, self-correction (mimics AI agent behavior).\n3. **Reasoning scaling dominates:** o3 and reasoning models are the frontier; incremental improvements in base model performance are marginal compared to test-time compute.\n4. **Long-context becomes standard:** 1M tokens (Gemini 3.1) enables full document reasoning, reducing context-switching overhead.\n5. **Multimodal is table-stakes:** All frontier models now handle images, audio, video; text-only is deprecated.\n\n## Common gotchas / interview framings\n\n- **\"Claude is always best.\"** → Model choice depends on task. Claude 4.7 best for code; Gemini 3.1 for long-context multimodal; GPT-5.5 for agentic tasks; o3 for hard reasoning.\n- **Benchmark gaming:** Models trained on public benchmarks inflate performance. Real-world tasks (domain-specific, novel) have different difficulty. Benchmark improvements don't always translate to user-facing improvements.\n- **Cost vs. quality:** GPT-5.5 is 10-50× more expensive per token than GPT-4o. Worth it? Only if the task requires reasoning (math, complex planning). For summarization or simple QA, GPT-4o is better value.\n- **Latency:** Reasoning models (o3, Claude 4.7) are **slow**. 5-30 seconds per response. Not viable for real-time applications. Use fast models (GPT-4o) for latency-critical paths, reason offline if needed.\n- **\"Frontier models have solved language.\"** → Far from it. Hallucination, factual errors, adversarial prompts, domain adaptation, reasoning on novel problems remain hard. Frontier models are better, not solved.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "As of May 2026, name the frontier model leaders in each of these dimensions: (a) coding (SWE-bench), (b) math reasoning (GPQA Diamond), (c) inference speed, (d) agentic capability.",
+        "back": "(a) Claude 4.7 (87.6% SWE-bench Verified), (b) Gemini 3.1 Pro (94.3% GPQA Diamond), (c) GPT-4o (fastest), (d) GPT-5.5 (native agentic planning, tool-use, correction). No single model dominates; choice depends on task requirements [[inference-scaling-and-test-time-compute-o1-reasoning-models]]."
+      },
+      {
+        "type": "flip",
+        "front": "Describe the key architectural/training innovation of GPT-5.5 (released Apr 2026) that distinguishes it from GPT-5.2.",
+        "back": "GPT-5.5: agentic first. Native support for multi-step task planning, tool calling, self-verification, and error recovery without explicit prompting. Can check its own work, call tools, and adjust approach. Slower (more reasoning steps) but better for complex, multi-step tasks. Represents shift from 'answer machine' to 'reasoning agent.'"
+      },
+      {
+        "type": "mcq",
+        "front": "Claude 4.7 achieves 87.6% on SWE-bench Verified (software engineering), while Gemini 3.1 achieves 94.3% on GPQA Diamond (scientific reasoning). How should this inform model selection?",
+        "back": "Benchmark performance on specialized tasks predicts real-world performance on *similar* tasks. Claude 4.7 trained/optimized for code (SWE-bench); Gemini 3.1 for science (GPQA). Use Claude for code-heavy workflows, Gemini for document understanding and reasoning. Benchmark specialization is a feature, not a flaw [[scaling-laws-for-loss-and-compute]].",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Gemini 3.1 is better overall; always use Gemini 3.1",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Benchmarks don't correlate; choose model based on latency/cost",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Benchmarks are task-specific: Claude 4.7 for code/SWE tasks, Gemini 3.1 for science/long-context reasoning",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Both are equally good; pick randomly",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the practical latency/cost tradeoff when choosing between GPT-4o and Claude 4.7 for a production system?",
+        "back": "GPT-4o: ~200ms latency, ~$0.00003/token. Claude 4.7: ~5-30s latency, ~$0.003/token (100× slower and expensive). Use GPT-4o for interactive latency-critical tasks (chat, real-time synthesis). Use Claude 4.7 for complex reasoning that can tolerate delay (code review, scientific analysis). Hybrid: route simple queries to GPT-4o, complex to Claude 4.7."
+      },
+      {
+        "type": "flip",
+        "front": "Explain why 2025-2026 frontier models increasingly emphasize agentic capability (planning, tool-use, self-correction) over raw reasoning performance.",
+        "back": "Real-world tasks are multi-step: gather info → reason → decide → act. Single-pass reasoning (o1/o3) is powerful but limited. Agentic models (GPT-5.5, Claude 4.7 extended) can scaffold multi-step workflows natively. Empirically, agentic behavior (ability to plan and verify) often outweighs brute-force reasoning on complex tasks [[inference-scaling-and-test-time-compute-o1-reasoning-models]]."
+      }
+    ]
+  }
+]

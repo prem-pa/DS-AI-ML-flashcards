@@ -1,0 +1,3 @@
+# Keep build artifacts off Google Drive (sync corrupts incremental builds).
+[build]
+target-dir = "/Users/prempa/.cache/flashcards-target"

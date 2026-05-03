@@ -1,0 +1,11 @@
+{
+  "newFileLocation": "current",
+  "attachmentFolderPath": "_attachments",
+  "alwaysUpdateLinks": true,
+  "useMarkdownLinks": false,
+  "newLinkFormat": "shortest",
+  "showLineNumber": true,
+  "strictLineBreaks": false,
+  "promptDelete": false,
+  "showFrontmatter": true
+}

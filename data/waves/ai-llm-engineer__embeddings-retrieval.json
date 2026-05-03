@@ -1,0 +1,1269 @@
+[
+  {
+    "slug": "dense-embeddings-and-contrastive-learning",
+    "title": "Dense Embeddings and Contrastive Learning",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "embeddings",
+      "representation-learning",
+      "neural-networks",
+      "loss-functions"
+    ],
+    "aliases": [
+      "contrastive loss",
+      "embedding training",
+      "dense representation learning"
+    ],
+    "wikilinks": [
+      "mteb-benchmark-and-evaluation",
+      "leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3",
+      "vector-database-landscape-pinecone-qdrant-weaviate-milvus-pgvector-lancedb"
+    ],
+    "sources": [
+      {
+        "url": "https://huggingface.co/mteb",
+        "label": "MTEB Benchmark"
+      },
+      {
+        "url": "https://github.com/embeddings-benchmark/mteb",
+        "label": "MTEB GitHub"
+      }
+    ],
+    "explainer_md": "## Intuition\nDense embeddings map text or other data into continuous vector spaces where semantically similar items are close together. Contrastive learning achieves this by training models to push similar pairs closer while pulling dissimilar pairs apart—solving the core challenge: how do you teach a neural network what \"similarity\" means without labeled rankings?\n\n## Detail\nDense embeddings represent text as fixed-dimensional real-valued vectors, typically 128–3,072 dimensions depending on the model. Unlike sparse methods like BM25, dense vectors capture semantic meaning. Contrastive learning optimizes embeddings via loss functions like triplet loss or in-batch negatives:\n\n- **In-batch negatives:** During training, positive pairs (related texts) are pulled together via cosine similarity $\\text{sim}(a, b) = a^T b / (\\|a\\| \\|b\\|)$, while other examples in the batch act as negatives.\n- **InfoNCE/NT-Xent loss:** The normalized temperature-scaled cross-entropy loss used in models like [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]].\n\nTraining typically requires large, clean datasets of similar/dissimilar pairs. Models like [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]] are pre-trained on billions of text pairs to capture general-purpose semantic similarity.\n\n## Common gotchas / interview framings\n- **Vector normalization:** Contrastive losses assume or enforce normalized vectors; un-normalized vectors break similarity assumptions.\n- **Negative mining:** Hard negatives (confusingly similar but negative pairs) matter more than random negatives for learning quality.\n- **Domain shift:** Embeddings trained on Wikipedia may not transfer well to medical or code domains; fine-tuning or specialized models needed.\n- **Dimensionality tradeoff:** Higher dimensions capture more nuance but increase latency and storage; [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]] uses Matryoshka learning to mitigate this.\n- Interviewers often ask: \"Why cosine similarity over L2 distance?\" Answer: for normalized vectors, they're equivalent; cosine is cheaper computationally.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the core principle of contrastive learning in embedding training.",
+        "back": "Contrastive learning trains embeddings by maximizing similarity between positive pairs (semantically related texts) while minimizing similarity between negative pairs. Mathematically, it pulls semantically similar vectors closer in the embedding space via in-batch negatives or explicit negative sampling, often using NT-Xent (InfoNCE) loss: $-\\log \\frac{e^{\\text{sim}(a, b^+)/\\tau}}{\\sum_i e^{\\text{sim}(a, i)/\\tau}}$ where $b^+$ is the positive and $\\tau$ is temperature."
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between normalized and un-normalized dense embeddings? Why does it matter in contrastive training?",
+        "back": "Normalized embeddings have unit length ($\\|v\\| = 1$), making cosine similarity equivalent to dot product. Un-normalized embeddings retain magnitude information, which can encode confidence or importance. Contrastive losses typically assume normalized vectors; without normalization, magnitude variation interferes with the similarity signal. Models like [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]] enforce L2 normalization after embedding to stabilize training."
+      },
+      {
+        "type": "mcq",
+        "front": "You're training a dense embedding model and your negatives are randomly sampled from the same corpus. Performance plateaus. What's the likely issue?",
+        "back": "Hard negative mining is crucial for contrastive learning. Random negatives are trivially easy to distinguish, so the model learns little. Hard negatives—pairs that are semantically similar but labeled as negatives—force the model to learn fine-grained distinctions. Modern frameworks like in-batch contrastive loss leverage negatives from the same batch (which are typically harder by design) to improve efficiency and convergence.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The model is overfitting to the training set",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Random negatives are too easy; hard negatives (confusingly similar but negative) would improve learning",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Your positive pairs are too similar",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The embedding dimension is too high",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does Matryoshka representation learning help in dense embedding training?",
+        "back": "Matryoshka representation learning, used by [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]], trains embeddings so that prefixes capture increasingly refined semantic information. A 256-dim prefix retains 90%+ of similarity information of the full 3072-dim embedding. This allows users to truncate embeddings at inference time (e.g., use 512 instead of 3072 dims) without retraining, reducing latency and storage while keeping quality high."
+      },
+      {
+        "type": "flip",
+        "front": "What is in-batch negative sampling and why is it preferred over explicit negative sampling?",
+        "back": "In-batch negatives leverage examples from the same training batch as negatives, so a batch of N examples yields N(N-1) negative pairs per example. This approach is efficient (no extra data needed), naturally produces harder negatives (similar domain items), and scales well to large models. Explicit negative sampling requires curating or mining hard negatives separately, which is slower and may introduce bias."
+      }
+    ]
+  },
+  {
+    "slug": "mteb-benchmark-and-evaluation",
+    "title": "MTEB Benchmark and Evaluation",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "benchmarking",
+      "evaluation",
+      "embeddings",
+      "leaderboard"
+    ],
+    "aliases": [
+      "MTEB leaderboard",
+      "embedding evaluation",
+      "Massive Text Embedding Benchmark"
+    ],
+    "wikilinks": [
+      "dense-embeddings-and-contrastive-learning",
+      "leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3",
+      "multilingual-and-cross-lingual-embeddings"
+    ],
+    "sources": [
+      {
+        "url": "https://huggingface.co/spaces/mteb/leaderboard",
+        "label": "MTEB Leaderboard"
+      },
+      {
+        "url": "https://github.com/embeddings-benchmark/mteb",
+        "label": "MTEB GitHub Repository"
+      },
+      {
+        "url": "https://huggingface.co/mteb",
+        "label": "MTEB on HuggingFace"
+      }
+    ],
+    "explainer_md": "## Intuition\nMTEB (Massive Text Embedding Benchmark) is the standard evaluation suite for embedding models, covering 8+ diverse tasks (retrieval, clustering, classification, reranking) across 100+ languages. It solves the problem: \"How do you fairly compare embeddings across domains?\" by providing a common benchmark that prevents overfitting to narrow use cases.\n\n## Detail\nMTEB v1 includes 200+ datasets grouped into task categories:\n- **Retrieval:** Find relevant documents for a query (largest task by count, most important for RAG).\n- **Clustering:** Group semantically similar texts without labels.\n- **Classification:** Text classification using embeddings.\n- **STS (Semantic Textual Similarity):** Rate similarity between sentence pairs.\n- **Reranking, Pair Classification, Summarization:** Specialized tasks.\n\nScores are reported as NDCG@10 for retrieval, accuracy for classification, and average precision for others. MTEB v2 (2026) introduced new evaluation protocols and tasks but scores are not directly comparable to v1.\n\nLeading models as of early 2026: Qwen3-Embedding-8B (70.58), NV-Embed-v2, Google Gemini Embedding 001, Cohere embed-v4 (65.2), [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]] (OpenAI text-3-large: 64.6, BGE-M3: 63.0).\n\n## Common gotchas / interview framings\n- **MTEB v1 vs v2 incomparability:** Published numbers from 2024 won't match 2026 runs; always check the version.\n- **Task weighting:** Average MTEB scores hide performance variation; a model may excel at retrieval but lag at clustering.\n- **Retrieval bias:** MTEB retrieval tasks emphasize English; [[multilingual-and-cross-lingual-embeddings]] are needed for other languages.\n- **Training data leakage:** Some MTEB datasets may overlap with training corpora; check source documentation.\n- Interviewers ask: \"Is a 0.5-point MTEB difference significant?\" Answer: depends on task and data size; <0.1 is noise, >1.0 is meaningful.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are the main task categories in MTEB and why is retrieval considered the most important?",
+        "back": "MTEB includes 8+ task categories: Retrieval, Clustering, Classification, Semantic Textual Similarity (STS), Reranking, Pair Classification, and Summarization. Retrieval is most important for RAG and production systems because: (1) it's the largest dataset category, (2) it directly measures core use case (find relevant documents), (3) it correlates well with downstream RAG quality, and (4) retrieval performance is most impactful for end-user relevance."
+      },
+      {
+        "type": "flip",
+        "front": "Explain why MTEB v1 and MTEB v2 scores are not directly comparable.",
+        "back": "MTEB v2 (released 2026) introduced updated evaluation protocols, new datasets, and refined task definitions that differ from v1. Models evaluated on v1 had different scoring scales and may not have been fine-tuned for v2 tasks. When comparing models, always verify which MTEB version was used; mixing v1 and v2 results invalidates the comparison."
+      },
+      {
+        "type": "mcq",
+        "front": "A model scores 72 MTEB overall (55 retrieval, 85 classification). Your use case is retrieval-focused RAG. What should you consider?",
+        "back": "Task weighting is critical. MTEB averages hide performance variation across tasks. A model excelling at classification but weak at retrieval will perform poorly for retrieval-focused RAG. Always drill down to task-specific scores. The 30-point gap suggests excellent classification generalization but weaker retrieval performance, which is the bottleneck for your use case. Consider [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]] or [[specialized-embeddings-medical-code-domain-specific]] if you need retrieval optimization.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "72 average is strong; use this model",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The 55 retrieval score is what matters most; high classification doesn't help your use case",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The gap between classification (85) and retrieval (55) indicates the model is unstable",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "You need to retrain on your domain first",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What does NDCG@10 measure in MTEB retrieval tasks?",
+        "back": "NDCG@10 (Normalized Discounted Cumulative Gain at 10) measures ranking quality of the top 10 retrieved documents. It rewards ranking relevant documents higher: relevant items at position 1 score higher than at position 10. The formula is: $\\text{NDCG@10} = \\frac{1}{Z} \\sum_{i=1}^{10} \\frac{2^{rel_i} - 1}{\\log_2(i+1)}$ where $rel_i$ is relevance at rank $i$ and $Z$ is the ideal ranking. Score range: 0–1, with 1.0 being perfect."
+      },
+      {
+        "type": "flip",
+        "front": "Why is it important to check for training data overlap between your embeddings model and MTEB datasets?",
+        "back": "If an embedding model was trained on data that includes MTEB evaluation datasets, its MTEB scores will be artificially inflated (data leakage). The model may memorize or overfit to those specific datasets, reducing generalization to new domains. Always check the model's training data documentation and, when possible, verify performance on held-out datasets or your own domain-specific data to get a true sense of generalization capability."
+      }
+    ]
+  },
+  {
+    "slug": "leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3",
+    "title": "Leading Embedding Models (BGE-M3, E5, Voyage, Cohere, OpenAI)",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "embedding-models",
+      "proprietary",
+      "open-source",
+      "production"
+    ],
+    "aliases": [
+      "state-of-the-art embeddings",
+      "embedding model comparison",
+      "top embedding models"
+    ],
+    "wikilinks": [
+      "dense-embeddings-and-contrastive-learning",
+      "mteb-benchmark-and-evaluation",
+      "multilingual-and-cross-lingual-embeddings",
+      "specialized-embeddings-medical-code-domain-specific",
+      "hybrid-search-dense-sparsebm25"
+    ],
+    "sources": [
+      {
+        "url": "https://huggingface.co/spaces/mteb/leaderboard",
+        "label": "MTEB Leaderboard"
+      },
+      {
+        "url": "https://blog.voyageai.com/2024/09/18/voyage-3/",
+        "label": "Voyage AI v3 Blog"
+      },
+      {
+        "url": "https://docs.cohere.com/docs/rerank",
+        "label": "Cohere Embed Docs"
+      },
+      {
+        "url": "https://platform.openai.com/docs/guides/embeddings",
+        "label": "OpenAI Embeddings Docs"
+      }
+    ],
+    "explainer_md": "## Intuition\nA handful of embedding models dominate production: open-source champions (BGE-M3, E5-Mistral) offer flexibility and self-hosting; proprietary leaders (OpenAI text-embedding-3-large, Cohere embed-v4, Voyage-3) trade cost for reliability and support. Choosing the right model is a trade-off between MTEB performance, latency, cost, and domain fit.\n\n## Detail\n\n**BGE-M3** (Alibaba, open-source): 8K token context, 1024 dims, supports dense, sparse, and multi-vector hybrid retrieval. MTEB score ~63, excels at multilingual (100+ languages). Sparse vectors enable BM25-like term matching within the model.\n\n**E5-Mistral** (Microsoft, open-source): Built on Mistral-7B, highest-performing open-source model for high-precision tasks. Larger compute footprint (7B parameters); best when accuracy outweighs latency.\n\n**Voyage-3 & Voyage-3-Lite**: Proprietary (VoyageAI). Voyage-3-large outperforms OpenAI text-3-large by ~7.55% across domains while costing 2.2x less and using 3x smaller dimensions (1024 vs 3072). Voyage-3-Lite for cost-sensitive use cases.\n\n**Cohere embed-v4**: Proprietary, MTEB 65.2. Includes built-in dimension compression (reduce storage 30–75% without quality loss). Strong for enterprise search and reranking pipelines paired with [[re-ranking-and-cross-encoder-models]].\n\n**OpenAI text-embedding-3-large**: Proprietary, MTEB 64.6. 3072 dims, Matryoshka representation (can truncate to 256 dims with minimal quality loss). Widely used in production, excellent API reliability.\n\n## Common gotchas / interview framings\n- **Dimension size tradeoff:** Smaller dims (256, 512) are faster but less nuanced; 3072 is highest precision but costlier. Use [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]] with dimension truncation if possible.\n- **Context window limits:** Most embeddings default to 512 or 8K tokens; [[chunk-size-and-overlap-in-document-splitting]] must account for this.\n- **Proprietary cost at scale:** OpenAI at billion-scale vectors gets expensive; open-source offsets compute.\n- **Multi-lingual models underperform on English:** [[multilingual-and-cross-lingual-embeddings]] often score lower on English-only tasks than English-specific models.\n- Interviewers ask: \"Voyage-3 vs OpenAI—which scales better?\" Answer: Voyage-3 is cheaper; both are production-ready. BGE-M3 for self-hosting, Cohere for reranking pipelines.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Compare BGE-M3 and E5-Mistral on three dimensions: self-hosting, cost, and multilingual support.",
+        "back": "**BGE-M3**: Alibaba open-source, self-host for free, small (1024 dims), supports 100+ languages well. **E5-Mistral**: Microsoft open-source, self-host (7B parameter compute cost), larger (768-1024 dims depending on variant), English-focused (supports some multilingual via fine-tuning). For production, BGE-M3 is faster and multilingual; E5-Mistral excels where precision matters and you have compute budgets."
+      },
+      {
+        "type": "mcq",
+        "front": "You need to embed 1 billion documents at <$10k/month. OpenAI text-3-large costs $0.02/1M tokens at inference. Which model is better?",
+        "back": "At billion-scale, proprietary API costs dominate. Voyage-3-large is 2.2x cheaper than OpenAI while outperforming by ~7.55% on MTEB. BGE-M3 is best for truly massive scale (self-host) but requires infrastructure. Cohere's compression helps but pricing is similar to OpenAI. For this budget, Voyage-3-large or self-hosted BGE-M3 wins.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "OpenAI text-3-large; it's the most reliable",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Voyage-3-large; it costs 2.2x less and performs better",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "BGE-M3; self-host it to avoid API costs entirely",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Cohere embed-v4 with compression",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is Matryoshka representation learning? Name one embedding model using it.",
+        "back": "Matryoshka representation learning trains embeddings so that truncating to smaller dimensions (e.g., 256 from 3072) retains 90%+ of similarity information. Useful for reducing latency and storage without retraining. **OpenAI text-embedding-3-large** uses this, allowing users to truncate from 3072 to 256 dims on-the-fly with minimal quality loss, reducing query latency and storage costs significantly."
+      },
+      {
+        "type": "flip",
+        "front": "Why does BGE-M3 support both dense and sparse retrieval in a single model? How does this enable hybrid search?",
+        "back": "BGE-M3 outputs both dense embeddings (learned semantic representation) and sparse vectors (learned BM25-like term weights). Dense captures semantic meaning; sparse captures term frequency and rare words. Hybrid search merges both: dense finds semantically similar items, sparse catches exact-match keywords missed by dense. This dual output reduces need for separate [[hybrid-search-dense-sparsebm25]] systems."
+      },
+      {
+        "type": "flip",
+        "front": "Name three trade-offs between open-source embeddings (BGE-M3, E5) and proprietary models (OpenAI, Voyage, Cohere).",
+        "back": "1. **Cost vs. Control**: Proprietary APIs are pay-per-call (no upfront infrastructure); open-source requires self-hosting (compute + latency management). 2. **Performance vs. Simplicity**: Open-source can match proprietary models on MTEB but need fine-tuning for domains; proprietary models are general-purpose out-of-box. 3. **Customization vs. Support**: Open-source allows full control and fine-tuning; proprietary models offer vendor support, guaranteed SLAs, and updates."
+      }
+    ]
+  },
+  {
+    "slug": "multilingual-and-cross-lingual-embeddings",
+    "title": "Multilingual and Cross-Lingual Embeddings",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "multilingual",
+      "embeddings",
+      "cross-lingual",
+      "nlp"
+    ],
+    "aliases": [
+      "multilingual embeddings",
+      "zero-shot cross-lingual search",
+      "language-agnostic embeddings"
+    ],
+    "wikilinks": [
+      "leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3",
+      "rag-pipeline-architecture-retriever-ranker-reader",
+      "specialized-embeddings-medical-code-domain-specific"
+    ],
+    "sources": [
+      {
+        "url": "https://huggingface.co/spaces/mteb/leaderboard",
+        "label": "MTEB Multilingual Leaderboard"
+      },
+      {
+        "url": "https://openreview.net/forum?id=zl3pfz4VCV",
+        "label": "MMTEB: Massive Multilingual Text Embedding Benchmark"
+      }
+    ],
+    "explainer_md": "## Intuition\nMultilingual embeddings map text in different languages into a shared vector space where semantically equivalent texts—regardless of language—are close together. Cross-lingual search means retrieving documents in language B for a query in language A without explicit translation. This is crucial for global applications.\n\n## Detail\nMultilingual embeddings are trained on parallel or mixed-language corpora where the model learns to align representations across languages. Key approaches:\n\n- **Aligned Training**: Pairs of translations (\"hello\", \"hola\", \"bonjour\") are brought together in embedding space via contrastive loss.\n- **Pivot Languages**: English often dominates training data; lower-resource languages align via English pivots, which can degrade quality.\n- **Language Vectors**: Some models learn a separate language-specific component; others achieve language-agnostic embeddings.\n\n**MMTEB** (Multilingual MTEB) evaluates embeddings across 100+ languages on retrieval, clustering, and classification. Leading multilingual models as of 2026: Qwen3-Embedding-8B (70.58, 100+ languages), NV-Embed-Nemotron (NVIDIA, 100+ languages), BGE-M3 (100+ languages, hybrid retrieval), Google Gemini Embedding 001 (multilingual variant available).\n\nCross-lingual retrieval: query in English, retrieve documents in 50 languages with a single embedding model. Quality degrades in low-resource languages and under code-switching (mixing languages).\n\n## Common gotchas / interview framings\n- **Pivot language bias:** If training data is heavily English, lower-resource languages (Korean, Arabic, Hindi) may align poorly via English translations, degrading cross-lingual performance.\n- **Character-level embedding costs:** Multilingual models often use subword tokenization (BPE, SentencePiece) which increases token count and latency for non-Latin scripts.\n- **Asymmetric performance:** Cross-lingual retrieval (EN→FR) may differ from reverse (FR→EN) due to training data asymmetry.\n- **Code-switching failures:** Models trained on monolingual data fail on mixed-language queries common in multilingual regions.\n- Interviewers ask: \"Can you use an English-only model for Spanish retrieval?\" Answer: No; cross-lingual transfer without explicit training is near-zero. Use multilingual models like BGE-M3.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the core difference between aligned multilingual embeddings and monolingual embeddings.",
+        "back": "Monolingual embeddings map text within one language to a vector space (e.g., English texts only). Aligned multilingual embeddings share a single vector space where texts in different languages are mapped jointly so that semantically equivalent texts—regardless of language—are close together. This is achieved via contrastive learning on parallel corpora (translations) during training, enabling zero-shot cross-lingual retrieval."
+      },
+      {
+        "type": "flip",
+        "front": "What is pivot language bias in multilingual embeddings and how does it affect low-resource languages?",
+        "back": "Pivot language bias occurs when training data for lower-resource languages relies on translation via a high-resource language (typically English). If a model learns German→English→Korean alignments instead of direct German→Korean, misalignments accumulate through the pivot. Low-resource languages suffer degraded embedding quality and reduced cross-lingual retrieval accuracy. Models like BGE-M3 with direct multilingual training minimize this by training on direct translations rather than pivot-based alignment."
+      },
+      {
+        "type": "mcq",
+        "front": "You need to deploy a search engine supporting queries in English, Spanish, and Japanese. A monolingual English embedding model scores 85 MTEB (English only). Should you use it for Spanish/Japanese?",
+        "back": "Cross-lingual transfer without explicit training in embeddings is near-zero. An English-only model will map Spanish and Japanese words to effectively random positions in the English embedding space, yielding terrible retrieval. You must use a multilingual model trained on all target languages (e.g., BGE-M3 with 100+ languages, Qwen3-Embedding-8B). Machine translation as a workaround adds latency and error; direct multilingual embedding is far superior.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes; embeddings are language-universal",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No; cross-lingual transfer without training is near-zero. Use a multilingual model like BGE-M3",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Use English model + translate all Spanish/Japanese to English first",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use English model with fine-tuning on Spanish/Japanese data",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is code-switching and why do multilingual embeddings trained on monolingual data struggle with it?",
+        "back": "Code-switching is mixing two or more languages in a single query or document (common in multilingual regions, e.g., \"Hello, ¿cómo estás?\"). Embeddings trained on purely monolingual data see code-switched text as out-of-distribution (not in training), so the model cannot align the mixed language well. It may drop one language or misinterpret intent. Multilingual models with code-switched training data (like BGE-M3) handle this better by learning inter-language relationships."
+      },
+      {
+        "type": "flip",
+        "front": "Why do multilingual embeddings have higher token counts and latency than English-only models?",
+        "back": "Multilingual models use subword tokenization (BPE, SentencePiece) that covers all languages (Latin, Cyrillic, CJK, Arabic scripts, etc.). This larger vocabulary requires more tokens to represent text compared to English-specific tokenizers. For example, a Chinese query may tokenize to 2–3x more tokens in a multilingual model than an English-only model. Higher token count increases embedding computation time and cost at scale."
+      }
+    ]
+  },
+  {
+    "slug": "specialized-embeddings-medical-code-domain-specific",
+    "title": "Specialized Embeddings (Medical, Code, Domain-Specific)",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "embeddings",
+      "domain-specific",
+      "fine-tuning",
+      "specialized-models"
+    ],
+    "aliases": [
+      "domain embeddings",
+      "medical embeddings",
+      "code embeddings",
+      "specialized representations"
+    ],
+    "wikilinks": [
+      "leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3",
+      "mteb-benchmark-and-evaluation",
+      "rag-pipeline-architecture-retriever-ranker-reader"
+    ],
+    "sources": [
+      {
+        "url": "https://huggingface.co/spaces/mteb/leaderboard",
+        "label": "MTEB Leaderboard (Domain Tasks)"
+      },
+      {
+        "url": "https://blog.premai.io/best-embedding-models-for-rag-2026-ranked-by-mteb-score-cost-and-self-hosting/",
+        "label": "Best Embedding Models for RAG 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nGeneral-purpose embeddings trained on web text and books often fail on specialized domains (medical, legal, code) where terminology is domain-specific and relevance is defined differently. Specialized embeddings fine-tune or retrain on domain corpora to capture domain-specific semantic relationships.\n\n## Detail\nDomain-specialized embeddings follow two paths:\n\n1. **Fine-tuning**: Start with a strong general-purpose base (e.g., E5-base) and fine-tune on domain-specific training data (medical papers, code repositories, legal contracts). Cheaper than training from scratch; works well with 10k–100k domain examples.\n\n2. **From-scratch training**: Train on large domain corpora (e.g., PubMed for medical, GitHub for code). Requires significant data and compute but achieves highest in-domain performance.\n\nExamples:\n- **Medical**: Models like PubMedBERT embeddings fine-tuned on 14M PubMed abstracts. Medical terminology (\"carcinoma,\" \"ablation\") gets accurate semantic positions.\n- **Code**: CodeBERT, UniXcoder fine-tuned on code snippets and code search tasks. Syntactic and semantic similarities between functions are captured.\n- **Legal**: LegalBERT trained on contracts and case law. Legal concepts align with domain practice.\n\nSpecialized models trade off general-purpose breadth for domain depth. A medical embedding model may score lower on general MTEB but outperform general models on medical retrieval by 10–30%.\n\n## Common gotchas / interview framings\n- **Data requirements**: Fine-tuning needs 5k–50k high-quality domain pairs. Insufficient data leads to overfitting; small domain is better served by general models with [[re-ranking-and-cross-encoder-models]].\n- **Cold-start in new domains**: For rare domains (e.g., specific drug interactions), even specialized models struggle. Consider hybrid search [[hybrid-search-dense-sparsebm25]] or reranking.\n- **MTEB vs domain performance**: A model's MTEB score doesn't predict domain performance. Always evaluate on your domain data.\n- **Evaluation bias**: If you fine-tune on your domain data, evaluate on held-out domain test set, not general MTEB.\n- Interviewers ask: \"When should you fine-tune vs. use a general model?\" Answer: Fine-tune if you have 10k+ domain examples and domain-specific relevance differs from web semantics. Otherwise, use general + reranker.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Describe the trade-off between fine-tuning a general-purpose embedding model and training from scratch for a specialized domain.",
+        "back": "**Fine-tuning** (faster): Start with pre-trained general model (e.g., E5-base), add domain-specific training data (10k–100k examples). Preserves general knowledge, adapts to domain. 1–2 weeks, modest GPU. **From-scratch** (comprehensive): Train on domain corpus end-to-end. Captures all domain nuances, achieves highest in-domain performance. Requires 100k+ examples, months, significant compute. Use fine-tuning for most domains; from-scratch only if domain size and budget justify."
+      },
+      {
+        "type": "flip",
+        "front": "You have 3,000 labeled medical paper pairs. Should you fine-tune a general embedding model or use a general-purpose model with reranking?",
+        "back": "With only 3,000 pairs, fine-tuning risks overfitting and degrading general-purpose performance. Use a general-purpose model (e.g., BGE-M3 or OpenAI text-3) as-is for initial retrieval, then apply a medical-specific [[re-ranking-and-cross-encoder-models]] trained on your 3,000 pairs. This two-stage approach is more robust: retrieve broadly, rerank precisely within your 3,000 labeled examples."
+      },
+      {
+        "type": "mcq",
+        "front": "Your medical search system uses CodeBERT (code-specialized embeddings) for retrieval. Performance is poor. Why?",
+        "back": "Specialized embeddings are purpose-built for their domain. CodeBERT learned code semantics (function names, syntax, logic flow), not medical terminology. Medical text will be represented in arbitrary positions in its embedding space, yielding poor retrieval. Either use a medical-specialized model (PubMedBERT or fine-tuned general model) or use a general-purpose model with medical [[re-ranking-and-cross-encoder-models]] for reranking.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "CodeBERT is broken; switch to general models",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "CodeBERT specializes in code semantics, not medical. Use a medical-specialized embedding model or general-purpose with medical reranker",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Your queries are too long",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Medical documents need higher embedding dimensions",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What evaluation mistake do practitioners make when evaluating specialized embeddings?",
+        "back": "Using MTEB (general-purpose benchmark) to evaluate a medical embedding model. MTEB includes web text, Wikipedia, and English general corpora—not medical data. A medical model may score lower on MTEB but outperform on actual medical retrieval tasks. Always evaluate specialized embeddings on held-out examples from your target domain, not on general benchmarks. MTEB is useful for general models; domain performance requires domain-specific evaluation."
+      },
+      {
+        "type": "flip",
+        "front": "Name three reasons specialized embeddings may not be worth the effort and what alternatives exist.",
+        "back": "1. **Small domain**: Insufficient data for fine-tuning (< 5k pairs). Alternative: use general model + [[re-ranking-and-cross-encoder-models]].\n2. **Changing domain**: Domain vocabulary/relevance shifts over time. Alternative: use general model + periodic reranker retraining.\n3. **Multiple domains**: Supporting medical + legal + financial. Alternative: general model for retrieval + domain-specific rerankers for each.\nAlternatives (general + reranker) are often better ROI than specialized embeddings."
+      }
+    ]
+  },
+  {
+    "slug": "vector-database-landscape-pinecone-qdrant-weaviate-milvus-pgvector-lancedb",
+    "title": "Vector Database Landscape (Pinecone, Qdrant, Weaviate, Milvus, pgvector, LanceDB)",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "vector-databases",
+      "infrastructure",
+      "storage",
+      "scalability"
+    ],
+    "aliases": [
+      "vector DB options",
+      "vector storage",
+      "embedding storage"
+    ],
+    "wikilinks": [
+      "exact-vs-approximate-nearest-neighbor-search-hnsw-ivf",
+      "indexing-strategies-and-performance-tuning",
+      "vector-database-selection-criteria-scale-latency-cost"
+    ],
+    "sources": [
+      {
+        "url": "https://liquidmetal.ai/casesAndBlogs/vector-comparison/",
+        "label": "Vector DB Comparison 2025"
+      },
+      {
+        "url": "https://encore.dev/articles/best-vector-databases",
+        "label": "Best Vector Databases 2026"
+      },
+      {
+        "url": "https://callsphere.ai/blog/vector-database-benchmarks-2026-pgvector-qdrant-weaviate-milvus-lancedb",
+        "label": "Vector DB Benchmarks 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nVector databases store embeddings and enable fast similarity search at scale. Each trades off ease-of-use, cost, latency, and operational overhead differently. Pinecone offers managed simplicity; Qdrant offers open-source control; pgvector adds search to Postgres; LanceDB offers embedded/local search.\n\n## Detail\n\n**Pinecone** (managed): Fully hosted, zero-ops, auto-scaling. Pay per vector stored and queries. Best for teams avoiding infrastructure; costly at billion-scale. HTTP API, metadata filtering, namespaces for multi-tenancy.\n\n**Qdrant** (open-source + cloud): High-performance ANN search in Rust. Excellent latency and throughput. Flexible deployment: Docker, Kubernetes, managed Qdrant Cloud. Strong filtering, built-in HNSW indexing. Best for teams comfortable with infrastructure.\n\n**Weaviate** (open-source + cloud): Knowledge graph + vector search. GraphQL interface, complex filtering, multi-hop queries. Better for use cases requiring relational reasoning alongside semantic search.\n\n**Milvus** (open-source): Deployed at billion+ vector scale. Supports multiple index types (IVF, HNSW, Annoy). Complex operational setup; recommended for massive production workloads with infrastructure teams.\n\n**pgvector** (Postgres extension): Add vector search to existing Postgres. Vectors and metadata in same ACID transaction. No separate infrastructure; supports both IVFFlat and HNSW indexing. Best for teams already using Postgres, moderate scale (<100M vectors).\n\n**LanceDB** (embedded): In-process vector DB built on Lance columnar format. Zero-copy data access, excellent for local/laptop development and edge search. Not suitable for remote multi-user access.\n\n## Common gotchas / interview framings\n- **Cost at scale**: Managed databases (Pinecone) are simple but 10–100x more expensive than pgvector or Milvus at billion-scale.\n- **Operational complexity**: Qdrant and Milvus require DevOps; pgvector requires Postgres expertise; Pinecone requires none but API dependency.\n- **Index selection matters**: pgvector HNSW is faster than IVFFlat but larger; trade latency vs. memory [[exact-vs-approximate-nearest-neighbor-search-hnsw-ivf]].\n- **Metadata filtering overhead**: Heavy filtering can negate ANN speedup; design your schema carefully [[vector-database-selection-criteria-scale-latency-cost]].\n- Interviewers ask: \"Pinecone vs pgvector for 100M vectors?\" Answer: pgvector is 100x cheaper; Pinecone for managed simplicity only if budget allows.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Compare Pinecone and pgvector on cost, operational overhead, and when to choose each.",
+        "back": "**Pinecone**: Managed, pay per vector (~$0.25 per 100k vectors/month). No ops overhead. Scales trivially. Expensive at billion-scale. Best for startups/teams avoiding infrastructure. **pgvector**: Open-source Postgres extension, one-time setup, same cost as Postgres (typically $50–500/month for mid-scale). Requires Postgres knowledge. 100–1000x cheaper than Pinecone at scale. Best for teams with Postgres, cost-sensitive workloads. For <10M vectors with unlimited budget: Pinecone. For >100M vectors or cost-sensitive: pgvector."
+      },
+      {
+        "type": "mcq",
+        "front": "You're building a multi-tenant RAG system for 50 customers, each with private vectors. Which DB enables the cleanest isolation with minimal ops?",
+        "back": "Pinecone's namespaces provide built-in multi-tenancy isolation without extra ops. Milvus and Qdrant require custom namespace/deployment logic. pgvector with separate schemas is viable but adds Postgres management. Pinecone's abstraction and SLAs make it ideal for multi-tenant systems where simplicity > cost.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Milvus with per-customer namespaces",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Pinecone with namespaces",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "pgvector with separate schemas",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Qdrant with per-customer deployments",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why would you choose Qdrant or Milvus over Pinecone despite higher operational complexity?",
+        "back": "**Cost at scale**: At 1B vectors, Pinecone costs $250k+/month; Qdrant/Milvus cost 10–50x less. **Data privacy**: No vectors sent to external service. **Customization**: Full control over indexing, replication, hardware. **Performance tuning**: [[indexing-strategies-and-performance-tuning]] can be optimized for your specific latency/recall tradeoff. Use Pinecone for simplicity <100M vectors; use open-source for massive scale or strict cost/privacy requirements."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the trade-off between Weaviate and Qdrant for a search system requiring both vector similarity and complex filtering.",
+        "back": "**Weaviate**: Knowledge graph + vector DB. Excels at multi-hop queries and complex relational filtering. GraphQL interface is expressive. Lower throughput and latency compared to Qdrant. **Qdrant**: Pure vector search, simpler filtering. Excellent latency and throughput; BM25 integration for hybrid search. Use Weaviate for complex relationships (documents linked to entities, ontologies); Qdrant for pure vector/hybrid search performance."
+      },
+      {
+        "type": "flip",
+        "front": "What is LanceDB and when is it appropriate for a vector search system?",
+        "back": "LanceDB is an embedded in-process vector DB built on Lance columnar format. Vectors and data live in the same zero-copy storage, enabling fast local search without a separate server. Ideal for: laptop/edge inference, single-machine embedding pipelines, local RAG without network overhead. Not suitable for multi-user remote access or high-concurrency systems. Use for development, offline search, or client-side search; use Qdrant/Pinecone for production multi-user systems."
+      }
+    ]
+  },
+  {
+    "slug": "exact-vs-approximate-nearest-neighbor-search-hnsw-ivf",
+    "title": "Exact vs Approximate Nearest Neighbor Search (HNSW, IVF)",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "indexing",
+      "algorithms",
+      "approximate-search",
+      "ann"
+    ],
+    "aliases": [
+      "ANN search",
+      "nearest neighbor algorithms",
+      "HNSW vs IVF"
+    ],
+    "wikilinks": [
+      "vector-database-landscape-pinecone-qdrant-weaviate-milvus-pgvector-lancedb",
+      "indexing-strategies-and-performance-tuning",
+      "vector-database-selection-criteria-scale-latency-cost"
+    ],
+    "sources": [
+      {
+        "url": "https://www.pingcap.com/article/approximate-nearest-neighbor-ann-search-explained-ivf-vs-hnsw-vs-pq/",
+        "label": "ANN Search Explained: IVF vs HNSW vs PQ"
+      },
+      {
+        "url": "https://www.myscale.com/blog/hnsw-vs-ivf-explained-powerful-comparison/",
+        "label": "HNSW vs IVF Comparison"
+      },
+      {
+        "url": "https://www.pinecone.io/learn/series/faiss/vector-indexes/",
+        "label": "Vector Indexes (Pinecone)"
+      }
+    ],
+    "explainer_md": "## Intuition\nExact nearest neighbor (brute-force) is slow at scale (O(n) per query). Approximate nearest neighbor (ANN) trades small accuracy loss for massive speedup. HNSW and IVF are the two dominant ANN algorithms, each with different speed/accuracy/memory trade-offs.\n\n## Detail\n\n**Exact search (brute-force)**: Compare query vector to all N database vectors via cosine similarity or L2 distance. Time: O(N·d) per query. For N=1M, d=1024, ~1B operations per query → 1–10s latency. Unacceptable for production.\n\n**Approximate Nearest Neighbor (ANN)**: Sacrifice small accuracy loss (~0–5%) for sub-second search.\n\n**HNSW (Hierarchical Navigable Small World)**: Graph-based algorithm. Builds a multi-layer hierarchical graph where each vector connects to nearby neighbors. Search navigates the graph, jumping between layers, reaching the target in log(N) steps. Properties:\n- **Latency**: Very fast (1–100ms at 1B scale).\n- **Memory**: Higher (graph overhead ~2–3x vector size).\n- **Index build time**: Slow (hours for 1B vectors).\n- **Recall**: Very high (95%+ at default settings).\n- **Update handling**: Adding/removing vectors is slow and memory-intensive.\n\n**IVF (Inverted File)**: Partition-based algorithm. Divide vector space into k clusters (via k-means), build inverted index. During query: search only relevant clusters via coarse quantization, then re-rank within clusters. Properties:\n- **Latency**: Fast (10–500ms depending on cluster count).\n- **Memory**: Compact (minimal overhead).\n- **Index build time**: Fast (k-means is fast).\n- **Recall**: Medium (80–95%, depends on cluster quality and cluster search count).\n- **Update handling**: Fast; adding vectors to existing clusters is efficient.\n- **Data dependency**: Performance varies with data distribution; poorly clustered data degrades recall.\n\n## Common gotchas / interview framings\n- **Index size trade-off**: HNSW uses 2–3x more memory than IVF. For 1B vectors, HNSW might need 3–6TB vs IVF's 1–2TB.\n- **Recall vs latency tuning**: HNSW recall is fixed at index build; IVF recall is tunable via cluster count at query time (higher cluster count = higher recall, higher latency).\n- **Update patterns**: HNSW struggles with frequent updates (re-indexing costly); IVF handles incremental updates well.\n- **Clustering assumption**: IVF assumes data has natural clusters; high-dimensional random data or non-Euclidean distributions hurt IVF.\n- Interviewers ask: \"HNSW or IVF for a real-time search system?\" Answer: IVF (faster updates); for offline indexing: HNSW (better recall).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the core idea of HNSW. Why is it so fast despite having to search vectors?",
+        "back": "HNSW (Hierarchical Navigable Small World) builds a multi-layer graph where vectors are connected to nearby neighbors. Search navigates the graph, jumping between layers, following edges toward the query's nearest neighbors. Because the graph is hierarchical and each layer halves the search space, reaching the target takes O(log N) steps instead of O(N). This logarithmic traversal is why HNSW achieves sub-100ms latency on billion-scale vectors."
+      },
+      {
+        "type": "flip",
+        "front": "What is the main difference between HNSW and IVF in how they partition the search space?",
+        "back": "**HNSW**: Graph-based. Vectors are nodes in a multi-layer graph; edges connect nearby neighbors. Partitioning is implicit (neighbors form clusters). **IVF**: Partition-based. Vectors are explicitly divided into k clusters via k-means. Search: coarse quantization identifies relevant clusters, then exact search within clusters. HNSW explores via graph navigation; IVF explores via cluster membership."
+      },
+      {
+        "type": "mcq",
+        "front": "You have 1B vectors. Memory is $10/GB, query latency budget is 100ms. HNSW uses 3TB, IVF uses 1TB. Which scales better?",
+        "back": "At billion scale, memory cost dominates. IVF's 1TB vs HNSW's 3TB is $20k/month difference. Both can meet 100ms latency: IVF via cluster count, HNSW via default settings. IVF scales better economically. HNSW is better for offline indexing with high recall requirements; IVF wins for cost-sensitive, update-heavy systems.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "HNSW; it has better recall",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "IVF; it has 2TB less memory cost ($20k/month savings) and meets latency budget with cluster tuning",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "They scale equally; choose based on data distribution",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "HNSW; it's faster to build",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does tuning the number of clusters (k) in IVF affect recall and latency? What's the trade-off?",
+        "back": "Larger k (more clusters): Each cluster is smaller, so per-cluster recall improves, but you must search more clusters to achieve the same recall. Trade-off: **Fewer clusters** (k=100) = low latency, lower recall (~80%). **More clusters** (k=10000) = high latency, higher recall (~95%). At query time, you can tune how many clusters to search, adjusting recall vs latency dynamically. This tunability is IVF's advantage over HNSW (which has fixed recall at index build time)."
+      },
+      {
+        "type": "flip",
+        "front": "Why is HNSW poor for systems with frequent vector updates, and how does IVF handle updates better?",
+        "back": "HNSW's multi-layer graph structure requires rebuilding to maintain performance after many insertions/deletions. Rebalancing the graph is expensive (hours for billion-scale). IVF handles updates more gracefully: new vectors are assigned to their nearest cluster and inserted incrementally, requiring minimal re-indexing. For streaming data or evolving corpora, IVF is significantly more efficient than HNSW."
+      }
+    ]
+  },
+  {
+    "slug": "hybrid-search-dense-sparsebm25",
+    "title": "Hybrid Search (Dense + Sparse/BM25)",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "hybrid-search",
+      "bm25",
+      "sparse-retrieval",
+      "ranking"
+    ],
+    "aliases": [
+      "dense + BM25",
+      "combining dense and sparse",
+      "multi-vector retrieval"
+    ],
+    "wikilinks": [
+      "dense-embeddings-and-contrastive-learning",
+      "leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3",
+      "retriever-design-bm25-dense-hybrid-multi-hop"
+    ],
+    "sources": [
+      {
+        "url": "https://www.pinecone.io/learn/series/faiss/vector-indexes/",
+        "label": "Vector Indexes (Pinecone)"
+      },
+      {
+        "url": "https://blog.premai.io/best-embedding-models-for-rag-2026-ranked-by-mteb-score-cost-and-self-hosting/",
+        "label": "Best Embedding Models 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nDense embeddings excel at semantic matching but miss exact keyword matches. BM25 (sparse retrieval) excels at keyword-driven queries but ignores semantic meaning. Hybrid search combines both: dense for semantic relevance, sparse for exact-term matching. The combination recovers precision lost by either alone.\n\n## Detail\n\n**Dense retrieval**: Query and documents encoded to vectors. Cosine similarity finds semantically similar documents. Works well for paraphrases and conceptual relevance. Fails on exact terms (proper nouns, product names, codes).\n\n**Sparse retrieval (BM25)**: Term-based ranking. BM25 score: $\\text{BM25}(q, d) = \\sum_{i=1}^{n} \\text{IDF}(q_i) \\cdot \\frac{f(q_i, d) \\cdot (k_1 + 1)}{f(q_i, d) + k_1 \\cdot (1 - b + b \\cdot \\frac{|d|}{\\text{avgdl}})}$ where $f(q_i, d)$ is term frequency, IDF is inverse document frequency, $k_1$ and $b$ are tuning parameters. Excels when queries have exact terms but misses synonyms and paraphrases.\n\n**Hybrid approaches**:\n1. **Post-hoc fusion**: Retrieve top-k from dense, top-k from BM25, merge rankings (RRF, weighted average).\n2. **Learned fusion**: Train a ranker on combined dense + sparse scores [[re-ranking-and-cross-encoder-models]].\n3. **Single model (sparse+dense)**: BGE-M3 outputs both dense and sparse vectors in one forward pass, enabling unified hybrid search.\n\n## Common gotchas / interview framings\n- **Fusion weighting**: Equal weighting (0.5 dense + 0.5 BM25) is naive. Optimal weights depend on query type. Use [[re-ranking-and-cross-encoder-models]] to learn weights.\n- **Sparse vector size**: BM25 produces vectors with vocabulary size dimensions (~100k for English). Storing alongside dense is memory-expensive; compression helps.\n- **Query type variability**: Keyword-heavy queries favor BM25; semantic queries favor dense. Hybrid handles both but adds latency (two retrievals).\n- **Vocabulary mismatch**: BM25 depends on exact term matching; misspellings, stemming differences hurt recall.\n- Interviewers ask: \"Dense or BM25 for product search?\" Answer: Hybrid. Dense catches synonyms (\"shoe\" ↔ \"footwear\"); BM25 catches exact product names.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does combining dense and sparse (BM25) retrieval improve recall compared to either alone?",
+        "back": "Dense retrieval captures semantic meaning but misses exact keywords (e.g., product SKU \"XYZ-123\" might not appear in training). BM25 captures exact terms but misses synonyms and paraphrases. A query for \"blue shoes\" with BM25 alone might miss documents mentioning \"navy footwear.\" Hybrid retrieval: dense finds \"navy footwear\" (semantic match), BM25 finds \"blue shoes\" (exact match). Merging both result sets recovers both semantic and keyword-based relevance."
+      },
+      {
+        "type": "flip",
+        "front": "Describe three strategies for combining dense and sparse retrieval results.",
+        "back": "1. **Reciprocal Rank Fusion (RRF)**: Merge ranked lists using $\\frac{1}{\\text{rank}_1 + \\text{rank}_2}$. Simple, rank-order agnostic. 2. **Weighted average**: $0.5 \\cdot \\text{dense\\_score} + 0.5 \\cdot \\text{bm25\\_score}$. Weights tuned on held-out dev set; better empirically. 3. **Learned fusion (reranker)**: Feed (query, dense_score, bm25_score) to a cross-encoder [[re-ranking-and-cross-encoder-models]] to predict final relevance. Best for complex interactions but requires labeled data."
+      },
+      {
+        "type": "mcq",
+        "front": "Your RAG system searches a technical documentation corpus. Queries often include exact terms (\"REST API v3.2\") and semantic paraphrases (\"how to call HTTP endpoints\"). Which retrieval should you use?",
+        "back": "Technical docs benefit from hybrid search. Dense embeddings struggle with version numbers (\"v3.2\" is rare in training, low semantic signal). BM25 retrieves exact matches directly. Hybrid catches both: dense finds conceptual matches (\"HTTP endpoints\" ↔ \"REST API\"), BM25 finds exact terms (\"v3.2\", \"GET\", \"POST\"). BGE-M3's built-in sparse vectors also solve this elegantly in a single model.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Dense-only; it captures both",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "BM25-only; it's designed for exact matches",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Hybrid (dense + BM25); dense for semantic paraphrases, BM25 for exact terms like version numbers",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Dense with BGE-M3's sparse vector support",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the computational cost of hybrid search vs dense-only retrieval?",
+        "back": "Hybrid search runs two retrievals (dense + BM25) sequentially or in parallel, then merges results. Computational cost: ~2x dense-only (two forward passes + merge overhead). At scale (million queries/day), this doubles infrastructure cost. For latency-sensitive systems, parallel execution helps, but peak latency is dominated by the slower retrieval (usually BM25 for large corpora). Trade-off: +100% cost for ~10–20% recall improvement in mixed-query workloads."
+      },
+      {
+        "type": "flip",
+        "front": "How does BGE-M3's multi-vector output simplify hybrid search compared to separate dense + BM25 systems?",
+        "back": "BGE-M3 outputs three vectors per text: dense (semantic), sparse (BM25-like term weights), and colbert (token-level interaction vectors). All three come from one forward pass, eliminating the need to run separate BM25 indexing. Hybrid search is unified: query BGE-M3 → get dense + sparse vectors → search both in single vector DB → merge. Simpler deployment, no separate BM25 index, better maintained model coherence."
+      }
+    ]
+  },
+  {
+    "slug": "vector-database-selection-criteria-scale-latency-cost",
+    "title": "Vector Database Selection Criteria (Scale, Latency, Cost)",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "vector-databases",
+      "system-design",
+      "trade-offs",
+      "evaluation"
+    ],
+    "aliases": [
+      "choosing a vector database",
+      "database trade-offs",
+      "vector DB selection"
+    ],
+    "wikilinks": [
+      "vector-database-landscape-pinecone-qdrant-weaviate-milvus-pgvector-lancedb",
+      "exact-vs-approximate-nearest-neighbor-search-hnsw-ivf",
+      "indexing-strategies-and-performance-tuning"
+    ],
+    "sources": [
+      {
+        "url": "https://liquidmetal.ai/casesAndBlogs/vector-comparison/",
+        "label": "Vector DB Comparison 2025"
+      },
+      {
+        "url": "https://callsphere.ai/blog/vector-database-benchmarks-2026-pgvector-qdrant-weaviate-milvus-lancedb",
+        "label": "Vector DB Benchmarks 2026"
+      },
+      {
+        "url": "https://tensorblue.com/blog/vector-database-comparison-pinecone-weaviate-qdrant-milvus-2025",
+        "label": "Vector DB Performance & Price 2025"
+      }
+    ],
+    "explainer_md": "## Intuition\nNo single vector database wins on all axes. Pinecone is easiest but most expensive. pgvector is cheapest but requires Postgres expertise. Qdrant balances simplicity and cost. The right choice depends on your scale, latency requirements, cost sensitivity, and operational maturity.\n\n## Detail\nKey trade-offs when selecting a vector database:\n\n**Scale (vectors stored)**:\n- < 10M: Any option works. Pinecone simplicity often wins.\n- 10M–100M: pgvector or Qdrant recommended. Pinecone becomes costly (~$1–10k/month).\n- 100M–1B: pgvector or Milvus. Pinecone prohibitively expensive ($10–100k/month).\n- 1B+: Milvus, self-hosted Qdrant, or pgvector at scale. Pinecone not viable.\n\n**Latency (p99 query time)**:\n- < 50ms: HNSW index (Qdrant, pgvector with HNSW).\n- 50–200ms: IVF index or Qdrant default.\n- > 200ms: Latency not a constraint; optimize for cost (Milvus, LanceDB).\n\n**Cost ($/month)**:\n- Managed (Pinecone): $100–100k depending on vector count and queries.\n- Self-hosted (pgvector): $50–1000/month (Postgres server cost).\n- Open-source (Qdrant, Milvus): $0 software + infrastructure (EC2, Kubernetes, ~$500–5000/month for mid-scale).\n\n**Operational complexity**:\n- Pinecone: None (managed).\n- pgvector: Moderate (Postgres admin).\n- Qdrant: Moderate (Docker/K8s).\n- Milvus: High (distributed system, many moving parts).\n\n## Common gotchas / interview framings\n- **Hidden costs at scale**: Pinecone's per-vector pricing compounds; a 1B vector system costs $250k/month+.\n- **Latency-scale coupling**: HNSW scales to 1B vectors but memory explodes; IVF is more memory-efficient but latency varies with cluster tuning.\n- **Operational burden underestimation**: Self-hosting Qdrant/Milvus requires DevOps. Budget 10–20% engineering time for scaling, monitoring, disaster recovery.\n- **Metadata filtering overhead**: Heavy metadata queries can negate ANN benefits. Measure on realistic queries before committing.\n- Interviewers ask: \"Pinecone vs pgvector?\" Answer: \"It depends on scale and budget. Pinecone < 50M vectors, unlimited budget. pgvector > 10M vectors, cost-sensitive.\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "For each vector count range, recommend a vector database and justify.",
+        "back": "**< 10M vectors**: Pinecone (no ops overhead, simplicity wins). **10M–100M**: pgvector (100x cheaper, still manageable with Postgres). **100M–1B**: Qdrant (balance of cost, performance, ops). **> 1B**: Milvus (only option that doesn't bankrupt you). At 1B, Pinecone costs $250k+/month; Milvus on AWS/GCP is $5–10k/month."
+      },
+      {
+        "type": "mcq",
+        "front": "Your startup has 50M vectors, $500/month infrastructure budget, p99 latency target of 100ms. What's the best choice?",
+        "back": "At 50M vectors, Pinecone costs $5–10k/month (outside budget). pgvector on a $100/month Postgres instance fits budget and HNSW achieves <100ms p99 latency. Qdrant would cost ~$500/month in EC2/K8s (tight budget, no buffer). Milvus is overkill at 50M. pgvector is the pragmatic choice.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Pinecone; it's the easiest",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "pgvector with HNSW index; it fits your budget and latency",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Qdrant because it's open-source",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Milvus for future-proofing",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the latency-scale trade-off between HNSW and IVF indices.",
+        "back": "**HNSW**: Fixed latency (~20–100ms at any scale) but memory grows 2–3x with vectors. At 1B vectors, HNSW uses 3–6TB. **IVF**: Memory scales linearly with vectors (1TB for 1B), but latency varies: few clusters (fast, low recall), many clusters (slow, high recall). Trade-off: HNSW = consistent latency, high memory; IVF = tunable latency, low memory. Choose HNSW if latency is strict; IVF if memory/cost is strict."
+      },
+      {
+        "type": "flip",
+        "front": "What hidden costs should you budget for when self-hosting Qdrant or Milvus?",
+        "back": "1. **Infrastructure**: EC2/GCP instances, storage, network (~$1k–5k/month). 2. **DevOps/SRE**: Monitoring, alerting, backups, disaster recovery, upgrades (~10–20% engineer time). 3. **Scaling labor**: Tuning indices, rebalancing shards, capacity planning. 4. **Data migration**: If you need to switch later, moving billions of vectors is expensive. Budget $100k–500k in engineering + downtime. Pinecone's per-vector pricing is high, but DevOps overhead of self-hosting often matches or exceeds it for growing systems."
+      },
+      {
+        "type": "flip",
+        "front": "When would you choose Weaviate over Qdrant despite Qdrant's superior latency?",
+        "back": "When your use case requires knowledge graph + vector search (not pure vector search). Example: search documents and entities, rank by relationship to a query entity, filter by entity type. Weaviate's GraphQL and structural filtering excel here. Qdrant is faster for pure semantic search. Trade-off: Weaviate for complex relational queries (lower latency still acceptable >100ms), Qdrant for speed-sensitive pure vector retrieval (<50ms p99)."
+      }
+    ]
+  },
+  {
+    "slug": "indexing-strategies-and-performance-tuning",
+    "title": "Indexing Strategies and Performance Tuning",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "advanced",
+    "tags": [
+      "indexing",
+      "optimization",
+      "performance",
+      "tuning"
+    ],
+    "aliases": [
+      "index tuning",
+      "performance optimization",
+      "vector indexing"
+    ],
+    "wikilinks": [
+      "exact-vs-approximate-nearest-neighbor-search-hnsw-ivf",
+      "vector-database-landscape-pinecone-qdrant-weaviate-milvus-pgvector-lancedb",
+      "vector-database-selection-criteria-scale-latency-cost"
+    ],
+    "sources": [
+      {
+        "url": "https://www.myscale.com/blog/hnsw-vs-ivf-explained-powerful-comparison/",
+        "label": "HNSW vs IVF Deep Dive"
+      },
+      {
+        "url": "https://www.pingcap.com/article/approximate-nearest-neighbor-ann-search-explained-ivf-vs-hnsw-vs-pq/",
+        "label": "ANN Search Explained"
+      },
+      {
+        "url": "https://medium.com/@bavalpreetsinghh/pgvector-hnsw-vs-ivfflat-a-comprehensive-study-21ce0aaab931",
+        "label": "pgvector HNSW vs IVFFlat Study"
+      }
+    ],
+    "explainer_md": "## Intuition\nBuilding and tuning vector indices is engineering. Small knob tweaks (HNSW M, efConstruction, IVF nlist, nprobe) can 10x latency or halve recall. Advanced practitioners optimize indices for their specific data distribution, query patterns, and latency-recall-memory constraints via systematic benchmarking.\n\n## Detail\n\n**HNSW tuning parameters**:\n- **M (max neighbors per node)**: Default 16. Higher M = higher recall, more memory, slower indexing. Typical range: 8–48. Set M=32 for high recall, M=8 for low memory.\n- **efConstruction**: Number of nearest neighbors to check during index building. Default 200. Higher = better index quality, slower build. Typical: 200–1000.\n- **ef (query parameter)**: Analogous to efConstruction but at query time. Higher ef = higher recall, slower query. Tune post-index for latency-recall tradeoff.\n\n**IVF tuning parameters**:\n- **nlist (cluster count)**: Number of cluster centers. IVF builds k-means index with nlist clusters. Typical: 100–10000. Higher nlist = more clusters, shorter scan per cluster, less recall per probe. Trade-off: more clusters = shorter per-cluster search but need to probe more clusters for same recall.\n- **nprobe (clusters to search)**: How many nearest clusters to search at query time. Default ~nlist/8. Higher nprobe = higher recall, higher latency. Tune this post-index for latency-recall tradeoff.\n- **Factory string (FAISS)**: Encodes index configuration, e.g., \"IVF100,PQ64\" (100 clusters, 64-bit product quantization). Complex configurations trade memory/accuracy/speed.\n\n**Quantization** (advanced): Reduce vector size (float32 → float8 or binary). 4–16x memory savings, small accuracy loss. Example: PQ (Product Quantization) decomposes 1024-dim vector into chunks, quantizes each. Used in Milvus, FAISS.\n\n**Best practices**:\n1. **Profile your data**: Measure recall@k for different parameter settings on a sample.\n2. **Latency-recall curves**: Plot latency vs recall for different M, ef, nprobe values. Choose the knee of the curve for your latency budget.\n3. **Warm-up queries**: Cache/warm HNSW index before serving; first queries are slower.\n4. **Monitor in production**: Measure actual p50, p95, p99 latencies; recall on real query distributions may differ from benchmark.\n\n## Common gotchas / interview framings\n- **Overfitting to benchmark**: Tuning indices on standard benchmarks (SIFT, GIST) may not generalize to your data. Always benchmark on representative data.\n- **Stateless parameter tuning**: HNSW's ef and IVF's nprobe are query-time parameters; you can A/B test different values without rebuilding the index.\n- **Memory explosion with HNSW**: HNSW at M=64 on 1B vectors uses 10TB+; easily exceeds available RAM. Monitor memory during indexing.\n- **IVF cluster imbalance**: If clusters are imbalanced (some huge, some tiny), nprobe-based recall is inconsistent. k-means initialization matters.\n- Interviewers ask: \"My HNSW query is too slow.\" Answer: Decrease ef (faster, lower recall). If recall is already bad, you need lower M and rebuild.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the HNSW parameters M, efConstruction, and ef. Which is tunable post-indexing?",
+        "back": "**M**: Maximum degree per node in the graph. Fixed at index build. Higher M (32 vs 8) = higher recall, more memory, slower queries. **efConstruction**: Neighbor check budget during index building. Fixed at build. Higher (1000 vs 200) = better quality, slower build. **ef**: Neighbor check budget at query time (dynamic). Can be tuned post-index without rebuild. Increase ef for higher recall (slower queries); decrease for latency."
+      },
+      {
+        "type": "mcq",
+        "front": "Your HNSW index with M=16, ef=200 has p99 query latency of 500ms (budget: 100ms). How should you tune?",
+        "back": "ef is tunable post-index. Decreasing ef from 200 to 50 will significantly reduce latency (log reduction in neighbor checks) while moderately reducing recall. This is the fast fix. Rebuilding with M=8 is slower and permanent. nprobe is an IVF parameter. For HNSW, decrease ef first; if recall drops below acceptable, then consider rebuilding with lower M or switching to IVF.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Decrease ef to 50; trade recall for latency",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Decrease M to 8; rebuild the index",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Increase nprobe; it'll speed up queries",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use IVF instead of HNSW",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the relationship between IVF's nlist and nprobe? How do they control the latency-recall trade-off?",
+        "back": "**nlist**: Number of clusters (fixed at index build). Typical 100–10k. **nprobe**: How many nearest clusters to search per query (tuned post-index). Relationship: more clusters (higher nlist) = smaller clusters, faster per-cluster search, but you must probe more clusters to maintain recall. With nlist=1000 and nprobe=10, you search 10 of 1000 clusters (~1%). Higher nprobe (10→50) = higher recall, higher latency. Tune nprobe post-index to hit your latency budget."
+      },
+      {
+        "type": "flip",
+        "front": "Describe a systematic approach to benchmarking and tuning vector indices for production.",
+        "back": "1. **Representative sample**: Use 10k–100k vectors from production distribution. 2. **Latency-recall grid**: Test parameter combinations (M=[8,16,32], ef=[50,200,400]) on 1k queries. Measure recall@10 and latency. 3. **Plot curves**: Plot latency vs recall for each config. 4. **Pick the knee**: Choose the parameter set maximizing recall while staying under latency budget. 5. **Warm-up & cache**: Cache index in memory, warm up on 100 queries before measuring (HNSW has cache effects). 6. **A/B test in production**: Test your tuned params on a subset of traffic before full rollout."
+      },
+      {
+        "type": "flip",
+        "front": "When and why should you use quantization (PQ, scalar quantization) in vector indices?",
+        "back": "Quantization reduces vector size (float32 → int8, or Product Quantization to 4–16 bits per chunk) for massive memory savings (4–16x) at the cost of ~1–5% recall loss. Use when: (1) memory is the constraint (billion-scale indices), (2) network bandwidth is bottleneck (distributed systems), (3) you have latency budget to trade for memory. Don't use if accuracy is critical or if recall loss is unacceptable. Example: 1B vectors, 1024 dims, float32 = 4TB; with PQ8 = 250GB."
+      }
+    ]
+  },
+  {
+    "slug": "rag-pipeline-architecture-retriever-ranker-reader",
+    "title": "RAG Pipeline Architecture (Retriever, Ranker, Reader)",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "rag",
+      "pipeline",
+      "architecture",
+      "system-design"
+    ],
+    "aliases": [
+      "RAG system design",
+      "retrieval pipeline",
+      "RAG architecture"
+    ],
+    "wikilinks": [
+      "dense-embeddings-and-contrastive-learning",
+      "vector-database-landscape-pinecone-qdrant-weaviate-milvus-pgvector-lancedb",
+      "retriever-design-bm25-dense-hybrid-multi-hop",
+      "re-ranking-and-cross-encoder-models",
+      "chunk-size-and-overlap-in-document-splitting"
+    ],
+    "sources": [
+      {
+        "url": "https://blog.premai.io/best-embedding-models-for-rag-2026-ranked-by-mteb-score-cost-and-self-hosting/",
+        "label": "Best Embedding Models for RAG 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nRAG (Retrieval-Augmented Generation) pipelines have three stages: (1) **Retriever** finds candidate documents fast but roughly, (2) **Ranker** reorders candidates with a more sophisticated model for accuracy, (3) **Reader** (LLM) reads top-k reranked documents and generates grounded answers. This three-stage design balances speed, accuracy, and cost.\n\n## Detail\n\n**Stage 1: Retriever** (speed-prioritized)\n- Query → embed with dense model [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]] or BM25 [[hybrid-search-dense-sparsebm25]].\n- Search [[vector-database-landscape-pinecone-qdrant-weaviate-milvus-pgvector-lancedb]] for top-k (typically 50–1000).\n- Latency budget: 10–100ms. Recall: ~60–80% OK; ranker improves.\n\n**Stage 2: Ranker** (accuracy-prioritized)\n- Takes top-k from retriever. \n- Re-ranks using cross-encoder [[re-ranking-and-cross-encoder-models]] (e.g., Cohere Rerank v4).\n- Typically re-ranks top-100 to top-10 or top-20.\n- Latency budget: 100–500ms. Recall after reranking: 90%+.\n\n**Stage 3: Reader** (generation)\n- Takes top-k reranked documents.\n- Feed to LLM with in-context prompt: \"Given these documents, answer the question.\"\n- LLM generates grounded answer.\n- Latency: 1–10 seconds (LLM generation time dominates).\n\n**Why three stages?**\n- Dense embeddings are fast (10ms) but semantic-only; dense retrievers recall ~60% of relevant docs.\n- Cross-encoders are slower (50–100ms per doc) but very accurate. Ranking top-100 is feasible; ranking 1M is not.\n- LLMs are slow (1s+) but excellent at generating from context. Need ranker to ensure context is high-quality.\n\n**Cost/latency/quality tradeoffs**:\n- **Dense-only**: Fast (10ms), cheap, lower quality (~70% end-to-end recall).\n- **Dense + Ranker**: Moderate (100–200ms), higher quality (~90% recall).\n- **Dense + Ranker + LLM**: Slow (2s+), highest quality, most expensive.\n\n## Common gotchas / interview framings\n- **Bottleneck varies**: In early RAGs, retriever was bottleneck (poor recall). Modern models shift bottleneck to ranker (latency) or LLM (cost). Profile your system.\n- **Ranker overfitting**: Training rankers on your data can overfit if data is small. Use [[re-ranking-and-cross-encoder-models]] from vendors or pretrain on large data.\n- **Lost-in-the-middle**: Passing 50 documents to LLM and asking \"answer based on these\" can degrade quality. Reranker + limiting to top-3 to top-5 helps.\n- **Multi-hop vs single-hop**: Simple RAG retrieves once. Multi-hop iterates: answer question → retrieve based on answer to refine.\n- Interviewers ask: \"Why not just rerank all docs with cross-encoder?\" Answer: Cost. Cross-encoding 1M docs × 500ms each = 500k GPU-seconds. Dense retrieval + rerank top-100 is 100x faster.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Draw the three-stage RAG pipeline and explain why each stage is needed.",
+        "back": "Stage 1: **Retriever** (query → dense embed → vector search → top-k docs). Fast (10–100ms), rough recall (~60–80%). Stage 2: **Ranker** (top-k docs + query → cross-encoder → rerank → top-k'). Slower (100–500ms), high precision (~90%+). Stage 3: **Reader** (top-k' docs + query → LLM → answer). Slow (1–10s), generates grounded answer. Why: Dense is fast but misses semantics. Cross-encoder is accurate but slow on large sets. LLM is slow but excellent at generation. Three stages optimize cost, latency, quality."
+      },
+      {
+        "type": "mcq",
+        "front": "Your RAG system has 99% retriever recall (dense embedding) but 60% end-to-end question-answering accuracy. The bottleneck is likely?",
+        "back": "High retriever recall (99%) with low QA accuracy (60%) indicates the ranker is missing relevant docs or the LLM is failing on large contexts. Since retriever is working well, the issue is downstream. Add a cross-encoder ranker [[re-ranking-and-cross-encoder-models]] to reorder and filter top-10 docs. If ranker is present, the issue is LLM context overload (\"lost-in-the-middle\"); limit to top-3 reranked docs.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Retriever quality; add more retrieval diversity",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Ranker quality or missing ranker; add cross-encoder reranking",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "LLM quality; use a stronger model",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Chunk size; split documents differently",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is latency for the retriever stage (10–100ms) much lower than the ranker stage (100–500ms)?",
+        "back": "**Retriever** uses fast approximate nearest neighbor search (HNSW, IVF) on vectors; only one forward pass through embedding model (10ms) + vector DB lookup (5–50ms). **Ranker** uses cross-encoders which score each (query, doc) pair independently, requiring one forward pass per doc. Scoring top-100 docs takes 100 × 5–10ms = 500–1000ms. Rankers are slower because they're more accurate (cross-encoder > bi-encoder) but must process each doc individually."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the 'lost-in-the-middle' problem in RAG and a solution.",
+        "back": "When passing 50 documents to an LLM with a prompt \"Answer this question based on these docs,\" the LLM often ignores middle documents, focusing on the first and last few. This is due to attention patterns in transformers. Solutions: (1) Pass fewer docs (top-3 to top-5) from a good ranker. (2) Use retrieval-augmented generation with iterative refinement: answer question once, identify gaps, retrieve more focused docs. (3) Integrate reranker [[re-ranking-and-cross-encoder-models]] to surface only the most relevant docs."
+      },
+      {
+        "type": "flip",
+        "front": "Compare single-hop vs multi-hop RAG retrieval. When should you use each?",
+        "back": "**Single-hop**: Query → retrieve once → generate answer. Simple, fast (100–200ms), works for direct questions (\"What is X?\"). **Multi-hop**: Query → retrieve → generate partial answer → identify missing info → retrieve again → refine answer. Slower (1–2s), better for complex questions (\"Compare X and Y, given the relationship between Z\"). Use single-hop for most use cases; multi-hop when single-hop fails (low end-to-end recall). Multi-hop requires loop detection to avoid infinite retrieval."
+      }
+    ]
+  },
+  {
+    "slug": "retriever-design-bm25-dense-hybrid-multi-hop",
+    "title": "Retriever Design (BM25, Dense, Hybrid, Multi-Hop)",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "retriever",
+      "bm25",
+      "dense-search",
+      "multi-hop"
+    ],
+    "aliases": [
+      "retrieval methods",
+      "search strategies",
+      "query strategies"
+    ],
+    "wikilinks": [
+      "dense-embeddings-and-contrastive-learning",
+      "hybrid-search-dense-sparsebm25",
+      "query-expansion-and-rewriting",
+      "chunk-size-and-overlap-in-document-splitting"
+    ],
+    "sources": [
+      {
+        "url": "https://www.pinecone.io/learn/series/faiss/vector-indexes/",
+        "label": "Vector Indexes (Pinecone)"
+      }
+    ],
+    "explainer_md": "## Intuition\nRetriever design determines recall and speed. Dense retrievers (embeddings) are semantic but miss keywords. BM25 is keyword-centric but ignores meaning. Hybrid combines both. Multi-hop iterates retrieval to handle complex questions. Each has trade-offs in latency, recall, and cost.\n\n## Detail\n\n**BM25 Retriever**: Rank documents by term relevance. BM25 score $= \\sum_i \\text{IDF}(q_i) \\cdot \\frac{f(q_i, d) \\cdot (k_1 + 1)}{f(q_i, d) + k_1(1 - b + b |d|/\\text{avgdl})}$. Pros: Exact term matching, no embeddings needed. Cons: Fails on synonyms, paraphrases, semantic relevance. Best for: Keyword-driven queries, structured data with names/IDs.\n\n**Dense Retriever**: Embed query and docs; find nearest neighbors. Pros: Semantic understanding, handles paraphrases. Cons: Misses exact keywords (rare terms, proper nouns). Latency: 10–100ms. Best for: Open-domain QA, semantic search.\n\n**Hybrid Retriever**: Combine BM25 + dense. Retrieve top-k from each, merge rankings (RRF, learned fusion). Pros: Covers both keywords and semantics. Cons: 2x latency, complexity in fusion. Best for: Mixed query types (exact terms + semantic understanding).\n\n**Multi-hop Retriever**: Iterative retrieval. (1) Answer query with initial retrieval. (2) Identify missing info. (3) Retrieve based on partial answer + gaps. (4) Repeat until confident. Pros: Handles complex reasoning, multi-document reasoning. Cons: 5–10x latency, complexity. Best for: Complex questions requiring reasoning across many docs.\n\n**Query expansion** [[query-expansion-and-rewriting]]: Augment query with synonyms, paraphrases, related terms before retrieval. Improves recall but increases computation.\n\n## Common gotchas / interview framings\n- **Retriever recall vs end-to-end QA recall**: High retriever recall (relevant docs are retrieved) != high QA recall (LLM answers correctly). Ranker and LLM contribute downstream.\n- **Multi-hop complexity**: Naive multi-hop can loop forever (retrieve → answer → retrieve → ...). Add termination condition: max iterations, convergence threshold, or explicit relevance check.\n- **Fusion weights**: Equal weighting (0.5 BM25 + 0.5 dense) is suboptimal. Learn weights on dev set or use learned ranker [[re-ranking-and-cross-encoder-models]].\n- **Query rewriting ambiguity**: Expanding a query can introduce noise. \"Apple\" → \"Apple computer, apple fruit, Apple Inc.\" increases retrieval but may add noise. Use selective expansion.\n- Interviewers ask: \"Dense or BM25 for patent search?\" Answer: Hybrid. Patents have exact claims (keywords) and conceptual novelty (semantics).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Describe the strengths and weaknesses of BM25, dense, and hybrid retrievers.",
+        "back": "**BM25**: Exact keyword matching. Fast, no embeddings needed. Fails on synonyms, paraphrases. Strength: rare terms, structured data. Weakness: semantic understanding. **Dense**: Embeddings, semantic matching. Handles paraphrases. Weakness: misses exact keywords (SKUs, names). Strength: open-domain QA. **Hybrid**: Combines both. Covers keywords + semantics. Weakness: 2x latency, fusion complexity. Strength: mixed query types."
+      },
+      {
+        "type": "mcq",
+        "front": "Your retriever is used for product search (queries like \"best blue running shoes size 10\"). BM25 alone scores 75% recall. Dense alone scores 65%. Which should you use?",
+        "back": "Product search mixes keywords (size, color, brand) and semantics (\"running shoes\" ↔ \"athletic footwear\"). BM25 alone misses semantic variants; dense alone misses exact attributes. Hybrid retrieval: BM25 retrieves by size/color, dense retrieves by shoe type. Merging both yields ~80%+ recall. Multi-hop is overkill for single-turn product search.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "BM25 alone; it has higher recall",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Dense alone; it's more semantic",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Hybrid (BM25 + dense); BM25 catches exact \"size 10\", dense catches \"running\" ↔ \"jogging\"",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Multi-hop retrieval",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain multi-hop retrieval and when it should be used over single-hop.",
+        "back": "**Single-hop**: Query once → retrieve documents → answer. **Multi-hop**: (1) Query → retrieve (2) Generate partial answer (3) Identify gaps/missing info (4) Retrieve again based on gaps (5) Repeat until confident. Use multi-hop for: complex questions requiring reasoning across multiple documents, follow-up questions, hypothetical reasoning. Example: \"How would X policy affect Y given the relationship between Z and W?\" Single-hop retrieval may miss Z-W relationship; multi-hop iterates to find it."
+      },
+      {
+        "type": "flip",
+        "front": "What is query expansion and when should you use it?",
+        "back": "Query expansion augments the original query with synonyms, paraphrases, and related terms before retrieval. Example: \"What is RAG?\" → \"What is retrieval-augmented generation? How do RAG systems work? RAG vs fine-tuning.\" Benefits: Higher recall, more robust to query variations. Costs: Increased computation, potential noise (expanded terms may introduce false matches). Use when: Dense retrieval recall is insufficient and computational budget allows; avoid when: computation is constrained or query is already comprehensive."
+      },
+      {
+        "type": "flip",
+        "front": "What should a multi-hop retriever do to avoid infinite loops?",
+        "back": "Add termination conditions: (1) **Max iterations** (e.g., max 5 retrievals). (2) **Convergence check**: Stop if new information is minimal (e.g., >80% overlap with previous retrieval). (3) **Explicit relevance**: Stop if retrieved documents directly answer the query (LLM judges relevance). (4) **Loop detection**: Track retrieved document IDs; stop if re-retrieving same docs. Recommended: Combine max iterations + convergence check for robustness."
+      }
+    ]
+  },
+  {
+    "slug": "chunk-size-and-overlap-in-document-splitting",
+    "title": "Chunk Size and Overlap in Document Splitting",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "document-processing",
+      "chunking",
+      "preprocessing",
+      "rag"
+    ],
+    "aliases": [
+      "document splitting",
+      "text chunking",
+      "chunk strategy"
+    ],
+    "wikilinks": [
+      "rag-pipeline-architecture-retriever-ranker-reader",
+      "retriever-design-bm25-dense-hybrid-multi-hop",
+      "leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3"
+    ],
+    "sources": [
+      {
+        "url": "https://blog.premai.io/best-embedding-models-for-rag-2026-ranked-by-mteb-score-cost-and-self-hosting/",
+        "label": "Best Embedding Models for RAG 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nDocuments are too long to embed or pass to LLMs whole. You split them into chunks (sentences, paragraphs, fixed-length spans), embed each, and retrieve relevant chunks. Chunk size and overlap control granularity, recall, and retrieval quality. Too small = noisy fragments, lost context. Too large = semantic dilution, retrieval failures. No overlap = context breaks; high overlap = redundancy.\n\n## Detail\n\n**Chunk size options**:\n- **Sentence-level** (10–20 tokens): Semantic units, clean boundaries. High recall (many candidates). Cons: Lost context, small chunks may lack meaning in isolation.\n- **Paragraph-level** (50–200 tokens): Natural semantic units. Balance. Cons: Variable size, some paragraphs too long/short.\n- **Fixed size** (256, 512, 1024 tokens): Consistent, predictable. Pros: Simple to implement, consistent embedding. Cons: May split mid-sentence, semantics ignored.\n- **Semantic chunking**: Split on semantic boundaries (e.g., topic changes, NLP-detected section breaks). Pros: Respect semantic units. Cons: Slower to compute, variable chunk size.\n\n**Chunk overlap**: Repeat tokens from adjacent chunks. Example: Chunk 1 tokens [1–256], Chunk 2 tokens [128–384] (128 token overlap). Overlap bridges context lost at chunk boundaries.\n- **No overlap (0%)**: Highest efficiency, lowest context. Relevant info at boundary lost.\n- **Moderate overlap (10–25%)**: Standard choice. Balances context and efficiency.\n- **High overlap (>50%)**: Maximum context, more redundancy, increased embedding cost.\n\n**Impact on retrieval**:\n- Chunk size directly affects latency: more chunks = more embeddings to store, slower search (large indices).\n- Overlap increases index size: 2x overlap = 2x more chunks, 2x more storage.\n- Chunk quality affects recall: semantic chunks improve retriever ranking; random boundaries introduce noise.\n\n## Common gotchas / interview framings\n- **Context window mismatch**: If embedding model has 512 token context but chunks are 1024 tokens, information is lost at encoding. Match [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]] context window to chunk size.\n- **Lost-in-the-middle with long chunks**: Passing 1000-token chunks to LLM may trigger \"lost-in-the-middle\" effect [[rag-pipeline-architecture-retriever-ranker-reader]].\n- **No silver bullet**: Optimal chunk size is task/domain-dependent. Single paragraph for legal documents vs code blocks for documentation. Always measure on representative data.\n- **Iterative tuning**: Start with 512 tokens, 10% overlap. Measure retriever recall. If low, reduce chunk size (more granularity); if noisy, increase size (more context).\n- Interviewers ask: \"What chunk size should we use?\" Answer: \"Start with 512 tokens, 10% overlap. Measure retriever recall. Iterate based on domain.\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain how chunk size and overlap affect vector database size and retrieval latency.",
+        "back": "Smaller chunks = more chunks per document. If 1000-page doc is split into 512-token chunks, you get ~2000 chunks (assuming ~256 tokens per page). Each chunk needs embedding and storage. More chunks = larger vector DB = slower retrieval (more similarity computations) and higher storage. Overlap multiplies this: 25% overlap = 1.25x more chunks. Trade-off: smaller chunks = higher recall (granular matching), larger chunks = lower cost (fewer embeddings)."
+      },
+      {
+        "type": "mcq",
+        "front": "Your embedding model has 512 token context window. Should you use 1024 token chunks?",
+        "back": "If a chunk is 1024 tokens and your embedding model context is 512, the encoder truncates or ignores the last 512 tokens. This loses semantic information from the second half of the chunk. Always set chunk size ≤ embedding model context window. If you need longer chunks, use a model with larger context (e.g., BGE-M3 with 8K tokens) or split differently.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes; use the full model capacity",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No; chunks larger than context window truncate information at encoding",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Yes; the model will handle overflow",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No; you should use 128 token chunks",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Compare sentence-level, paragraph-level, and fixed-size chunking. When should you use each?",
+        "back": "**Sentence-level** (10–20 tokens): High granularity, clean semantic units. Best for open-domain QA. Risk: Lost context (sentences isolated). **Paragraph-level** (50–200 tokens): Natural units, balanced. Best for general documents. Risk: Variable size. **Fixed-size** (256, 512 tokens): Uniform, simple. Best for consistency. Risk: Ignores semantics. Use sentences for high-precision retrieval, paragraphs for balance, fixed-size for simplicity and consistency at scale."
+      },
+      {
+        "type": "flip",
+        "front": "What is chunk overlap and why should you use it?",
+        "back": "Chunk overlap is repeating tokens at boundaries between consecutive chunks. Example: Chunk 1 = tokens [0–256], Chunk 2 = tokens [200–456] (200 token overlap). Overlap preserves context lost at hard chunk boundaries. Without overlap, semantic information split across boundary is lost (Chunk 1 ends, Chunk 2 begins, middle meaning is severed). Typical overlap: 10–25%. Higher overlap (50%+) maximizes context but doubles embedding cost."
+      },
+      {
+        "type": "flip",
+        "front": "Your RAG system splits documents into 256-token chunks with no overlap. Retriever recall is 70%. How would you improve it?",
+        "back": "Try: (1) **Increase overlap** to 10–25%; bridges context lost at boundaries. (2) **Increase chunk size** to 512 tokens; provides more context per chunk, may reduce boundary fragmentation. (3) **Use semantic chunking** instead of fixed-size; respects natural semantic units. Start with overlap (simplest, no recomputation needed); measure impact. If still low, reprocess with larger chunks or semantic splitting."
+      }
+    ]
+  },
+  {
+    "slug": "re-ranking-and-cross-encoder-models",
+    "title": "Re-Ranking and Cross-Encoder Models",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "reranking",
+      "cross-encoders",
+      "ranking",
+      "neural-ranking"
+    ],
+    "aliases": [
+      "reranker models",
+      "cross-encoder ranking",
+      "relevance ranking"
+    ],
+    "wikilinks": [
+      "rag-pipeline-architecture-retriever-ranker-reader",
+      "hybrid-search-dense-sparsebm25",
+      "retriever-design-bm25-dense-hybrid-multi-hop"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.cohere.com/docs/rerank",
+        "label": "Cohere Rerank Docs"
+      },
+      {
+        "url": "https://cohere.com/blog/rerank-4",
+        "label": "Introducing Rerank 4"
+      },
+      {
+        "url": "https://galileo.ai/blog/mastering-rag-how-to-select-a-reranking-model",
+        "label": "Mastering RAG: Selecting Reranking Models"
+      }
+    ],
+    "explainer_md": "## Intuition\nRetrieval (dense or BM25) retrieves fast but roughly. Reranking takes those rough candidates and reorders them with a more sophisticated model that jointly considers query + document (not independently). Cross-encoders (e.g., Cohere Rerank v4) are the modern approach, trading latency for accuracy. Most RAG systems use dense retrieval → cross-encoder reranking → LLM reader.\n\n## Detail\n\n**Bi-encoder vs Cross-encoder**:\n- **Bi-encoder** (dense retrieval): Encode query independently, encode each doc independently, compute similarity. Fast (10ms), but doesn't capture query-doc interactions. Recall ~60%.\n- **Cross-encoder**: Encode (query, doc) as a pair. Model sees both simultaneously, learns fine-grained interactions. Accuracy ~90%, but slow (5–100ms per doc, proportional to doc count).\n\n**Why reranking works**: Retrievers optimize for speed; rerankers optimize for accuracy. Rank retrieved docs (50–100) with cross-encoder; top-10 output has high precision.\n\n**Leading rerankers (2025–2026)**:\n- **Cohere Rerank v4**: SOTA (as of early 2026). 32K context window, self-learning, multilingual. Variants: Fast (speed-optimized), Pro (accuracy-optimized).\n- **Cohere Rerank 3.5**: Previous SOTA. Smaller context (4K), multilingual.\n- **BGE-reranker-large**: Open-source, good quality, self-hostable. ~1000x cheaper than APIs but requires compute.\n- **DPR + ColBERT**: Research models, not production-ready (slow, older architecture).\n\n**Reranking cost**: Cross-encoding top-100 docs at 5ms/doc = 500ms latency. Typical RAG: retrieve (100ms) + rerank top-100 (500ms) = 600ms retrieval + 5–10s LLM = ~6–11s total.\n\n## Common gotchas / interview framings\n- **Law of diminishing returns**: Reranking top-100 improves precision; top-1000 has minimal ROI and huge cost. Most RAGs rerank top-50 to top-100.\n- **Context window matters**: Cohere Rerank v4 has 32K context, enabling reranking very long documents. Rerank v3 (4K context) may truncate. [[leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3]].\n- **Open vs proprietary**: Cohere (proprietary) is best but costs per-API-call; BGE-reranker (open) is free but requires GPU compute (~$1/month on shared GPU, $500/month on dedicated).\n- **Reranking is not deduplication**: Two documents with same meaning get different scores (cross-encoder distinguishes subtle differences). Deduplication is a separate concern.\n- Interviewers ask: \"Dense retrieval alone vs dense + reranker?\" Answer: Reranker improves precision (70% → 90%); cost is ~500ms. Worth it for most RAG systems.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the difference between bi-encoder and cross-encoder. Why is cross-encoder slower?",
+        "back": "**Bi-encoder**: Encodes query once (10ms), encodes each doc independently (5ms each). No joint modeling. Fast (10 + 5k ms for k docs). **Cross-encoder**: Encodes (query, doc) pair jointly (5–10ms per pair). Captures query-doc interactions. Slower (5k–10k ms for k docs). Why slower: Every doc requires a separate forward pass through the full model with the query; bi-encoder amortizes query encoding once."
+      },
+      {
+        "type": "flip",
+        "front": "You have top-100 retrieved documents. Should you rerank all 100 or just top-20? What are the trade-offs?",
+        "back": "**Rerank all 100** (5ms × 100 = 500ms latency): Highest chance of surfacing a missed relevant doc from position 50–100. Cons: 5x slower. **Rerank top-20** (100ms): Fast, likely covers most relevant docs (law of diminishing returns). Cons: May miss edge cases deep in retriever ranking. Recommendation: Start with top-50; if recall is sufficient, reduce to top-20 for latency. Measure on your data."
+      },
+      {
+        "type": "mcq",
+        "front": "Your RAG system: dense retriever (70% recall) → rerank top-100 (90% recall) → LLM. End-to-end QA accuracy is 60%. Bottleneck?",
+        "back": "Reranker is achieving 90% recall (good). The 30% gap between reranker recall (90%) and QA accuracy (60%) suggests the LLM isn't using retrieved documents effectively. Issues: (1) Lost-in-the-middle (too many docs), (2) LLM hallucinating, (3) context overload. Solutions: Limit reranker output to top-5, refine prompt, or use stronger LLM.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Reranker is missing relevant docs; increase reranking depth",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Reranker is working (90% recall); LLM is failing to answer based on context",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Dense retriever is weak; upgrade model",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Add more documents",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Compare Cohere Rerank v4, Cohere Rerank 3.5, and BGE-reranker-large on cost, accuracy, and deployment.",
+        "back": "**Cohere Rerank v4**: Best accuracy, 32K context, multilingual. Proprietary (API cost ~$0.001–0.003 per rerank). Fully managed. **Cohere Rerank 3.5**: Good accuracy, 4K context, multilingual. Older version, cheaper. **BGE-reranker-large**: Open-source, comparable accuracy, self-hosted (free software, GPU cost ~$500/month shared). Trade-off: Cohere v4 for best-in-class accuracy and minimal ops; BGE for cost-sensitive, large-scale systems."
+      },
+      {
+        "type": "flip",
+        "front": "Why does Cohere Rerank v4's 32K context window matter compared to Rerank 3.5's 4K?",
+        "back": "Rerank v3.5 (4K context) truncates documents longer than 4K tokens. A 8K-token document loses the last 4K. Rerank v4 (32K context) accommodates longer documents without truncation, enabling more complete document understanding. Useful for: long-form documents (research papers, legal contracts), multi-document ranking, and scenarios where document beginning and end are both important for relevance judgment."
+      }
+    ]
+  },
+  {
+    "slug": "query-expansion-and-rewriting",
+    "title": "Query Expansion and Rewriting",
+    "track": "ai-llm-engineer",
+    "topic": "embeddings-retrieval",
+    "difficulty": "intermediate",
+    "tags": [
+      "query-optimization",
+      "retrieval",
+      "nlp",
+      "semantic-search"
+    ],
+    "aliases": [
+      "query refinement",
+      "query augmentation",
+      "search term expansion"
+    ],
+    "wikilinks": [
+      "retriever-design-bm25-dense-hybrid-multi-hop",
+      "rag-pipeline-architecture-retriever-ranker-reader",
+      "dense-embeddings-and-contrastive-learning"
+    ],
+    "sources": [
+      {
+        "url": "https://blog.premai.io/best-embedding-models-for-rag-2026-ranked-by-mteb-score-cost-and-self-hosting/",
+        "label": "Best Embedding Models for RAG 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nQueries are often terse or ambiguous (\"Apple\", \"how to learn Python\"). Query expansion augments queries with synonyms, paraphrases, or clarifications to improve retriever recall. Query rewriting reformulates the query to match document language better. Both trade computation for recall.\n\n## Detail\n\n**Query expansion**: Add related terms to the original query.\n- **Synonym expansion**: \"Apple\" → \"Apple, apple fruit, apple tree\".\n- **Paraphrase expansion**: \"How to learn Python\" → \"How to learn Python, Python tutorial, Python for beginners, getting started with Python\".\n- **LLM-based expansion**: Use an LLM to generate alternative phrasings of the query. \"What is RAG\" → \"What is retrieval-augmented generation? How does RAG work? RAG systems explained.\"\n\nExpanded query is used for retrieval: search for original + all expanded terms, merge results.\n\n**Query rewriting**: Reformulate query to match document language or domain conventions.\n- **Domain normalization**: \"doc\" → \"document\", \"amt\" → \"amount\".\n- **Clarification**: \"apple\" → \"apple inc\" (context-aware disambiguation).\n- **Logical expansion**: \"fast AND accurate\" → boolean query logic.\n\n**Impact**:\n- **Pros**: Higher recall (more matching candidates), handles user spelling variations.\n- **Cons**: Increased latency (multiple searches), potential noise (irrelevant expansions), higher cost.\n\n**Implementation**:\n1. **Static expansion**: Predefined thesaurus or synonyms. Fast, deterministic. Limited coverage.\n2. **LLM-based**: Query to LLM → get expansions → search all. Flexible, handles context. Slower (LLM latency 500ms–1s).\n3. **Learned expansion**: Train model to generate good expansions. Middle ground.\n\n## Common gotchas / interview framings\n- **Expansion noise**: Blindly expanding can introduce false positives. \"Apple\" → \"Apple tree, apple juice, Apple Inc.\" confuses product search. Use selective expansion (semantic similarity threshold).\n- **Latency cost**: Expanding a query 5x means 5x retrieval searches (if done serially). Implement in parallel and merge results for latency.<br/>\n- **Diminishing returns**: First few expansions help; beyond 5–10 variations, recall plateaus. Stop when recall stops improving.\n- **Domain specificity**: Generic expansions (synonyms) fail in specialized domains. Legal \"contract\" ≠ general \"agreement\". Use domain-aware models.\n- Interviewers ask: \"Should you expand user queries or document queries?\" Answer: Often better to expand both (bidirectional expansion) or just documents at indexing time.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain query expansion. What are two strategies (synonym-based vs LLM-based)?",
+        "back": "Query expansion adds related terms to improve retriever recall. **Synonym-based**: Use a thesaurus or synonym dictionary. \"Apple\" → \"apple, apple fruit, apple tree\". Fast (lookup only), deterministic, limited to pre-defined synonyms. **LLM-based**: Ask LLM to generate paraphrases. \"How to learn Python\" → \"Python tutorial, Python for beginners, getting started with Python, Python learning guide\". Slower (LLM inference), flexible, context-aware but potentially noisy."
+      },
+      {
+        "type": "flip",
+        "front": "What is query rewriting and how does it differ from expansion?",
+        "back": "**Expansion** adds new terms; original query remains. **Rewriting** reformulates the query itself. Example expansion: \"apple\" + \"apple inc\". Example rewriting: \"apple\" → \"apple inc\" (domain-aware clarification). Rewriting is more aggressive; it replaces rather than augments. Use rewriting for: domain normalization (\"amt\" → \"amount\"), disambiguating terms, matching document conventions."
+      },
+      {
+        "type": "mcq",
+        "front": "Your retriever gets query \"How to fix Ctrl+S not working?\" Zero relevant docs. Why expansion might help?",
+        "back": "Original query \"Ctrl+S\" is technical jargon; documents might use \"save shortcut\", \"keyboard hotkey\", \"save command\". Expansion bridges this vocabulary gap. Expanding to synonyms/related terms (\"save shortcut\", \"keyboard shortcut\", \"Windows hotkey\") increases the chance of matching relevant documents even if they use different terminology.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Expansion adds noise; not useful",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Expand to \"Ctrl+S, save shortcut, keyboard shortcut issue, Windows/Mac save\" to find documents on keyboard shortcuts",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Expansion is only for synonyms",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The query is fine; database is incomplete",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "When should you expand the user's query vs expanding documents at indexing time?",
+        "back": "**Expand user query**: Runtime latency cost (multiple searches), handles dynamic user intent variations, no reindexing. **Expand documents at indexing**: One-time cost, consistent, no query-time latency. Recommendation: Expand documents if you control the corpus and expansion is deterministic (synonyms, domain normalization). Expand user queries if user intent is variable or real-time adaptation is needed. Bidirectional expansion (both) is best but costliest."
+      },
+      {
+        "type": "flip",
+        "front": "How can you reduce noise from query expansion while maintaining recall gains?",
+        "back": "1. **Semantic similarity threshold**: Only add expansions with >0.8 cosine similarity to original query. Filters out distant terms. 2. **Selective expansion**: Expand only ambiguous terms (proper nouns, rare terms) where expansion helps. 3. **Merge with ranking**: Retrieve via expanded query, rerank results with cross-encoder [[re-ranking-and-cross-encoder-models]] focusing on relevance to original (unmodified) query. Top-k results are high-quality despite expansion noise. 4. **Human-in-the-loop**: For critical queries, validate expansions before search."
+      }
+    ]
+  }
+]

@@ -1,0 +1,65 @@
+{
+  "track": "ml-engineer",
+  "track_label": "ML ENGINEER",
+  "topic": "feature-engineering-selection",
+  "topic_label": "Feature Engineering & Selection",
+  "concept_count": 8,
+  "concepts": [
+    {
+      "slug": "domain-specific-feature-engineering",
+      "title": "Domain-specific feature engineering",
+      "difficulty": "intermediate",
+      "hook": "Task knowledge drives feature creation; often beats automatic feature learning.",
+      "subtopic": "Feature Creation"
+    },
+    {
+      "slug": "polynomial-and-interaction-features",
+      "title": "Polynomial and interaction features",
+      "difficulty": "intermediate",
+      "hook": "Capture nonlinearity and interactions; exponential growth with polynomial degree.",
+      "subtopic": "Feature Creation"
+    },
+    {
+      "slug": "embedding-based-features",
+      "title": "Embedding-based features",
+      "difficulty": "intermediate",
+      "hook": "Learn dense representations from categorical data; reduces sparsity.",
+      "subtopic": "Feature Creation"
+    },
+    {
+      "slug": "temporal-features-lag-rolling-window-seasonal-decomposition",
+      "title": "Temporal features (lag, rolling window, seasonal decomposition)",
+      "difficulty": "intermediate",
+      "hook": "Time-series specific; encode temporal patterns.",
+      "subtopic": "Feature Creation"
+    },
+    {
+      "slug": "filter-methods-correlation-mutual-information-statistical-tests",
+      "title": "Filter methods (correlation, mutual information, statistical tests)",
+      "difficulty": "intermediate",
+      "hook": "Fast, model-agnostic; may miss interactions.",
+      "subtopic": "Feature Selection"
+    },
+    {
+      "slug": "wrapper-methods-forwardbackward-selection-rfe",
+      "title": "Wrapper methods (forward/backward selection, RFE)",
+      "difficulty": "intermediate",
+      "hook": "Model-dependent; computationally expensive but captures interactions.",
+      "subtopic": "Feature Selection"
+    },
+    {
+      "slug": "embedded-methods-feature-importance-from-tree-models-l1-regularization",
+      "title": "Embedded methods (feature importance from tree models, L1 regularization)",
+      "difficulty": "intermediate",
+      "hook": "Efficient; coupled to model training.",
+      "subtopic": "Feature Selection"
+    },
+    {
+      "slug": "multicollinearity-and-correlation-cleanup",
+      "title": "Multicollinearity and correlation cleanup",
+      "difficulty": "intermediate",
+      "hook": "High correlation inflates variance in linear models; remove redundant features.",
+      "subtopic": "Feature Selection"
+    }
+  ]
+}

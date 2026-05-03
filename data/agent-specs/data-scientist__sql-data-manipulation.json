@@ -1,0 +1,93 @@
+{
+  "track": "data-scientist",
+  "track_label": "DATA SCIENTIST",
+  "topic": "sql-data-manipulation",
+  "topic_label": "SQL & Data Manipulation",
+  "concept_count": 12,
+  "concepts": [
+    {
+      "slug": "select-where-group-by-having",
+      "title": "SELECT, WHERE, GROUP BY, HAVING",
+      "difficulty": "beginner",
+      "hook": "Core query building blocks.",
+      "subtopic": "SQL Fundamentals"
+    },
+    {
+      "slug": "aggregation-functions-count-sum-avg-max",
+      "title": "Aggregation functions (COUNT, SUM, AVG, MAX)",
+      "difficulty": "beginner",
+      "hook": "Summarize data across groups.",
+      "subtopic": "SQL Fundamentals"
+    },
+    {
+      "slug": "joins-inner-left-right-full-outer",
+      "title": "Joins (INNER, LEFT, RIGHT, FULL OUTER)",
+      "difficulty": "intermediate",
+      "hook": "Combine tables; understand join types and cardinality.",
+      "subtopic": "SQL Fundamentals"
+    },
+    {
+      "slug": "subqueries-and-ctes-with-clauses",
+      "title": "Subqueries and CTEs (WITH clauses)",
+      "difficulty": "intermediate",
+      "hook": "Modularize logic; improve readability.",
+      "subtopic": "SQL Fundamentals"
+    },
+    {
+      "slug": "window-functions-rownumber-rank-lag-lead",
+      "title": "Window functions (ROW_NUMBER, RANK, LAG, LEAD)",
+      "difficulty": "intermediate",
+      "hook": "Compute running totals, ranks, and neighbor operations without aggregation.",
+      "subtopic": "SQL Fundamentals"
+    },
+    {
+      "slug": "recursive-ctes",
+      "title": "Recursive CTEs",
+      "difficulty": "advanced",
+      "hook": "Traverse hierarchical structures (e.g., org charts, trees).",
+      "subtopic": "Advanced SQL"
+    },
+    {
+      "slug": "set-operations-union-intersect-except",
+      "title": "Set operations (UNION, INTERSECT, EXCEPT)",
+      "difficulty": "intermediate",
+      "hook": "Combine multiple result sets.",
+      "subtopic": "Advanced SQL"
+    },
+    {
+      "slug": "case-statements-for-conditional-logic",
+      "title": "CASE statements for conditional logic",
+      "difficulty": "intermediate",
+      "hook": "Branch within queries; enables metric definitions.",
+      "subtopic": "Advanced SQL"
+    },
+    {
+      "slug": "partitioning-and-ordered-analytics",
+      "title": "Partitioning and ordered analytics",
+      "difficulty": "intermediate",
+      "hook": "Compute aggregates within partitions; essential for funnel and cohort analysis.",
+      "subtopic": "Advanced SQL"
+    },
+    {
+      "slug": "index-strategies",
+      "title": "Index strategies",
+      "difficulty": "intermediate",
+      "hook": "Speed up WHERE and JOIN conditions; tradeoff: write speed.",
+      "subtopic": "Query Optimization & Performance"
+    },
+    {
+      "slug": "query-execution-plans",
+      "title": "Query execution plans",
+      "difficulty": "advanced",
+      "hook": "Understand how database executes queries; identify bottlenecks.",
+      "subtopic": "Query Optimization & Performance"
+    },
+    {
+      "slug": "avoiding-common-pitfalls-n1-queries-missing-joins",
+      "title": "Avoiding common pitfalls (N+1 queries, missing JOINs)",
+      "difficulty": "intermediate",
+      "hook": "Write efficient queries that don't explode data or compute.",
+      "subtopic": "Query Optimization & Performance"
+    }
+  ]
+}

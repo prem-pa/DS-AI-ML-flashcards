@@ -1,0 +1,1061 @@
+[
+  {
+    "slug": "supervised-fine-tuning-sft-on-instruction-data",
+    "title": "Supervised fine-tuning (SFT) on instruction data",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "intermediate",
+    "tags": [
+      "instruction-following",
+      "sft",
+      "post-training",
+      "data-quality",
+      "base-models"
+    ],
+    "aliases": [
+      "SFT",
+      "instruction tuning",
+      "instruct-tuning"
+    ],
+    "wikilinks": [
+      "base-language-models",
+      "supervised-learning",
+      "instruction-following",
+      "training-data",
+      "prompt-templates",
+      "model-fine-tuning"
+    ],
+    "sources": [
+      {
+        "url": "https://llamafactory.readthedocs.io/en/latest/getting_started/sft.html",
+        "label": "LLaMA Factory SFT Guide"
+      },
+      {
+        "url": "https://huggingface.co/blog/mlabonne/sft-llama3",
+        "label": "HuggingFace: Fine-tune Llama 3 Ultra-Efficiently"
+      },
+      {
+        "url": "https://www.jenova.ai/en/resources/llama-factory-complete-guide-to-llm-fine-tuning",
+        "label": "LLaMA Factory: Complete Fine-Tuning Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\nSFT converts a base model (trained on next-token prediction) into an instruction-following assistant. The model learns to map input instructions to desired outputs via supervised learning on curated {input, output} pairs. This is the foundation of modern LLMs: no SFT → model ignores instructions.\n\n## Detail\nTraining objective is standard cross-entropy loss on target tokens:\n$$\\mathcal{L}_{SFT} = -\\mathbb{E}_{(x, y) \\sim \\mathcal{D}} [\\log p_\\theta(y \\mid x)]$$\nwhere $\\mathcal{D}$ is an instruction-response dataset. Data quality and diversity matter enormously: 500 carefully curated examples often outperform 5,000 noisy ones. Modern practice uses **template-driven generation** (system + user + assistant roles) to make the model robust to prompt variation.\n\nKey hyperparameters: learning rate ($2 \\times 10^{-5}$ typical), batch size (16–64), and gradient accumulation. Training time: 1–4 epochs on most 7B models. After SFT, the model has learned domain conventions but lacks alignment to human preferences; this is where RLHF or DPO enters.\n\n## Common gotchas / interview framings\n- **Data quality kills performance**: A 10k noisy dataset can underperform a 1k clean one. Always audit and filter.\n- **Catastrophic forgetting**: Aggressive SFT on narrow data risks degrading the model's general knowledge. Use mixed datasets or replay original pretraining data.\n- **Token distribution shift**: If target distribution differs from training (e.g., assistant responses are much longer), loss may appear to plateau.\n- **Instruction diversity**: Models trained on narrow instruction styles (e.g., QA only) overfit and generalize poorly. Use multiple templates.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is supervised fine-tuning (SFT) and why is it the prerequisite for RLHF/DPO?",
+        "back": "SFT trains a base model on {instruction, response} pairs using cross-entropy loss. It teaches the model to follow instructions. RLHF and DPO require an SFT-initialized model; training alignment from a base model directly is inefficient because the model first must learn how to respond to prompts. SFT is the intermediate step."
+      },
+      {
+        "type": "flip",
+        "front": "You have 10k instruction examples. How do you decide how many epochs to train SFT?",
+        "back": "Monitor validation loss on a held-out set (~10% of data). Typical: 1–4 epochs. If val loss plateaus or increases, stop (overfitting). If you have limited data, use early stopping and/or regularization (weight decay, dropout). For very small datasets (<5k), 1 epoch with heavy augmentation is safer."
+      },
+      {
+        "type": "mcq",
+        "front": "Which is NOT a primary failure mode of naive SFT?",
+        "back": "SFT degradation on long reasoning is not intrinsic; it's usually a data issue. The real failures are catastrophic forgetting (mitigated by mixed data), narrow distribution (mitigated by template diversity), and format sensitivity (mitigated by varying prompts).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Catastrophic forgetting of pretraining knowledge",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Overfitting to narrow instruction styles",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Long-horizon reasoning degradation",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Sensitivity to prompt format variation",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why does SFT alone not align models to human preferences?",
+        "back": "SFT optimizes for behavioral cloning of training data, not for preference satisfaction. A model can learn to follow instructions but still make harmful or low-quality choices when faced with ambiguity. Alignment requires learning to rank outputs or maximize reward—SFT cannot do this. Enter RLHF/DPO."
+      }
+    ]
+  },
+  {
+    "slug": "parameter-efficient-fine-tuning-lora-qlora-llama-adapter",
+    "title": "Parameter-efficient fine-tuning (LoRA, QLoRA, LLaMA-Adapter)",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "intermediate",
+    "tags": [
+      "peft",
+      "memory-efficiency",
+      "lora",
+      "qlora",
+      "adapter-methods",
+      "quantization"
+    ],
+    "aliases": [
+      "LoRA",
+      "QLoRA",
+      "PEFT",
+      "DoRA",
+      "adapters"
+    ],
+    "wikilinks": [
+      "low-rank-decomposition",
+      "quantization",
+      "gpu-memory",
+      "fine-tuning-approaches",
+      "parameter-efficiency",
+      "multi-task-learning",
+      "inference-efficiency"
+    ],
+    "sources": [
+      {
+        "url": "https://introl.com/blog/fine-tuning-infrastructure-lora-qlora-peft-scale-guide-2025",
+        "label": "Introl: LoRA, QLoRA, PEFT at Scale"
+      },
+      {
+        "url": "https://explore.n1n.ai/blog/fine-tune-llm-lora-qlora-guide-2026-2026-04-17",
+        "label": "N1N AI: Fine-Tuning Guide 2026"
+      },
+      {
+        "url": "https://kaitchup.substack.com/p/advanced-lora-fine-tuning-how-to",
+        "label": "Advanced LoRA Fine-Tuning Comparison"
+      },
+      {
+        "url": "https://github.com/ZrrSkywalker/LLaMA-Adapter",
+        "label": "LLaMA-Adapter GitHub"
+      }
+    ],
+    "explainer_md": "## Intuition\nLoRA (Low-Rank Adaptation) replaces full weight updates with low-rank deltas. Instead of training all $n \\times m$ parameters in a weight matrix, train only $r(n + m)$ parameters (where $r \\ll n, m$). Update: $W' = W + AB^T$, where $A \\in \\mathbb{R}^{n \\times r}$, $B \\in \\mathbb{R}^{m \\times r}$. This recovers ~90–95% of full fine-tune quality at 1/10th the memory.\n\nQLoRA pushes further: quantize the base model to 4-bit NF4 precision, keeping only LoRA weights in full precision. A 70B model drops from 140 GB to ~46 GB. LLaMA-Adapter uses zero-initialized attention: learnable adapter tokens injected per-layer, only 1.2M parameters for 7B model.\n\n## Detail\nLoRA mathematics: Forward pass is $$h = W_0 x + \\Delta W x = W_0 x + AB^T x$$\nGradient updates only flow through $A, B$. Key hyperparameters: $r$ (rank, typically 8–64), $\\alpha$ (scaling, usually $\\alpha = 2r$), and target modules (typically Q, V in attention, or all linear layers).\n\nQLoRA adds: (1) 4-bit NF4 quantization of frozen base, (2) double quantization of quantization constants, (3) paged optimizers to handle memory spikes. This requires ~0.04x the VRAM of full fine-tune.\n\nLLaMA-Adapter: learnable adapters in attention; can tune in <1 hour on single GPU with 52k examples.\n\nDoRA (2024): decompose LoRA into magnitude and direction; slight improvements over LoRA on some tasks, same rank budget.\n\n## Common gotchas / interview framings\n- **Rank selection**: Too low (r=4) → underfitting. Too high (r=64+) → approaching full FT cost, overfitting risk. Start with r=16, grid-search if needed.\n- **Target module choice**: Adapter on Q, V only misses critical updates to other layers. Modern best: all linear layers (query, value, up_proj, down_proj, gate).\n- **QLoRA + FSDP**: Quantization incompatible with full-parameter distributed training. Use for single/multi-GPU setups, not 1k-GPU clusters.\n- **LoRA drift**: Rank too high + loose KL constraint → indistinguishable from full FT. Monitor model divergence from base.\n- **Inference overhead**: LoRA adds ~10% latency (AB^T matrix-vector product). Merge if latency-critical: $W' = W + AB^T$.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You have a 7B model and 8xA100 for DPO. Would you use full FT, LoRA, or QLoRA? Justify.",
+        "back": "Use full FT on this setup. With 8xA100 (640GB VRAM), you have enough memory. Full FT avoids LoRA rank bottleneck and inference merge overhead. QLoRA is overkill and adds quantization noise. Full FT is fastest to converge and simplest to deploy (no adapter merging needed)."
+      },
+      {
+        "type": "flip",
+        "front": "LoRA rank selection: what do r=4, r=16, r=64 trade off?",
+        "back": "r=4: minimal VRAM, fast training, but underfits complex domain shifts; recovers ~70–80% quality. r=16: sweet spot for most tasks; recovers ~90–95%; standard default. r=64: approaches full FT memory/time, risks overfitting on small datasets, diminishing returns on quality. Start r=16, adjust if task complexity demands it."
+      },
+      {
+        "type": "mcq",
+        "front": "Which statement about QLoRA is FALSE?",
+        "back": "QLoRA is NOT compatible with FSDP. Quantization and full-parameter sharding conflict. QLoRA is designed for single/multi-GPU setups. For large-scale distributed training, use full FT or LoRA without quantization.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "QLoRA uses 4-bit NF4 quantization to reduce base model size",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "QLoRA is compatible with FSDP for 1000+ GPU distributed training",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "QLoRA requires paged optimizers to handle memory spikes",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "QLoRA typically achieves 90%+ of full fine-tune performance",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You deploy a LoRA model. Why must you merge W + AB^T before inference if latency is critical?",
+        "back": "At inference, separate A, B matrices require an extra matrix-vector product (AB^T @ x), adding ~10% latency and complexity. Merging (W' = W + AB^T) pre-computation fuses this into a single matrix. Trade: inference speed gains vs. serving multiple LoRA variants (no merge → swap adapters cheaply)."
+      }
+    ]
+  },
+  {
+    "slug": "domain-specific-fine-tuning",
+    "title": "Domain-specific fine-tuning",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "intermediate",
+    "tags": [
+      "domain-adaptation",
+      "specialization",
+      "vertical-models",
+      "in-domain-performance",
+      "transfer-learning"
+    ],
+    "aliases": [
+      "Domain adaptation",
+      "vertical tuning",
+      "specialty models"
+    ],
+    "wikilinks": [
+      "domain-knowledge",
+      "transfer-learning",
+      "in-domain-data",
+      "vertical-ai",
+      "task-specific-models",
+      "fine-tuning-strategies"
+    ],
+    "sources": [
+      {
+        "url": "https://llamafactory.readthedocs.io/en/latest/",
+        "label": "LLaMA Factory Documentation"
+      },
+      {
+        "url": "https://www.jenova.ai/en/resources/llama-factory-complete-guide-to-llm-fine-tuning",
+        "label": "LLaMA Factory Complete Guide"
+      },
+      {
+        "url": "https://huggingface.co/docs/peft/en/overview",
+        "label": "HuggingFace PEFT Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\nDomain-specific fine-tuning adapts a general LLM to a narrow vertical: medical, law, finance, code. The model learns domain vocabulary, reasoning patterns, and conventions. Example: adapting Llama-2 on 50k medical notes teaches it anatomy, drug interactions, ICD coding.\n\nKey insight: general pretraining lacks domain signal. Supervised fine-tuning on domain examples is the simplest way to inject it. Improves both in-domain accuracy (e.g., USMLE scores on medical Llama) and reduces out-of-distribution hallucinations.\n\n## Detail\nProcess: (1) Collect domain corpus (medical notes, legal contracts, code repos). (2) SFT on domain instruction-response pairs. (3) Optional: continued pretraining on domain text first to inject tokens/concepts, then SFT for task alignment. (4) Optional: DPO or RLHF on domain preferences (e.g., lawyer-annotated legal reasoning).\n\nChallenges:\n- **Data scarcity**: Medical/legal domains have <100k labeled examples. Mitigation: synthetic data (GPT-4 generates domain Q&A), data augmentation, transfer from related domains.\n- **Vocabulary drift**: Domain jargon not well-represented in pretraining. Solution: continued pretraining on raw domain text to adapt embeddings.\n- **Catastrophic forgetting**: Over-aggressive domain tuning degrades general knowledge. Balance: train on mixed data (50% domain + 50% general instruction data).\n\nBest practice: LoRA on domain data is standard. Rank r=16–32 typical. Training time: 1–3 epochs on 10k–100k examples. Validation: task-specific metrics (e.g., F1 on medical NER, BLEU on legal summarization) + MMLU delta to catch forgetting.\n\n## Common gotchas / interview framings\n- **\"In-domain\" is relative**: A model trained on 1 hospital's data may fail on another due to notation differences. Validate cross-site, cross-provider.\n- **Synthetic data quality**: LLM-generated training pairs are biased toward model's pretraining distribution. Use human-in-the-loop or domain expert review.\n- **Task-specific overfitting**: A code model trained only on Python is brittle on Go or Rust. Diversify domains within the vertical.\n- **Benchmark leakage**: Be careful fine-tuning on data overlapping with eval benchmarks (e.g., medical Llama on data from USMLE source corpora).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You're building a medical LLM from Llama-2. SFT on 50k medical notes or 200k synthetic medical Q&A first?",
+        "back": "Start with 200k synthetic (GPT-4 generated) medical Q&A for SFT, then optionally fine-tune on domain-annotated human data (50k notes) for preference tuning. Synthetic data cheaper, scales faster; human data provides ground truth. SFT on mixed sources, then DPO/RLHF on high-quality human preferences."
+      },
+      {
+        "type": "mcq",
+        "front": "You notice your domain-specific model scores 85% on in-domain medical Q&A but 55% on MMLU (general knowledge). Why?",
+        "back": "Over-tuning on narrow medical data causes catastrophic forgetting of general knowledge. Mitigation: mix 50% general instruction data into training. The MMLU drop signals loss of pretraining knowledge, not vocab issues.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The domain vocab is too specialized",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Catastrophic forgetting from aggressive domain fine-tuning",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Medical pretraining is inherently weak at MMLU",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "LoRA rank was too high",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "When is continued pretraining on domain corpus (before SFT) worth the cost?",
+        "back": "When the domain has **unique vocabulary or structure** not covered in pretraining. Examples: niche scientific terminology, proprietary code syntax, specialized notation. If domain examples use standard English + domain terminology, SFT alone suffices. Continued pretraining is expensive (days) and only pays off for truly novel token distributions."
+      },
+      {
+        "type": "flip",
+        "front": "You built a legal Llama on contract data and it hallucinates non-existent clauses. Diagnosis?",
+        "back": "Likely SFT on noisy synthetic legal data or too-narrow human annotation. Legal reasoning requires **grounding**: each prediction tied to source text. Mitigation: (1) add retrieval-augmented generation (RAG) to fetch relevant clauses, (2) use preference tuning (DPO) to penalize unsourced claims, (3) audit training data for hallucination seeds."
+      }
+    ]
+  },
+  {
+    "slug": "continued-pre-training-on-domain-data",
+    "title": "Continued pre-training on domain data",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "intermediate",
+    "tags": [
+      "pretraining",
+      "domain-corpus",
+      "token-distribution",
+      "vocabulary-adaptation",
+      "continued-learning"
+    ],
+    "aliases": [
+      "Domain pretraining",
+      "further pretraining",
+      "adaptive pretraining"
+    ],
+    "wikilinks": [
+      "pretraining",
+      "language-modeling",
+      "domain-corpus",
+      "token-embeddings",
+      "causal-language-modeling",
+      "computational-cost"
+    ],
+    "sources": [
+      {
+        "url": "https://llamafactory.readthedocs.io/en/latest/getting_started/pretraining.html",
+        "label": "LLaMA Factory Continued Pretraining"
+      },
+      {
+        "url": "https://www.jenova.ai/en/resources/llama-factory-complete-guide-to-llm-fine-tuning",
+        "label": "LLaMA Factory Fine-Tuning Guide"
+      },
+      {
+        "url": "https://huggingface.co/blog/mlabonne/sft-llama3",
+        "label": "HuggingFace LLaMA 3 SFT Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\nContinued pretraining extends causal language modeling (next-token prediction) on domain-specific text without instruction labels. Useful when the domain has **unique vocabulary or structure** absent in general pretraining. Example: continued pretraining a general LLM on ArXiv papers teaches it scientific writing patterns, mathematical notation, and domain concepts.\n\n## Detail\nObjective: standard causal language modeling loss on domain corpus,\n$$\\mathcal{L} = -\\sum_t \\log p_\\theta(x_t | x_{<t})$$\nwhere $x$ is raw domain text (no instruction labels needed).\n\nKey parameters:\n- **Learning rate**: 0.1–0.5x the SFT rate (e.g., $1 \\times 10^{-5}$ instead of $2 \\times 10^{-5}$) to avoid divergence from pretrained distribution.\n- **Data volume**: 10–100B tokens typical. Costs 5–50x more compute than SFT (~1M tokens).\n- **Vocab extension**: If domain uses novel tokens (e.g., new symbols, rare scientific notation), expand vocab and reinitialize embeddings before continued pretraining.\n- **Checkpointing strategy**: Save intermediate checkpoints (every 5B tokens) to avoid loss if training interrupts.\n\nAfter continued pretraining, the model is \"warmed up\" on domain signal and ready for task-specific SFT. Combined: continued pretraining → SFT → DPO/RLHF.\n\n## Common gotchas / interview framings\n- **When NOT to do it**: If domain vocab is standard English + a few specialized terms, SFT alone is 90% effective at 10% the cost. Skip continued pretraining unless you have >10B domain tokens.\n- **Catastrophic forgetting of base**: Aggressive learning rate or low-quality data can degrade general knowledge. Monitor loss on base pretraining eval set (e.g., pile) to ensure no divergence.\n- **Vocabulary size mismatch**: If domain has rare symbols, you must add tokens before continued pretraining. Adding tokens *after* wastes learned embeddings.\n- **Diminishing returns**: Beyond ~50B domain tokens, loss improvement plateaus. Compute budget better spent on SFT + DPO.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You have 20 GPU-days of budget. Choose: continued pretraining on 50B code tokens OR SFT on 50k code Q&A pairs?",
+        "back": "Choose SFT. 20 GPU-days continued pretraining on code barely scratches 50B tokens (~1/10th needed for real impact). Instead, SFT on clean 50k code Q&A examples teaches task-specific reasoning with massive time savings and faster iteration. Reserve continued pretraining for post-hoc analysis, not critical path."
+      },
+      {
+        "type": "mcq",
+        "front": "When is continued pretraining on domain data most justified?",
+        "back": "Continued pretraining pays off **only** when domain has truly novel tokens or structure. Standard terminology can be learned via SFT. Code, math notation, legal markup justify the cost.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Domain has standard English + 10 new terminology words",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Domain has unique symbolic notation, rare tokens, or structural patterns (e.g., scientific papers, code, legal markup)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "You want to improve MMLU scores",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "You have unlimited compute budget",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "After 10B tokens of continued pretraining on medical texts, loss jumps 2x on your general eval set. Diagnosis?",
+        "back": "**Catastrophic forgetting**: learning rate too high or data quality too low. Immediate fix: (1) lower learning rate by 2–5x, (2) validate data quality (remove noisy scans, OCR errors), (3) mix 20–30% general data into batches to retain base knowledge. Future: continued pretraining is risky; SFT + domain-specific preference tuning is safer."
+      },
+      {
+        "type": "flip",
+        "front": "Should you expand the vocab before or after continued pretraining on a new domain?",
+        "back": "**Before**. Expanding vocab after pretraining wastes learned embeddings for new tokens. If you expand mid-stream, new tokens initialize randomly and never benefit from subsequent training. Plan vocab additions upfront, initialize embeddings (e.g., from similar tokens), then continue pretraining."
+      }
+    ]
+  },
+  {
+    "slug": "reinforcement-learning-from-human-feedback-rlhf",
+    "title": "Reinforcement learning from human feedback (RLHF)",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "intermediate",
+    "tags": [
+      "rlhf",
+      "reward-modeling",
+      "policy-optimization",
+      "alignment",
+      "human-feedback"
+    ],
+    "aliases": [
+      "RLHF",
+      "human feedback alignment",
+      "preference learning"
+    ],
+    "wikilinks": [
+      "reward-model",
+      "policy-optimization",
+      "preference-data",
+      "ppo",
+      "human-alignment",
+      "kl-divergence",
+      "rl-for-llms"
+    ],
+    "sources": [
+      {
+        "url": "https://cameronrwolfe.substack.com/p/proximal-policy-optimization-ppo",
+        "label": "Cameron Wolfe: PPO for LLM Alignment"
+      },
+      {
+        "url": "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+        "label": "HuggingFace: Simplifying Alignment from RLHF to DPO"
+      },
+      {
+        "url": "https://mljourney.com/rlhf-vs-dpo-vs-ppo-how-to-align-llms-without-losing-your-mind/",
+        "label": "ML Journey: RLHF vs DPO vs PPO"
+      }
+    ],
+    "explainer_md": "## Intuition\nRLHF is a three-step process: (1) **SFT**: train model on instruction data. (2) **Reward Modeling**: collect pairwise preferences (A vs B), train a reward model $r_\\phi(x, y)$ to predict which response humans prefer. (3) **Policy Optimization**: use RL (typically PPO) to fine-tune the SFT model to maximize reward while staying close to the original model (KL penalty).\n\nThe appeal: reward model captures human values without hand-coding them. Once trained, it scales to any prompt.\n\n## Detail\nStep-by-step pipeline:\n\n**1. Preference Data Collection:**\nCollect triples: (prompt, response_A, response_B, preference). Example: prompt = \"Summarize this article\", A and B are two summaries, human marks A as better. Typically 10k–100k pairwise comparisons.\n\n**2. Reward Model Training:**\n$$\\mathcal{L}_{RM} = -\\mathbb{E}[(y_w, y_l) \\sim \\mathcal{D}] [\\log \\sigma(r_\\phi(x, y_w) - r_\\phi(x, y_l))]$$\nwhere $y_w$ is preferred (\"winner\"), $y_l$ is dispreferred (\"loser\"), $\\sigma$ is sigmoid. Reward model is typically a smaller LLM (~1/4 scale of policy) or linear head on frozen embeddings.\n\n**3. Policy Optimization with PPO:**\n$$\\mathcal{L}_{RL} = \\mathbb{E}_{y \\sim \\pi}[r_\\phi(x, y)] - \\beta D_{KL}(\\pi(y|x) \\parallel \\pi_{SFT}(y|x))$$\nPPO introduces clipped gradients to stabilize training. $\\beta$ (KL weight, typical: 0.01–0.1) controls how far policy can drift from SFT baseline.\n\n**Complexity:** Requires 3 forward passes per training step (policy, reference, reward model). Compute: ~3x SFT cost. Instability risks from reward model overfitting and PPO hyperparameter sensitivity.\n\n## Common gotchas / interview framings\n- **Reward hacking**: Model learns to game the reward signal. Example: verbose responses score higher (more text seems better). Mitigation: human review, domain-specific reward metrics, avoid reward simplicity.\n- **Preference data bias**: Human annotators have inconsistent preferences (~80% agreement typical). Aggregating weak signals can train a weak reward model.\n- **KL collapse**: If $\\beta$ too low, policy diverges from SFT (unintelligible outputs). If $\\beta$ too high, policy doesn't improve. Tune carefully (grid search 0.01–0.1).\n- **Reward model overfitting**: Training on only 10k examples risks poor OOD generalization. Use data augmentation, ensemble rewards, or skip RLHF → DPO.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does RLHF require both an SFT model AND a reference model during PPO?",
+        "back": "SFT model is the **policy** being optimized. Reference model is frozen copy of SFT model used to compute KL divergence penalty, preventing the policy from drifting too far. KL term: $\\beta D_{KL}(\\pi(y|x) \\parallel \\pi_{ref}(y|x))$. Without reference, policy could collapse to reward hacking or diverge to gibberish."
+      },
+      {
+        "type": "mcq",
+        "front": "You train a reward model on 10k binary preferences (A > B) and it predicts perfectly on training data (98% accuracy). At inference, it ranks irrelevant outputs as high-reward. Why?",
+        "back": "Reward model trained on only 10k examples has high train accuracy but poor OOD generalization. Solution: more preference data, ensemble rewards, or skip RLHF and use DPO (direct preference optimization) instead.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The KL penalty is too weak",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Reward model overfit to training distribution; poor generalization to OOD prompts",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The PPO learning rate was too high",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Insufficient SFT data",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "RLHF pipeline: SFT → Reward Model → PPO. What is the computational cost multiplier vs. SFT?",
+        "back": "Approximately **3x SFT cost**. Each PPO step requires forward/backward through: (1) policy model, (2) reference model (inference only but still compute), (3) reward model. Plus PPO's clipped objectives add overhead. Modern shortcut: skip RM entirely, use DPO for ~1.5x cost."
+      },
+      {
+        "type": "flip",
+        "front": "You set KL weight β=0.001. Policy outputs gibberish. You set β=1.0. Policy barely improves over SFT. What went wrong?",
+        "back": "KL weight mismatch. β=0.001 is **way too low** (policy diverges). β=1.0 is **way too high** (no reward signal breakthrough). Proper range: 0.01–0.1. Start β=0.05, grid-search around it. Use validation set (human evals preferred) to find sweet spot between improvement and stability."
+      }
+    ]
+  },
+  {
+    "slug": "reward-modeling-and-preference-data",
+    "title": "Reward modeling and preference data",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "advanced",
+    "tags": [
+      "reward-model",
+      "preference-data",
+      "annotation",
+      "generalization",
+      "data-quality"
+    ],
+    "aliases": [
+      "Reward model",
+      "preference labeling",
+      "human preferences"
+    ],
+    "wikilinks": [
+      "preference-learning",
+      "binary-classification",
+      "model-generalization",
+      "data-annotation",
+      "bradley-terry-model",
+      "rlhf",
+      "reward-signal"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2305.18290",
+        "label": "Rafailov et al: DPO (discusses reward model limitations)"
+      },
+      {
+        "url": "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+        "label": "HuggingFace: RLHF to DPO Blog"
+      },
+      {
+        "url": "https://aman.ai/primers/ai/preference-optimization/",
+        "label": "Aman Sanger: Preference Optimization Primer"
+      }
+    ],
+    "explainer_md": "## Intuition\nA reward model is a learned proxy for human preferences. Given a prompt and response, it predicts a scalar score reflecting how much humans like that response. Training data: pairwise comparisons (\"response A is better than response B\"). The reward model learns a Bradley-Terry preference model that generalizes to rank unseen responses.\n\nKey challenge: **preference data is expensive and noisy**. Human annotators disagree (~80% pairwise agreement typical), and the reward model must generalize beyond its training distribution—a hard problem.\n\n## Detail\nPreference Data:\n- Collection: crowdsourced annotators label pairwise comparisons. Cost: $0.10–$1 per comparison. Time: 10k examples = 2–4 weeks. Bias: annotators from specific geographic/demographic groups may have skewed preferences.\n- Format: triplet (prompt, response_A, response_B, label ∈ {A, B, tie}). Labels often noisy; ~20% inter-annotator disagreement.\n- Filtering: remove tied votes (ambiguous), consensus only (>2 raters agree). Trade: fewer examples but higher signal.\n\nReward Model Architecture:\n- Simplest: freeze a base model, attach a linear classification head to the last hidden state, train binary classifier on (y_w vs y_l). Output: scalar $r(x, y) = \\text{head}(\\text{model}_\\text{frozen}(y))$.\n- Parametric approach: trainable LM with classification head. More capacity but overfitting risk on small datasets.\n- Training objective: binary cross-entropy:\n$$\\mathcal{L}_{RM} = -[y_w \\log(\\sigma(r(x, y_w) - r(x, y_l))) + (1 - y_w) \\log(1 - \\sigma(r(x, y_w) - r(x, y_l)))]$$\nWhere sigmoid ensures reward difference is calibrated [0, 1].\n\nGeneralization Challenges:\n- **Distribution shift**: Model trained on code+chat preferences may fail on medical text.\n- **Overconfidence**: High training accuracy (95%+) ≠ good generalization. OOD examples are ranked confidently but incorrectly.\n- **Reward hacking**: Policy exploits reward model weaknesses (e.g., verbosity bias if longer responses get higher scores).\n- **Preference inconsistency**: Cyclic preferences (A > B, B > C, C > A) can occur; model must interpolate inconsistent signals.\n\nModern approach (2026): Skip learned reward models entirely → **DPO, ORPO, or SimPO** directly fit pairwise losses without RM.\n\n## Common gotchas / interview framings\n- **\"Does 10k preference pairs generalize?\"** Usually poorly without careful curation. Aim for 50k+ or use synthetic augmentation.\n- **Preference aggregation**: Majority vote discards minority opinion but improves signal. Probabilistic weighting (trust confident annotators) is superior but complex.\n- **Cross-domain reward**: A reward model trained on dialogue doesn't transfer to summarization. Domain-specific RM's expensive; motivates preference-only methods (DPO).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You collect 50k pairwise preferences for a domain. Annotators agree 82% of the time. Should you train a reward model or use DPO?",
+        "back": "Use **DPO**. 18% disagreement (7.2k mismatched pairs) will hurt reward model generalization. DPO directly optimizes on pairwise labels without training an intermediate RM, avoiding RM overfitting on weak signal. DPO is also 50% cheaper (no separate RM training) and more stable."
+      },
+      {
+        "type": "mcq",
+        "front": "Reward model trained on 10k dialogue preferences, evaluated on 1k heldout dialogue, achieves 94% accuracy. But it ranks irrelevant outputs highly on a medical dataset. Why?",
+        "back": "Classic OOD failure. High accuracy on in-domain val set masks poor generalization. Medical examples are outside the training distribution; model confidently ranks them wrong. Mitigation: (1) add medical preferences to training, (2) use ensemble/uncertainty estimates, or (3) skip RM → use DPO.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The model is underfitting dialogue preferences",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Strong distribution shift; reward model has not seen medical examples and makes overconfident wrong predictions",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Insufficient regularization (weight decay, dropout)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The preference data was mislabeled",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Describe two ways to mitigate reward hacking where the policy learns to output verbose text because longer responses score higher.",
+        "back": "1. **Audit reward model**: plot reward vs response length; if correlation exists, add length-normalized reward $r(x, y) / |y|$ or length-penalized objective. 2. **Enforce diversity in preference data**: ensure dataset has good/bad examples of various lengths, so model learns quality ≠ length. 3. **Use task-specific metrics**: prefer BLEU/ROUGE (length-robust) over simple scalar rewards."
+      },
+      {
+        "type": "flip",
+        "front": "Why is Bradley-Terry preference model preferred over naive scoring (reward_A - reward_B)?",
+        "back": "Bradley-Terry is a principled probabilistic model: $P(y_w > y_l) = \\sigma(r(x, y_w) - r(x, y_l))$. It ensures probabilities are bounded [0, 1], handles intransitive preferences gracefully, and has theoretical grounding in ranking. Naive scoring can produce unbounded differences and is less statistically robust."
+      }
+    ]
+  },
+  {
+    "slug": "policy-optimization-reinforce-ppo",
+    "title": "Policy optimization (REINFORCE, PPO)",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "advanced",
+    "tags": [
+      "policy-gradient",
+      "reinforce",
+      "ppo",
+      "on-policy-rl",
+      "gradient-variance"
+    ],
+    "aliases": [
+      "PPO",
+      "REINFORCE",
+      "policy gradient",
+      "on-policy RL"
+    ],
+    "wikilinks": [
+      "policy-gradient",
+      "variance-reduction",
+      "clipped-objective",
+      "on-policy-learning",
+      "rlhf",
+      "advantage-function",
+      "generalized-advantage-estimation"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1707.06347",
+        "label": "Schulman et al: PPO Algorithms"
+      },
+      {
+        "url": "https://cameronrwolfe.substack.com/p/proximal-policy-optimization-ppo",
+        "label": "Cameron Wolfe: PPO Deep Dive"
+      },
+      {
+        "url": "https://arxiv.org/abs/2501.03262",
+        "label": "REINFORCE++ Paper"
+      },
+      {
+        "url": "https://arxiv.org/abs/2601.11574",
+        "label": "GRADE: Replacing Policy Gradients with Backprop"
+      }
+    ],
+    "explainer_md": "## Intuition\n**REINFORCE**: Update policy by taking gradient of expected reward. Policy gradient theorem: $\\nabla_\\theta \\mathbb{E}[R] = \\mathbb{E}[\\nabla_\\theta \\log p_\\theta(a|s) R]$. Intuition: increase probability of actions that lead to high reward.\n\n**PPO** (Proximal Policy Optimization): REINFORCE has high variance; PPO adds a clipped objective to stabilize training: don't update too far from current policy per step. This prevents catastrophic steps and divergence.\n\nBoth are **on-policy**: require fresh samples from current policy, so training is expensive. But they're reliable and interpretable.\n\n## Detail\n**REINFORCE Objective:**\n$$\\mathcal{L}_{REINFORCE} = \\mathbb{E}_t [\\log p_\\theta(a_t | s_t) R_t]$$\nwhere $R_t = \\sum_{t'=t}^T \\gamma^{t'-t} r_{t'}$ is cumulative reward. Problem: $R_t$ is a single sample—high variance. Small number of good rollouts by chance → large policy update; bad rollouts → large negative update. Training is unstable.\n\n**PPO Objective (Clipped):**\n$$\\mathcal{L}_{PPO} = \\mathbb{E}_t [\\min(r_t(\\theta) A_t, \\text{clip}(r_t(\\theta), 1-\\epsilon, 1+\\epsilon) A_t)]$$\nwhere $r_t(\\theta) = \\frac{p_\\theta(a_t|s_t)}{p_{\\text{old}}(a_t|s_t)}$ (probability ratio), $A_t$ is advantage estimate, $\\epsilon$ (typical: 0.2) clips ratio to stay near old policy. This prevents overly aggressive updates.\n\nAdvantage Estimation (crucial for stability):\n$$A_t = r_t + \\gamma V(s_{t+1}) - V(s_t)$$\nwhere $V$ is a learned value function (critic). Reduces variance vs. raw cumulative reward.\n\n**PPO with LLMs:**\n- For each batch of prompts: generate multiple completions from current policy → score each with reward model → compute advantages → update policy via PPO. Repeat.\n- Batch size, learning rate, $\\beta$ (KL weight) are critical. Small batches → high variance; large batches → expensive per step.\n- Number of epochs per batch: typically 1–4 (more epochs risks overtraining on stale rollouts).\n\n**Recent Variants (2025–2026):**\n- **REINFORCE++**: removes critic, stabilizes with variance reduction tricks (batch normalization of rewards, adaptive learning rate). Simpler than PPO, competitive performance.\n- **GRADE**: replaces discrete token sampling with continuous relaxation (Gumbel-Softmax) → allows differentiable backprop instead of high-variance score function gradients. Promising but less adopted.\n- **GRPO** (Group Relative Policy Optimization): groups samples, computes advantages within groups. Online RL, removes need for separate value function.\n\n## Common gotchas / interview framings\n- **On-policy inefficiency**: Every policy update requires fresh rollouts. Can't reuse old samples → 3–5x compute vs. off-policy methods (DPO).\n- **PPO hyperparameter sensitivity**: $\\epsilon$ (clip range), learning rate, $\\beta$ (KL weight) are finicky. Poor choices → divergence or no improvement. Grid search advised.\n- **Advantage estimation instability**: Value function $V$ must be trained well; if $V$ is bad, $A_t$ is noisy, policy updates are random. Requires careful V function training (separate loss).\n- **Sequence length explosion**: Sampling long sequences from policy is expensive. Limit prompt length or use truncation.\n- **Reward model dependency**: If reward model is poor, policy optimizes a corrupted signal. RLHF assumes good RM; if RM is weak, PPO amplifies bad signal.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is PPO's clipped objective more stable than REINFORCE?",
+        "back": "REINFORCE uses $\\log p(a|s) R$—unbounded. Single lucky rollout → massive positive update; one bad rollout → massive negative update. PPO clips the probability ratio to $[1-\\epsilon, 1+\\epsilon]$, bounding the update per step. This prevents catastrophic divergence and stabilizes training."
+      },
+      {
+        "type": "mcq",
+        "front": "You run PPO with ε=0.5 (clip range ±50%) and observe: policy improves for 2 epochs, then diverges (nonsense outputs). What likely happened?",
+        "back": "ε=0.5 is huge (typical: 0.2). Allows policy to shift 50% away from old policy per step—too aggressive. Reduce ε to 0.1–0.2. Gradient updates are clipped per-step; large ε defeats the purpose.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "ε is too large; policy is drifting too far from baseline per step",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Reward model is poorly calibrated",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "KL weight β is too high",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Value function is overfitting",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "PPO requires a **value function** (critic). Why is training V(s) well important?",
+        "back": "Advantage $A_t = r_t + \\gamma V(s_{t+1}) - V(s_t)$ depends on V. If V is poorly trained, A is noisy → policy gradients are uninformative. Good V reduces variance of advantage estimates, making policy updates reliable. Typically: use separate loss $\\mathcal{L}_V = (V(s_t) - R_t)^2$ to train V alongside PPO."
+      },
+      {
+        "type": "flip",
+        "front": "You have 1M tokens budget. Use RLHF (PPO) or DPO?",
+        "back": "Use **DPO**. PPO is on-policy (requires fresh samples per step), so 1M tokens might be 3–5 PPO steps depending on batch size. DPO is off-policy (batch-only), so same 1M tokens = deeper, more stable training. DPO converges faster and is 2–3x cheaper. RLHF reserved for when compute is abundant."
+      }
+    ]
+  },
+  {
+    "slug": "kl-divergence-constraint-and-reference-model",
+    "title": "KL divergence constraint and reference model",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "intermediate",
+    "tags": [
+      "kl-divergence",
+      "reference-model",
+      "distribution-shift",
+      "regularization",
+      "policy-stability"
+    ],
+    "aliases": [
+      "KL penalty",
+      "KL constraint",
+      "reference policy"
+    ],
+    "wikilinks": [
+      "kl-divergence",
+      "distribution-divergence",
+      "regularization",
+      "policy-drift",
+      "rlhf",
+      "ppo",
+      "entropy-regularization"
+    ],
+    "sources": [
+      {
+        "url": "https://cameronrwolfe.substack.com/p/proximal-policy-optimization-ppo",
+        "label": "Cameron Wolfe: PPO & KL Constraints"
+      },
+      {
+        "url": "https://arxiv.org/abs/1707.06347",
+        "label": "Schulman et al: PPO (includes KL discussion)"
+      },
+      {
+        "url": "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+        "label": "HuggingFace RLHF Blog"
+      }
+    ],
+    "explainer_md": "## Intuition\nAfter SFT, the model has learned to follow instructions. RLHF optimizes to maximize reward, but unbounded optimization can cause policy to diverge from SFT distribution—e.g., model collapses to reward hacking, outputs become incoherent, or language degrades. **KL divergence constraint** acts as a regularizer: keep the optimized policy close to the SFT baseline.\n\nIntuition: \"improve reward, but don't drift too far from your teacher.\" This prevents catastrophic forgetting and reward hacking.\n\n## Detail\n**KL Divergence:**\n$$D_{KL}(\\pi \\parallel \\pi_{ref}) = \\mathbb{E}_{y \\sim \\pi} [\\log \\pi(y|x) - \\log \\pi_{ref}(y|x)]$$\nMeasures how much $\\pi$ (optimized policy) differs from $\\pi_{ref}$ (SFT baseline). If KL = 0, policies are identical. If KL >> 0, policies diverge.\n\n**Loss with KL Penalty:**\nInstead of maximizing reward alone, optimize:\n$$\\mathcal{L} = \\mathbb{E}[r(x, y)] - \\beta D_{KL}(\\pi(y|x) \\parallel \\pi_{ref}(y|x))$$\nwhere $\\beta$ (weight) controls the trade-off. Higher $\\beta$ → stay closer to SFT (safer, less improvement). Lower $\\beta$ → aggressive reward optimization (risk divergence).\n\n**Reference Model Implementation:**\nThe reference model is a **frozen copy** of the SFT model. At each training step:\n1. Compute $\\log \\pi(y|x)$ from current policy.\n2. Compute $\\log \\pi_{ref}(y|x)$ from frozen reference (inference only, no gradients).\n3. KL term: compute log probability ratio, multiply by $\\beta$, subtract from reward.\n\nMemory cost: reference model takes up ~2x VRAM of policy during training (both loaded). Inference cost: zero (reference used only during training).\n\n**Beta Tuning:**\n- $\\beta = 0$: no constraint, pure reward maximization → divergence.\n- $\\beta = 0.01$: very loose constraint, significant room for policy drift.\n- $\\beta = 0.05–0.1$: sweet spot for RLHF; balances improvement vs. stability.\n- $\\beta = 1.0$: strong constraint, policy barely improves but stays very safe.\n\n**Why Reference Model?**\nWithout reference: policy has no regularization; RL collapse to reward hacking. With reference: KL term penalizes divergence, keeping policy interpretable and aligned to base model behavior.\n\n## Common gotchas / interview framings\n- **\"Why not just lower LR?\"** Lower learning rate slows convergence but doesn't prevent divergence. KL explicitly constrains distribution shift, more principled.\n- **Reference model staleness**: Reference is frozen at start of RLHF. If SFT is weak, reference is also weak. **Always strong SFT before RLHF**.\n- **Beta annealing**: Some pipelines start high $\\beta$ (conservative) and decay it (allowing more drift). Risky; typically fixed $\\beta$ is safer.\n- **KL collapse with large batches**: Very large batches + small $\\beta$ can cause KL to exceed policy capacity, leading to gibberish. Monitor KL during training.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "During RLHF, why does the model need a **frozen reference** model in addition to the trainable policy?",
+        "back": "Reference provides a KL divergence baseline: $D_{KL}(\\pi || \\pi_{ref})$. Without it, reward maximization has no constraint—policy can diverge to reward hacking or gibberish. Reference keeps policy close to SFT distribution, preventing catastrophic forgetting and ensuring outputs remain coherent."
+      },
+      {
+        "type": "mcq",
+        "front": "You set β=0.5 during PPO. Policy improves 5% in reward but outputs become repetitive/low-quality. Diagnosis?",
+        "back": "β=0.5 is moderate, but combined with 5% improvement + degradation suggests reward hacking. Reward model may penalize short/diverse text, reward verbosity or repetition. Reduce β further? No—the real fix is audit reward model or add length/diversity penalties.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "β is too high (too much constraint); policy is not free to improve",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "β is too low (insufficient constraint); policy is drifting and reward hacking (e.g., repetition scores high)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The reward model is bad",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Learning rate too high",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Reference model takes 1.5GB VRAM. Can you use a quantized (4-bit) reference to save memory?",
+        "back": "In theory yes, practically **no**. Computing log probability $\\log \\pi_{ref}(y|x)$ requires accurate token probabilities. Quantization (4-bit) degrades accuracy significantly. KL term becomes noisy, policy updates unreliable. Mitigation: use smaller reference model (~half scale of policy) or accept VRAM cost. Better: use DPO (no reference needed)."
+      },
+      {
+        "type": "flip",
+        "front": "Why does SFT quality matter before RLHF if RLHF is supposed to improve the model?",
+        "back": "Reference model is frozen SFT. If SFT is weak (poor instruction-following), reference is also weak. KL term then regularizes against weak baseline, limiting improvements. RLHF can only optimize against reward signal—if reference is garbage, KL is a weak regularizer. **Strong SFT is prerequisite for effective RLHF**."
+      }
+    ]
+  },
+  {
+    "slug": "direct-preference-optimization-dpo",
+    "title": "Direct Preference Optimization (DPO)",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "intermediate",
+    "tags": [
+      "dpo",
+      "preference-optimization",
+      "no-reward-model",
+      "pairwise-loss",
+      "alignment"
+    ],
+    "aliases": [
+      "DPO",
+      "preference loss",
+      "implicit rewards"
+    ],
+    "wikilinks": [
+      "preference-data",
+      "pairwise-loss",
+      "bradley-terry-model",
+      "rlhf",
+      "reward-model",
+      "alignment-methods"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2305.18290",
+        "label": "Rafailov et al: Direct Preference Optimization (ICLR 2024)"
+      },
+      {
+        "url": "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+        "label": "HuggingFace: RLHF to DPO"
+      },
+      {
+        "url": "https://www.together.ai/blog/direct-preference-optimization",
+        "label": "Together AI: DPO Deep Dive"
+      },
+      {
+        "url": "https://cameronrwolfe.substack.com/p/direct-preference-optimization",
+        "label": "Cameron Wolfe: DPO Technical Analysis"
+      }
+    ],
+    "explainer_md": "## Intuition\n**DPO** skips the reward model entirely. Instead, directly fit a pairwise loss on preference data: given (prompt, preferred_response, dispreferred_response), optimize the policy to assign higher probability to preferred response.\n\nKey insight: RLHF trains reward model, then policy. DPO merges these: the policy itself becomes the reward model (implicit). No separate RM → 50% cheaper, simpler, more stable.\n\n## Detail\n**DPO Loss Derivation:**\nAssuming Bradley-Terry preference model:\n$$P(y_w > y_l | x) = \\frac{\\exp(r(x, y_w))}{\\exp(r(x, y_w)) + \\exp(r(x, y_l))}$$\nRafailov et al. derive that the optimal reward is:\n$$r^*(x, y) = \\beta \\log \\frac{\\pi^*(y|x)}{\\pi_{ref}(y|x)} + C$$\nwhere $\\pi^*$ is optimal policy, $\\pi_{ref}$ is reference (SFT) model, $\\beta$ controls KL regularization strength. **No explicit RM needed**—reward is implicit in the policy ratio.\n\nSubstituting back into Bradley-Terry gives the **DPO loss**:\n$$\\mathcal{L}_{DPO} = -\\mathbb{E}[(y_w, y_l) \\sim \\mathcal{D}] \\left[ \\log \\sigma(\\beta \\log \\frac{\\pi_\\theta(y_w|x)}{\\pi_{ref}(y_w|x)} - \\beta \\log \\frac{\\pi_\\theta(y_l|x)}{\\pi_{ref}(y_l|x)}) \\right]$$\nSimplifies to:\n$$\\mathcal{L}_{DPO} = -\\mathbb{E} [\\log \\sigma(\\beta (\\log \\frac{\\pi_\\theta(y_w|x)}{\\pi_{ref}(y_w|x)} - \\log \\frac{\\pi_\\theta(y_l|x)}{\\pi_{ref}(y_l|x)}))]$$\n\nThis is a **binary classification loss** on log probability ratios. Optimal policy learns to rank preferred responses higher than dispreferred ones while staying close to reference (implicit KL regularization via $\\beta$).\n\n**Advantages over RLHF:**\n- No separate reward model training (saves 1–2 weeks, 50% compute).\n- Stable (binary classification, no PPO instability).\n- Off-policy: can reuse same batch multiple times.\n- Better generalization (directly fits human preferences, not proxy RM).\n\n**Hyperparameters:**\n- $\\beta$ (0.1–1.0, typical 0.5): strength of KL constraint. Higher $\\beta$ → tighter to reference, slower improvement. Lower $\\beta$ → aggressive optimization, risk divergence.\n- Learning rate: 1e-6 typical (smaller than SFT due to off-policy nature).\n- Epochs: 1–3 (DPO overfits quickly with small datasets).\n\n**Limitations:**\n- Requires pairwise preference labels (DPO cannot use unpaired data; KTO addresses this).\n- Assumes Bradley-Terry model holds (not always true; see ORPO, SimPO for refinements).\n- Beta sensitivity (similar to RLHF's KL weight).\n\n## Common gotchas / interview framings\n- **DPO overfits**: 1 epoch on small datasets (<10k) often best. More epochs hurt OOD performance.\n- **Beta tuning is critical**: β=0.1 trains fast but diverges; β=1.0 barely improves. No universal default.\n- **Reference model matters**: If SFT is weak, DPO has weak baseline. SFT quality directly impacts DPO quality (unlike RLHF where RM can partially compensate).\n- **Comparison to DPO variants** (2026): SimPO removes reference model entirely (simpler); ORPO merges SFT loss; KTO handles unpaired data. DPO remains most popular due to simplicity.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "DPO loss includes log probability ratios. Why not just optimize log π(y_w) - log π(y_l) directly?",
+        "back": "Direct difference has unbounded range. DPO uses sigmoid on the ratio difference: $\\sigma(\\beta(\\log \\text{ratio}_w - \\log \\text{ratio}_l))$. This (1) bounds loss [0, 1], (2) incorporates reference model via ratio, (3) provides implicit KL regularization. Pure log difference lacks reference signal and can diverge."
+      },
+      {
+        "type": "mcq",
+        "front": "You train DPO on 50k preferences with β=0.1, achieve 90% preference accuracy on val set, but model outputs degrade on general (non-preference) tasks. Why?",
+        "back": "β=0.1 is **very loose** KL constraint. Policy can drift 10x from reference. High preference accuracy ≠ general knowledge preservation. Increase β to 0.3–0.5 to keep policy closer to SFT, or mix general instruction data into DPO batches.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "β=0.1 is too low; policy diverged too far from SFT baseline",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "DPO overfitting on narrow preference signal; not enough general instruction data mixed in",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Learning rate too high",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Epochs too many",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "DPO vs RLHF: you have 100k pairwise preferences and 4xA100. Which is faster?",
+        "back": "**DPO**. DPO trains directly on preferences (1 pass, ~2 hrs). RLHF trains RM (~8 hrs) + PPO (~16 hrs) = 24 hrs total. DPO: 2–3 hrs on same GPU. 10x faster. Trade: DPO assumes Bradley-Terry model; RLHF more flexible. For standard alignment, DPO wins on speed and simplicity."
+      },
+      {
+        "type": "flip",
+        "front": "Your DPO model trains perfectly (99% pref acc on train) but generalizes poorly to new prompts. Fix?",
+        "back": "Classic overfitting. (1) Reduce β to allow more conservative updates (β=0.3 instead of 1.0). (2) Train only 1 epoch, not 3. (3) Add regularization: mix general instruction data (50%) into batches. (4) Early stopping on heldout preference set (different prompts). (5) Consider smaller lr or dropout on embeddings."
+      }
+    ]
+  },
+  {
+    "slug": "simpo-orpo-kto-post-dpo-landscape",
+    "title": "SimPO, ORPO, KTO post-DPO landscape",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "advanced",
+    "tags": [
+      "post-dpo",
+      "simpo",
+      "orpo",
+      "kto",
+      "preference-optimization",
+      "modern-methods"
+    ],
+    "aliases": [
+      "SimPO",
+      "ORPO",
+      "KTO",
+      "reference-free",
+      "merged-objective"
+    ],
+    "wikilinks": [
+      "dpo",
+      "preference-optimization",
+      "implicit-rewards",
+      "unpaired-data",
+      "merged-objectives",
+      "modern-alignment",
+      "2026-methods"
+    ],
+    "sources": [
+      {
+        "url": "https://medium.com/@fahey_james/dpo-isnt-enough-the-modern-post-training-stack-simpo-orpo-kto-and-beyond-d82e52a1ee6c",
+        "label": "James Fahey: Post-DPO Stack (Medium)"
+      },
+      {
+        "url": "https://llm-stats.com/blog/research/post-training-techniques-2026",
+        "label": "LLM Stats: Post-Training 2026"
+      },
+      {
+        "url": "https://aman.ai/primers/ai/preference-optimization/",
+        "label": "Aman Sanger: Preference Optimization Primer"
+      }
+    ],
+    "explainer_md": "## Intuition\nPost-DPO landscape (2026): researchers found DPO works but has limitations (requires pairwise data, reference model, beta sensitivity). Recent methods refine it:\n\n- **SimPO**: Remove reference model, use implicit reward from average log probability. Simpler, fewer hyperparameters.\n- **ORPO**: Merge SFT and preference objectives into single loss. Training SFT + preference in parallel instead of sequential.\n- **KTO** (Kahneman-Tversky Optimization): Handle **unpaired data** (thumbs-up/down without comparisons). Useful for production systems where binary feedback is cheaper than pairwise annotations.\n\n## Detail\n\n**SimPO (Simple Preference Optimization):**\nKey insight: DPO's implicit reward $r^* = \\beta \\log(\\pi/\\pi_{ref})$ suggests we don't need separate $\\pi_{ref}$. Use **average log probability** of response as implicit reward signal. Loss:\n$$\\mathcal{L}_{SimPO} = -\\log \\sigma(\\gamma (s(y_w) - s(y_l)))$$\nwhere $s(y) = \\frac{1}{|y|} \\sum_t \\log p_\\theta(y_t|x, y_{<t})$ is normalized log prob. $\\gamma$ scales the signal. No reference model needed → 30% VRAM saving vs DPO. Slightly simpler, competitive performance.\n\n**ORPO (Odds-Ratio Preference Optimization):**\nMerge SFT and preference loss into one objective: don't train SFT, then DPO—combine them. Loss:\n$$\\mathcal{L}_{ORPO} = \\mathcal{L}_{SFT} + \\lambda \\mathcal{L}_{preference}$$\nSingle training run does both: model learns to follow instructions AND satisfy preferences. Saves ~30% wall-clock time (1 training run vs 2). Memory: comparable to DPO. Tradeoff: mixing objectives can sometimes hurt convergence (requires careful lambda tuning).\n\n**KTO (Kahneman-Tversky Optimization):**\nKey challenge: pairwise preference collection is expensive (~$1/pair). KTO handles **unpaired binary feedback** (good/bad only, no comparisons):\n- Collect: (prompt, response, label ∈ {good, bad}). Cheap: $0.1/annotation, fast.\n- Insight: Kahneman-Tversky prospect theory—human preferences asymmetric (loss aversion). KTO models this: penalize bad responses more than rewarding good ones.\n- Loss (simplified):\n$$\\mathcal{L}_{KTO} = -\\mathbb{E}_{y^+} [\\log \\sigma(\\beta \\log p_\\theta(y^+))] - \\mathbb{E}_{y^-} [\\log \\sigma(-\\beta \\log p_\\theta(y^-))]$$\nNo reference model, no pairwise comparisons needed. Huge practical win for production systems. Slightly lower quality than DPO (asymmetric signal), but massive cost/speed advantage.\n\n**Comparison Table (2026):**\n| Method | Ref Model | Pairwise Data | VRAM | Speed | Quality | Production Ready |\n|--------|-----------|---------------|------|-------|---------|------------------|\n| DPO    | Yes       | Yes           | 100% | 100%  | 100%    | Yes              |\n| SimPO  | No        | Yes           | 70%  | 105%  | 98%     | Yes              |\n| ORPO   | Yes       | Yes           | 90%  | 70%   | 100%    | Yes              |\n| KTO    | No        | No (binary)   | 50%  | 110%  | 90%     | Emerging         |\n\n## Common gotchas / interview framings\n- **SimPO's avg log prob**: Using average log probability as reward can be noisy for very long sequences. Works well for typical dialog/QA lengths (100–500 tokens).\n- **ORPO lambda tuning**: Balance SFT vs preference—$\\lambda$ too high favors preferences (forget instruction-following), too low ignores preferences. Default: 0.5, grid-search 0.3–1.0.\n- **KTO binary label quality**: Binary feedback is cheaper but noisier than pairwise. Requires more examples for same quality. Also, asymmetric loss (loss aversion) may not hold universally across domains.\n- **Reference model still useful**: Even in SimPO/KTO, many practitioners keep frozen reference in loss for stability (hidden KL). True \"reference-free\" is a gradient more than binary.",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "You have budget for either 100k pairwise DPO annotations OR 500k binary (good/bad) KTO annotations. Which yields better alignment?",
+        "back": "Domain/annotator dependent. For high-quality annotations (expert raters): 100k DPO likely better. For crowd-sourced annotations (noisy): 500k KTO may have better signal-to-cost ratio. Empirically, modern best practice: hybrid—use both if possible, or prioritize KTO for production (cheaper, faster iteration).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "100k pairwise DPO; higher signal per example",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "500k binary KTO; 5x more data outweighs signal loss",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Depends on domain and quality of annotators",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "DPO always wins regardless of data scale",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "SimPO removes the reference model. How does it prevent policy divergence without explicit KL penalty?",
+        "back": "SimPO uses implicit constraint: scaling by average log probability. The model is incentivized to assign high probability to preferred responses, naturally staying near the SFT distribution (high probability = coherent under SFT baseline). No explicit KL, but implicit regularization from score normalization. Trade: less explicit control vs. DPO."
+      },
+      {
+        "type": "flip",
+        "front": "You train ORPO (merged SFT+preference) with lambda=2.0. Model reaches 95% preference accuracy but degraded instruction-following (MMLU -5%). Diagnosis?",
+        "back": "**Lambda too high** (2.0 weighs preferences 2x over SFT loss). Model prioritizes preference signal, forgets instruction-following. Reduce lambda to 0.5–1.0 to rebalance. Or audit preference data for distribution shift—if preferences are on narrow domains, ORPO will overfit. Solution: mix general instructions into preference batches."
+      },
+      {
+        "type": "flip",
+        "front": "KTO handles unpaired binary feedback (good/bad). Why is this a production game-changer vs pairwise DPO?",
+        "back": "Cost: pairwise ~$1/pair; binary ~$0.1/annotation. Speed: binary 10x faster to collect. Annotation complexity: binary (simple yes/no) vs pairwise (judge which of two is better, requires careful design). For production systems with tight iteration cycles (weekly model updates), KTO's cheap feedback enables rapid improvement. DPO reserves for polished, one-time training."
+      }
+    ]
+  },
+  {
+    "slug": "grpo-group-relative-policy-optimization",
+    "title": "GRPO (Group Relative Policy Optimization)",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "advanced",
+    "tags": [
+      "grpo",
+      "online-rl",
+      "group-advantage",
+      "deepseek",
+      "ppo-variant"
+    ],
+    "aliases": [
+      "GRPO",
+      "group relative",
+      "online RL"
+    ],
+    "wikilinks": [
+      "online-rl",
+      "policy-optimization",
+      "group-advantage",
+      "critic-free",
+      "deepseek",
+      "rl-for-llms",
+      "advantage-estimation"
+    ],
+    "sources": [
+      {
+        "url": "https://llm-stats.com/blog/research/post-training-techniques-2026",
+        "label": "LLM Stats: Post-Training 2026"
+      },
+      {
+        "url": "https://arxiv.org/abs/2501.03262",
+        "label": "REINFORCE++: Stabilizing Critic-Free RL"
+      },
+      {
+        "url": "https://medium.com/@ding.zhongqiang/human-alignment-in-large-language-models-041088692d00",
+        "label": "Dr. Zhongqiang DING: LLM Alignment (2026)"
+      }
+    ],
+    "explainer_md": "## Intuition\n**GRPO** is an online RL method designed for LLM alignment. Key innovation: **group relative advantage**. Instead of training a separate value function critic, compute advantages by comparing responses *within groups*. This removes the need for critic, reducing memory and complexity while maintaining stability.\n\nArchitecture: (1) For each prompt, generate N responses from current policy. (2) Score each response with reward model. (3) Compute advantage as relative rank within group (not absolute value). (4) Update policy via PPO-style clipped gradients.\n\nIntroduced by DeepSeek (2025) for training DeepSeek-R1; now widely adopted for reasoning tasks and online RL.\n\n## Detail\n**Group Advantage Computation:**\nTraditional PPO:\n$$A_t = r_t + \\gamma V(s_{t+1}) - V(s_t)$$\nrequires training value network V (extra parameters, loss, complexity).\n\nGRPO: for prompt $x$, sample N responses $(y_1, \\ldots, y_N)$ from $\\pi_\\theta$. Score each: $r(x, y_i)$. Compute group advantage:\n$$A_i = \\frac{r(x, y_i) - \\text{mean}(r(x, y_j) : j \\in [1, N])}{\\text{std}(r(x, y_j))}$$\nAdvantage is **relative rank within group**, not absolute. Naturally normalized, statistically stable.\n\nPolicy update (PPO-style):\n$$\\mathcal{L}_{GRPO} = -\\mathbb{E}[\\min(r_t A_t, \\text{clip}(r_t, 1-\\epsilon, 1+\\epsilon) A_t)]$$\nwhere $r_t = \\frac{p_\\theta(y_i|x)}{p_{\\theta_{old}}(y_i|x)}$ (policy ratio).\n\n**Advantages:**\n- **No critic network**: Saves ~30% VRAM (no separate V parameters). Simpler codebase.\n- **On-policy but efficient**: Sample multiple responses per prompt (amortizes inference cost).\n- **Stable advantages**: Normalization by group mean/std naturally calibrates advantage scale. Less hyperparameter tuning than PPO.\n- **Empirically strong**: DeepSeek-R1's reasoning improvements attributed partly to GRPO.\n\n**Disadvantages:**\n- Still on-policy (requires fresh samples per update, expensive). Not as efficient as DPO.\n- Requires good reward model (same as PPO). Poor reward → bad advantages.\n- Group size N is hyperparameter (typically 4–16). Smaller groups → noisier advantages; larger → more compute per step.\n\n**Hyperparameters:**\n- Group size N: 4–16 typical. Larger → more stable but slower.\n- Learning rate: ~1e-5 (same as PPO).\n- Epochs per group: 1–2 (to avoid overfitting to single group).\n- Reward model: must be calibrated and reasonably accurate.\n\n## Common gotchas / interview framings\n- **Group size too small**: 2–4 responses, std is tiny, advantage estimates are noisy. Prefer N ≥ 4.\n- **Reward model quality**: If reward model is poorly calibrated (e.g., all responses score similarly), advantages collapse to ~0 → no policy update. Requires good RM.\n- **Comparison to REINFORCE++**: REINFORCE++ is critic-free with variance reduction tricks; GRPO is critic-free with group normalization. Both address PPO critic complexity; GRPO is newer (2025), REINFORCE++ is older variant.\n- **Online RL cost**: Still on-policy, so ~3–5x cost of DPO per epoch. Used when reasoning/complex tasks need online samples.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "GRPO removes the critic (value function). How does it estimate advantages without V(s)?",
+        "back": "Group relative advantage: sample N responses from current policy, score each with reward model, compute advantage as: (response_score - group_mean) / group_std. Advantage is **relative rank within group**, not absolute value. Naturally normalized, no separate critic needed. Trade: must sample multiple responses per prompt (expensive), but avoids critic training overhead."
+      },
+      {
+        "type": "mcq",
+        "front": "You implement GRPO with group size N=2. Advantages are near zero; policy barely updates. Why?",
+        "back": "With N=2, only 2 responses per prompt. If both score similarly (std small), advantage normalizes to ~0. Increase N to ≥4–8 to get meaningful variance within groups. Or audit reward model—if all responses score similarly, RM may be poorly calibrated.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Learning rate too low",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Group size too small; std(rewards) in small group is tiny, advantage ~0",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Reward model is too good (all scores similar)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "PPO clip range ε too tight",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "GRPO vs DPO: you need reasoning/complex task, 8xA100, 100k preference pairs. Which is faster?",
+        "back": "**DPO is faster** (~2–3 hrs, off-policy). GRPO is slower (~12–16 hrs, on-policy—many samples needed). DPO preferred for standard alignment. GRPO shines when **reasoning quality matters** and you can afford compute; online sampling improves quality for tasks like math/code (DeepSeek-R1 case). For typical task: DPO wins speed."
+      },
+      {
+        "type": "flip",
+        "front": "GRPO group size N: tradeoff between N=4 vs N=16?",
+        "back": "N=4: fast (4 samples/prompt), but advantage estimates noisy (small group std). N=16: stable advantages (16-sample std well-estimated), but slower (16 inference passes per prompt). Sweet spot: N=8. Start there, grid-search if variance issues. Larger groups more stable but diminishing returns after N=16."
+      }
+    ]
+  },
+  {
+    "slug": "iterative-improvement-dpo-new-data-dpo",
+    "title": "Iterative improvement (DPO → new data → DPO)",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "difficulty": "advanced",
+    "tags": [
+      "iterative-training",
+      "self-play",
+      "data-generation",
+      "scaling",
+      "capability-improvement"
+    ],
+    "aliases": [
+      "Self-play",
+      "iterative DPO",
+      "data-flywheel"
+    ],
+    "wikilinks": [
+      "dpo",
+      "self-play",
+      "data-generation",
+      "feedback-loops",
+      "continuous-improvement",
+      "synthetic-data",
+      "compound-learning"
+    ],
+    "sources": [
+      {
+        "url": "https://medium.com/@fahey_james/dpo-isnt-enough-the-modern-post-training-stack-simpo-orpo-kto-and-beyond-d82e52a1ee6c",
+        "label": "James Fahey: Post-DPO Stack"
+      },
+      {
+        "url": "https://llm-stats.com/blog/research/post-training-techniques-2026",
+        "label": "LLM Stats: Post-Training 2026"
+      },
+      {
+        "url": "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+        "label": "HuggingFace: RLHF to DPO"
+      }
+    ],
+    "explainer_md": "## Intuition\nIterative improvement is a **self-play loop**: train model on preference data → model generates new responses → evaluate/annotate responses → retrain on new data. Each iteration compounds improvements. Models like Claude, GPT-4, and Llama 3 improved via multiple rounds of this loop.\n\nKey insight: initial SFT + DPO round captures obvious improvements. Subsequent rounds target harder problems and edge cases that the model now handles. Each round pushes the frontier further.\n\n## Detail\n**Pipeline:**\n1. **Round 1**: SFT on base data (100k examples) → DPO on preference data (50k pairs). Model $M_1$ deployed.\n2. **Round 2**: Use $M_1$ to generate responses on new/harder prompts. Human annotators rank responses. Collect 50k new preference pairs. DPO on merged old + new data. Model $M_2$ improves over $M_1$.\n3. **Round 3+**: Repeat. Each iteration refines capability frontier.\n\n**Data Generation Strategies:**\n- **Diversity sampling**: Target prompts where model struggles (e.g., reasoning, rare domains).\n- **Contrastive generation**: Generate multiple responses per prompt, rank by quality. Synthetic preference pairs are cheaper than human annotations (use reward model or GPT-4 to rank).\n- **Hard examples**: Focus on edge cases, adversarial prompts, out-of-distribution inputs.\n\n**Synthetic vs Human Annotation:**\n- **Human annotation**: Gold standard, expensive (~$1/pair). Used for critical tasks, research.\n- **Reward model ranking**: Cheap (~$0.01/pair, trained RM scores responses). Faster iteration, but inherits RM biases.\n- **LLM-as-judge**: Use strong model (GPT-4) to rank responses. Effective for diversity, cheaper than human. Risk: judge biases align with LLM, not humans.\n\n**Convergence:**\nEach round improves on target metrics (MMLU, AlphaEval, preference score). Diminishing returns after ~4–5 rounds (curve flattens). Cost vs gain trade-off: round 1 gains 10%, round 2 gains 5%, round 3 gains 2%.\n\n**Challenges:**\n- **Data quality drift**: Later rounds rely on model-generated data, which biases toward model's capabilities. Must audit for feedback loops (model prefers responses similar to its own).\n- **Catastrophic forgetting**: Earlier rounds' knowledge can be overwritten. Mitigation: replay baseline data (20%) in each round.\n- **Annotation consistency**: Human preferences inconsistent across rounds (different annotators, time). Use crowd consensus or expert raters.\n- **Scalability**: Each round takes weeks (data generation + annotation + training). Frontline labs (OpenAI, Anthropic, DeepSeek) run parallel rounds.\n\n## Common gotchas / interview framings\n- **Iteration ≠ always improvement**: If data quality drops (too much synthetic, biased toward model), later rounds may hurt. Monitor metrics closely.\n- **Compounding errors**: RM-ranked synthetic data can contain errors that compound. Round 2 trains on slightly wrong preferences → round 3 biases worse. Use human audit or reset with human data periodically.\n- **Resource allocation**: Diminishing returns by round 3. Allocation: 50% on round 1, 30% on round 2, 20% on round 3+. Better to deepen round 1 (more data, higher quality) than chase round 5.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Iterative DPO loop: after round 2 (using model-generated preferences with reward model ranking), round 3 performance plateaus. Diagnosis?",
+        "back": "Likely **feedback loop bias**: reward model is biased toward model's own style. New data from model + ranked by RM = training on self-reinforcing signal. Model optimizes RM, not human preferences. Fix: (1) audit new data for human preferences (~20% human annotation), (2) reset RM with fresh human feedback, (3) add diversity samples (different prompt types, domains)."
+      },
+      {
+        "type": "mcq",
+        "front": "Iterative improvement schedule: you have budget for 5 annotation rounds and 100k total annotations. Allocate?",
+        "back": "Front-load round 1: strong base foundation. Round 2 capitalizes on round 1's gains. Rounds 3+ have diminishing returns (harder problems, more expensive to solve). Allocation strategy: 50/30/10/5/5 typical for optimal return.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "20k each round (equal allocation)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "50k round 1, 30k round 2, 10k round 3, 5k round 4, 5k round 5",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "10k round 1, 20k round 2, 30k round 3, 25k round 4, 15k round 5",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "100k on round 1 only, skip rounds 2+",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Should iterative DPO use 100% synthetic preferences (RM-ranked) or mix in human feedback?",
+        "back": "**Mix in human feedback** (~20% human, 80% synthetic). Pure synthetic creates feedback loops (RM bias compounds). Periodic human audits catch deviations. Typical: round 1 all human (establish baseline); rounds 2+ mix synthetic + human (80/20). Cost: increases per round but prevents drift."
+      },
+      {
+        "type": "flip",
+        "front": "After round 3 iterative DPO, model quality plateaus on target metric. Should you continue to round 4?",
+        "back": "Probably **not**, unless you identified new problem areas. Diminishing returns are real. Instead: (1) audit data quality (is new data still aligned with human preferences?), (2) change data distribution (focus on hard negatives, edge cases instead of general examples), or (3) pivot methods (switch to RLHF for online samples, or constitutional AI for bias reduction). More rounds ≠ guaranteed gain."
+      }
+    ]
+  }
+]

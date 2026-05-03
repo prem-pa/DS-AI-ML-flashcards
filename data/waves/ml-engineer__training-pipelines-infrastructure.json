@@ -1,0 +1,2105 @@
+[
+  {
+    "slug": "data-loading-and-preprocessing-at-scale",
+    "title": "Data loading and preprocessing at scale",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "dataloader",
+      "prefetching",
+      "i/o-bottleneck",
+      "multiprocessing",
+      "async-loading"
+    ],
+    "aliases": [
+      "dataloader optimization",
+      "batching pipeline",
+      "I/O prefetch"
+    ],
+    "wikilinks": [
+      "distributed-sampling-and-epoch-synchronization",
+      "shuffling-and-batching-strategies",
+      "validation-strategy-and-metric-selection",
+      "gradient-accumulation"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/docs/stable/data.html",
+        "label": "PyTorch DataLoader Documentation"
+      },
+      {
+        "url": "https://docs.ray.io/en/latest/train/user-guide/data-loading.html",
+        "label": "Ray Train Data Loading Guide"
+      },
+      {
+        "url": "https://lightning.ai/docs/pytorch/stable/data/dataloader.html",
+        "label": "PyTorch Lightning DataLoader Tutorial"
+      }
+    ],
+    "explainer_md": "## Intuition\nData loading is often the first bottleneck in training pipelines. GPUs train faster than CPUs can fetch and preprocess data, causing idle compute. At scale (TB+ datasets, distributed training), this gap grows exponentially. Effective data loading overlaps I/O with computation via prefetching and multiprocessing.\n\n## Detail\n**Prefetching & Async I/O:** Use `num_workers > 0` in DataLoader to spawn CPU processes that fetch and preprocess batches while GPU trains on current batch. Typical range: 4-8 workers per GPU. `pin_memory=True` locks tensors in CPU RAM for faster host-to-device transfer (~5-10% speedup).\n\n**Distributed Sampling:** With DistributedSampler, each worker sees unique subset of data—no duplication across GPUs. Set `shuffle=True` per epoch and synchronize `set_epoch(epoch)` before each DataLoader reset to ensure correct shuffling across workers.\n\n**Memory Efficiency:** Large datasets fit in memory via memory-mapped files (HDF5, Parquet) instead of loading all at once. Lazy loading + on-the-fly augmentation (torchvision, albumentations) reduces RAM footprint.\n\n## Common gotchas / interview framings\n- Forgot to call `sampler.set_epoch(epoch)` in distributed training → determinism breaks, train/val confusion\n- `num_workers=0` is safe but slow; find optimal `num_workers` via profiling (too many → overhead)\n- DistributedSampler + DataLoader shuffle=True → shuffle is redundant; let sampler handle it\n- Memory-pinned batches require GPU memory; balance batch size vs available GPU RAM",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does DataLoader with `num_workers=0` hurt GPU utilization?",
+        "back": "Main process blocks on CPU preprocessing, leaving GPU idle. `num_workers > 0` spawns worker processes that prefetch batches asynchronously while GPU trains, overlapping I/O with compute."
+      },
+      {
+        "type": "mcq",
+        "front": "In distributed training with 4 GPUs, what does DistributedSampler do?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Randomly shuffles data across all workers every iteration",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Partitions dataset into 4 unique non-overlapping shards, each worker gets 1/4",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Duplicates data across workers for redundancy",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Creates 4 copies of the dataset in memory",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "When should you call `sampler.set_epoch(epoch)`?",
+        "back": "Before each epoch when using DistributedSampler. This ensures different random shuffling per epoch across all workers, maintaining statistical independence."
+      },
+      {
+        "type": "mcq",
+        "front": "Which technique reduces memory footprint for billion-row datasets?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Increase batch size",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Load entire dataset into CPU RAM",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Use memory-mapped files (HDF5/Parquet) with lazy loading",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Use float32 instead of float64",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "shuffling-and-batching-strategies",
+    "title": "Shuffling and batching strategies",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "shuffling",
+      "batch-size",
+      "sampling",
+      "epoch-coordination",
+      "random-seed"
+    ],
+    "aliases": [
+      "batch strategy",
+      "sampling order",
+      "epoch sync"
+    ],
+    "wikilinks": [
+      "data-loading-and-preprocessing-at-scale",
+      "batch-size-effects-on-generalization",
+      "distributed-sampling-and-epoch-synchronization"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/docs/stable/data.html#torch.utils.data.DistributedSampler",
+        "label": "PyTorch DistributedSampler"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/data.html#torch.utils.data.RandomSampler",
+        "label": "PyTorch RandomSampler"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle",
+        "label": "Fisher-Yates Shuffle Algorithm"
+      }
+    ],
+    "explainer_md": "## Intuition\nShuffling decorrelates sequential patterns in data, making gradient updates less biased. Without shuffling, model sees same order every epoch and may learn spurious temporal dependencies. Batching aggregates losses and gradients, reducing noise and improving convergence.\n\n## Detail\n**Shuffling vs Order:** Shuffled training → unbiased gradients, better generalization. Deterministic order → reproducible but potentially biased. In distributed training, need coordinated shuffling across all workers to maintain independence.\n\n**Batch Size Trade-offs:** Larger batches (e.g., 256→1024) are noisier (lower SNR per sample) but reduce communication overhead per iteration. Can lead to sharper minima (worse generalization) or flatter minima (better generalization) depending on optimization landscape.\n\n**Random Seed & Reproducibility:** Set `seed=42` in sampler for reproducible shuffling. Different seeds per epoch prevent leakage. In distributed: each worker uses same base seed, sampler handles offset per worker to ensure disjoint subsets.\n\n**Batching Impact:** Effective batch size = batch_size * num_gpus (data parallel). Some studies show larger batches need longer warmup and higher learning rate (linear scaling rule).\n\n## Common gotchas / interview framings\n- Shuffle in DataLoader AND DistributedSampler → double shuffling or inconsistent seed behavior\n- Same seed across epochs → model may overfit to batch order patterns\n- Forget `shuffle=True` in train DataLoader → training is deterministic, hurts regularization\n- Changing batch size mid-training without adjusting learning rate → divergence",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why shuffle training data?",
+        "back": "Without shuffling, gradients are biased (model sees same correlations each epoch). Shuffling decorrelates samples, leading to unbiased gradient estimates and better generalization."
+      },
+      {
+        "type": "mcq",
+        "front": "What happens if you use the same random seed for shuffling across all 100 epochs?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Improves reproducibility",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Data order is identical each epoch; model may memorize order patterns, hurting generalization",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Increases learning efficiency",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No effect on training",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In distributed training with 8 GPUs and batch_size=128, what is the effective batch size?",
+        "back": "1024 samples per iteration (128 per GPU × 8 GPUs). This affects learning rate scheduling—larger effective batch often requires higher learning rate."
+      },
+      {
+        "type": "mcq",
+        "front": "Which sampling strategy ensures no overlap across 4 distributed workers?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Random shuffling on each worker independently",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "DistributedSampler with same seed on each worker",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Sequential chunking (worker 0 gets indices 0-N/4, worker 1 gets N/4-N/2, etc.)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Let each worker sample randomly with replacement",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "data-normalization-z-score-min-max",
+    "title": "Data normalization (z-score, min-max)",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "beginner",
+    "tags": [
+      "normalization",
+      "standardization",
+      "preprocessing",
+      "feature-scaling",
+      "numerical-stability"
+    ],
+    "aliases": [
+      "feature scaling",
+      "standardization",
+      "z-score normalization"
+    ],
+    "wikilinks": [
+      "data-loading-and-preprocessing-at-scale",
+      "mixed-precision-training-fp16-bfloat16",
+      "loss-curves-and-convergence-diagnostics"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/preprocessing.html",
+        "label": "scikit-learn StandardScaler & MinMaxScaler"
+      },
+      {
+        "url": "https://pytorch.org/vision/stable/transforms.html",
+        "label": "torchvision.transforms.Normalize"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Feature_scaling",
+        "label": "Wikipedia: Feature Scaling"
+      }
+    ],
+    "explainer_md": "## Intuition\nNeural networks converge faster when input features are centered (mean ~0) and scaled (std ~1). Unnormalized inputs with wildly different magnitudes cause steep loss landscapes and slow learning. Normalization flattens the landscape.\n\n## Detail\n**Z-score (Standardization):** `(x - mean) / std`. Centers features to mean=0, scales to std=1. Best for normally distributed features. Assumes Gaussian distribution; outliers can inflate std.\n\n**Min-Max Scaling:** `(x - min) / (max - min)`. Bounds features to [0, 1]. Sensitive to outliers; if max/min change at test time, breaks calibration.\n\n**ImageNet Normalization:** Images normalized per channel: `mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]` (ImageNet RGB stats). Pretrained models expect this—essential when using transfer learning.\n\n**Batch Normalization ≠ Input Normalization:** Batch Norm normalizes layer activations during training; input normalization is a preprocessing step. Both can be used together (normalization + BatchNorm).\n\n## Common gotchas / interview framings\n- Normalize training data, then use training stats (mean/std) on test data—leakage if test stats differ\n- Outliers in min-max scaling → compress 99% of data into [0, 0.01], losing signal\n- Forget to normalize inputs for transfer learning → accuracy drops significantly\n- Z-score vs Min-max choice depends on downstream layer (BatchNorm tolerates raw inputs; small LR needs norm)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why normalize input features before training?",
+        "back": "Unnormalized inputs cause poor conditioning of the loss landscape—features with large magnitudes dominate gradients, slowing convergence. Normalization flattens the landscape, enabling faster learning with smaller learning rates."
+      },
+      {
+        "type": "mcq",
+        "front": "What is z-score normalization formula?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "(x - min) / (max - min)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "(x - mean) / std",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "x / ||x||",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "log(x)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You're using a pretrained ResNet (ImageNet weights). What normalization should you apply?",
+        "back": "ImageNet normalization: `mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]` per RGB channel. Pretrained weights expect these statistics."
+      },
+      {
+        "type": "mcq",
+        "front": "Min-max scaling is sensitive to which problem?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Large batch sizes",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Outliers shifting max/min",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Negative values",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Non-square matrices",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "imbalanced-data-and-oversamplingundersampling",
+    "title": "Imbalanced data and oversampling/undersampling",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "class-imbalance",
+      "resampling",
+      "weighted-loss",
+      "stratification",
+      "data-augmentation"
+    ],
+    "aliases": [
+      "class imbalance",
+      "weighted sampling",
+      "resampling strategies"
+    ],
+    "wikilinks": [
+      "image-augmentation-pipelines-torchvision-albumentations",
+      "batch-size-effects-on-generalization",
+      "validation-strategy-and-metric-selection"
+    ],
+    "sources": [
+      {
+        "url": "https://imbalanced-learn.org/",
+        "label": "imbalanced-learn Library"
+      },
+      {
+        "url": "https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_class_weight.html",
+        "label": "scikit-learn compute_class_weight"
+      },
+      {
+        "url": "https://arxiv.org/abs/1801.05936",
+        "label": "Class Weight Paper (Survey)"
+      }
+    ],
+    "explainer_md": "## Intuition\nWhen dataset is severely imbalanced (e.g., 99% negative, 1% positive), model ignores minority class—it's easier to achieve 99% accuracy by predicting majority. Two approaches: resample data (oversample minority, undersample majority) or weight loss (penalize minority misclassifications more).\n\n## Detail\n**Oversampling:** Duplicate minority samples or synthesize via SMOTE (interpolate between minority samples). Increases dataset size; risks overfitting on duplicates if minority class is tiny.\n\n**Undersampling:** Randomly remove majority samples. Faster training; loses information. Avoid unless majority class is huge.\n\n**Weighted Loss (Preferred):** Assign weight ∝ 1/class_frequency to each class. `nn.CrossEntropyLoss(weight=class_weights)`. More data-efficient than resampling; no information loss. Cost: gradient variance increases slightly.\n\n**Stratified Sampling:** In train-test split, maintain class distribution. `StratifiedKFold` ensures each fold has similar class balance.\n\n**Threshold Adjustment:** Even with balanced training, threshold for binary classification can be tuned post-hoc to trade recall vs precision.\n\n## Common gotchas / interview framings\n- Oversample before train-test split → leakage (synthetic samples appear in test)\n- Undersampling too aggressive → throw away useful majority examples\n- Forget class weights when imbalance > 10:1 → model ignores minority, metrics (accuracy) misleading\n- Use accuracy as metric with imbalanced data → misleading; use F1, AUC-ROC, or precision-recall curve",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Dataset is 95% negative, 5% positive. What's wrong with just training on raw data?",
+        "back": "Model achieves 95% accuracy by predicting majority ('negative'), ignoring minority. Gradient updates dominated by majority class. Minority misclassifications have negligible impact on loss."
+      },
+      {
+        "type": "mcq",
+        "front": "What does SMOTE do?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Randomly duplicates minority samples",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Interpolates new minority samples along lines between existing samples",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Removes outliers",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Applies data augmentation",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In imbalanced classification, why is weighted loss preferred over oversampling?",
+        "back": "Weighted loss doesn't duplicate data (no information loss), trains faster, avoids overfitting on synthetic duplicates. Only downside: slightly higher gradient variance."
+      },
+      {
+        "type": "mcq",
+        "front": "When performing train-test split on imbalanced data, which approach prevents leakage?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Oversample, then split",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Split, then oversample only training data",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Use StratifiedKFold",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Undersample before splitting",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "image-augmentation-pipelines-torchvision-albumentations",
+    "title": "Image augmentation pipelines (torchvision, albumentations)",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "augmentation",
+      "regularization",
+      "torchvision",
+      "albumentations",
+      "online-augmentation"
+    ],
+    "aliases": [
+      "data augmentation",
+      "online augmentation",
+      "augmentation strategy"
+    ],
+    "wikilinks": [
+      "data-loading-and-preprocessing-at-scale",
+      "imbalanced-data-and-oversamplingundersampling",
+      "validation-strategy-and-metric-selection"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/vision/stable/transforms.html",
+        "label": "torchvision.transforms"
+      },
+      {
+        "url": "https://albumentations.ai/",
+        "label": "Albumentations Library"
+      },
+      {
+        "url": "https://arxiv.org/abs/1805.09501",
+        "label": "AutoAugment Paper"
+      }
+    ],
+    "explainer_md": "## Intuition\nModels overfit to training set specifics (e.g., camera angle, lighting). Online augmentation (rotation, flip, crop) on-the-fly during training creates synthetic diversity. Model never sees exact same image twice, generalizing better to test data without collecting more images.\n\n## Detail\n**torchvision.transforms:** Compose transformations in pipeline. `Compose([RandomHorizontalFlip(), RandomRotation(45), ColorJitter()])` applies sequentially. Each sample augmented differently each epoch (stochastic).\n\n**Albumentations:** More efficient (OpenCV backend vs PIL), more transforms, GPU support. Handles bounding boxes/masks. Preferred for production pipelines with complex augmentations.\n\n**Light vs Heavy Augmentation:** Light (flip, small crop) preserves semantics; heavy (aggressive rotation, color shift) risks breaking labels (e.g., rotate 90° with horizontal text). Domain-dependent.\n\n**Augmentation Intensity & Regularization:** Stronger augmentation = more regularization, delays overfitting. But too much hurts convergence. Typical approach: start conservative, increase if overfitting.\n\n**Train vs Validation:** Augment training data only. Validation/test use deterministic resize + center crop (no randomness) for reproducibility.\n\n## Common gotchas / interview framings\n- Augment both train and validation → invalid validation metrics\n- Geometric augmentation (rotate) without updating labels → incorrect targets\n- Augmentation + Dropout + BatchNorm together → over-regularization, slow convergence\n- Test-time augmentation (TTA) useful for production but adds latency",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why augment training data online (per batch) instead of pre-generating augmented copies?",
+        "back": "Online augmentation: infinite diversity (each epoch, each sample augmented differently). Pre-generated: finite diversity (limited by storage). Online also avoids duplicating storage."
+      },
+      {
+        "type": "mcq",
+        "front": "What's the key difference between torchvision.transforms and albumentations?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "torchvision is slower",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Albumentations uses OpenCV, faster, better bbox/mask support",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "torchvision supports GPU",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No practical difference",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You're training a model for medical image classification. What augmentation strategy is safest?",
+        "back": "Light augmentations only (small rotations, slight zoom, small translations). Avoid aggressive rotations/flips that could flip anatomy (e.g., left-right mirror in chest X-rays changes meaning)."
+      },
+      {
+        "type": "mcq",
+        "front": "Should you apply augmentation during validation?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, for consistency",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, validation should be deterministic",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Only light augmentation",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Yes, but different augmentations than training",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "loss-curves-and-convergence-diagnostics",
+    "title": "Loss curves and convergence diagnostics",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "loss-analysis",
+      "convergence",
+      "debugging",
+      "learning-rate",
+      "overfitting"
+    ],
+    "aliases": [
+      "convergence debugging",
+      "loss plateauing",
+      "NaN/divergence detection"
+    ],
+    "wikilinks": [
+      "checkpointing-and-recovery",
+      "validation-strategy-and-metric-selection",
+      "learning-rate-schedules-constant-step-decay-cosine-annealing-warm-restarts"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/docs/stable/amp.html",
+        "label": "PyTorch Automatic Mixed Precision"
+      },
+      {
+        "url": "https://wandb.ai/guides/loss-curves",
+        "label": "Weights & Biases: Loss Curves Guide"
+      },
+      {
+        "url": "https://karpathy.github.io/2019/04/25/recipe/",
+        "label": "Andrej Karpathy: Recipe for Training Neural Networks"
+      }
+    ],
+    "explainer_md": "## Intuition\nLoss curve tells the whole story: is learning rate too high (NaN)? Too low (plateaus)? Overfitting (train ↓, val ↑)? Underfitting (both flat)? Reading loss curves is core diagnosis skill in training.\n\n## Detail\n**Healthy Curve:** Loss decreases smoothly, steeper initially, flattens as learning rate schedule decays. Train/val gap widens slightly over epochs (normal—train sees more epochs). No spikes or NaNs.\n\n**Learning Rate Too High:** Loss oscillates wildly, often spikes to NaN/inf. Gradient norm explodes. Fix: lower LR, add gradient clipping.\n\n**Learning Rate Too Low:** Loss decreases very slowly, plateaus without reaching good performance. Gradient updates tiny. Fix: increase LR, shorten warmup.\n\n**Overfitting:** Training loss ↓ continuously, validation loss ↑ after initial decrease. Gap widens. Fix: increase regularization (dropout, weight decay, augmentation), reduce model capacity, use early stopping.\n\n**Underfitting:** Both training and validation loss plateau early at high value. Model capacity insufficient or LR too high (preventing learning). Fix: increase capacity, lower LR, train longer.\n\n**NaN/Inf Detected:** Usually from exploding gradients, numerical instability in loss (log of negative), or mixed precision issues. Check gradient norm, rescale targets, add gradient clipping.\n\n## Common gotchas / interview framings\n- Loss oscillates slightly → normal in SGD; if huge swings → LR too high\n- Train loss stops decreasing but val loss still improves → overfitting; train may not need more epochs\n- Gradient norm grows unbounded → gradient clipping or LR reduction needed\n- Batch size changed mid-training → learning rate must adjust (linear scaling rule)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Loss suddenly spikes to NaN during training. What are the top 3 causes?",
+        "back": "1) Learning rate too high (exploding gradients). 2) Numerical instability (log of negative, division by zero). 3) Mixed precision underflow/overflow without proper scaling. Check gradient norm, rescale targets, add clipping."
+      },
+      {
+        "type": "mcq",
+        "front": "If training loss decreases smoothly but validation loss increases after epoch 5, what's likely happening?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Model is learning correctly",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Overfitting; need more regularization or early stopping",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Learning rate too low",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Batch size too small",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Training loss plateaus at 2.3 after epoch 10, no improvement. What's your first diagnostic step?",
+        "back": "Check learning rate: if too low, loss progresses slowly. Plot gradient norm—if tiny, LR needs increase. If gradient norm large but loss flat, loss landscape is flat (poor conditioning, increase LR)."
+      },
+      {
+        "type": "mcq",
+        "front": "In mixed precision training, loss becomes NaN after 100 iterations. Which fix is most likely to help?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Decrease batch size",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Increase loss scale or add gradient clipping",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Switch to float32",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Reduce model capacity",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "gradient-accumulation",
+    "title": "Gradient accumulation",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "gradient-accumulation",
+      "effective-batch-size",
+      "memory-efficient",
+      "micro-batch",
+      "gradient-scaling"
+    ],
+    "aliases": [
+      "virtual batch size",
+      "gradient summing",
+      "micro-batching"
+    ],
+    "wikilinks": [
+      "mixed-precision-training-fp16-bfloat16",
+      "data-parallelism-ddp",
+      "pipeline-parallelism-and-micro-batching"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/docs/stable/notes/amp_examples.html",
+        "label": "PyTorch AMP with Gradient Accumulation"
+      },
+      {
+        "url": "https://huggingface.co/docs/transformers/training",
+        "label": "Hugging Face Trainer (gradient_accumulation_steps)"
+      },
+      {
+        "url": "https://lightning.ai/docs/pytorch/stable/common/trainer.html",
+        "label": "PyTorch Lightning Trainer (accumulate_grad_batches)"
+      }
+    ],
+    "explainer_md": "## Intuition\nGPU memory limits batch size. With gradient accumulation, train on smaller batches but accumulate gradients over N micro-batches before optimizer step. Effective batch size = batch_size * accumulation_steps, matching large-batch training without running out of memory.\n\n## Detail\n**Mechanics:** Zero gradients → loop 4 times {forward(micro_batch), backward()}→ loss += loss/4 (normalize) → optimizer.step()→zero_grad(). Effective batch size = micro_batch_size * 4.\n\n**Normalization Critical:** Must scale loss by 1/accumulation_steps to maintain correct gradient magnitudes. Without scaling, accumulated gradients 4× too large.\n\n**Learning Rate Unaffected:** Effective batch size increases but learning rate stays same (or may scale with batch size per literature). Warmup schedule should account for effective batch size.\n\n**Momentum Interaction:** With momentum (SGD, Adam), longer accumulation intervals → momentum dampens less frequently. Some empirical studies suggest slight LR increase helps (linear scaling rule).\n\n**Mixed Precision Impact:** Loss scaling in AMP interacts with gradient accumulation. Gradient scaling should be scaled by 1/accumulation_steps to avoid numerical issues.\n\n## Common gotchas / interview framings\n- Forgot to normalize loss (divide by accumulation_steps) → gradients 4× too large, training unstable\n- Changed accumulation_steps mid-training without adjusting LR → convergence changes\n- Batch norm in accumulated loop → BN statistics computed per micro-batch, incorrect (use SyncBN or single-batch BN)\n- Validation every micro-batch instead of every full accumulation → wastes compute, corrupts metrics",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You want effective batch size = 1024 but GPU only fits 256. How do you use gradient accumulation?",
+        "back": "Set batch_size=256, accumulation_steps=4. Train 4 micro-batches, accumulate gradients, update once. Effective = 256 × 4 = 1024."
+      },
+      {
+        "type": "mcq",
+        "front": "In gradient accumulation with 4 steps, how should you scale the loss before backward?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Don't scale, sum losses",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Divide by 4",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Multiply by 4",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Divide by 2",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why does batch norm in a gradient accumulation loop cause issues?",
+        "back": "BN computes mean/var per micro-batch. Over 4 micro-batches, you're computing BN stats on 4 different 256-sample groups. Use SyncBatchNorm (accumulate stats across all micro-batches) or apply BN per full accumulated batch."
+      },
+      {
+        "type": "mcq",
+        "front": "Gradient accumulation allows you to simulate larger batches. Does this also mean you should adjust your learning rate?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "No, learning rate is independent of batch size",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Yes, use linear scaling rule: LR *= sqrt(effective_batch_size/reference_size)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Yes, always divide LR by accumulation_steps",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No clear answer; depends on optimizer",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "mixed-precision-training-fp16-bfloat16",
+    "title": "Mixed precision training (fp16, bfloat16)",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "mixed-precision",
+      "fp16",
+      "bfloat16",
+      "amp",
+      "loss-scaling",
+      "numerical-stability"
+    ],
+    "aliases": [
+      "FP16 training",
+      "BF16 training",
+      "automatic mixed precision"
+    ],
+    "wikilinks": [
+      "gradient-accumulation",
+      "loss-curves-and-convergence-diagnostics",
+      "tensor-parallelism-and-model-sharding"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/docs/stable/amp.html",
+        "label": "PyTorch Automatic Mixed Precision"
+      },
+      {
+        "url": "https://arxiv.org/abs/1710.03740",
+        "label": "Mixed Precision Training Paper"
+      },
+      {
+        "url": "https://docs.nvidia.com/deeplearning/performance/mixed-precision-training/",
+        "label": "NVIDIA Mixed Precision Training Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\nFP32 uses 32 bits (expensive); FP16 uses 16 bits (2× faster, 2× less memory). But FP16 has lower range → gradient underflow. Solution: keep weights in FP32, compute forward/backward in FP16, loss-scale gradients to prevent underflow. Modern BF16 has same range as FP32 but lower precision—fewer underflows.\n\n## Detail\n**FP16 (Half Precision):** Exponent: 5 bits, Mantissa: 10 bits. Range: ~6e-5 to 6e4. Gradients in backprop can be ~1e-5, risking underflow. Loss scaling (multiply loss by 2^k, backprop, unscale) prevents this.\n\n**BF16 (Brain Float):** Exponent: 8 bits (same as FP32!), Mantissa: 7 bits. Range: ~1e-38 to 1e38 (like FP32). Precision lower but range safe. No explicit loss scaling needed. Growing standard on NVIDIA (H100, B200) and TPU.\n\n**FP8 (OCP Standard):** Newest: E5M2 (exponent 5, mantissa 2) for weights; E4M3 for activations. Even smaller but requires careful quantization. Used in torchtitan for layer-selective precision.\n\n**Automatic Mixed Precision (AMP):** PyTorch autocast() wraps forward pass, automatically casts ops to FP16/BF16 where safe (matmul, conv), keeps FP32 where needed (reductions, losses). Transparent to user code.\n\n**Loss Scaling & Gradient Accumulation:** Loss scale in AMP must account for gradient accumulation: scale = base_scale / accumulation_steps to avoid overflow.\n\n## Common gotchas / interview framings\n- FP16 + no loss scaling → gradients underflow to zero, model stops learning\n- Loss scale too high → gradients overflow, NaN\n- Mix FP16 in wrong places (reductions, softmax) → numerical instability\n- BF16 different from FP16; BF16 needs NO explicit loss scaling (but some frameworks implement anyway)\n- H100/B200 have fast TF32 (tensor float 32, precision between FP32 and FP16) → very efficient",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does FP16 training require loss scaling?",
+        "back": "FP16 has narrow range (~6e-5 to 6e4). Gradients from backprop can be ~1e-5, risking underflow to zero. Loss scaling (multiply loss by 2^k) prevents underflow by keeping intermediate values in FP16 range."
+      },
+      {
+        "type": "mcq",
+        "front": "What's the key advantage of BF16 over FP16?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "BF16 is faster",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "BF16 has same exponent range as FP32, avoiding underflow",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "BF16 has higher precision",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "BF16 requires no weights in FP32",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In PyTorch's autocast(), which operations are kept in FP32 and why?",
+        "back": "Reductions (sum, mean), losses (cross-entropy), softmax. These ops accumulate or have large intermediate values; FP16 precision insufficient to avoid numerical errors. Matmul/conv safe in FP16."
+      },
+      {
+        "type": "mcq",
+        "front": "When combining mixed precision with gradient accumulation, how should you adjust loss scaling?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Use same loss scale as no accumulation",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Divide loss scale by accumulation_steps",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Multiply loss scale by accumulation_steps",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Loss scale independent of accumulation",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "checkpointing-and-recovery",
+    "title": "Checkpointing and recovery",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "beginner",
+    "tags": [
+      "checkpointing",
+      "recovery",
+      "state-dict",
+      "fault-tolerance",
+      "early-stopping"
+    ],
+    "aliases": [
+      "model saving",
+      "checkpoint recovery",
+      "best model tracking"
+    ],
+    "wikilinks": [
+      "loss-curves-and-convergence-diagnostics",
+      "validation-strategy-and-metric-selection",
+      "distributed-sampling-and-epoch-synchronization"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/tutorials/beginner/saving_loading_models.html",
+        "label": "PyTorch Saving and Loading Models"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/distributed.html#torch.distributed.checkpoint",
+        "label": "PyTorch Distributed Checkpoint"
+      },
+      {
+        "url": "https://lightning.ai/docs/pytorch/stable/common/checkpointing.html",
+        "label": "PyTorch Lightning Checkpointing"
+      }
+    ],
+    "explainer_md": "## Intuition\nTraining large models takes days/weeks. Crashes happen (OOM, hardware failure, preemption). Checkpointing saves model weights + optimizer state periodically. On crash, resume from latest checkpoint instead of restarting from epoch 0.\n\n## Detail\n**State Dict Components:** torch.save({model.state_dict(), optimizer.state_dict(), epoch, best_metric}). State dict = all learnable parameters + buffers (BN running stats). Optimizer state = momentum buffers, adaptive LR terms (Adam's m, v).\n\n**Checkpoint Frequency:** Save every N iterations or when validation metric improves (best model). Don't save every iteration (I/O bottleneck); every epoch is typical.\n\n**Distributed Checkpointing:** Naive: all ranks save → N copies. Better: one rank saves, broadcasts to others. Best: PyTorch Distributed Checkpoint (async, sharded saves). For FSDP, save consolidated state dict via `FSDP.full_state_dict_to_cpu()` or sharded via `state_dict()` + DTensor APIs.\n\n**Resume Training:** Load checkpoint: `state_dict = torch.load(path); model.load_state_dict(state_dict['model']); optimizer.load_state_dict(state_dict['optimizer']); start_epoch = state_dict['epoch']`. Note: optimizer state includes LR schedule state.\n\n**Early Stopping:** Monitor validation metric, keep best checkpoint. Stop if validation metric doesn't improve for N epochs. Track (epoch, metric) for each checkpoint.\n\n## Common gotchas / interview framings\n- Save model only, not optimizer state → resume at epoch N, but optimizer (momentum, Adam m/v) reset, hurts convergence\n- Load checkpoint but forget to set model.train() / model.eval() → wrong behavior (BN uses wrong stats)\n- Checkpoint path not writable (permission/disk full) → training crashes silently\n- Different model architecture between save/load → load_state_dict() fails\n- Distributed: one rank checkpoints → others don't have checkpoint (use distributed checkpointing)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What should a checkpoint contain beyond model weights?",
+        "back": "Optimizer state (momentum buffers, adaptive LR), epoch number, validation metric, random seed. These let you resume training exactly where you left off."
+      },
+      {
+        "type": "mcq",
+        "front": "You load a checkpoint and resume training. Validation loss spikes. What likely went wrong?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Model weights corrupted",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Forgot to load optimizer state or set correct epoch",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Learning rate changed",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Batch size changed",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In distributed training with 8 GPUs, should each GPU save its own checkpoint?",
+        "back": "No. Either one rank saves the full consolidated state_dict, or use PyTorch Distributed Checkpoint (async, sharded). Multiple saves waste I/O and storage."
+      },
+      {
+        "type": "mcq",
+        "front": "What's the purpose of tracking the 'best' checkpoint during training?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Reduces storage",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Allows early stopping and recovery at best validation metric",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Speeds up training",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Prevents overfitting",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "validation-strategy-and-metric-selection",
+    "title": "Validation strategy and metric selection",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "validation",
+      "metrics",
+      "early-stopping",
+      "evaluation",
+      "overfitting-detection"
+    ],
+    "aliases": [
+      "metric selection",
+      "validation frequency",
+      "performance monitoring"
+    ],
+    "wikilinks": [
+      "loss-curves-and-convergence-diagnostics",
+      "checkpointing-and-recovery",
+      "imbalanced-data-and-oversamplingundersampling"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/model_evaluation.html",
+        "label": "scikit-learn Model Evaluation"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/nn.functional.html#loss-functions",
+        "label": "PyTorch Loss Functions"
+      },
+      {
+        "url": "https://paperswithcode.com/methods/category/metrics",
+        "label": "Papers with Code: Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nTraining loss doesn't reveal true performance—it's optimistic (trained on it). Validation loss is unbiased proxy. Choose metrics aligned with task objective: accuracy for balanced classification, F1/AUC for imbalanced, BLEU for NLP, RMSE for regression.\n\n## Detail\n**Validation Frequency:** Every epoch (standard); every N iterations if epochs long. Too frequent → overhead; too sparse → miss best checkpoint window. Typical: every epoch or every 100 iterations.\n\n**Overfitting Detection:** Plot train vs validation metrics. If train ↓ and validation ↑, overfitting. Widen gap → need regularization (dropout, weight decay), more data, or smaller model.\n\n**Metric Selection by Task:**\n- Balanced Classification: Accuracy (intuitive), F1 (precision-recall balance)\n- Imbalanced Classification: AUC-ROC (threshold-independent), Precision-Recall curve, Macro-F1\n- Regression: MAE (robust to outliers), RMSE (emphasizes large errors), MAPE (relative error)\n- Multi-label: mAP (mean average precision), Hamming loss\n\n**Early Stopping:** Monitor validation metric, stop if no improvement for N epochs (patience). Save best checkpoint, report metrics on test set at end. Prevents overfitting and wastes.\n\n**Validation on Full Data vs Subset:** Full validation every epoch → accurate but slow. Subset (10-20%) → fast but noisy. Trade-off depends on validation cost.\n\n## Common gotchas / interview framings\n- Use training metric for early stopping → wrong (overfitting undetected, early stopping triggers late)\n- Validation metric selected post-hoc (after seeing test results) → overfitting to test set\n- Imbalanced data + accuracy metric → model predicts majority, 99% accuracy but useless\n- Validation during training, but test set has different distribution → metrics don't transfer\n- Change validation metric mid-training → invalidates comparisons",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Training loss decreases but validation loss increases. What should you do?",
+        "back": "Model is overfitting. Either: increase regularization (dropout, weight decay, augmentation), reduce model capacity, use early stopping at best validation checkpoint, or add more training data."
+      },
+      {
+        "type": "mcq",
+        "front": "For severely imbalanced binary classification (1% positive), which metric is best?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Accuracy",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Precision",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "AUC-ROC or Precision-Recall curve",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Recall only",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is early stopping and why use it?",
+        "back": "Monitor validation metric, stop training if it doesn't improve for N epochs (patience). Saves at best checkpoint. Prevents overfitting and wastes training time on epochs with no improvement."
+      },
+      {
+        "type": "mcq",
+        "front": "Should you choose your validation metric before or after seeing test data?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "After seeing test data to optimize for it",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Before; choosing post-hoc causes overfitting to test set",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "It doesn't matter",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Choose multiple and average",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "data-parallelism-ddp",
+    "title": "Data parallelism (DDP)",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "ddp",
+      "data-parallelism",
+      "distributed-training",
+      "synchronization",
+      "all-reduce"
+    ],
+    "aliases": [
+      "distributed data parallel",
+      "multi-GPU training",
+      "gradient synchronization"
+    ],
+    "wikilinks": [
+      "gradient-synchronization-and-all-reduce",
+      "distributed-sampling-and-epoch-synchronization",
+      "tensor-parallelism-and-model-sharding"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html",
+        "label": "PyTorch DistributedDataParallel"
+      },
+      {
+        "url": "https://pytorch.org/tutorials/intermediate/ddp_tutorial.html",
+        "label": "PyTorch DDP Tutorial"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/notes/cuda.html#cuda-memory-allocation",
+        "label": "PyTorch CUDA Memory Management"
+      }
+    ],
+    "explainer_md": "## Intuition\nData Parallelism: replicate model on each GPU. Each GPU trains on different batch of data, computes gradients, synchronizes (all-reduce) to average gradients, updates model with averaged gradient. Effective batch size = batch_size * num_gpus. Simplest form of distributed training.\n\n## Detail\n**DDP Setup:** Wrap model: `model = DistributedDataParallel(model)`. Use DistributedSampler to partition data. Each rank (GPU) calls forward/backward independently, DDP synchronizes gradients in backward().\n\n**Synchronization Mechanism:** Each rank computes local gradients → DDP buckets gradients (e.g., 1MB chunks) → all-reduce (NCCL) sums and averages gradients across ranks → each rank updates model with averaged gradient. Synchronous: all ranks must finish before averaging (slowdown if one rank slower).\n\n**Effective Batch Size:** batch_size * num_gpus. Learning rate may need adjustment (linear scaling rule). Warmup typically scales with effective batch size.\n\n**Gradient Buckets & Overlap:** DDP uses gradient buckets (default ~25MB) to overlap all-reduce communication with backward pass. Large buckets → less overhead but less overlap; small buckets → more overhead but better overlap.\n\n**Broadcast & Parameters:** After all-reduce, DDP broadcasts updated model weights to all ranks (single weight copy for correctness).\n\n## Common gotchas / interview framings\n- Forgot DistributedSampler → data duplication across ranks (same batch on every GPU)\n- Different batch sizes across ranks → all-reduce mismatch, deadlock\n- Synchronous DDP with stragglers → slow rank delays all others (consider async gradient descent or DDP with async_reduce flag)\n- Large gradient buckets → less communication overlap, slower\n- Load imbalance (uneven data split) → some ranks finish early, idle time before all-reduce",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "In DDP with 4 GPUs and batch_size=64, what is the effective batch size per iteration?",
+        "back": "256 (64 × 4). Each GPU processes 64 samples, gradients averaged over 256. May need higher learning rate (linear scaling rule)."
+      },
+      {
+        "type": "mcq",
+        "front": "What happens if you use DistributedDataLoader without DistributedSampler?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Training works fine",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Each GPU sees the same batch; no true parallelism, wastes compute",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Gradients are randomly shuffled",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All-reduce fails",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "DDP synchronizes gradients via all-reduce. What is the communication overhead?",
+        "back": "O(model_size). All-reduce requires sending gradient tensors across all ranks. Ring all-reduce reduces from O(N²) to O(2N-2) links but still O(model_size) data volume. Bottleneck for very large models."
+      },
+      {
+        "type": "mcq",
+        "front": "What does DDP do to handle stragglers (slower GPUs)?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Automatically balances workload",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Synchronizes at each backward() call (synchronous); slow GPU delays all others",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Uses async gradients to avoid waiting",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Sends partial gradients",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "gradient-synchronization-and-all-reduce",
+    "title": "Gradient synchronization and all-reduce",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "all-reduce",
+      "communication",
+      "nccl",
+      "ring-allreduce",
+      "collective-communication"
+    ],
+    "aliases": [
+      "gradient synchronization",
+      "ring all-reduce",
+      "NCCL communication"
+    ],
+    "wikilinks": [
+      "data-parallelism-ddp",
+      "gradient-accumulation",
+      "distributed-sampling-and-epoch-synchronization"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/overview.html",
+        "label": "NVIDIA NCCL Documentation"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/distributed.html",
+        "label": "PyTorch Distributed Package"
+      },
+      {
+        "url": "https://arxiv.org/abs/1811.05957",
+        "label": "Reducing Communication Overhead (Ring All-Reduce)"
+      }
+    ],
+    "explainer_md": "## Intuition\nIn DDP, all GPUs compute gradients independently, then must synchronize (average) to agree on shared model update. All-reduce is the collective communication primitive: each rank sends its gradients to all others, computes global average, all get same result. Bottleneck for large models or slow networks.\n\n## Detail\n**All-Reduce Definition:** Each rank i has vector g_i (gradients). All-reduce produces: result = (g_1 + g_2 + ... + g_N) / N on every rank. Operations: sum + reduction, broadcast result. Can be implemented via tree, butterfly, or ring topology.\n\n**Ring All-Reduce:** N ranks arranged in ring topology. Each rank sends gradient to next, receives from previous. N-1 rounds of forward pass + N-1 rounds of backward pass. Communication cost: O(model_size), near-optimal. Less latency-sensitive than tree (which has log(N) latency, but larger bandwidth per node).\n\n**NCCL (Nvidia Collective Communication Library):** NVIDIA's all-reduce implementation, optimized for NVLink/InfiniBand. Typical bandwidth: ~900 GB/s (H100 NVLink), ~200 GB/s (Ethernet).\n\n**Gradient Buckets:** Instead of all-reduce entire model at once, split into buckets and all-reduce incrementally. Allows overlapping communication with backward pass of next layer. Typical bucket size: 25-100 MB.\n\n**InfiniBand vs Ethernet:** InfiniBand (low latency, high bandwidth) much better than Ethernet. Multi-node training heavily benefits from InfiniBand. Ethernet can be bottleneck, especially with large models.\n\n## Common gotchas / interview framings\n- Gradient all-reduce latency-bound for small models/small N; bandwidth-bound for large models/large N\n- Not overlapping all-reduce with computation → full synchronous wait, no pipelining\n- Gradient bucket size too small → too many all-reduce ops, overhead; too large → no overlap\n- Unbalanced ring (some links slower) → entire ring limited by slowest link\n- Heterogeneous hardware → all-reduce speed limited by slowest device",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does ring all-reduce do and why is it efficient?",
+        "back": "Arranges N ranks in ring. Each rank sends gradient to next neighbor, receives from previous. N-1 forward + N-1 backward rounds. Communication O(model_size), near-optimal. Reduces latency vs tree topology."
+      },
+      {
+        "type": "mcq",
+        "front": "Gradient buckets are used in all-reduce. What is their purpose?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Reduce memory usage",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Overlap all-reduce communication with backward pass computation",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Compress gradients",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Reduce numerical errors",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In a ring all-reduce, what's the bottleneck if one link is 10× slower than others?",
+        "back": "Entire ring is limited by slowest link. Each round waits for slowest link to finish, giving bottleneck = 10× the slowest bandwidth instead of N links in parallel."
+      },
+      {
+        "type": "mcq",
+        "front": "NCCL bandwidth on H100 NVLink vs Ethernet. Which is faster?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "NVLink ~50 GB/s, Ethernet ~200 GB/s",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "NVLink ~900 GB/s, Ethernet ~200 GB/s",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Same speed",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Depends on gradient size",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "tensor-parallelism-and-model-sharding",
+    "title": "Tensor parallelism and model sharding",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "advanced",
+    "tags": [
+      "tensor-parallelism",
+      "model-sharding",
+      "tp",
+      "column-parallel",
+      "row-parallel"
+    ],
+    "aliases": [
+      "TP",
+      "intra-layer parallelism",
+      "model parallelism"
+    ],
+    "wikilinks": [
+      "data-parallelism-ddp",
+      "pipeline-parallelism-and-micro-batching",
+      "gradient-synchronization-and-all-reduce"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1909.08053",
+        "label": "Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/distributed.tensor.html",
+        "label": "PyTorch Distributed Tensor (DTensor)"
+      },
+      {
+        "url": "https://github.com/pytorch/torchtitan",
+        "label": "TorchTitan: PyTorch Native Multi-GPU Training"
+      }
+    ],
+    "explainer_md": "## Intuition\nTensor Parallelism splits individual weight matrices (tensors) across GPUs. For a dense layer Y = XW, split W column-wise: each GPU computes partial Y, then all-reduce. Different from Data Parallelism (replicate model, split data). Used when model too large to fit on single GPU.\n\n## Detail\n**Column Parallel (Output Projection):** Weight matrix W split by output dimension. X same on all ranks, each rank computes X @ W_i (partial output). Then all-reduce (sum partial outputs) to get Y. Communication: all-reduce of output size.\n\n**Row Parallel (Input Projection):** Weight matrix W split by input dimension. Each rank computes X_i @ W, then all-gather X to reconstruct full output. Communication: all-gather of input size.\n\n**Attention QKV Projections:** In Transformers, split Q, K, V projections via column parallelism. Each rank computes partial attention heads, gather to get full attention. Degree of TP = number of attention heads / GPU count (common: TP=8 with 96 heads).\n\n**Activation Recomputation:** TP adds all-reduce/all-gather ops, increasing memory. Recompute activations instead of storing them (trade compute for memory). Critical for memory-constrained large models.\n\n**Degree & Granularity:** TP degree (# of GPUs) limited by model architecture (e.g., # of heads, vocab size). Too high degree → fine-grained parallelism, communication overhead. Sweet spot: TP=8-16 for typical LLMs.\n\n## Common gotchas / interview framings\n- TP + DP together (2D parallelism): must coordinate tensor sharding + data sharding. DTensor simplifies this\n- Pipeline Parallelism + TP = 3D: complex but necessary for 100B+ models\n- Allreduce in TP synchronous; one slow rank → entire cluster waits\n- Context Parallelism (CP) emerging: split sequence dimension, reduces activation memory (4D parallelism in TorchTitan)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "In tensor parallelism, how is a dense layer Y = XW split across 4 GPUs?",
+        "back": "Column-parallel: split W into 4 column chunks (W_1, W_2, W_3, W_4). Each GPU computes X @ W_i. Then all-reduce (sum) to get Y. Or row-parallel: split W by rows, all-gather X."
+      },
+      {
+        "type": "mcq",
+        "front": "Tensor parallelism requires synchronization via all-reduce. How does this differ from DDP?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Same all-reduce operation",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "TP all-reduce is smaller (per-tensor), more frequent; DDP all-reduce is once per iteration",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "DDP has no all-reduce",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "TP is faster due to smaller tensors",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "A 7B parameter model doesn't fit on a single H100 (80GB). Should you use TP or DP to shard?",
+        "back": "TP (tensor parallelism) shards the model (weights) across GPUs. DP (data parallelism) replicates model on each GPU, needs GPU memory ≥ 7B params. For 7B on 80GB, DP works (with quantization or LoRA). TP needed for 70B+."
+      },
+      {
+        "type": "mcq",
+        "front": "What is a key disadvantage of tensor parallelism?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Less efficient than data parallelism",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Frequent all-reduce operations; higher communication overhead than DP",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Cannot be combined with DP",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Requires custom model architecture",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "pipeline-parallelism-and-micro-batching",
+    "title": "Pipeline parallelism and micro-batching",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "advanced",
+    "tags": [
+      "pipeline-parallelism",
+      "pp",
+      "micro-batching",
+      "gpipe",
+      "bubble",
+      "temporal-pipeline"
+    ],
+    "aliases": [
+      "PP",
+      "inter-layer parallelism",
+      "pipeline bubble"
+    ],
+    "wikilinks": [
+      "tensor-parallelism-and-model-sharding",
+      "data-parallelism-ddp",
+      "gradient-accumulation"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1811.06965",
+        "label": "GPipe: Efficient Training of Giant Models on Multiple GPUs"
+      },
+      {
+        "url": "https://arxiv.org/abs/2006.00650",
+        "label": "PipeDream: A More Effective Data Parallel Method for Distributed Deep Learning"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/pipeline.html",
+        "label": "PyTorch Pipeline Parallel"
+      }
+    ],
+    "explainer_md": "## Intuition\nPipeline Parallelism splits model layers across GPUs (GPU 0: layers 0-24, GPU 1: layers 25-48, etc.). Different GPUs process different microbatches in parallel, creating a pipeline. While GPU 1 processes microbatch 1, GPU 0 processes microbatch 2. Temporal pipelining: reduces idle time, increases GPU utilization.\n\n## Detail\n**Microbatching:** Split batch into M microbatches (e.g., batch=128 → 4 microbatches of 32). Forward pass: GPU 0 processes mb1, GPU 1 processes nothing. GPU 0 finishes, passes output to GPU 1 (GPU 0 starts mb2). GPU 1 processes mb1 while GPU 0 processes mb2. Pipeline of depth M.\n\n**Forward vs Backward:** Forward pass straightforward (sequential microbatches). Backward more complex: need to store activations for all microbatches → large memory, or recompute (trade compute for memory). GPipe recomputes; PipeDream uses double buffering.\n\n**Pipeline Bubble:** With P partitions and M microbatches (M >> P), bubble = (P-1)*M / (M+P-1) ≈ (P-1)/M for large M. Small M → large bubble (GPUs idle); large M → small bubble but more memory per microbatch.\n\n**Backward Pass Scheduling:** GPipe uses synchronous backward (wait for all forward passes, then backward). PipeDream is async (overlap forward and backward of different microbatches). Async is harder but reduces bubble.\n\n**Communication:** Activations passed between GPUs at layer boundaries. Size = batch_size * hidden_dim * num_layers_per_partition (can be large). Recomputation saves this activation memory.\n\n## Common gotchas / interview framings\n- Too few microbatches → large pipeline bubble, low utilization\n- Too many microbatches → small microbatch size, inefficient compute (batch norm unstable)\n- Backward pass not aligned with forward → gradient staleness, convergence issues\n- Activation memory explosion with large hidden_dim + many layers\n- Communication at layer boundaries: all-reduce not needed (sequential), just send activations",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "In pipeline parallelism with 4 GPUs and 8 microbatches, what is the pipeline depth and bubble?",
+        "back": "Depth = 8. Bubble = (4-1) / 8 = 37.5% idle time. GPUs not all busy; 3 GPUs wait for GPU 0 in first phase."
+      },
+      {
+        "type": "mcq",
+        "front": "How does microbatching in pipeline parallelism improve GPU utilization?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Reduces gradient size",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Creates temporal pipelining: GPUs process different microbatches, overlapping computation",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Requires less memory",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Reduces communication overhead",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Pipeline parallelism requires storing activations for backward pass. How can you reduce this memory?",
+        "back": "Recomputation (GPipe): recompute activations during backward instead of storing. Trades compute (2× forward compute) for memory (~50% activation memory saved)."
+      },
+      {
+        "type": "mcq",
+        "front": "In pipeline parallelism, why is the backward pass more complex than forward?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Backward requires all-reduce",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Backward needs activations from forward; storing all activations uses O(depth) memory",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Backward has no communication",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Backward is not complex",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "distributed-sampling-and-epoch-synchronization",
+    "title": "Distributed sampling and epoch synchronization",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "distributed-sampling",
+      "epoch-sync",
+      "sampler",
+      "data-duplication",
+      "worker-coordination"
+    ],
+    "aliases": [
+      "sampler coordination",
+      "rank synchronization",
+      "epoch boundary"
+    ],
+    "wikilinks": [
+      "data-loading-and-preprocessing-at-scale",
+      "shuffling-and-batching-strategies",
+      "data-parallelism-ddp"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/docs/stable/data.html#torch.utils.data.distributed.DistributedSampler",
+        "label": "PyTorch DistributedSampler"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/distributed.html#torch.distributed.barrier",
+        "label": "PyTorch Distributed Barrier"
+      },
+      {
+        "url": "https://docs.ray.io/en/latest/train/examples/pytorch/pytorch-dpp/README.html",
+        "label": "Ray Train Distributed Sampling"
+      }
+    ],
+    "explainer_md": "## Intuition\nIn distributed training, multiple workers (GPUs/machines) train in parallel. Each must see different data (no duplication) and stay synchronized (same epoch boundaries). DistributedSampler handles this: partitions data indices, each rank gets non-overlapping subset, all sync at epoch start.\n\n## Detail\n**DistributedSampler:** Splits dataset of N samples into P partitions (P = num_ranks). Rank i gets indices [i*N/P, (i+1)*N/P). No overlap, no duplication. Each epoch, shuffle with different seed per rank via set_epoch().\n\n**Set Epoch:** Must call `sampler.set_epoch(epoch)` before each epoch. This sets random seed internally: seed_per_rank = seed_base + epoch. Different epochs → different shuffle permutations, but same base seed across ranks → same disjoint partition.\n\n**Barrier Synchronization:** Use `torch.distributed.barrier()` to ensure all ranks finish epoch N before starting N+1. Prevents some ranks ahead causing stale data access (e.g., rank 0 loads epoch 10 while rank 1 still on epoch 9).\n\n**Data Duplication Issues:** Forgetting DistributedSampler or not using shuffle properly → some samples seen by multiple ranks, others never seen. Gradient estimates biased, convergence affected.\n\n**Non-Divisible Datasets:** If N % P != 0, some ranks get fewer samples. DistributedSampler pads with drop_last=False (default) or drops excess with drop_last=True. For reproducibility, use drop_last=True.\n\n## Common gotchas / interview framings\n- Forgot `set_epoch()` → same permutation every epoch; model may memorize batch order\n- `shuffle=True` in DataLoader + DistributedSampler → double shuffling or inconsistent random state\n- Missing barrier() → some ranks ahead of others, loss tracking wrong\n- Non-synchronized random seed across ranks → different partitions (duplication or gaps)\n- Changing num_workers per rank without adjusting sampler → inconsistent data splits",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "In distributed training with 4 GPUs and 1000 samples, how many samples does each GPU see per epoch?",
+        "back": "250 samples. DistributedSampler partitions: rank 0 [0:250], rank 1 [250:500], rank 2 [500:750], rank 3 [750:1000]. Non-overlapping."
+      },
+      {
+        "type": "mcq",
+        "front": "Why must you call `sampler.set_epoch(epoch)` in distributed training?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "To save epoch number",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "To ensure different shuffle permutation each epoch, maintaining dataset diversity",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "To sync all ranks",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No reason; it's optional",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What does `torch.distributed.barrier()` do?",
+        "back": "Synchronization primitive. Each rank blocks until all ranks reach barrier. Ensures all ranks finish current phase (e.g., end of epoch) before proceeding to next. Prevents race conditions."
+      },
+      {
+        "type": "mcq",
+        "front": "Dataset has 1003 samples, 4 GPUs. DistributedSampler with drop_last=False. How many samples per rank?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "250 + 3 pad",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "250",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "251",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "250, and last rank gets 253",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "grid-search-random-search-bayesian-optimization",
+    "title": "Grid search, random search, Bayesian optimization",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "hyperparameter-tuning",
+      "grid-search",
+      "random-search",
+      "bayesian-optimization",
+      "hpo"
+    ],
+    "aliases": [
+      "hyperparameter search",
+      "parameter tuning",
+      "sample-efficient optimization"
+    ],
+    "wikilinks": [
+      "learning-rate-schedules-constant-step-decay-cosine-annealing-warm-restarts",
+      "batch-size-effects-on-generalization",
+      "population-based-training-pbt"
+    ],
+    "sources": [
+      {
+        "url": "https://optuna.readthedocs.io/",
+        "label": "Optuna: Hyperparameter Optimization Framework"
+      },
+      {
+        "url": "https://scikit-optimize.github.io/",
+        "label": "scikit-optimize (Bayesian Optimization)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1611.02136",
+        "label": "Hyperband: A Novel Bandit-Based Approach to Hyperparameter Optimization"
+      }
+    ],
+    "explainer_md": "## Intuition\nHyperparameter tuning: find optimal learning rate, batch size, regularization, etc. Grid search: try all combinations (exhaustive but exponential). Random search: sample randomly (better than grid for high-dim). Bayesian Optimization: model performance landscape, sample promising regions (sample-efficient, but slower per iteration).\n\n## Detail\n**Grid Search:** Cartesian product of hyperparameter values. For LR ∈ [0.001, 0.01, 0.1] and batch_size ∈ [32, 64, 128], try all 9 combinations. Pros: simple, parallelizable. Cons: exponential in # of hyperparameters. Inefficient for high-dimensional spaces.\n\n**Random Search:** Sample hyperparameters randomly from distributions. Typically needs 60-80% fewer trials than grid for same performance. Robust to irrelevant hyperparameters (grid allocates equal budget to all dimensions). Easy to scale: add more trials incrementally.\n\n**Bayesian Optimization (BO):** Fit surrogate model (e.g., Gaussian Process) to observed (hyperparams → metric) pairs. Use acquisition function (e.g., Expected Improvement) to select next point. Sequential: fit, pick next, evaluate, repeat. Very sample-efficient (few trials), but slower per iteration. Suited for expensive evaluations (long training).\n\n**Hyperband:** Adaptive resource allocation. Test many hyperparams quickly with few epochs, kill unpromising, increase epochs on survivors. Balances BO's sample efficiency with grid/random's parallelism.\n\n**Population-Based Training (PBT):** Evolutionary approach. Parallel population of workers, each training with different hyperparams. Periodically evaluate, kill worst, spawn copies of best with mutations. Hyperparams dynamically adjust during training.\n\n## Common gotchas / interview framings\n- Grid search with 10 hyperparams, 3 values each → 3^10 = 59K trials, infeasible\n- Random search undershoots grid on small spaces; overkill for 2-3 hyperparams\n- BO assumes smooth, continuous optimization landscape; breaks with discrete hyperparams (optimizer choice)\n- Hyperband's early stopping can harm long-horizon tasks (long training period before metric improves)\n- Don't tune on test set (information leakage); use separate validation set",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is random search often better than grid search for hyperparameter tuning?",
+        "back": "Random allocates budget to all dimensions equally. If some hyperparams are irrelevant, grid wastes trials; random finds good hyperparams faster. Also, high-dim spaces make grid exponential."
+      },
+      {
+        "type": "mcq",
+        "front": "Bayesian Optimization fits a surrogate model and uses an acquisition function. What is the acquisition function for?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Speed up training",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Select next hyperparameter point to evaluate",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Evaluate the model",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Regularize hyperparameters",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You have 100 GPUs and 1 week to tune LR and batch size. Which method is best?",
+        "back": "Grid search or random search over distributed trials. Parallel evaluation across GPUs. Bayesian Optimization better for sequential (few GPUs, expensive evals). Hyperband also good (adaptive allocation)."
+      },
+      {
+        "type": "mcq",
+        "front": "Population-Based Training (PBT) differs from standard search how?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Uses Bayesian optimization",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Evolutionary: parallel workers, dynamically adjust hyperparams during training, kill/clone workers",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Faster convergence per trial",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Requires less compute",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "learning-rate-schedules-constant-step-decay-cosine-annealing-warm-restarts",
+    "title": "Learning rate schedules (constant, step decay, cosine annealing, warm restarts)",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "learning-rate-schedule",
+      "lr-decay",
+      "cosine-annealing",
+      "warmup",
+      "warm-restarts"
+    ],
+    "aliases": [
+      "LR schedule",
+      "learning rate decay",
+      "annealing schedule"
+    ],
+    "wikilinks": [
+      "loss-curves-and-convergence-diagnostics",
+      "gradient-accumulation",
+      "momentum-and-weight-decay-interaction"
+    ],
+    "sources": [
+      {
+        "url": "https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.html",
+        "label": "PyTorch Learning Rate Schedulers"
+      },
+      {
+        "url": "https://arxiv.org/abs/1608.03983",
+        "label": "SGDR: Stochastic Gradient Descent with Warm Restarts"
+      },
+      {
+        "url": "https://arxiv.org/abs/1706.02677",
+        "label": "Warm Restarts and Learning Rate Annealing"
+      }
+    ],
+    "explainer_md": "## Intuition\nTraining dynamics benefit from high learning rate early (fast progress), lower LR late (convergence to minima). Learning rate schedule adapts LR over training. Constant → simple but suboptimal. Step decay → reduce by factor every N epochs. Cosine annealing → smooth decay. Warm restarts → periodically reset LR high, create multiple descent phases.\n\n## Detail\n**Constant LR:** Same LR throughout. Simple, but requires careful initial tuning. Often too high (early divergence) or too low (slow convergence late). Baseline for comparison.\n\n**Step Decay:** Multiply LR by gamma every N epochs (e.g., LR *= 0.1 every 30 epochs). Discrete drops; loss may spike at transition. Common in older papers; mostly replaced by cosine annealing.\n\n**Cosine Annealing:** LR decays smoothly as cosine function: LR(t) = LR_min + (LR_max - LR_min) * 0.5 * (1 + cos(π * t / T)). Smooth, no abrupt transitions. Empirically better than step decay.\n\n**Warmup:** Start with low LR, increase linearly to LR_max over first K epochs. Prevents early divergence with large batches. Typical warmup fraction: 5-10% of total training. Critical for fine-tuning pretrained models.\n\n**Warm Restarts (SGDR):** After cosine annealing reaches LR_min, restart (reset LR to LR_max), anneal again with longer period. Multiple descent phases, may escape local minima. Can find better solutions than single phase.\n\n**Cyclical LR (CLR):** Cycle LR between bounds periodically (triangular, exp_range). Reduces need for precise LR tuning. Research shows it helps with learning rate ranges (e.g., LR_min to LR_max over cycle).\n\n## Common gotchas / interview framings\n- Warmup too short → early training unstable, divergence risk\n- Warmup too long → wastes training on suboptimal LR\n- Cosine annealing with wrong T (total epochs) → LR doesn't match actual training length\n- Changing batch size mid-training → should adjust LR (linear scaling rule)\n- Warm restarts with same period → may not escape minima; increase period each restart (SGDR) helps\n- No warmup with large batch size (gradient accumulation) → divergence",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why use cosine annealing over constant learning rate?",
+        "back": "Cosine annealing smoothly reduces LR as training progresses, balancing exploration (high LR early) and exploitation (low LR late). Constant LR can't do both; cosine empirically outperforms."
+      },
+      {
+        "type": "mcq",
+        "front": "Cosine annealing with T=100 (total epochs). At epoch 50, LR is approximately?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "0.5 * LR_max",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "0.15 * LR_max (near LR_min)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Same as LR_max",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Increases",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "When should you use warmup in learning rate schedule?",
+        "back": "Always in deep learning, especially with large batch sizes or fine-tuning. Warmup (e.g., 5-10% of epochs) prevents early divergence by starting with low LR, linearly increasing to target."
+      },
+      {
+        "type": "mcq",
+        "front": "Warm Restarts (SGDR) periodically reset LR high. What is the benefit?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Faster convergence",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Multiple descent phases, may escape local minima or find better solutions",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Reduces memory",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No benefit; just adds complexity",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "momentum-and-weight-decay-interaction",
+    "title": "Momentum and weight decay interaction",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "advanced",
+    "tags": [
+      "momentum",
+      "weight-decay",
+      "adamw",
+      "l2-regularization",
+      "optimizer"
+    ],
+    "aliases": [
+      "weight decay vs L2",
+      "decoupled weight decay",
+      "momentum buffer"
+    ],
+    "wikilinks": [
+      "loss-curves-and-convergence-diagnostics",
+      "learning-rate-schedules-constant-step-decay-cosine-annealing-warm-restarts",
+      "batch-size-effects-on-generalization"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1711.05101",
+        "label": "Decoupled Weight Decay Regularization (AdamW Paper)"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/generated/torch.optim.Adam.html",
+        "label": "PyTorch Adam Optimizer"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/generated/torch.optim.SGD.html",
+        "label": "PyTorch SGD with Momentum"
+      }
+    ],
+    "explainer_md": "## Intuition\nWeight decay regularizes by penalizing large weights. But its interaction with momentum differs: in SGD + momentum, weight decay scales inversely with momentum (implicit). In Adam, weight decay + momentum don't interact as intended. AdamW (decoupled) applies weight decay independently, fixing this. Critical distinction for modern training.\n\n## Detail\n**L2 Regularization:** Add λ * ||w||^2 to loss. Gradient = original_grad + 2*λ*w. Update: w -= lr * (grad + 2*λ*w). Discourages large weights, reduces variance (generalization).\n\n**Weight Decay in SGD + Momentum:** w -= lr * (grad + λ*w). With momentum: m = β*m + grad → w -= lr * (m + λ*w). The λ*w term is NOT accumulated in momentum buffer. This causes weight decay to decouple from momentum scaling, an implicit effect of SGD (unintended but works empirically).\n\n**Weight Decay in Adam (Coupled):** Gradient = grad + λ*w. Then Adam's adaptive learning applies. Problem: if weights large, grad is large, adaptive LR scales down, but weight decay term λ*w scaled by same adaptive LR. Weight decay is weakened when you want it most (large weights). Leads to ineffective regularization in Adam.\n\n**AdamW (Decoupled Weight Decay):** Separate weight decay from gradient: w -= lr * (m_adapted + λ*w). Weight decay λ*w applied directly, not through adaptive LR. More consistent regularization, better generalization. Now standard (better than coupling).\n\n**Practical Implications:** SGD + momentum: weight decay works well, use l2_regularization or weight_decay (equivalent). Adam: MUST use AdamW, not Adam + weight decay (coupled). Weight decay magnitude differs between optimizers; empirical tuning needed.\n\n## Common gotchas / interview framings\n- Adam + weight_decay > 0 → weight decay weakened, ineffective. Use AdamW instead\n- Changing weight decay mid-training → regularization changes, affects convergence\n- Weight decay too high → underfitting (over-regularization). Too low → overfitting\n- Momentum buffer initialization: starts at 0, takes ~1/β epochs to stabilize\n- Different optimizers need different weight decay values for same regularization effect",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is AdamW recommended over Adam with weight decay?",
+        "back": "Adam couples weight decay with adaptive LR (scaled by second moment estimate). Large weight gradients → small adaptive LR → weak weight decay. AdamW decouples: applies weight decay directly, independent of adaptive LR, more effective."
+      },
+      {
+        "type": "mcq",
+        "front": "In SGD with momentum, weight decay ≠ L2 regularization because?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "They're actually equivalent",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Weight decay term not accumulated in momentum buffer; momentum doesn't affect regularization term",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Weight decay is faster",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Momentum buffer amplifies weight decay",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You're using Adam optimizer with weight_decay=0.01. Why is this ineffective?",
+        "back": "Adam's adaptive learning rate scales weight decay down when weights are large (when you want regularization most). Use AdamW instead, which decouples weight decay from adaptive LR."
+      },
+      {
+        "type": "mcq",
+        "front": "In training, you switch from SGD to Adam. Should you adjust weight decay value?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "No, use same value",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Yes, typically increase weight decay for AdamW (different effective strength)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Yes, set to zero",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use L2 regularization instead",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "batch-size-effects-on-generalization",
+    "title": "Batch size effects on generalization",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "intermediate",
+    "tags": [
+      "batch-size",
+      "generalization",
+      "sharpness",
+      "flatness",
+      "gradient-noise"
+    ],
+    "aliases": [
+      "batch size and overfitting",
+      "large batch training",
+      "batch size and learning rate"
+    ],
+    "wikilinks": [
+      "shuffling-and-batching-strategies",
+      "learning-rate-schedules-constant-step-decay-cosine-annealing-warm-restarts",
+      "momentum-and-weight-decay-interaction"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1609.04836",
+        "label": "On Large-Batch Training for Deep Learning"
+      },
+      {
+        "url": "https://arxiv.org/abs/1711.00489",
+        "label": "The Generalization Gap in Machine Learning"
+      },
+      {
+        "url": "https://arxiv.org/abs/1411.1134",
+        "label": "Deep Residual Learning (ResNet, batch size effects)"
+      }
+    ],
+    "explainer_md": "## Intuition\nLarge batch sizes (e.g., 4096) compute gradient from many samples, reducing noise. Small batches (e.g., 32) noisier gradients. Conventional wisdom: small batches → high variance → regularization effect → better generalization. Large batches → low variance → sharpness in loss landscape → overfitting. But empirical results mixed: large batches with proper LR tuning can match small batches.\n\n## Detail\n**Batch Size & Gradient Noise:** Small batch → noisier gradient estimates (high variance). Noise can escape sharp minima (saddle point avoidance). Large batch → precise gradient, settles into nearest minimum (sharp or flat). Sharp minima have lower test accuracy (small perturbations in weights cause large loss changes).\n\n**Flatness & Generalization (SAC):** Sharpness Aware Minimization (SAM) finds flat minima, improving generalization. Sharp minima: high loss at small weight perturbations. Flat minima: robust to perturbations. Larger batch → risk of sharp minima.\n\n**Linear Scaling Rule:** When increasing batch size by factor k, increase LR by √k (or k depending on regime). Allows large-batch training to match small-batch final accuracy. E.g., 8× larger batch → 2-3× higher LR.\n\n**Warmup with Large Batch:** Large batches need longer warmup (5-10% of epochs or more). Early training with large batch unstable; warmup stabilizes by starting low LR, linearly increasing.\n\n**Generalization Gap:** Train loss can be low on both large and small batches, but test gap (test loss - train loss) different. Large batch + large LR → larger test gap (overfitting). Small batch or regularization → smaller test gap.\n\n## Common gotchas / interview framings\n- Blindly increase batch size without adjusting LR → training diverges or converges slower\n- Large batch training needs longer warmup; forget warmup → divergence in first epoch\n- Same LR for different batch sizes → large batch may diverge (too small effective LR for batch size)\n- Batch norm statistics computed per batch; large batch → more stable BN stats, but loss landscape sharper\n- Gradient accumulation increases effective batch size; adjust LR accordingly",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why might small batch sizes lead to better generalization than large batches?",
+        "back": "Small batches → noisy gradients → can escape sharp minima. Large batches → precise gradients → settle in nearby minimum (often sharp). Sharp minima: high loss near minimum, poor generalization. Noisy gradients help escape."
+      },
+      {
+        "type": "mcq",
+        "front": "You increase batch size from 256 to 2048 (8×). What should you do to learning rate?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Keep it same",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Increase by √8 ≈ 2.8× (linear scaling rule)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Decrease to 1/8",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No clear answer",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Large batch training is prone to divergence early. How do you mitigate?",
+        "back": "Use longer warmup (5-10%+ of epochs). Start with low LR, linearly increase to target LR. Stabilizes early training before settling into minima."
+      },
+      {
+        "type": "mcq",
+        "front": "Batch norm statistics (mean/var) computed per-batch. Large batch → more stable BN, but loss landscape becomes?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Flatter",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Sharper",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Unaffected",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Depends on model",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "population-based-training-pbt",
+    "title": "Population-based training (PBT)",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "difficulty": "advanced",
+    "tags": [
+      "pbt",
+      "population-based",
+      "evolutionary",
+      "hyperparameter-adaptation",
+      "dynamic-tuning"
+    ],
+    "aliases": [
+      "PBT",
+      "evolutionary hyperparameter tuning",
+      "online hyperparameter adaptation"
+    ],
+    "wikilinks": [
+      "grid-search-random-search-bayesian-optimization",
+      "learning-rate-schedules-constant-step-decay-cosine-annealing-warm-restarts",
+      "validation-strategy-and-metric-selection"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1711.09846",
+        "label": "Population Based Training of Neural Networks"
+      },
+      {
+        "url": "https://docs.ray.io/en/latest/tune/examples/pbt_example.html",
+        "label": "Ray Tune: Population-Based Training"
+      },
+      {
+        "url": "https://github.com/google-deepmind/population-based-training",
+        "label": "Google DeepMind: Population-Based Training"
+      }
+    ],
+    "explainer_md": "## Intuition\nPopulation-Based Training (PBT) runs a parallel population of training runs (e.g., 16 workers) with different hyperparameters. Periodically (e.g., every 50 epochs), evaluate all workers, kill bottom performers, spawn copies of top performers with hyperparameter mutations. Hyperparameters dynamically adapt during training, exploring promising regions.\n\n## Detail\n**Population Setup:** N parallel workers, each training with different hyperparams (LR, batch size, regularization, etc.). Workers train independently, no synchronization (unlike DDP). Periodic evaluation on validation set.\n\n**Selection & Replacement:** Every T epochs (e.g., 50), rank workers by validation metric. Kill bottom k% (e.g., bottom 25%), spawn copies of top k% with mutated hyperparams. Mutations: sample from same distribution as initialization, or perturb current value (±20%). Workers reset to best checkpoint before mutation.\n\n**Hyperparameter Adaptation:** Unlike grid/random search (static hyperparams), PBT learns to adjust hyperparams during training. LR might decay faster than schedule suggests if loss plateaus; batch size might increase to speed up convergence.\n\n**Computational Cost:** N workers training in parallel → N× compute. But parallelism matches research clusters (many GPUs). Better sample efficiency than sequential Bayesian Opt.\n\n**Checkpointing:** Each worker must checkpoint periodically (for replacement). If worker killed, load last checkpoint, mutate hyperparams, continue. This restart overhead amortized over training length.\n\n## Common gotchas / interview framings\n- PBT assumes large population (N >> 5) for stability; small N → luck matters\n- Mutation rate (variance) critical; too high → too much randomness; too low → no exploration\n- Evaluation cost per period must be cheap relative to training (otherwise overhead dominates)\n- PBT better for multi-worker scenarios; overkill for 1-GPU experiments\n- Hyperparameter exploration bias: if initial range wrong, PBT won't escape (like all search methods)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "How does PBT adapt hyperparameters unlike grid/random search?",
+        "back": "PBT runs parallel workers with different hyperparams, periodically kills underperformers, clones top performers with mutations. Hyperparams change dynamically during training based on validation metric, not fixed upfront."
+      },
+      {
+        "type": "mcq",
+        "front": "In PBT, after evaluation every T epochs, what happens to the bottom 25% of workers?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Continue training with same hyperparams",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Get killed; top 25% cloned with mutated hyperparams to replace them",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Hyperparams reset to initial values",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All workers reset and retrain",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "PBT with 16 workers requires 16× compute vs sequential search. Why use it?",
+        "back": "Better sample efficiency (fewer total evaluations to find good hyperparams). Parallelism matches research clusters. Dynamic adaptation during training often outperforms static hyperparams, offsetting 16× compute overhead."
+      },
+      {
+        "type": "mcq",
+        "front": "What is a critical hyperparameter of PBT itself (meta-parameter)?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Population size N",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Mutation rate/variance",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Evaluation frequency",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above",
+            "correct": true
+          }
+        ]
+      }
+    ]
+  }
+]

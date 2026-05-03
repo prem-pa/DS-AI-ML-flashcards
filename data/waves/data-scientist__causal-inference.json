@@ -1,0 +1,966 @@
+[
+  {
+    "slug": "dags-directed-acyclic-graphs-and-causal-assumptions",
+    "title": "DAGs (Directed Acyclic Graphs) and causal assumptions",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "graphical-models",
+      "causal-structure",
+      "d-separation",
+      "identification",
+      "Pearl"
+    ],
+    "aliases": [
+      "directed acyclic graphs",
+      "causal graphs",
+      "structural graphs"
+    ],
+    "wikilinks": [
+      "confounders-colliders-mediators",
+      "backdoor-criterion",
+      "frontdoor-criterion",
+      "do-calculus"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://ftp.cs.ucla.edu/pub/stat_ser/r350.pdf",
+        "label": "Pearl: Causal Inference in Statistics Overview"
+      },
+      {
+        "url": "https://www.amazon.com/Causality-Reasoning-Inference-Judea-Pearl/dp/052189560X",
+        "label": "Pearl: Causality: Models, Reasoning and Inference"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDAGs visually encode causal relationships as nodes (variables) and directed edges (causal arrows). The absence of an edge encodes a causal assumption: no direct effect. Crucially, DAGs must be acyclic—no feedback loops—to represent causal order.\n\n## Detail\n\nA DAG formalizes three core causal assumptions:\n\n1. **Causal completeness**: All relevant confounders appear in the graph\n2. **No unmeasured confounding**: Unobserved variables causing multiple nodes are absent (or their effects are captured)\n3. **Causal markov condition**: Each node is independent of its non-descendants given its parents\n\nDAGs enable:\n- **d-separation rules**: Determine when variables are conditionally independent given adjustment sets\n- **Identification**: Which causal effects are theoretically estimable from observational data\n- **Backdoor/Frontdoor criteria**: Algorithmic tests for valid adjustment sets\n\nExample DAG:\n```\nU (unmeasured confounder)\n↓\nX → Y\n↑\nM (mediator)\n```\n\n## Common gotchas / interview framings\n\n- \"I added control variables but got worse estimates\"—you may have conditioned on a collider or mediator (bad)\n- \"Which variables should I control for?\" requires reading the DAG, not folklore (e.g., \"always control for demographics\" is naive)\n- DAGs encode causal assumptions; they are not learned from data alone—they come from domain knowledge\n- Interview: \"Draw the DAG for a pricing experiment\" or \"What assumption does this DAG violate?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does a directed edge in a DAG mean?",
+        "back": "A direct causal effect: the source variable has a direct causal impact on the target, all else equal. An edge X → Y means X affects Y; absence of X → Z means no direct effect."
+      },
+      {
+        "type": "flip",
+        "front": "Why must a causal DAG be acyclic?",
+        "back": "Causality has temporal order: causes precede effects. Cycles would mean X causes Y and Y causes X, violating temporal precedence. Acyclicity ensures we can assign causal direction."
+      },
+      {
+        "type": "mcq",
+        "front": "In the DAG U → X → Y with U unmeasured, which adjustment set identifies the causal effect of X on Y?",
+        "back": "Adjust for nothing. U is a confounder (parent of both X and Y), but it's unmeasured. However, there's no backdoor path through U (since U → X → Y is the frontdoor). Adjusting would bias estimates.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Adjust for nothing (empty set)",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Adjust for U",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Adjust for Y",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Adjust for X",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the causal Markov condition in a DAG?",
+        "back": "Each variable is independent of its non-descendants conditional on its parents. Parents 'screen off' all other influences on that variable (in the causal model)."
+      }
+    ]
+  },
+  {
+    "slug": "confounders-colliders-mediators",
+    "title": "Confounders, colliders, mediators",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "node-types",
+      "d-separation",
+      "conditioning",
+      "bias",
+      "selection-bias"
+    ],
+    "aliases": [
+      "confounding variables",
+      "collider bias",
+      "mediation paths",
+      "blocking"
+    ],
+    "wikilinks": [
+      "dags-directed-acyclic-graphs-and-causal-assumptions",
+      "backdoor-criterion",
+      "sensitivity-analysis-for-hidden-bias"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://ftp.cs.ucla.edu/pub/stat_ser/r350.pdf",
+        "label": "Pearl: Causal Inference in Statistics Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nIn a DAG, nodes play different roles depending on their position relative to treatment (X) and outcome (Y). These roles determine when we should condition on a variable:\n\n- **Confounder**: Ancestor of both X and Y → creates spurious association\n- **Collider**: Descendant of both X and Y → induces bias if conditioned on\n- **Mediator**: X → M → Y → lies on causal path from X to Y\n\n## Detail\n\n**Confounders** (e.g., age in a treatment study):\n- Create backdoor paths: X ← U → Y\n- Adjustment (stratification or regression) blocks the path, reduces bias\n- Failure to adjust → confounding bias\n\n**Colliders** (e.g., Y is selected based on both X and U):\n```\nX → C ← U\n```\n- Conditioning on C *opens* the path X - C - U - Y, inducing spurious correlation\n- Do NOT adjust for colliders (common pitfall in observational studies)\n- Causes \"collider bias\" or \"selection bias\"\n\n**Mediators** (e.g., X → mechanism → Y):\n- Conditioning on mediators blocks the direct path, isolates natural direct effect\n- Total effect = direct effect + indirect effect (through mediator)\n\n## Common gotchas / interview framings\n\n- \"I controlled for age and results flipped sign\"—age may be a collider or lie on a causal path\n- \"Why did sample selection hurt my estimate?\"—likely conditioned on a collider\n- Interview: \"Draw and identify confounders, colliders, and mediators in [scenario]\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is a confounder and how does it bias estimates?",
+        "back": "A variable that causally affects both treatment and outcome. It creates a backdoor path (non-causal association) between X and Y. Example: age affects both exercise and health. Unadjusted estimates confound treatment effect with age effect."
+      },
+      {
+        "type": "flip",
+        "front": "What is collider bias and why does conditioning on a collider create it?",
+        "back": "A collider is a variable caused by both X and Y. Conditioning on it opens a spurious path X - Collider - Y, inducing correlation between X and Y even if no causal effect exists. Example: college admission (collider of grades and test scores); conditioning on admission creates spurious negative correlation."
+      },
+      {
+        "type": "mcq",
+        "front": "You observe that correcting for a measured variable increases rather than decreases residual variance. Which is most likely?",
+        "back": "Conditioning on a collider opens spurious paths and can increase bias. If the variable is a true confounder, adjustment should reduce variance; worsening suggests collider bias.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The variable is a confounder",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The variable is a collider",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The variable is a mediator",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The variable is independent of X and Y",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In mediation analysis, what is the natural indirect effect (NIE)?",
+        "back": "The portion of the total effect on Y transmitted through the mediator M. Total Effect = Direct Effect + Indirect Effect. Isolating NIE requires careful assumptions about treatment effect heterogeneity and no post-treatment confounding."
+      }
+    ]
+  },
+  {
+    "slug": "backdoor-criterion",
+    "title": "Backdoor criterion",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "d-separation",
+      "adjustment-sets",
+      "confounding",
+      "identification",
+      "Pearl"
+    ],
+    "aliases": [
+      "backdoor paths",
+      "confounding paths",
+      "valid adjustment"
+    ],
+    "wikilinks": [
+      "dags-directed-acyclic-graphs-and-causal-assumptions",
+      "confounders-colliders-mediators",
+      "frontdoor-criterion"
+    ],
+    "sources": [
+      {
+        "url": "https://ftp.cs.ucla.edu/pub/stat_ser/r350.pdf",
+        "label": "Pearl: Causal Inference in Statistics Overview"
+      },
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nThe backdoor criterion is an algorithm (Pearl, 1993) to identify when and how to adjust for variables to eliminate confounding bias. A backdoor path is a non-causal path from treatment X to outcome Y that goes 'backward' through a confounder.\n\n## Detail\n\n**Backdoor path**: A path from X to Y that:\n1. Starts with an arrow into X (X ← ...)\n2. Does not follow the causal edge X → Y\n\nExample: X ← U → Y is a backdoor path (U confounds X and Y).\n\n**Backdoor criterion**: A set Z blocks all backdoor paths if:\n1. No variable in Z is a descendant of X (to avoid cutting causal paths)\n2. Z blocks every backdoor path from X to Y\n\n**Blocking a path**: A path is blocked by a set Z if:\n- Z contains a non-collider on the path, OR\n- A collider on the path has no descendant in Z\n\n**Algorithm**: \n```\n1. Find all backdoor paths from X to Y\n2. Identify a sufficient adjustment set Z that blocks all backdoor paths\n3. Adjust for Z using regression, matching, or other methods\n```\n\nExample DAG with backdoor path:\n```\nU → X → Y\n↑\nU → X ← (direct)\nBackdoor path: X ← U → Y\nFix: Adjust for U\n```\n\n## Common gotchas / interview framings\n\n- \"Just add all measured confounders\"—may include descendants of X (mediators) or colliders\n- \"The regression coefficient changed when I added controls\"—sign of collider or mediator conditioning\n- Interview: \"What is the minimal sufficient adjustment set for this DAG?\" or \"Will adjusting for Z work?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is a backdoor path?",
+        "back": "A non-causal association pathway from X to Y that starts with an arrow into X (i.e., X is the target of an edge). Example: X ← U → Y creates a backdoor path through confounder U. It is called 'backdoor' because it enters X from the back."
+      },
+      {
+        "type": "flip",
+        "front": "What does it mean to 'block' a path in a DAG?",
+        "back": "A path is blocked by an adjustment set Z if at least one of these holds on the path: (1) Z contains a non-collider on the path, or (2) a collider on the path has no descendant in Z. Blocked paths do not transmit association."
+      },
+      {
+        "type": "mcq",
+        "front": "In DAG: U → X → Y, U → Y, is adjusting for U sufficient to identify the causal effect of X on Y?",
+        "back": "Yes. The backdoor path is U → X ← (no arrow back), which is actually U → Y. Wait, re-reading: U → X → Y is a direct path (not backdoor). The confounder path is U → X and U → Y. Adjusting for U blocks the confounding path U → Y that doesn't go through X.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, U blocks the backdoor path",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "No, U is a parent of X and blocks the forward path",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Yes, there is no collider on the backdoor path",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No, U is a mediator",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why can't we always 'adjust for everything' to estimate causal effects?",
+        "back": "Adjusting for descendants of X (mediators, colliders) can increase bias by blocking causal paths or opening spurious paths. The backdoor criterion specifies exactly which variables to adjust for."
+      }
+    ]
+  },
+  {
+    "slug": "frontdoor-criterion",
+    "title": "Frontdoor criterion",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "unmeasured-confounding",
+      "mediator",
+      "identification",
+      "Pearl",
+      "mediation"
+    ],
+    "aliases": [
+      "frontdoor paths",
+      "frontdoor formula",
+      "unobserved confounder"
+    ],
+    "wikilinks": [
+      "dags-directed-acyclic-graphs-and-causal-assumptions",
+      "backdoor-criterion",
+      "mediation-analysis"
+    ],
+    "sources": [
+      {
+        "url": "https://ftp.cs.ucla.edu/pub/stat_ser/r350.pdf",
+        "label": "Pearl: Causal Inference in Statistics Overview"
+      },
+      {
+        "url": "https://www.amazon.com/Causality-Reasoning-Inference-Judea-Pearl/dp/052189560X",
+        "label": "Pearl: Causality: Models, Reasoning and Inference"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nThe frontdoor criterion (Pearl, 1993) solves a tough problem: identifying causal effects when there is an unmeasured confounder, *but* the entire effect flows through an observed mediator. It is rarer than backdoor adjustment but crucial when unobserved confounding is unavoidable.\n\n## Detail\n\n**Frontdoor condition**: The causal effect of X on Y is identified if:\n1. X has no unmeasured confounders (or unmeasured confounders are blocked by other variables)\n2. M (mediator) is on all causal paths from X to Y (X → M → Y)\n3. All paths from M to Y that do not go through X are blocked by some variables (no backdoor from M to Y through unmeasured U)\n\nDAG:\n```\nU (unmeasured) ← (confounds X and Y)\n  ↓\n  X → M → Y\n      ↑\n    No unmeasured confounder of M → Y\n```\n\n**Frontdoor formula** (simplified):\n```\nP(Y|do(X)) = Σ_m P(M|X) × Σ_x' P(Y|M,X') × P(X')\n```\nIt uses the *path* through M to infer the total effect despite unmeasured U.\n\n## Common gotchas / interview framings\n\n- \"Frontdoor is rare in practice\"—most unmeasured confounding violates all three conditions\n- \"Does M fully mediate the effect?\"—frontdoor requires M to capture *all* pathways from X to Y\n- Interview: \"Can you identify the causal effect if there's an unmeasured confounder U?\" → Teach frontdoor criterion in response",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the frontdoor criterion and when does it apply?",
+        "back": "An identification strategy for causal effects when there is unmeasured confounding of X and Y, but all causal effect flows through an observed mediator M, and M has no unmeasured confounder affecting its path to Y. Frontdoor 'goes forward' through M, avoiding the unmeasured confounder."
+      },
+      {
+        "type": "flip",
+        "front": "In a frontdoor setup, what role does the mediator M play?",
+        "back": "M is the sole intermediary of the causal effect: all paths from X to Y must pass through M. M acts as a 'bottleneck' that allows us to decompose the effect of X on Y into identifiable parts despite unmeasured confounding."
+      },
+      {
+        "type": "mcq",
+        "front": "In the frontdoor DAG with unmeasured U → X, U → Y, X → M → Y, M → Y, can we identify the causal effect of X on Y?",
+        "back": "Yes, if M fully mediates and M has no unmeasured confounder affecting M → Y. The frontdoor formula leverages the causal pathway through M to identify the effect despite the unmeasured U.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, using the frontdoor formula",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "No, because U confounds both X and Y",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Only if M is a collider",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Yes, by adjusting for U",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is the frontdoor criterion rarely used in practice?",
+        "back": "Its conditions are strict: (1) all effect must flow through M, (2) no unmeasured confounder of M → Y, and (3) no alternative paths from X to Y. Most real problems violate at least one assumption."
+      }
+    ]
+  },
+  {
+    "slug": "randomized-experiments-as-gold-standard",
+    "title": "Randomized experiments as gold standard",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "RCT",
+      "randomization",
+      "gold-standard",
+      "unconfoundedness",
+      "experimental-design"
+    ],
+    "aliases": [
+      "randomized controlled trials",
+      "RCT",
+      "A/B testing",
+      "experimental gold standard"
+    ],
+    "wikilinks": [
+      "unconfoundedness-and-sutva-assumptions",
+      "matching-and-propensity-scores",
+      "sensitivity-analysis-for-hidden-bias"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://ftp.cs.ucla.edu/pub/stat_ser/r350.pdf",
+        "label": "Pearl: Causal Inference in Statistics Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nRandomization is the 'gold standard' for causal inference because it breaks all backdoor confounding paths. By randomly assigning treatment, we ensure treatment is independent of all pre-treatment variables—measured and unmeasured.\n\n## Detail\n\n**Why randomization works**:\n1. Random assignment severs all causal edges *into* treatment (X ← U becomes independent)\n2. In the resulting DAG, X has no parents; no backdoor paths from X to Y\n3. The association between X and Y is entirely causal (unconfounded)\n\n**RCT assumptions** (core):\n- **Random assignment**: P(X=1|U)=P(X=1) for all U (treatment independent of confounders)\n- **SUTVA**: No interference between units, consistent treatment (covered separately)\n- **Positivity**: All units have nonzero probability of receiving each treatment arm\n\n**Causal estimate**: Simple comparison of means:\n```\nATE = E[Y|X=1] - E[Y|X=0]\n```\nNo adjustment for confounders needed (though variance can be reduced with covariate adjustment).\n\n**Limitations in practice**:\n- High cost, infeasible for many questions (e.g., long-term health effects)\n- External validity: RCT populations may not represent target population\n- Compliance/adherence issues (intention-to-treat vs. per-protocol)\n- Ethical concerns (withholding beneficial treatment)\n\n## Common gotchas / interview framings\n\n- \"RCT gives the causal effect\"—only under SUTVA and full compliance; departures require careful analysis\n- \"We ran an A/B test, so no confounding\"—true for assignment, but interpretation requires SUTVA\n- Interview: \"What assumptions does an RCT make?\" or \"When would you prefer observational to RCT?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does random assignment eliminate confounding?",
+        "back": "Randomization makes treatment X independent of all pre-treatment variables (measured and unmeasured). In the causal DAG, X has no parents (no edges pointing into X), so no backdoor paths exist. The only association between X and Y is causal."
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between intention-to-treat (ITT) and per-protocol (PP) estimates in an RCT?",
+        "back": "ITT: analyze subjects as randomized, regardless of adherence. Per-protocol: analyze only those who complied with assigned treatment. ITT is unbiased for the intent-to-treat effect but may underestimate efficacy if compliance is low. PP can be biased if non-compliance is correlated with outcomes."
+      },
+      {
+        "type": "mcq",
+        "front": "An RCT with 5% of participants dropping out of one arm. Which estimate is most reliable?",
+        "back": "ITT is more reliable because it preserves the randomization. Non-random dropout can bias PP estimates. ITT estimates the effect in the population randomized, even if some don't comply.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Intention-to-treat (ITT), because randomization is maintained",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Per-protocol (PP), because it reflects real outcomes",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Both are equally valid",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Neither; dropout introduces selection bias",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What does SUTVA stand for and why does it matter for RCTs?",
+        "back": "Stable Unit Treatment Value Assumption: (1) no interference between units (treatment of one doesn't affect another's outcome), and (2) consistent treatment (one version of treatment). Violations occur in social networks or clustered experiments; violations require design adjustments."
+      }
+    ]
+  },
+  {
+    "slug": "matching-and-propensity-scores",
+    "title": "Matching and propensity scores",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "matching",
+      "propensity-score",
+      "covariate-balance",
+      "observational",
+      "model-reduction"
+    ],
+    "aliases": [
+      "propensity score matching",
+      "PSM",
+      "covariate matching",
+      "propensity weighting",
+      "AIPW"
+    ],
+    "wikilinks": [
+      "randomized-experiments-as-gold-standard",
+      "unconfoundedness-and-sutva-assumptions",
+      "sensitivity-analysis-for-hidden-bias"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://ftp.cs.ucla.edu/pub/stat_ser/r350.pdf",
+        "label": "Pearl: Causal Inference in Statistics Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMatching and propensity scores are observational analogs to randomization. Instead of randomly assigning treatment, we pair or weight treated and control units so they are comparable on observed confounders. This reduces model dependence and can improve bias-variance tradeoff.\n\n## Detail\n\n**Propensity score**: The probability of treatment given observed confounders:\n```\ne(X) = P(X=1 | Z)\n```\nwhere Z are measured confounders.\n\n**Key insight**: If unconfoundedness holds (all confounders measured), then within levels of e(X), treated and control are comparable on Z.\n\n**Matching strategies**:\n1. **Exact matching**: Match on exact values of Z (curse of dimensionality; rarely feasible)\n2. **Propensity score matching (PSM)**: Match treated to control with similar e(X) within caliper (tolerance)\n3. **Inverse probability weighting (IPW)**: Weight treated units by 1/e(X), controls by 1/(1−e(X)); reweights to a pseudo-population where X ⊥ Z\n4. **Doubly robust**: Combine outcome regression + propensity weighting to reduce bias if either model misspecified\n\n**Covariate balance**: Check that treated and control have similar distributions of Z after matching/weighting (key diagnostic).\n\n## Common gotchas / interview framings\n\n- \"Propensity score matching controls for unmeasured confounding\"—FALSE; only works if all confounders measured\n- \"Always do 1:1 matching\"—may discard many units and increase variance; full cohort weighting often better\n- \"My regression adjustment and PSM gave different answers\"—suggests model misspecification or overlap issues\n- Interview: \"Why might matching reduce variance compared to regression?\" or \"What is covariate balance and why check it?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the propensity score and what does it achieve in matching?",
+        "back": "The propensity score e(X) = P(X=1|Z) is the probability of treatment given observed confounders. Within levels of e(X), treated and control units are balanced on Z (by definition). Matching or weighting on the propensity score mimics randomization conditional on Z."
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between propensity score matching and inverse probability weighting?",
+        "back": "PSM: Select a matched sample of treated and control with similar propensity scores, then compare outcomes. IPW: Reweight the entire cohort so that treatment is independent of confounders in the weighted population. IPW uses all data; PSM may discard many units."
+      },
+      {
+        "type": "mcq",
+        "front": "After propensity score matching, you check covariate balance and find age still differs between treated and control. What should you do?",
+        "back": "Tighten the caliper or re-specify the propensity model. Poor balance indicates the propensity model did not adequately balance confounders. Option (b) is also reasonable (doubly robust); (c) is the direct fix.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Ignore it; propensity matching handles it",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Adjust for age in the outcome regression",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Tighten the caliper (reduce tolerance) or use a different matching algorithm",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Conclude there is residual confounding",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is a 'doubly robust' estimator and why is it useful?",
+        "back": "An estimator combining propensity-weighted outcome regression. It is doubly robust because it gives consistent estimates if either the propensity model OR the outcome model is correctly specified (but not necessarily both). Reduces sensitivity to model misspecification."
+      }
+    ]
+  },
+  {
+    "slug": "difference-in-differences",
+    "title": "Difference-in-differences",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "DiD",
+      "panel-data",
+      "time-fixed-effects",
+      "quasi-experimental",
+      "parallel-trends"
+    ],
+    "aliases": [
+      "difference-in-difference",
+      "DiD",
+      "panel regression",
+      "parallel trends"
+    ],
+    "wikilinks": [
+      "randomized-experiments-as-gold-standard",
+      "unconfoundedness-and-sutva-assumptions",
+      "regression-discontinuity"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://bookdown.org/ccolonescu/ad4/differences-in-differences.html",
+        "label": "Econometric Methods for Causal Inference: Differences-in-Differences"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDifference-in-differences (DiD) compares the *change* in outcomes over time between a treated group and a control group. If both groups follow parallel trends absent treatment, the difference in trends isolates the causal effect. DiD eliminates time-invariant confounders (e.g., permanent differences between groups).\n\n## Detail\n\n**Setup**: Panel data with two time periods (pre/post) and two groups (treated/control).\n\n```\nEstimate = (Y_treated_post - Y_treated_pre) - (Y_control_post - Y_control_pre)\n          = ΔY_treated - ΔY_control\n```\n\n**Core assumption: Parallel trends**\nAbsent treatment, the treated group's outcome would have followed the same trend as the control group. Violating this (e.g., treated group was improving faster even without treatment) biases the estimate.\n\n**Model** (for multiple groups/periods):\n```\nY_it = β_0 + β_t × Time + β_g × Group + β_{DiD} × (Time × Group) + ε_it\n```\nwhere β_{DiD} is the treatment effect.\n\n**Advantages**:\n- Removes time-invariant confounders (group-level heterogeneity)\n- Requires no parametric assumptions on outcome model\n- Can extend to staggered treatment adoption\n\n**Limitations**:\n- Requires parallel trends, often unverifiable (test with pre-period trends)\n- Treatment effects may vary over time; assumes constant effect\n- Time-varying confounders violate assumptions\n\n## Common gotchas / interview framings\n\n- \"Our groups have different levels but same trends\"—DiD handles level differences; trends are key\n- \"Treatment rolled out to some groups earlier\"—use staggered DiD (heterogeneous treatment timing)\n- \"Parallel trends test: compare pre-period slopes\"—weak test if treatment effects appear immediately\n- Interview: \"How would you check the parallel trends assumption?\" or \"Why is DiD powerful for observational data?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the parallel trends assumption in DiD and why is it crucial?",
+        "back": "Absent treatment, the treated and control groups would have followed the same trend in outcomes over time. If the assumption holds, the divergence in post-treatment trends is causal. If pre-treatment trends differ, the control group is not a valid counterfactual."
+      },
+      {
+        "type": "flip",
+        "front": "How does DiD eliminate time-invariant confounders?",
+        "back": "DiD estimates the difference in *changes* (ΔY_treated - ΔY_control), not levels. Any constant confounder (e.g., permanent group difference) cancels out in the difference. Only time-varying confounders that differ between groups bias the estimate."
+      },
+      {
+        "type": "mcq",
+        "front": "In a DiD setup, treated and control groups have different baseline outcomes. Does this invalidate the estimate?",
+        "back": "No. DiD estimates the difference in trends, not levels. A constant level difference is a time-invariant confounder that cancels out in the double difference.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, because the groups are not comparable",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, because DiD eliminates level differences",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Only if the difference is growing over time",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It depends on the cause of the difference",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is 'staggered' or 'cascading' treatment adoption and how does it affect DiD?",
+        "back": "Treatment is rolled out to different groups at different times (e.g., policy adopted by some states before others). Standard DiD can be biased; newer methods (e.g., Goodman-Bacon, Callaway-Sant'Anna) account for multiple treatment times and heterogeneous treatment effects."
+      }
+    ]
+  },
+  {
+    "slug": "instrumental-variables-iv",
+    "title": "Instrumental variables (IV)",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "endogeneity",
+      "IV",
+      "two-stage-least-squares",
+      "exclusion-restriction",
+      "relevance"
+    ],
+    "aliases": [
+      "instrumental variable",
+      "2SLS",
+      "TSLS",
+      "endogenous regressor"
+    ],
+    "wikilinks": [
+      "randomized-experiments-as-gold-standard",
+      "unconfoundedness-and-sutva-assumptions",
+      "sensitivity-analysis-for-hidden-bias"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://www.mostlyharmlesseconometrics.com/",
+        "label": "Mostly Harmless Econometrics: Angrist & Pischke"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nInstrumental variables (IV) identify causal effects in the presence of unmeasured confounding and endogeneity. An IV is a variable that causally affects treatment but does not directly affect the outcome (except through treatment). IV extracts the exogenous variation in treatment to estimate the causal effect.\n\n## Detail\n\n**Problem**: X is endogenous—confounded by unmeasured U:\n```\nU → X → Y\n↓ _______↑\n```\nRegression of Y on X is biased.\n\n**Solution**: Find an instrument Z:\n```\nZ → X → Y\n    ↑ _________↑\n    U (does not affect Y directly)\n```\n\n**IV assumptions**:\n1. **Relevance**: Z causally affects X; Cov(Z, X) ≠ 0\n2. **Exclusion restriction**: Z affects Y only through X; no direct effect Z → Y\n3. **Exogeneity**: Z is unconfounded (independent of U)\n\n**Estimation** (two-stage least squares, 2SLS):\n- Stage 1: Regress X on Z; get predicted X̂\n- Stage 2: Regress Y on X̂\n- The coefficient on X̂ estimates the local average treatment effect (LATE)\n\n**Interpretation**:\n- IV estimates LATE: the effect among units whose treatment is affected by Z (compliers)\n- Assumes monotonicity: Z always pushes in the same direction for all units\n- Requires constant treatment effect (or estimates LATE, not ATE)\n\n## Common gotchas / interview framings\n\n- \"My instrument is weak\"—F-stat < 10 in stage 1; use IV-robust inference\n- \"Exclusion restriction is untestable\"—domain knowledge required; sensitivity analysis helpful\n- \"IV estimates different quantities than regression\"—yes, LATE vs ATE; which is your target?\n- Interview: \"Propose an instrument for [scenario]\" or \"How would you test the exclusion restriction?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is an instrumental variable and what problem does it solve?",
+        "back": "An IV is a variable Z that causally affects treatment X but does not directly affect the outcome Y (except through X). It solves endogeneity: when treatment X is confounded by unmeasured variables U, IV exploits exogenous variation in X to estimate the causal effect."
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between the average treatment effect (ATE) and local average treatment effect (LATE) in IV?",
+        "back": "ATE is the effect for the average unit in the population. LATE (estimated by IV) is the effect for 'compliers'—units whose treatment is causally affected by the instrument. IV estimates LATE, not ATE, unless treatment effects are constant across units."
+      },
+      {
+        "type": "mcq",
+        "front": "In 2SLS, the F-statistic in stage 1 is 3 (instrument weak). What is the implication?",
+        "back": "Weak instruments lead to finite-sample bias and inflated standard errors. Rule of thumb: F > 10 for one instrument. Use IV-robust inference (Anderson-Rubin) if weak.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The instrument is valid",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Weak instrument bias occurs; standard errors are unreliable",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The exclusion restriction is violated",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The second stage is valid despite weak first stage",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the exclusion restriction and why is it untestable?",
+        "back": "The exclusion restriction requires the instrument Z to affect Y only through X, not directly. It is untestable because we cannot observe the direct effect of Z on Y conditional on X (it is a causal assumption). Validity depends on domain knowledge and careful reasoning about mechanisms."
+      }
+    ]
+  },
+  {
+    "slug": "regression-discontinuity",
+    "title": "Regression discontinuity",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "RDD",
+      "sharp-discontinuity",
+      "fuzzy-discontinuity",
+      "cutoff",
+      "quasi-experimental"
+    ],
+    "aliases": [
+      "regression discontinuity design",
+      "RDD",
+      "sharp RDD",
+      "fuzzy RDD",
+      "cutoff design"
+    ],
+    "wikilinks": [
+      "randomized-experiments-as-gold-standard",
+      "instrumental-variables-iv",
+      "sensitivity-analysis-for-hidden-bias"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://www.mostlyharmlesseconometrics.com/",
+        "label": "Mostly Harmless Econometrics: Angrist & Pischke"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nRegression discontinuity design (RDD) exploits a sharp cutoff in eligibility for treatment. If assignment is determined by a 'running variable' crossing a threshold (e.g., test score ≥ 80 → enter program), individuals just above and below the cutoff are similar in all respects except treatment. The discontinuity in outcomes at the cutoff estimates the causal effect.\n\n## Detail\n\n**Setup**:\n- Running variable R (e.g., test score, income, age)\n- Cutoff c: if R ≥ c, receive treatment; else control\n- Outcome Y\n\n**Sharp RDD**: Treatment is deterministic at the cutoff.\n```\nX = 1 if R ≥ c; 0 otherwise\n```\n\n**Fuzzy RDD**: Treatment eligibility changes at the cutoff, but not deterministically (e.g., 90% treated above cutoff, 10% below).\n```\nP(X = 1 | R) has a jump at c\n```\n\n**Identification**: Units just above and below c have similar pre-treatment characteristics (local randomization). The jump in E[Y|R] at c estimates the local average treatment effect (LATE) at the cutoff.\n\n**Estimation**:\n- Local polynomial regression (fit polynomial on each side of cutoff; compare values at c)\n- Nonparametric methods (local linear, local polynomial)\n- Bandwidth selection crucial (too wide → bias; too narrow → high variance)\n\n**Validity conditions**:\n- Running variable manipulable (if units can game the system, fails McCrary test)\n- No other treatment changes at the cutoff\n- Effect only local to the cutoff (may not generalize)\n\n## Common gotchas / interview framings\n\n- \"RDD gives the ATE\"—no, only LATE at the cutoff; often not representative\n- \"Manipulation around the threshold\"—test with density histogram (McCrary 2008)\n- \"Bandwidth selection\"—sensitivity check with alternative bandwidths\n- Interview: \"Design an RDD for [scenario]\" or \"How do you test the validity of an RDD?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key identifying assumption in regression discontinuity?",
+        "back": "Local randomization: units just above and below the cutoff on the running variable are similar in all respects except treatment assignment. This makes them a valid comparison, as if they were randomized. The discontinuity in outcomes at the cutoff is causal."
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between sharp and fuzzy RDD?",
+        "back": "Sharp RDD: treatment is deterministic at the cutoff (e.g., test score ≥ 80 → always treated). Fuzzy RDD: eligibility changes at the cutoff, but compliance is imperfect (e.g., some eligible don't participate). Fuzzy RDD is estimated using IV methods (cutoff as the instrument)."
+      },
+      {
+        "type": "mcq",
+        "front": "In an RDD, the McCrary test shows a large jump in density of the running variable at the cutoff. What does this suggest?",
+        "back": "A jump in density suggests units manipulated their running variable to reach a desired treatment status (e.g., bunching just above the cutoff). This violates the local randomization assumption and invalidates the RDD.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The treatment effect is large",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Possible manipulation of the running variable; RDD assumptions violated",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The sample size is adequate",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The bandwidth is too small",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why does RDD estimate a local average treatment effect (LATE) rather than the ATE?",
+        "back": "RDD identifies the effect only at the cutoff where there is a discontinuity. Units far from the cutoff are not directly compared. The effect at the cutoff may differ from the population average (e.g., marginal vs. inframarginal units)."
+      }
+    ]
+  },
+  {
+    "slug": "unconfoundedness-and-sutva-assumptions",
+    "title": "Unconfoundedness and SUTVA assumptions",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "identifying-assumptions",
+      "unconfoundedness",
+      "SUTVA",
+      "causal-model",
+      "no-interference"
+    ],
+    "aliases": [
+      "no unmeasured confounding",
+      "conditional independence",
+      "SUTVA",
+      "no spillovers"
+    ],
+    "wikilinks": [
+      "randomized-experiments-as-gold-standard",
+      "matching-and-propensity-scores",
+      "sensitivity-analysis-for-hidden-bias"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://ftp.cs.ucla.edu/pub/stat_ser/r350.pdf",
+        "label": "Pearl: Causal Inference in Statistics Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nUnconfoundedness (no unmeasured confounding) and SUTVA (Stable Unit Treatment Value Assumption) are the two core assumptions that allow us to identify causal effects from observational or experimental data. They are strong, often unverifiable, and rarely fully satisfied. Understanding their scope is essential for honest inference.\n\n## Detail\n\n**Unconfoundedness** (Rubin, 1974):\n```\nY(1), Y(0) ⊥ X | Z\n```\nTreated and control units with the same observed covariates Z have the same potential outcome distribution. No unmeasured variable U confounds X and Y. Formally, all confounders are measured.\n\n**Implications**:\n- Allows regression adjustment, matching, or weighting on Z to estimate causal effects\n- Violation (unmeasured U) → biased estimates; sensitivity analysis quantifies bias\n\n**SUTVA** (Stable Unit Treatment Value Assumption) has two parts:\n1. **No interference**: One unit's treatment does not affect another's outcome\n   - Violated in social networks, cluster studies, peer effects\n2. **Consistency**: Potential outcome Y(x) is well-defined and unique; no multiple \"versions\" of treatment\n   - Violated if treatment is complex/heterogeneous or context-dependent\n\n**Violations and remedies**:\n- Unmeasured confounding → sensitivity analysis, triangulation\n- Interference → use causal graph for interference, network methods\n- Inconsistent treatment → define treatment precisely; consider mediation analysis\n\n## Common gotchas / interview framings\n\n- \"We measured everything, so unconfoundedness holds\"—no: unmeasured confounding is unknown by definition\n- \"Users don't interact, so SUTVA holds\"—even spillovers in aggregate metrics (e.g., platform load)\n- \"Causal claims require unconfoundedness and SUTVA\"—true; sensitivity analysis measures robustness\n- Interview: \"List causal assumptions and explain when you'd worry about violations.\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does unconfoundedness mean and why is it crucial for causal inference?",
+        "back": "Unconfoundedness means all variables that confound the treatment-outcome relationship are measured (no unmeasured confounders U). Formally: Y(1), Y(0) ⊥ X | Z. It is the key assumption allowing valid causal estimates from observational data via regression, matching, or weighting."
+      },
+      {
+        "type": "flip",
+        "front": "Can unconfoundedness be tested? How do we assess it?",
+        "back": "Unconfoundedness cannot be directly tested because unmeasured confounders are, by definition, unobserved. Assessment relies on: (1) subject-matter knowledge (have we measured the key confounders?), (2) sensitivity analysis (how robust are results to unmeasured confounding?), and (3) triangulation (do multiple methods agree?)."
+      },
+      {
+        "type": "mcq",
+        "front": "In a study of work-from-home's effect on productivity, employees self-select into WFH. Which assumption is most likely violated?",
+        "back": "Unconfoundedness. Employees who choose WFH may differ in motivation, which causally affects productivity. This unmeasured confounder biases estimates. Sensitivity analysis would quantify the required degree of confounding to reverse results.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Positivity",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Unconfoundedness (unmeasured motivation)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "SUTVA",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Consistency",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is SUTVA and what does it require?",
+        "back": "Stable Unit Treatment Value Assumption: (1) no interference—one unit's treatment does not affect another's outcome, and (2) consistency—the outcome under treatment x is well-defined and unique across contexts. Violations occur in networked settings (interference) and complex/context-dependent treatments (inconsistency)."
+      }
+    ]
+  },
+  {
+    "slug": "sensitivity-analysis-for-hidden-bias",
+    "title": "Sensitivity analysis for hidden bias",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "unmeasured-confounding",
+      "robustness",
+      "Rosenbaum",
+      "bias-bounds",
+      "hidden-bias"
+    ],
+    "aliases": [
+      "sensitivity to unmeasured confounding",
+      "bias bounds",
+      "Rosenbaum bounds",
+      "robustness check"
+    ],
+    "wikilinks": [
+      "unconfoundedness-and-sutva-assumptions",
+      "matching-and-propensity-scores",
+      "difference-in-differences"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://ftp.cs.ucla.edu/pub/stat_ser/r350.pdf",
+        "label": "Pearl: Causal Inference in Statistics Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nSensitivity analysis quantifies how robust causal conclusions are to violations of unconfoundedness. Rather than assume unmeasured confounding is zero (unverifiable), we ask: \"How much unmeasured confounding would be required to reverse the conclusions?\" If a small amount suffices, we should be skeptical; if a large amount is required, we can be more confident.\n\n## Detail\n\n**Rosenbaum bounds** (Rosenbaum, 1987):\nFor matched observational studies, suppose matched pairs differ in treatment by Γ (relative odds ratio), modeling unmeasured confounding. The question: for what values of Γ does the treatment effect estimate become insignificant?\n\n**Example**:\n- Estimate: treatment reduces outcome by 10 units (p < 0.01)\n- Sensitivity: results robust to Γ ≤ 1.5 (unmeasured confounder increases odds of treatment by ≤ 50% in matched pairs)\n\n**E-value** (VanderWeele & Ding, 2017):\nFor observational studies with a point estimate and confidence interval, the E-value is the minimum strength of association (relative risk) an unmeasured confounder must have with both treatment and outcome to explain away the observed effect.\n\n**Interpretation**:\n- E-value = 1: no unmeasured confounding needed (estimate near null)\n- E-value = 2: unmeasured confounder must have RR ≥ 2 with both X and Y to reverse the result\n- Higher E-value → more robust to unmeasured confounding\n\n**Other methods**:\n- **Benchmark sensitivity analysis**: Model unmeasured confounding using observed confounders as benchmarks\n- **Causal bounds**: Derive lower and upper bounds on the true causal effect under partial assumptions\n\n## Common gotchas / interview framings\n\n- \"Sensitivity analysis proves the result is causal\"—no, it quantifies robustness; high values are reassuring but not proof\n- \"We did sensitivity analysis; no unmeasured confounding\"—wrong interpretation; analysis shows how much would overturn results\n- Interview: \"How would you assess robustness to unmeasured confounding?\" or \"Calculate/interpret an E-value.\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the goal of sensitivity analysis in causal inference?",
+        "back": "To quantify how robust causal conclusions are to violations of unconfoundedness. Rather than assume unmeasured confounding is zero, sensitivity analysis asks: 'How strong would an unmeasured confounder need to be to overturn the causal conclusions?' A reassuring answer means high confidence; a weak bound means skepticism is warranted."
+      },
+      {
+        "type": "flip",
+        "front": "What is an E-value and how do you interpret it?",
+        "back": "The E-value is the minimum relative risk (RR) an unmeasured confounder must have with both treatment and outcome to explain away the observed effect. E-value = 1 means no confounding needed (effect near null). E-value = 2 means the confounder must associate with both X and Y at RR ≥ 2. Higher E-values indicate stronger robustness."
+      },
+      {
+        "type": "mcq",
+        "front": "A treatment effect estimate is RR = 1.8 (95% CI: 1.2–2.7). The E-value is 2.4. What does this mean?",
+        "back": "An unmeasured confounder would need to have a relative risk ≥ 2.4 with both treatment and outcome to explain away the observed effect. This is moderately strong confounding; depending on the context, this may or may not be plausible.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The treatment effect is 2.4 times stronger than placebo",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Unmeasured confounding with RR ≥ 2.4 with both X and Y could explain away the effect",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The estimate is robust to unmeasured confounding",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The unmeasured confounder has RR = 2.4",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is a Rosenbaum bound and when is it used?",
+        "back": "Rosenbaum bounds assess sensitivity to unmeasured confounding in matched studies. Given matched pairs and the magnitude of unmeasured confounding Γ, the bound tests whether the treatment effect remains significant. It answers: 'For matched pairs differing by Γ in odds of treatment, does the treatment effect estimate overturn?' Used in matching-based studies."
+      }
+    ]
+  },
+  {
+    "slug": "mediation-analysis",
+    "title": "Mediation analysis",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "mediation",
+      "direct-indirect-effects",
+      "mechanism",
+      "path-analysis",
+      "decomposition"
+    ],
+    "aliases": [
+      "mediation",
+      "indirect effect",
+      "natural indirect effect",
+      "path analysis"
+    ],
+    "wikilinks": [
+      "dags-directed-acyclic-graphs-and-causal-assumptions",
+      "confounders-colliders-mediators",
+      "frontdoor-criterion"
+    ],
+    "sources": [
+      {
+        "url": "https://miguelhernan.org/whatifbook",
+        "label": "Hernán & Robins: Causal Inference: What If"
+      },
+      {
+        "url": "https://ftp.cs.ucla.edu/pub/stat_ser/r350.pdf",
+        "label": "Pearl: Causal Inference in Statistics Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMediation analysis decomposes the causal effect of X on Y into two pathways: (1) the direct effect of X on Y not through the mediator M, and (2) the indirect effect of X on Y through M. Understanding mechanisms is valuable for both science and intervention design (if you want to change Y, do you target X or M?).\n\n## Detail\n\n**Effect decomposition**:\n```\nTotal Effect (TE) = Direct Effect (DE) + Indirect Effect (IE)\n  E[Y(1)] - E[Y(0)] = E[Y(1) - Y(1,M(0))] + E[Y(1,M(1)) - Y(0)]\n```\nwhere M(x) is the mediator under treatment x, and Y(x, m) is the outcome under treatment x and mediator level m.\n\n**Natural Direct Effect (NDE)**: Effect of X on Y if the mediator were held at the level it would take under control (x=0).\n**Natural Indirect Effect (NIE)**: Effect of X on Y transmitted through changes in the mediator.\n\n**Assumptions** (strong):\n1. No unmeasured confounding of X-Y\n2. No unmeasured confounding of M-Y\n3. No confounding of X-M relationship\n4. No post-treatment confounding (no variable affected by X that confounds M-Y)\n\n**Typical (flawed) approach** (Baron & Kenny, 1986):\n- Regress Y on X (total effect)\n- Regress M on X\n- Regress Y on X and M (\"controlled\" for M)\n- If effect shrinks, conclude mediation\n\n**Problems with this**: Does not account for confounding of M-Y, treatment effect heterogeneity, or post-treatment confounding.\n\n**Modern approach**:\n- Use causal assumptions (DAG) to identify NDE/NIE\n- Conduct sensitivity analysis for post-treatment confounding\n- Estimate using g-formula, IPW, or doubly robust methods\n\n## Common gotchas / interview framings\n\n- \"Mediation analysis tests if the effect is causal\"—no, all methods assume X → Y is causal\n- \"Controlling for M gives the direct effect\"—incorrect without additional assumptions (especially no post-treatment confounding)\n- \"Add more mediators and total effect sums to 100%\"—not true if mediators are correlated (overlap)\n- Interview: \"What are the assumptions for mediation analysis?\" or \"Design a mediation study for [scenario].\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the natural indirect effect (NIE) and how does it differ from the total effect?",
+        "back": "The natural indirect effect is the portion of the total effect transmitted through the mediator M (X → M → Y). Total Effect = Direct Effect (X → Y direct) + Indirect Effect (X → M → Y). NIE isolates the mechanism-specific pathway."
+      },
+      {
+        "type": "flip",
+        "front": "What are the key assumptions for identifying NDE and NIE?",
+        "back": "1. No unmeasured confounding of X-Y, 2. No unmeasured confounding of M-Y, 3. No confounding of X-M, and critically, 4. No post-treatment confounding: no variable affected by X confounds the M-Y relationship. Assumption 4 is often violated in practice."
+      },
+      {
+        "type": "mcq",
+        "front": "In a study examining whether education (X) improves income (Y) via social network (M), the relationship between M and Y is confounded by job-search effort (affected by education). What is the consequence?",
+        "back": "Job-search effort is a post-treatment confounder (affected by X, confounds M-Y). This violates the core mediation assumption and biases the NIE estimate. Sensitivity analysis or additional data on effort is needed.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The NDE is overestimated",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The NIE is biased due to post-treatment confounding",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Mediation analysis is still valid",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The total effect is zero",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is the Baron-Kenny approach to mediation (regress Y on X, M, then check if coefficient shrinks) problematic?",
+        "back": "It assumes no unmeasured confounding of M-Y and no post-treatment confounding, which are often violated. The regression approach does not account for treatment effect heterogeneity or confounding structures. Modern causal mediation uses g-formula or IPW with explicit assumptions."
+      }
+    ]
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "track": "research-leaning",
+  "track_label": "RESEARCH-LEANING",
+  "topic": "scaling-laws-emergent-abilities",
+  "topic_label": "Scaling Laws & Emergent Abilities",
+  "concept_count": 7,
+  "concepts": [
+    {
+      "slug": "compute-optimal-scaling-chinchilla-llama-paper-scaling-laws",
+      "title": "Compute optimal scaling (Chinchilla, LLaMA paper scaling laws)",
+      "difficulty": "advanced",
+      "hook": "Optimal allocation of training compute between data and model size.",
+      "subtopic": "Scaling Laws"
+    },
+    {
+      "slug": "loss-scaling-laws-and-extrapolation",
+      "title": "Loss scaling laws and extrapolation",
+      "difficulty": "advanced",
+      "hook": "Predict loss at different scales; smooth relationships.",
+      "subtopic": "Scaling Laws"
+    },
+    {
+      "slug": "downstream-scaling-laws",
+      "title": "Downstream scaling laws",
+      "difficulty": "advanced",
+      "hook": "How do improvements on pre-training loss translate to downstream tasks?",
+      "subtopic": "Scaling Laws"
+    },
+    {
+      "slug": "scaling-laws-for-long-context",
+      "title": "Scaling laws for long context",
+      "difficulty": "advanced",
+      "hook": "Does efficiency/quality scale linearly or worse with context length?",
+      "subtopic": "Scaling Laws"
+    },
+    {
+      "slug": "in-context-learning-as-emergence",
+      "title": "In-context learning as emergence",
+      "difficulty": "advanced",
+      "hook": "Sudden acquisition of ICL ability; why does it emerge?",
+      "subtopic": "Emergence & Capability Jumps"
+    },
+    {
+      "slug": "grokking-phenomenon",
+      "title": "Grokking phenomenon",
+      "difficulty": "advanced",
+      "hook": "Long training before generalization; mechanism unclear.",
+      "subtopic": "Emergence & Capability Jumps"
+    },
+    {
+      "slug": "superposition-and-interpretability-crisis",
+      "title": "Superposition and interpretability crisis",
+      "difficulty": "advanced",
+      "hook": "Features in superposition; individual neurons not interpretable.",
+      "subtopic": "Emergence & Capability Jumps"
+    }
+  ]
+}

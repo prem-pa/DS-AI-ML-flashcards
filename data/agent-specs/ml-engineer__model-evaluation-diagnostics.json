@@ -1,0 +1,93 @@
+{
+  "track": "ml-engineer",
+  "track_label": "ML ENGINEER",
+  "topic": "model-evaluation-diagnostics",
+  "topic_label": "Model Evaluation & Diagnostics",
+  "concept_count": 12,
+  "concepts": [
+    {
+      "slug": "classification-metrics-accuracy-precision-recall-f1-auc-roc-auc-pr",
+      "title": "Classification metrics (accuracy, precision, recall, F1, AUC-ROC, AUC-PR)",
+      "difficulty": "intermediate",
+      "hook": "Know when to use each; ROC vs PR tradeoff.",
+      "subtopic": "Evaluation Metrics"
+    },
+    {
+      "slug": "regression-metrics-mae-mse-rmse-r-squared-quantile-loss",
+      "title": "Regression metrics (MAE, MSE, RMSE, R-squared, quantile loss)",
+      "difficulty": "intermediate",
+      "hook": "RMSE emphasizes outliers; MAE robust; quantile loss for asymmetric cost.",
+      "subtopic": "Evaluation Metrics"
+    },
+    {
+      "slug": "ranking-metrics-ndcg-map-mrr",
+      "title": "Ranking metrics (NDCG, MAP, MRR)",
+      "difficulty": "intermediate",
+      "hook": "Position-aware; used in recommender and search systems.",
+      "subtopic": "Evaluation Metrics"
+    },
+    {
+      "slug": "calibration-and-brier-score",
+      "title": "Calibration and Brier score",
+      "difficulty": "intermediate",
+      "hook": "Model confidence matches true probability; separate from accuracy.",
+      "subtopic": "Evaluation Metrics"
+    },
+    {
+      "slug": "confusion-matrix-and-per-class-performance",
+      "title": "Confusion matrix and per-class performance",
+      "difficulty": "intermediate",
+      "hook": "Identify which classes are confused; guides data collection.",
+      "subtopic": "Error Analysis"
+    },
+    {
+      "slug": "residual-analysis-in-regression",
+      "title": "Residual analysis in regression",
+      "difficulty": "intermediate",
+      "hook": "Plots reveal heteroscedasticity, nonlinearity, outliers.",
+      "subtopic": "Error Analysis"
+    },
+    {
+      "slug": "learning-curves-and-bias-variance-decomposition",
+      "title": "Learning curves and bias-variance decomposition",
+      "difficulty": "intermediate",
+      "hook": "Diagnose if you need more data (variance) or simpler model (bias).",
+      "subtopic": "Error Analysis"
+    },
+    {
+      "slug": "out-of-distribution-ood-detection",
+      "title": "Out-of-distribution (OOD) detection",
+      "difficulty": "advanced",
+      "hook": "Identify when test data differs from training; calibration methods.",
+      "subtopic": "Error Analysis"
+    },
+    {
+      "slug": "adversarial-examples-and-adversarial-robustness",
+      "title": "Adversarial examples and adversarial robustness",
+      "difficulty": "advanced",
+      "hook": "Small perturbations fool models; certified defenses exist.",
+      "subtopic": "Robustness & Adversarial"
+    },
+    {
+      "slug": "data-poisoning-and-model-backdoors",
+      "title": "Data poisoning and model backdoors",
+      "difficulty": "advanced",
+      "hook": "Malicious training data corrupts models; defenses include anomaly detection.",
+      "subtopic": "Robustness & Adversarial"
+    },
+    {
+      "slug": "model-stealing-and-intellectual-property",
+      "title": "Model stealing and intellectual property",
+      "difficulty": "advanced",
+      "hook": "Extracting model via API queries; mitigations: query throttling, output quantization.",
+      "subtopic": "Robustness & Adversarial"
+    },
+    {
+      "slug": "fairness-metrics-demographic-parity-equalized-odds-calibration",
+      "title": "Fairness metrics (demographic parity, equalized odds, calibration)",
+      "difficulty": "intermediate",
+      "hook": "Different fairness notions suit different contexts.",
+      "subtopic": "Robustness & Adversarial"
+    }
+  ]
+}

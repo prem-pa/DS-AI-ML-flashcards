@@ -1,0 +1,888 @@
+[
+  {
+    "slug": "domain-specific-feature-engineering",
+    "title": "Domain-specific feature engineering",
+    "track": "ml-engineer",
+    "topic": "feature-engineering-selection",
+    "difficulty": "intermediate",
+    "tags": [
+      "feature-creation",
+      "domain-knowledge",
+      "business-logic",
+      "problem-solving",
+      "competition"
+    ],
+    "aliases": [
+      "task-aware-features",
+      "expert-guided-engineering",
+      "knowledge-driven-features"
+    ],
+    "wikilinks": [
+      "feature-engineering",
+      "domain-knowledge",
+      "exploratory-data-analysis",
+      "feature-importance",
+      "model-interpretability",
+      "baseline-features"
+    ],
+    "sources": [
+      {
+        "url": "https://sebastianraschka.com/faq/docs/feature_sele_categories.html",
+        "label": "Sebastian Raschka - Feature Selection Categories"
+      },
+      {
+        "url": "https://www.blog.trainindata.com/feature-selection-with-wrapper-methods/",
+        "label": "Train in Data - Feature Selection Methods"
+      },
+      {
+        "url": "https://www.frontiersin.org/journals/big-data/articles/10.3389/fdata.2025.1624507/pdf",
+        "label": "Frontiers in Big Data - Feature Selection Review"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDomain-specific feature engineering means you leverage your knowledge of the problem space—what the features mean, how they relate to the target, and what domain rules apply—to manually create features that are more predictive than raw variables. A loan officer knows that debt-to-income ratio matters; a time-series analyst knows that seasonality and trend components drive outcomes; a fraud analyst knows that velocity features (how many transactions in the last hour?) matter.\n\n## Detail\n\nBeat automatic feature learning pipelines by encoding business logic. Examples:\n- **Finance**: expense ratios, default risk metrics, cash-flow indicators\n- **E-commerce**: customer lifetime value, repeat purchase rate, cart abandonment signals\n- **Healthcare**: severity scores combining multiple clinical measures\n- **Time-series**: seasonal indicators, holiday flags, rolling aggregates at domain-relevant windows\n\nThis differs from polynomial/interaction features (which are systematic) because it requires reading domain literature, interviewing stakeholders, and understanding the causal structure of the problem. Domain features often survive feature selection because they capture real signal; random polynomial expansions rarely do.\n\n## Common gotchas / interview framings\n- \"How would you identify high-value domain features without seeing all the data?\"\n- \"Domain features can be gold, but how do you avoid overfitting to your hypothesis?\"\n- \"Describe a time you created a feature that beat the baseline. What domain insight drove it?\"\n- \"What's the difference between a domain feature and feature engineering via interaction terms?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is domain-specific feature engineering often more effective than automatic feature learning for tabular data?",
+        "back": "Domain features encode causal relationships and business logic that automatic methods miss. They distill expert knowledge into a few high-signal variables, avoiding spurious patterns and reducing dimensionality. Kaggle winners report domain features as the biggest predictor lift."
+      },
+      {
+        "type": "flip",
+        "front": "Give an example of a domain feature in a churn prediction task.",
+        "back": "Engagement decay: compare average login frequency in the last month vs. last 6 months. If the ratio is below 0.5, churn risk is elevated. This captures behavioral inertia—a concept raw login counts alone would miss."
+      },
+      {
+        "type": "mcq",
+        "front": "Which approach is most likely to uncover domain-specific features?",
+        "back": "Option B: direct domain knowledge is the primary source. The others are useful downstream, but domain features are born from understanding the problem, not the data alone.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Run variance inflation factors on all raw features",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Conduct exploratory interviews with subject-matter experts and domain literature review",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Increase polynomial degree until r² plateaus",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Apply SHAP to identify top feature interactions",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How do you validate that a domain feature is not just your hypothesis overfitting?",
+        "back": "Use held-out test set and cross-validation. Compare lift vs. simpler baseline. If the feature works across folds and generalizes to test, and if domain theory predicts why, it's likely genuine signal."
+      }
+    ]
+  },
+  {
+    "slug": "polynomial-and-interaction-features",
+    "title": "Polynomial and interaction features",
+    "track": "ml-engineer",
+    "topic": "feature-engineering-selection",
+    "difficulty": "intermediate",
+    "tags": [
+      "nonlinearity",
+      "feature-creation",
+      "polynomial-expansion",
+      "interactions",
+      "feature-explosion"
+    ],
+    "aliases": [
+      "interaction-terms",
+      "polynomial-expansion",
+      "higher-order-features",
+      "cross-features"
+    ],
+    "wikilinks": [
+      "polynomial-regression",
+      "nonlinearity",
+      "feature-explosion",
+      "overfitting",
+      "dimensionality",
+      "regularization"
+    ],
+    "sources": [
+      {
+        "url": "https://medium.com/@bhatadithya54764118/day-33-feature-selection-techniques-filter-wrapper-and-embedded-methods-00fb2bd04aa3",
+        "label": "Medium - Feature Selection Techniques Overview"
+      },
+      {
+        "url": "https://www.geeksforgeeks.org/machine-learning/feature-selection-filter-methods/",
+        "label": "GeeksforGeeks - Filter Methods"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nPolynomial and interaction features let linear models capture nonlinear relationships and synergistic effects. If y depends on the product of two inputs (e.g., height × weight = body mass proxy), a polynomial expansion creates that feature explicitly. The cost: exponential feature explosion. A degree-3 polynomial with 10 features yields 1000+ features; you must regularize or select.\n\n## Detail\n\nPolynomial features: x_new = [x, x², x³, ...]. Useful for curve fitting but prone to overfitting and multicollinearity.\n\nInteraction features: x_new includes [x_i * x_j] for all pairs (or selected pairs). Example: in pricing, price elasticity may depend on both volume AND season (volume × season_flag).\n\nManual interaction selection is safer than exhaustive: domain knowledge or correlation analysis identify the most likely pairwise interactions. PolynomialFeatures with low degree + feature selection (filter or wrapper) is a practical pipeline.\n\n```python\nfrom sklearn.preprocessing import PolynomialFeatures\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.feature_selection import SelectKBest, f_regression\n\npipe = Pipeline([\n    ('poly', PolynomialFeatures(degree=2, include_bias=False)),\n    ('select', SelectKBest(f_regression, k=10)),\n    ('model', LinearRegression())\n])\n```\n\n## Common gotchas / interview framings\n- \"Why does polynomial degree 3 blow up faster than you'd expect?\"\n- \"How would you avoid multicollinearity when adding x²?\"\n- \"When should you use interaction features vs. letting a tree capture interactions?\"\n- \"Describe the trade-off between feature explosion and nonlinearity capture.\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does increasing polynomial degree from 2 to 3 cause more than a 3x increase in features?",
+        "back": "Combinatorial explosion. Degree-2 adds all pairs (choose 2 from n variables); degree-3 adds all triples. With n=10: degree 2 ≈ 55 features, degree 3 ≈ 175. Each additional degree multiplies by roughly (n/degree)."
+      },
+      {
+        "type": "flip",
+        "front": "When would you prefer tree-based models over polynomial features?",
+        "back": "Trees capture interactions automatically without explicit feature engineering. They avoid multicollinearity, scale better, and require less domain knowledge. Use polynomials for linear models or interpretability."
+      },
+      {
+        "type": "mcq",
+        "front": "What is the primary risk of using PolynomialFeatures without feature selection?",
+        "back": "Polynomials create collinear features (e.g., x and x² are correlated) and blow up the feature space, increasing variance and overfitting. Use SelectKBest or L1 regularization to prune.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Reduced training speed due to convexity",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Overfitting due to high dimensionality and multicollinearity",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Loss of feature interpretability in tree models",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Inability to capture interactions",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How would you select only the most important interactions without exhaustive PolynomialFeatures?",
+        "back": "Use correlation analysis or mutual information to identify pairs of features with high joint predictiveness. Manually create interactions for those pairs, or use wrapper methods like RFE to prune polynomial features."
+      },
+      {
+        "type": "mcq",
+        "front": "In which scenario would an interaction feature x_i * x_j be most useful?",
+        "back": "Interaction terms capture synergistic effects where two weak individual predictors combine to strongly predict y. This is common in dose-response models, pricing, and click-through rates (placement × user_quality).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "When x_i and x_j are both normally distributed",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "When the target depends multiplicatively on both inputs (e.g., dose × exposure time in pharmacology)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "When the model is a decision tree with depth > 5",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "When x_i and x_j are uncorrelated with the target individually",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "embedding-based-features",
+    "title": "Embedding-based features",
+    "track": "ml-engineer",
+    "topic": "feature-engineering-selection",
+    "difficulty": "intermediate",
+    "tags": [
+      "categorical-encoding",
+      "embeddings",
+      "dimensionality-reduction",
+      "neural-networks",
+      "representation-learning"
+    ],
+    "aliases": [
+      "learned-embeddings",
+      "categorical-embeddings",
+      "embedding-layers",
+      "dense-representations"
+    ],
+    "wikilinks": [
+      "embeddings",
+      "one-hot-encoding",
+      "target-encoding",
+      "categorical-variables",
+      "neural-networks",
+      "dimensionality-reduction"
+    ],
+    "sources": [
+      {
+        "url": "https://sebastianraschka.com/faq/docs/feature_sele_categories.html",
+        "label": "Sebastian Raschka - Feature Selection Categories"
+      },
+      {
+        "url": "https://www.blog.trainindata.com/feature-selection-with-wrapper-methods/",
+        "label": "Train in Data - Feature Selection and Embeddings"
+      },
+      {
+        "url": "https://www.frontiersin.org/journals/big-data/articles/10.3389/fdata.2025.1624507/pdf",
+        "label": "Frontiers - Feature Selection and Deep Learning"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nEmbeddings replace high-cardinality categorical variables (e.g., product ID with 100k values) with learned dense vectors. Instead of one-hot encoding (100k sparse features), an embedding maps each category to a 10-50 dimensional dense vector. This reduces sparsity, captures semantic similarity, and often improves generalization. Neural networks learn embeddings end-to-end; for tree models, you can pre-train embeddings separately (e.g., via Word2Vec on sequences of product IDs) and use the dense vectors as input features.\n\n## Detail\n\nEmbedding layers in neural nets learn representations optimized for the downstream task. A product embedding captures product similarity; users who buy product A are more likely to buy products similar in embedding space.\n\nPre-trained embeddings (from NLP or recommendation systems) transfer knowledge: word2vec embeddings for text categories, embedding models from collaborative filtering. For tabular data, fastText can embed categorical columns unsupervised.\n\nBenefit over one-hot: drastically fewer features (10 vs. 100k), automatic similarity capture, smoother gradients for gradient descent. Drawback: less interpretable than one-hot, requires careful initialization and regularization to avoid overfitting in low-data regimes.\n\n```python\n# Keras embedding layer in a model\nfrom tensorflow.keras.layers import Embedding, Input, Flatten, Dense\n\ninput_ids = Input(shape=(1,))\nembed = Embedding(input_dim=100000, output_dim=32)(input_ids)  # 100k categories -> 32-dim vectors\nflat = Flatten()(embed)\noutput = Dense(1, activation='sigmoid')(flat)\n```\n\n## Common gotchas / interview framings\n- \"Why not just use one-hot encoding for categorical variables?\"\n- \"When should you pre-train embeddings vs. learn them end-to-end?\"\n- \"How do you handle new categories not seen during training with embeddings?\"\n- \"Compare embedding dimensions: too small (loses info), too large (overfits). How do you choose?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why are embeddings superior to one-hot encoding for high-cardinality categoricals (e.g., 100k distinct items)?",
+        "back": "One-hot creates 100k sparse binary features; embeddings use 10-50 dense dimensions. Benefits: (1) far fewer features, (2) capture similarity (nearby vectors = similar categories), (3) smoother gradients, (4) reduce data sparsity and improve generalization."
+      },
+      {
+        "type": "flip",
+        "front": "How would you handle a new category during inference if you trained embeddings on historical data?",
+        "back": "Several approaches: (1) pre-assign rare categories to a single 'unknown' embedding, (2) use a hash-based bucketing strategy to assign new categories to consistent embeddings, (3) use a default initialization (e.g., mean of existing embeddings), (4) treat as a missing value and impute."
+      },
+      {
+        "type": "mcq",
+        "front": "When should you use pre-trained embeddings (e.g., from word2vec or collaborative filtering) vs. learning embeddings end-to-end?",
+        "back": "Pre-trained embeddings transfer knowledge and are ideal for low-data regimes. End-to-end learning optimizes for your specific task when you have enough data. Both approaches work; choice depends on data volume and domain.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Always learn end-to-end; pre-training is only for NLP",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Use pre-trained if you have limited training data or the embedding task (e.g., product similarity) is well-understood; learn end-to-end for large data or novel tasks",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Pre-trained embeddings are incompatible with tree models, so only use for neural nets",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "End-to-end learning always overfits; pre-training is mandatory",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What's the trade-off in choosing embedding dimension (e.g., 10 vs. 50 vs. 128)?",
+        "back": "Small dimensions (10): faster, less overfitting, but may lose category nuance. Large dimensions (128): more expressive, captures fine-grained similarity, but requires more data and increases overfitting risk. Rule of thumb: ~√(cardinality) or cross-validate."
+      },
+      {
+        "type": "mcq",
+        "front": "In a tabular model with 1M users and 100k products, would you recommend one-hot or embeddings for product_id?",
+        "back": "Embeddings are ideal here. 100k one-hot features cause sparsity and overfitting. 32-dim embeddings reduce noise, capture product similarity, and improve generalization.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "One-hot; it's simpler and works fine for tabular data",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Embeddings; 100k features from one-hot is excessive; embeddings yield ~32 features and capture similarity",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Both; concatenate one-hot and embeddings for redundancy",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Neither; drop the product_id and use only user features",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "temporal-features-lag-rolling-window-seasonal-decomposition",
+    "title": "Temporal features (lag, rolling window, seasonal decomposition)",
+    "track": "ml-engineer",
+    "topic": "feature-engineering-selection",
+    "difficulty": "intermediate",
+    "tags": [
+      "time-series",
+      "temporal-patterns",
+      "lagged-features",
+      "rolling-aggregates",
+      "seasonality"
+    ],
+    "aliases": [
+      "lag-features",
+      "rolling-window-features",
+      "seasonal-indicators",
+      "time-based-features"
+    ],
+    "wikilinks": [
+      "time-series",
+      "autocorrelation",
+      "seasonal-decomposition",
+      "stationarity",
+      "forecast-horizons",
+      "feature-engineering"
+    ],
+    "sources": [
+      {
+        "url": "https://sebastianraschka.com/faq/docs/feature_sele_categories.html",
+        "label": "Sebastian Raschka - Feature Selection and Temporal Data"
+      },
+      {
+        "url": "https://www.enjoyalgorithms.com/blog/feature-selection-techniques/",
+        "label": "Enjoy Algorithms - Feature Selection Techniques"
+      },
+      {
+        "url": "https://www.frontiersin.org/journals/big-data/articles/10.3389/fdata.2025.1624507/pdf",
+        "label": "Frontiers - Feature Selection Review"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nTime-series models depend on history and patterns. Lags (prior values), rolling statistics (7-day average), and seasonal indicators encode temporal dependencies that raw timestamps don't capture. A sales forecast needs yesterday's sales; a traffic prediction needs the same hour from last week; a utility load model needs seasonal (summer vs. winter) and cyclical (weekday vs. weekend) patterns.\n\n## Detail\n\n**Lag features**: y_t-1, y_t-7 (autoregressive structure). Essential for modeling momentum and inertia.\n\n**Rolling windows**: rolling mean/std/min/max over k periods (7-day, 30-day). Captures trends and volatility.\n\n**Seasonal indicators**: hour-of-day, day-of-week, month, holidays (one-hot or cyclical encoding). Captures repeating patterns.\n\n**Seasonal decomposition**: trend, seasonal, residual components via STL or classical decomposition. Use trend and seasonal as engineered features.\n\n**Cyclical encoding**: Convert cyclic features (hour 0-23) to sin/cos pairs to preserve circularity: sin(2π*hour/24), cos(2π*hour/24).\n\n```python\nimport pandas as pd\nfrom statsmodels.tsa.seasonal import seasonal_decompose\n\n# Lag features\ndf['sales_lag_1'] = df['sales'].shift(1)\ndf['sales_lag_7'] = df['sales'].shift(7)\n\n# Rolling features\ndf['sales_rolling_7'] = df['sales'].rolling(7).mean()\ndf['sales_rolling_std'] = df['sales'].rolling(7).std()\n\n# Cyclical encoding\ndf['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)\ndf['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)\n\n# Seasonal decomposition\ndecomposed = seasonal_decompose(df['sales'], model='additive', period=7)\ndf['trend'] = decomposed.trend\ndf['seasonal'] = decomposed.seasonal\n```\n\n## Common gotchas / interview framings\n- \"How do you prevent look-ahead bias when engineering lag features?\"\n- \"Why is cyclical encoding (sin/cos) better than categorical encoding for hour-of-day?\"\n- \"What happens to lags at the start of a time series (missing values)?\"\n- \"Describe a situation where a single lag feature failed and rolling statistics succeeded.\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why should you use sin/cos encoding for cyclic features (hour, day-of-week) instead of categorical one-hot?",
+        "back": "Cyclical encoding preserves circularity: hour 23 and hour 0 are adjacent, not opposite. sin/cos pairs map cyclic features to a 2D plane where distance reflects temporal distance. One-hot ignores the wrap-around, creating spurious discontinuities."
+      },
+      {
+        "type": "flip",
+        "front": "What is look-ahead bias in time-series feature engineering, and how do you avoid it?",
+        "back": "Look-ahead bias occurs if you use future information (e.g., lag_-1 instead of lag_1, or rolling average including future points). Avoid by: (1) only shift backward (shift(positive)), (2) use expanding windows, (3) strictly separate train/test by time cutoff."
+      },
+      {
+        "type": "mcq",
+        "front": "When engineering lag features for hourly data, why might lag_1 (1 hour) alone be insufficient?",
+        "back": "Time-series often have multiple periodicities: daily, weekly, seasonal. Lag_24 captures diurnal patterns, lag_168 captures weekly. Multiple lags + rolling windows + seasonal decomposition together model the full temporal structure.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Lag_1 is always sufficient; lags beyond 1 introduce noise",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Hourly patterns may repeat at lag_24 (daily) and lag_168 (weekly); multiple lags capture these cycles",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Lag_1 is too slow; you need lag_0.5 for intra-hour patterns",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Lags destroy model interpretability",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How would you handle missing values created by lag features at the start of a time series?",
+        "back": "Options: (1) drop first k rows (accept data loss), (2) forward-fill or interpolate lags (introduces bias if many missing), (3) use seasonal naive lags only after sufficient history, (4) impute with mean/median of available history. Choose based on data volume and model sensitivity."
+      },
+      {
+        "type": "mcq",
+        "front": "A sales forecast uses lag_1 but still misses spikes. Which feature would you add next?",
+        "back": "Rolling statistics capture trend and volatility, which lags alone miss. Lag_1 is a point estimate; rolling mean/std smooth and reveal patterns. Together they model both short-term momentum and recent context.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Lag_2 and lag_3 to capture higher-order dependencies",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Rolling mean and std to capture recent trend and volatility",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Random polynomial features",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "A second lag_1 column (duplicate)",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "filter-methods-correlation-mutual-information-statistical-tests",
+    "title": "Filter methods (correlation, mutual information, statistical tests)",
+    "track": "ml-engineer",
+    "topic": "feature-engineering-selection",
+    "difficulty": "intermediate",
+    "tags": [
+      "feature-selection",
+      "filter-methods",
+      "correlation",
+      "mutual-information",
+      "statistical-tests"
+    ],
+    "aliases": [
+      "univariate-selection",
+      "correlation-filtering",
+      "information-gain",
+      "chi-squared-tests"
+    ],
+    "wikilinks": [
+      "feature-selection",
+      "correlation",
+      "mutual-information",
+      "pearson-correlation",
+      "p-values",
+      "statistical-testing"
+    ],
+    "sources": [
+      {
+        "url": "https://sebastianraschka.com/faq/docs/feature_sele_categories.html",
+        "label": "Sebastian Raschka - Feature Selection Categories"
+      },
+      {
+        "url": "https://www.geeksforgeeks.org/machine-learning/feature-selection-filter-methods/",
+        "label": "GeeksforGeeks - Filter Methods"
+      },
+      {
+        "url": "https://www.blog.trainindata.com/feature-selection-with-wrapper-methods/",
+        "label": "Train in Data - Feature Selection Methods"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nFilter methods rank features by their intrinsic statistical properties (correlation with target, mutual information, variance) without training a model. They're fast, model-agnostic, and interpretable but can miss interactions and dependencies between features. Use them as a first-pass screening step to remove obviously weak features before wrapper or embedded methods.\n\n## Detail\n\n**Pearson correlation**: For continuous targets, measure linear association. High |r| → strong linear relationship. Simple and fast; misses nonlinear dependencies.\n\n**Mutual information (MI)**: Captures nonlinear dependencies. MI(X; Y) measures bits of information X contains about Y. High MI → strong association (linear or nonlinear). More powerful than correlation but requires binning/estimation.\n\n**Chi-squared test**: For categorical targets, tests independence of categorical features. High χ² statistic + low p-value → feature is predictive.\n\n**ANOVA F-test**: For continuous targets with categorical features. Tests if mean target differs across feature categories. High F-statistic → feature is predictive.\n\n**Variance threshold**: Remove near-zero-variance features (little information content).\n\n```python\nfrom sklearn.feature_selection import SelectKBest, mutual_info_classif, f_classif, chi2, VarianceThreshold\nfrom sklearn.pipeline import Pipeline\n\n# Mutual information for classification\nselect_mi = SelectKBest(mutual_info_classif, k=10)\n\n# ANOVA F-test for regression\nselect_f = SelectKBest(f_regression, k=15)\n\n# Chi-squared for non-negative features\nselect_chi2 = SelectKBest(chi2, k=10)\n\n# Variance threshold\nvar_threshold = VarianceThreshold(threshold=0.01)\n```\n\n## Common gotchas / interview framings\n- \"Why does high correlation not guarantee predictiveness?\"\n- \"When would mutual information outperform Pearson correlation?\"\n- \"How do you combine filter results (e.g., top-10 by MI + top-5 by ANOVA)?\"\n- \"What's the drawback of filter methods in capturing feature interactions?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why might a feature with high correlation to the target still be useless in a model?",
+        "back": "Correlation measures linear association, but targets often depend on interactions or nonlinear combinations. A feature may be correlated due to confounding (a third variable drives both). Always validate in a held-out set; filter is a screening, not a guarantee."
+      },
+      {
+        "type": "mcq",
+        "front": "Which filter method best detects nonlinear relationships between feature and target?",
+        "back": "Mutual information measures information content without assuming linearity. Pearson misses nonlinear patterns. If target = x², MI will flag x as informative; Pearson correlation ≈ 0.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Pearson correlation (always linear)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Mutual information (captures both linear and nonlinear dependencies)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Variance threshold (ignores target entirely)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "T-test (univariate only)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the primary limitation of filter-based feature selection?",
+        "back": "Filters rank features independently without considering interactions or redundancy. Two highly correlated features both rank high even though you need only one. Feature A alone may be weak, but A+B together predict well; filters miss this synergy."
+      },
+      {
+        "type": "flip",
+        "front": "How would you combine Pearson correlation and mutual information for robust feature screening?",
+        "back": "Rank features by both metrics. Keep features in top-k by MI (catches nonlinearity), then subset those by high |Pearson correlation| (captures strong linear effects). Or: union of top-k by each method, then apply a wrapper to refine."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is SelectKBest(chi2) unsuitable for a dataset with negative values?",
+        "back": "Chi-squared tests require non-negative feature values. Preprocessing step: shift all features >= 0 if using chi2. Alternatively, use mutual_info_classif or f_classif, which handle negative values.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Chi-squared assumes non-negative inputs (it squares values)",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Negative values always reduce feature importance",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Chi-squared only works for categorical targets",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "SelectKBest doesn't support chi2 in sklearn",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "wrapper-methods-forwardbackward-selection-rfe",
+    "title": "Wrapper methods (forward/backward selection, RFE)",
+    "track": "ml-engineer",
+    "topic": "feature-engineering-selection",
+    "difficulty": "intermediate",
+    "tags": [
+      "feature-selection",
+      "wrapper-methods",
+      "recursive-feature-elimination",
+      "forward-selection",
+      "backward-selection"
+    ],
+    "aliases": [
+      "sequential-feature-selection",
+      "RFE",
+      "greedy-selection",
+      "model-based-selection"
+    ],
+    "wikilinks": [
+      "feature-selection",
+      "recursive-feature-elimination",
+      "model-training",
+      "cross-validation",
+      "computational-cost",
+      "feature-interactions"
+    ],
+    "sources": [
+      {
+        "url": "https://sebastianraschka.com/faq/docs/feature_sele_categories.html",
+        "label": "Sebastian Raschka - Feature Selection Categories"
+      },
+      {
+        "url": "https://www.blog.trainindata.com/feature-selection-with-wrapper-methods/",
+        "label": "Train in Data - Wrapper Methods"
+      },
+      {
+        "url": "https://www.frontiersin.org/journals/big-data/articles/10.3389/fdata.2025.1624507/pdf",
+        "label": "Frontiers - Comprehensive Feature Selection Review"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nWrapper methods train a model repeatedly on different subsets of features, evaluating each subset by model performance (e.g., cross-validation score). Unlike filters, wrappers account for model-specific interactions and can uncover synergistic feature combinations. The cost: computationally expensive (O(n²) or worse for exhaustive search), prone to overfitting if validation is loose, and model-dependent (the selected features are optimal for that specific model, not universally).\n\n## Detail\n\n**Forward selection**: Start with empty set. Iteratively add the feature that most improves CV score. Stop when improvement plateaus.\n\n**Backward elimination**: Start with all features. Iteratively remove the feature whose removal hurts CV score least. Stop when removal degrades performance significantly.\n\n**Recursive feature elimination (RFE)**: Train model, rank features by importance (coefficients, tree importance), remove bottom k%, repeat. Linear in iterations, efficient for high-dimensional data.\n\n**SequentialFeatureSelector**: sklearn's flexible forward/backward selection with cross-validation.\n\nBest practices:\n- Use cross-validation (StratifiedKFold for classification) to avoid overfitting the selection.\n- Set a minimum CV score threshold or patience to stop early.\n- Pair with regularization to avoid selecting noise.\n\n```python\nfrom sklearn.feature_selection import RFE, SequentialFeatureSelector\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.linear_model import LogisticRegression\n\n# RFE: recursive elimination\nrf = RandomForestClassifier(n_estimators=100, random_state=42)\nrfe = RFE(rf, n_features_to_select=10, step=5)\nX_rfe = rfe.fit_transform(X, y)\n\n# SequentialFeatureSelector: forward selection with CV\nlr = LogisticRegression(max_iter=1000)\nsfs = SequentialFeatureSelector(lr, n_features_to_select=10, cv=5, direction='forward')\nX_sfs = sfs.fit_transform(X, y)\n```\n\n## Common gotchas / interview framings\n- \"When is forward selection preferable to backward elimination?\"\n- \"How do you avoid overfitting during wrapper feature selection?\"\n- \"Why does RFE sometimes select different features than forward selection for the same model?\"\n- \"Compare computational cost of forward selection (n²) vs. filter methods (O(n)).\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why might forward selection and backward elimination select different feature subsets for the same model?",
+        "back": "Forward selection builds greedily from scratch, so early choices lock in. Backward elimination starts with all features and accounts for redundancy/multicollinearity early. Removal of a weak feature in backward may expose a strong feature, but forward might have skipped that path. The greedy algorithms find local optima, not global."
+      },
+      {
+        "type": "mcq",
+        "front": "How do you prevent wrapper-based feature selection from overfitting to the training set?",
+        "back": "Nested CV prevents selection overfitting. Inner loop (e.g., 5-fold) selects features on each fold's training data. Outer loop (e.g., 3-fold) evaluates the final model on truly held-out data. Without nesting, you optimize to noise.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Use the same train/test split repeatedly (no cross-validation)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Use nested cross-validation: inner loop for selection, outer loop for evaluation",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Disable regularization to ensure features are 'pure'",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Select features only from highly correlated features",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "A dataset has 100 features. Would you use forward selection or backward elimination first, and why?",
+        "back": "Start with backward elimination. Removing obviously weak features from 100 is faster than building forward from 0. Forward selection is more practical when feature count is manageable (~20-50). For very high dimensions, use filter + RFE + L1 regularization for efficiency."
+      },
+      {
+        "type": "flip",
+        "front": "Describe a scenario where RFE would fail but forward selection would succeed.",
+        "back": "RFE relies on single-model importance scores (e.g., tree feature importance). If a feature is weak in isolation but powerful in combination with another, RFE may prune it early. Forward selection, by iteratively building combos, would recognize the synergy and keep it."
+      },
+      {
+        "type": "mcq",
+        "front": "What is the computational complexity of forward selection with n features and k-fold CV?",
+        "back": "Forward selection: iterate k times (target features), each iteration trains a model on O(n) features with k-fold CV. Total: O(k * n * training_cost). With m target features, O(m * n * k * model_cost). For n=100, m=20, k=5, this is ~10k model trains—expensive but feasible.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "O(n) - linear, very fast",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "O(n*m) where m is target number of features - quadratic in the worst case",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "O(2^n) - exponential, only for small n",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "O(log n) - logarithmic",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "embedded-methods-feature-importance-from-tree-models-l1-regularization",
+    "title": "Embedded methods (feature importance from tree models, L1 regularization)",
+    "track": "ml-engineer",
+    "topic": "feature-engineering-selection",
+    "difficulty": "intermediate",
+    "tags": [
+      "feature-selection",
+      "embedded-methods",
+      "feature-importance",
+      "L1-regularization",
+      "lasso",
+      "tree-models"
+    ],
+    "aliases": [
+      "lasso-selection",
+      "tree-importance",
+      "regularization-based-selection",
+      "coeff-pruning"
+    ],
+    "wikilinks": [
+      "feature-selection",
+      "l1-regularization",
+      "lasso",
+      "tree-importance",
+      "regularization",
+      "feature-importance"
+    ],
+    "sources": [
+      {
+        "url": "https://sebastianraschka.com/faq/docs/feature_sele_categories.html",
+        "label": "Sebastian Raschka - Feature Selection Categories"
+      },
+      {
+        "url": "https://medium.com/@abhaysingh71711/efficient-feature-selection-a-guide-to-embedded-methods-for-optimized-machine-learning-45ea3c83e622",
+        "label": "Medium - Embedded Methods for Feature Selection"
+      },
+      {
+        "url": "https://www.blog.trainindata.com/feature-selection-with-wrapper-methods/",
+        "label": "Train in Data - Embedded and Wrapper Methods"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nEmbedded methods perform feature selection during model training, not before or after. L1 regularization (Lasso) shrinks weak coefficients to zero, effectively removing features. Tree-based feature importance ranks features by their contribution to splits and prediction, identifying which features the model actually uses. Embedded methods are efficient (single model training) and couple selection to the final model, ensuring features are chosen for the task at hand.\n\n## Detail\n\n**L1 regularization (Lasso)**: Adds penalty term λ * Σ|coefficient_i| to the loss. As λ increases, weak coefficients → 0 exactly (sparse solution). Features with coeff ≠ 0 are selected. Linear model; interpretable; fast.\n\n**Tree feature importance**: Computed as the decrease in impurity (Gini, entropy) each feature contributes across all splits. High importance → feature is used often and effectively. Works for Random Forests, Gradient Boosting. Not reliable for high-cardinality categoricals or when features are correlated (importance is shared arbitrarily).\n\n**Permutation importance**: Shuffle each feature, measure performance drop. Model-agnostic and stable under multicollinearity (both correlated features show high importance if both are useful).\n\n**Elastic Net**: L1 + L2 (ridge) penalty. Balances sparsity and stability.\n\n```python\nfrom sklearn.linear_model import LassoCV, LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier\nimport numpy as np\n\n# Lasso with cross-validation to find optimal lambda\nlasso = LassoCV(cv=5).fit(X, y)\nselected_features = np.where(lasso.coef_ != 0)[0]\n\n# Tree feature importance\nrf = RandomForestClassifier(n_estimators=100, random_state=42).fit(X, y)\nfeature_importance = rf.feature_importances_\n\n# Permutation importance\nfrom sklearn.inspection import permutation_importance\nperm_importance = permutation_importance(rf, X_test, y_test, n_repeats=10, random_state=42)\n```\n\n## Common gotchas / interview framings\n- \"Why does tree importance differ from permutation importance?\"\n- \"How does L1 differ from L2 regularization in terms of feature selection?\"\n- \"When is tree importance unreliable, and what should you use instead?\"\n- \"Compare computational cost: L1 selection vs. wrapper methods.\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does L1 regularization (Lasso) force weak coefficients to zero, while L2 (Ridge) only shrinks them?",
+        "back": "L1 penalty: λ * Σ|coef|. The absolute value creates a 'corner' in the penalty geometry; optimal solutions often hit zero. L2 penalty: λ * Σ(coef²). The quadratic shape has no corner; solutions smoothly approach zero but rarely reach it exactly. L1 → sparse; L2 → dense but small."
+      },
+      {
+        "type": "mcq",
+        "front": "Tree feature importance is unreliable when:",
+        "back": "With correlated features, a tree may use either feature A or B (both carry same signal); importance is split between them, and which one 'wins' in a split is somewhat arbitrary. Permutation importance avoids this by measuring actual prediction impact.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The target is continuous (regression)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Features are correlated; importance is arbitrarily divided among them",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The tree depth is > 10",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "You use entropy instead of Gini impurity",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "When would you prefer permutation importance over tree feature importance?",
+        "back": "Permutation importance is model-agnostic, accounts for feature interactions, and handles multicollinearity better (both correlated features show high importance if both are used). Use it when: (1) model is not a tree, (2) features are correlated, (3) you want a post-hoc explanation."
+      },
+      {
+        "type": "flip",
+        "front": "How do you use LassoCV to automatically select features?",
+        "back": "Fit LassoCV(cv=k) on X, y. It cross-validates to find optimal λ. Features with coef_ != 0 are selected. Access via X_selected = X[:, lasso.coef_ != 0]. Quick, efficient, and handles multicollinearity."
+      },
+      {
+        "type": "mcq",
+        "front": "A Random Forest ranks Feature A (importance=0.08) and Feature B (importance=0.07) as top-2. They are highly correlated. What should you do?",
+        "back": "Permutation importance measures actual prediction impact; one feature may dominate in a holdout set. Tree importance doesn't distinguish which of two correlated features is 'truly' useful. Permutation clarifies.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Keep both; they have the highest importance scores",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Use permutation importance to break the tie and determine which is truly predictive",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Randomly drop one and retrain",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Encode them as a single interaction feature",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "multicollinearity-and-correlation-cleanup",
+    "title": "Multicollinearity and correlation cleanup",
+    "track": "ml-engineer",
+    "topic": "feature-engineering-selection",
+    "difficulty": "intermediate",
+    "tags": [
+      "multicollinearity",
+      "correlation",
+      "feature-redundancy",
+      "variance-inflation",
+      "feature-selection",
+      "linear-models"
+    ],
+    "aliases": [
+      "collinearity-reduction",
+      "VIF-filtering",
+      "correlation-clustering",
+      "redundancy-cleanup"
+    ],
+    "wikilinks": [
+      "multicollinearity",
+      "variance-inflation-factor",
+      "pearson-correlation",
+      "linear-regression",
+      "model-stability",
+      "feature-redundancy"
+    ],
+    "sources": [
+      {
+        "url": "https://sebastianraschka.com/faq/docs/feature_sele_categories.html",
+        "label": "Sebastian Raschka - Feature Selection and Multicollinearity"
+      },
+      {
+        "url": "https://www.geeksforgeeks.org/machine-learning/feature-selection-filter-methods/",
+        "label": "GeeksforGeeks - Feature Selection"
+      },
+      {
+        "url": "https://www.frontiersin.org/journals/big-data/articles/10.3389/fdata.2025.1624507/pdf",
+        "label": "Frontiers - Feature Selection Review (2025)"
+      },
+      {
+        "url": "https://link.springer.com/article/10.1007/s11069-024-06878-6",
+        "label": "Springer - Comparison of Feature Selection Methods"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMulticollinearity occurs when two or more features are highly correlated. In linear models, this inflates coefficient variance: small changes in data cause large coefficient swings, reducing stability and interpretability. A 0.95-correlated pair of features both contribute to predictions, but neither alone explains much variance. Removing one redundant feature simplifies the model without sacrificing predictive power. Tree-based models and L1-regularized models are more robust to multicollinearity, but linear models (OLS regression, logistic regression without regularization) suffer.\n\n## Detail\n\n**Variance Inflation Factor (VIF)**: For each feature, regress it on all others. VIF = 1 / (1 - R²). VIF > 5-10 signals problematic multicollinearity. Iteratively remove the feature with highest VIF until all VIF < 5.\n\n**Correlation matrix**: Identify feature pairs with |r| > 0.95. Remove one from each pair (usually the one with lower domain relevance or external validity).\n\n**Principal Component Analysis (PCA)**: Projects correlated features into orthogonal principal components. Solves multicollinearity but sacrifices interpretability.\n\n**Domain-driven removal**: If two features are correlated because one is a derived/scaled version of the other, drop the redundant one (e.g., keep price_usd, drop price_eur if it's just a conversion).\n\n```python\nfrom statsmodels.stats.outliers_influence import variance_inflation_factor\nimport pandas as pd\nimport numpy as np\n\n# Compute VIF for each feature\nvif_data = pd.DataFrame()\nvif_data['feature'] = X.columns\nvif_data['VIF'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]\n\n# Remove features with VIF > 5 iteratively\nwhile (vif_data['VIF'] > 5).any():\n    max_vif_idx = vif_data['VIF'].idxmax()\n    X = X.drop(columns=vif_data.loc[max_vif_idx, 'feature'])\n    vif_data = pd.DataFrame()\n    vif_data['feature'] = X.columns\n    vif_data['VIF'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]\n\n# Correlation matrix cleanup\ncorr_matrix = X.corr().abs()\nmask = np.triu(np.ones_like(corr_matrix, dtype=bool))\ncorr_pairs = corr_matrix.where(~mask).stack().reset_index()\ncorr_pairs.columns = ['Feature1', 'Feature2', 'Correlation']\nhigh_corr = corr_pairs[corr_pairs['Correlation'] > 0.95]\n```\n\n## Common gotchas / interview framings\n- \"Why does multicollinearity hurt linear models more than tree models?\"\n- \"How do you choose which feature to drop from a correlated pair?\"\n- \"Does L1 regularization (Lasso) solve multicollinearity?\"\n- \"When is it okay to keep correlated features (e.g., in an ensemble)?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does multicollinearity inflate variance in linear regression coefficients?",
+        "back": "In y = b0 + b1*x1 + b2*x2 + noise, if x1 and x2 are nearly collinear, the design matrix X'X is nearly singular. (X'X)^-1 explodes, so small noise in data causes large swings in b1 and b2. Model fits training data, but coefficients are unstable under new data."
+      },
+      {
+        "type": "mcq",
+        "front": "Which model is most robust to multicollinearity?",
+        "back": "Trees make binary splits on one feature, so collinearity doesn't inflate variance. OLS and logistic regression require matrix inversion, which is ill-conditioned when features are correlated. L1/L2 regularization can mitigate in linear models.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Ordinary Least Squares (OLS) linear regression",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Decision trees and random forests (split on one feature at a time)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Logistic regression without regularization",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Naive Bayes",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You have two features with correlation r=0.96. How would you decide which to drop?",
+        "back": "Consider: (1) domain relevance (which is more interpretable/actionable?), (2) missing values (drop the one with more NaNs), (3) external validity (which is more reliably measured?), (4) correlation with target (keep the one more correlated with y). In a pinch, compute VIF and drop the higher one."
+      },
+      {
+        "type": "flip",
+        "front": "What is the Variance Inflation Factor (VIF), and when is it problematic?",
+        "back": "VIF = 1 / (1 - R² from regressing feature i on all others). VIF > 5 (some say 10) is a red flag: feature i is predictable from other features, so its coefficient is unreliable. Iteratively remove highest-VIF features until all VIF < 5."
+      },
+      {
+        "type": "mcq",
+        "front": "Does L1 regularization (Lasso) solve multicollinearity or just mask it?",
+        "back": "Lasso arbitrarily selects one of two correlated features (the other → 0). This is useful for sparsity and prediction, but doesn't address the fundamental redundancy. Elastic Net (L1+L2) is more stable: L2 stabilizes collinear pairs, L1 shrinks.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Solves it by forcing one coefficient to zero",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Masks it; Lasso shrinks one correlated feature arbitrarily while the other survives, reducing apparent collinearity but not the underlying redundancy",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Exacerbates it; L1 amplifies variance",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Neutral; Lasso has no effect on collinearity",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,1193 @@
+[
+  {
+    "slug": "null-and-alternative-hypotheses-p-values",
+    "title": "Null and alternative hypotheses, p-values",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "beginner",
+    "tags": [
+      "testing",
+      "hypothesis",
+      "p-values",
+      "statistics",
+      "inference"
+    ],
+    "aliases": [
+      "H0 and Ha",
+      "significance testing",
+      "p-value interpretation"
+    ],
+    "wikilinks": [
+      "type-i-error",
+      "statistical-significance",
+      "null-hypothesis",
+      "p-value",
+      "alternative-hypothesis",
+      "rejection-region"
+    ],
+    "sources": [
+      {
+        "url": "https://stats.libretexts.org/Bookshelves/Applied_Statistics/Mikes_Biostatistics_Book_(Dohm)/08:_Inferential_Statistics/8.1:_The_null_and_alternative_hypotheses",
+        "label": "LibreTexts: Null and Alternative Hypotheses"
+      },
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State STAT: P-Value Approach"
+      },
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: Hypothesis Testing"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nHypothesis testing is a formal framework for making decisions about populations using sample data. We start with a **null hypothesis** ($H_0$)—a claim of \"no effect\" or \"status quo\"—and test whether evidence sufficiently contradicts it. The **alternative hypothesis** ($H_a$) is what we would conclude if $H_0$ is rejected.\n\nA **p-value** quantifies the strength of this evidence: it is the probability of observing a test statistic as extreme as (or more extreme than) what we observed, *assuming $H_0$ is true*. Small p-values suggest the data are unlikely under $H_0$, leading us to reject it.\n\n## Detail\n\nFormally, given a test statistic $T$ computed from the sample:\n- The p-value = $P(T \\geq t_{\\text{obs}} | H_0 \\text{ is true})$ for a one-sided test (or analogous for two-sided).\n- A significance level $\\alpha$ (often 0.05) is chosen before the test; if p-value $< \\alpha$, we reject $H_0$.\n- Rejection means: \"The data provide sufficient evidence against $H_0$ at the $\\alpha$ level.\"\n\n**Critical Misconception**: A p-value is *not* \"the probability that $H_0$ is true\" or \"the probability the result is due to chance.\" Rather, it conditions on $H_0$ being true and measures how compatible the data are with that assumption.\n\n## Common gotchas / interview framings\n\n- **P < 0.05 does NOT mean**: the effect is true with 95% probability, or the effect size is large, or the result is practically important.\n- **P-hacking**: Repeating analyses, changing hypotheses post-hoc, or selective reporting until p < 0.05 inflates false positives.\n- **File drawer problem**: Studies with non-significant results go unpublished, creating selection bias.\n- **One-sided vs. two-sided**: Always specify before testing; one-sided tests are more powerful but directional.\n- **Multiple testing**: Testing 20 independent hypotheses at $\\alpha = 0.05$ expects ~1 false positive by chance alone.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define the null hypothesis ($H_0$) and explain its role in hypothesis testing.",
+        "back": "The null hypothesis is a baseline claim—typically \"no effect,\" \"no difference,\" or \"status quo.\" It is assumed true unless the data provide strong evidence to the contrary. Its role is to define what \"no signal\" looks like; we test whether the data contradict this assumption."
+      },
+      {
+        "type": "flip",
+        "front": "What does a p-value of 0.03 actually mean? What does it NOT mean?",
+        "back": "**Means**: If the null hypothesis were true, there is a 3% probability of observing a test statistic as extreme or more extreme than what we observed. **Does NOT mean**: (1) 3% chance the null is true, (2) 97% confidence in the alternative, (3) the effect size is large, or (4) the result is practically important."
+      },
+      {
+        "type": "mcq",
+        "front": "You run a hypothesis test and obtain a p-value of 0.12 at $\\alpha = 0.05$. Which statement is correct?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "We reject $H_0$; there is 12% chance the null is true.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "We fail to reject $H_0$; this means $H_0$ is definitely true.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "We fail to reject $H_0$; the data are not sufficiently extreme under $H_0$ to conclude a statistically significant effect.",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "We reject $H_0$ because p > 0.05 indicates a strong alternative.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Distinguish between one-sided and two-sided hypothesis tests. When is each appropriate?",
+        "back": "**One-sided test** ($H_a: \\mu > \\mu_0$ or $\\mu < \\mu_0$): Tests for effect in a specific direction; more powerful but requires directional hypothesis pre-specified. **Two-sided test** ($H_a: \\mu \\neq \\mu_0$): Tests for any difference; weaker but does not assume direction. Use two-sided unless theory or domain knowledge strongly justifies directionality (decided *before* data collection)."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the multiple testing problem and why it matters.",
+        "back": "When testing many hypotheses independently at $\\alpha = 0.05$, the probability of at least one false positive grows. For $m$ independent tests, the family-wise error rate ≈ $1 - (1 - \\alpha)^m$. Example: 20 tests give ~64% chance of ≥1 false positive. This inflates Type I errors and requires correction (e.g., Bonferroni, FDR)."
+      }
+    ]
+  },
+  {
+    "slug": "type-i-and-type-ii-errors-power",
+    "title": "Type I and Type II errors, power",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "errors",
+      "power",
+      "alpha",
+      "beta",
+      "test design"
+    ],
+    "aliases": [
+      "false positives",
+      "false negatives",
+      "sensitivity",
+      "specificity"
+    ],
+    "wikilinks": [
+      "type-i-error",
+      "type-ii-error",
+      "statistical-power",
+      "significance-level",
+      "effect-size",
+      "sample-size"
+    ],
+    "sources": [
+      {
+        "url": "https://www.southampton.ac.uk/~mb1a10/stats/FEEG6017_5.pdf",
+        "label": "Southampton: Hypothesis Testing and Type I/II Errors"
+      },
+      {
+        "url": "https://mcpanalytics.ai/whitepapers/whitepaper-bonferroni-correction",
+        "label": "MCP Analytics: Type I and Type II Error Analysis"
+      },
+      {
+        "url": "https://www.colorado.edu/amath/sites/default/files/attached-files/lesson9_hyptests.pdf",
+        "label": "University of Colorado: Hypothesis Tests and Power"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nWhen testing a hypothesis, two types of mistakes are possible:\n- **Type I error**: Rejecting $H_0$ when it is actually true (false positive). Probability is controlled by significance level $\\alpha$.\n- **Type II error**: Failing to reject $H_0$ when it is false (false negative). Probability is $\\beta$.\n\n**Statistical power** = $1 - \\beta$ is the probability of correctly rejecting $H_0$ when the alternative is true—the ability to detect a true effect.\n\nIn business contexts, the costs of these errors differ: Type I (launching a bad feature, running a fraudulent campaign) vs. Type II (missing a good opportunity, failing to detect disease). This tradeoff fundamentally shapes test design.\n\n## Detail\n\nFor a given sample size and effect size, there is an inverse tradeoff between $\\alpha$ and $\\beta$: decreasing $\\alpha$ (stricter rejection criterion) increases $\\beta$ (harder to detect true effects). Power depends on:\n- **Effect size** ($\\delta$, Cohen's $d$): Larger effects are easier to detect; requires domain knowledge or pilot studies.\n- **Sample size** ($n$): Larger samples increase power; proportional to $\\sqrt{n}$.\n- **Significance level** ($\\alpha$): Smaller $\\alpha$ reduces Type I but increases Type II.\n\nPower analysis involves choosing sample size pre-study to achieve target power (e.g., 80%) given an expected effect size and $\\alpha$.\n\n## Common gotchas / interview framings\n\n- **Not specifying the tradeoff**: Interview: \"Should we reduce alpha to 0.01?\" Answer requires discussing increased Type II cost.\n- **Ignoring multiple testing**: Correction (Bonferroni) increases $\\beta$ and reduces power; must account when designing sample size.\n- **Confusing $\\beta$ with p-value**: $\\beta$ is chosen pre-study; p-values are observed post-study.\n- **Assuming equal costs**: Defaulting to $\\alpha = 0.05$ ignores asymmetric business costs of errors.\n- **Power of 0.5 tests**: Underpowered studies produce unreliable, non-replicable results.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define Type I and Type II error. Which is controlled by $\\alpha$?",
+        "back": "**Type I error** (false positive): Rejecting $H_0$ when it is true. Probability = $\\alpha$ (significance level). **Type II error** (false negative): Failing to reject $H_0$ when it is false. Probability = $\\beta$. The significance level $\\alpha$ directly controls Type I; Type II ($\\beta$) is influenced by sample size, effect size, and $\\alpha$."
+      },
+      {
+        "type": "flip",
+        "front": "What is statistical power and how does it relate to Type II error?",
+        "back": "Statistical power = $1 - \\beta$ is the probability of correctly rejecting $H_0$ when the alternative hypothesis is true (detecting a true effect). A power of 0.80 means an 80% chance of detecting the effect if it exists. Higher power reduces the risk of Type II error (missing a real effect)."
+      },
+      {
+        "type": "mcq",
+        "front": "In an A/B test, increasing the significance level from $\\alpha = 0.05$ to $\\alpha = 0.10$ does which of the following?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Decreases Type I error rate and increases power",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Increases Type I error rate and increases power",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Decreases both Type I error and Type II error",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Increases Type II error and decreases power",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: A company tests whether a new algorithm reduces fraud. False positives block legitimate transactions (cost: customer frustration); false negatives miss fraud (cost: financial loss). How would you set $\\alpha$ and power?",
+        "back": "Since false negatives (undetected fraud) are likely more costly, aim for high power ($\\beta$ low, e.g., 0.10 for 90% power) to minimize Type II errors. Depending on fraud cost, $\\alpha$ could remain 0.05 or be slightly higher (0.10) to further increase power. Always justify the choice by the asymmetric costs of errors."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the relationship between sample size, effect size, and power in a single-sentence formula (conceptually).",
+        "back": "Power increases with larger sample size (more information), larger true effect size (easier to detect), and larger $\\alpha$ (looser rejection criterion). Roughly: Power $\\propto \\sqrt{n \\cdot \\delta^2}$ where $n$ is sample size and $\\delta$ is standardized effect size."
+      }
+    ]
+  },
+  {
+    "slug": "parametric-tests-t-test-anova-chi-squared",
+    "title": "Parametric tests (t-test, ANOVA, chi-squared)",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "parametric",
+      "t-test",
+      "ANOVA",
+      "chi-squared",
+      "test selection"
+    ],
+    "aliases": [
+      "t-test",
+      "ANOVA F-test",
+      "chi-square test",
+      "dependent sample testing"
+    ],
+    "wikilinks": [
+      "t-test",
+      "anova",
+      "chi-squared-test",
+      "normality-assumption",
+      "variance-homogeneity",
+      "parametric-vs-nonparametric"
+    ],
+    "sources": [
+      {
+        "url": "https://www.pnw.edu/wp-content/uploads/2020/03/lecturenotes10-9.pdf",
+        "label": "PNW: Hypothesis Tests and Parametric Methods"
+      },
+      {
+        "url": "https://www2.stat.duke.edu/courses/Fall11/sta10/STA10lecture21.pdf",
+        "label": "Duke: Hypothesis Testing Examples and Case Studies"
+      },
+      {
+        "url": "https://uwaterloo.ca/scholar/sites/ca.scholar/files/gydong/files/afm_113_week_8_lessons.pdf",
+        "label": "University of Waterloo: Hypothesis Testing Fundamentals"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nParametric tests assume the data follow a specific distribution (usually normal). When assumptions hold, they are the most powerful tests—they extract maximum information from data. Common parametric tests include:\n- **t-test**: Compares means of two groups (independent or paired).\n- **ANOVA** (F-test): Compares means across 3+ groups.\n- **Chi-squared test**: Tests independence or goodness-of-fit for categorical data.\n\n## Detail\n\n**t-test** assumes normality and tests $H_0: \\mu_1 = \\mu_2$. The test statistic is $t = \\frac{\\bar{x}_1 - \\bar{x}_2}{SE(\\bar{x}_1 - \\bar{x}_2)}$, following a t-distribution with degrees of freedom $n_1 + n_2 - 2$ (unpaired). Use a paired t-test when observations are linked (e.g., before/after).\n\n**ANOVA** extends the t-test to $k \\geq 3$ groups, testing $H_0: \\mu_1 = \\mu_2 = \\ldots = \\mu_k$. The F-statistic is the ratio of between-group variance to within-group variance: $F = \\frac{MS_{\\text{between}}}{MS_{\\text{within}}}$. Large F rejects $H_0$. Post-hoc tests (Tukey, Bonferroni) compare pairs if ANOVA is significant.\n\n**Chi-squared test** ($\\chi^2$) applies to categorical data, testing independence via: $\\chi^2 = \\sum \\frac{(O - E)^2}{E}$ where $O$ is observed count, $E$ is expected count under $H_0$.\n\n## Common gotchas / interview framings\n\n- **Violating normality**: t-test is robust to moderate violations with $n \\geq 30$ (CLT) but risky for small $n$ or heavy-tailed data. Use Shapiro-Wilk or Q-Q plots to check.\n- **Unequal variances**: Use Welch's t-test (doesn't assume equal variances) instead of Student's t. Levene's test checks variance homogeneity.\n- **Multiple comparisons after ANOVA**: A significant ANOVA does not tell you *which* pairs differ; pairwise comparisons require correction (Bonferroni, Tukey).\n- **Low cell counts in chi-squared**: If expected counts < 5, results are unreliable; use Fisher's exact test (2×2) or combine categories.\n- **Design of experiments**: Blocking, randomization, and power calculation must precede test selection.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "When would you use a t-test vs. ANOVA? What is the key distinction?",
+        "back": "Use **t-test** to compare means of exactly 2 groups (independent or paired samples). Use **ANOVA** when comparing means across 3 or more groups. ANOVA tests the omnibus hypothesis that all means are equal; if significant, post-hoc tests identify which pairs differ. You could run multiple t-tests instead, but this inflates Type I error (multiple testing problem)."
+      },
+      {
+        "type": "flip",
+        "front": "You have data from 2 groups with unequal sample sizes and unequal variances. Which variant of the t-test should you use?",
+        "back": "Use **Welch's t-test**, which does not assume equal population variances. It adjusts the degrees of freedom and is more robust than Student's t-test when variances differ. The test statistic and p-value are computed differently to account for heteroscedasticity."
+      },
+      {
+        "type": "mcq",
+        "front": "You conduct a 3-group ANOVA and obtain F = 4.2, p = 0.02. What does this result tell you?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Group 1 and Group 2 differ significantly; the effect is practically large.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "At least one pair of group means differs significantly; conduct post-hoc tests to identify which.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "All three group means are significantly different from each other.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The overall variance in the data is 4.2 times the expected value.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Describe a scenario where the assumptions for a t-test might be violated. How would you proceed?",
+        "back": "Violations occur with: (1) non-normal data (heavy tails, skew), (2) unequal variances (Levene's test), (3) small sample sizes ($n < 30$). Options: (a) Use Welch's t-test (handles variance inequality). (b) Transform data (e.g., log, square root) to normalize. (c) Use a nonparametric test like Mann-Whitney U. (d) With large $n$, t-test is robust due to CLT."
+      },
+      {
+        "type": "flip",
+        "front": "In a chi-squared test for independence, what do the expected counts represent and why is the assumption about them important?",
+        "back": "Expected counts are the cell frequencies predicted under $H_0$ (independence), calculated as $E = \\frac{(\\text{row total}) \\times (\\text{column total})}{\\text{grand total}}$. If expected counts are too small (< 5), the $\\chi^2$ distribution approximation breaks down and the p-value is unreliable. Combine categories or use Fisher's exact test as alternatives."
+      }
+    ]
+  },
+  {
+    "slug": "nonparametric-tests-mann-whitney-kruskal-wallis-permutation-tests",
+    "title": "Nonparametric tests (Mann-Whitney, Kruskal-Wallis, permutation tests)",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "nonparametric",
+      "distribution-free",
+      "rank-based",
+      "permutation",
+      "robustness"
+    ],
+    "aliases": [
+      "Wilcoxon test",
+      "Mann-Whitney U",
+      "Kruskal-Wallis H",
+      "randomization tests",
+      "rank tests"
+    ],
+    "wikilinks": [
+      "nonparametric-tests",
+      "rank-based-statistics",
+      "permutation-test",
+      "wilcoxon-signed-rank",
+      "mann-whitney-u",
+      "kruskal-wallis"
+    ],
+    "sources": [
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: Nonparametric and Permutation Methods"
+      },
+      {
+        "url": "https://statistics.laerd.com/statistical-guides/hypothesis-testing-3.php",
+        "label": "Laerd Statistics: Nonparametric Alternatives"
+      },
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State: Distribution-Free Methods"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nNonparametric tests make few or no assumptions about the underlying distribution of data. Instead of testing population parameters (like means), they test properties of distributions (like medians or ranks). These tests are robust to outliers and violations of normality, making them ideal when assumptions for parametric tests fail.\n\n## Detail\n\n**Mann-Whitney U test**: Nonparametric alternative to the independent t-test. Tests whether two independent samples come from the same distribution. The test compares ranks rather than raw values: rank all observations across both groups, then compute the test statistic based on the sum of ranks in one group. Robust to outliers and non-normality.\n\n**Kruskal-Wallis H test**: Extension to 3+ groups (nonparametric ANOVA). Tests $H_0$: all groups have the same distribution. The statistic $H$ is based on ranks; if significant, use pairwise Mann-Whitney tests (with multiple testing correction) to identify differing pairs.\n\n**Permutation tests** (randomization tests): A distribution-free approach that computes p-values by generating all (or a large sample of) possible rearrangements of the data under $H_0$. The p-value is the proportion of permutations yielding a test statistic as extreme as observed. Advantages: (1) Valid for any test statistic, (2) exact (not asymptotic), (3) transparent computational framework. Computationally intensive but feasible with modern computers.\n\n## Common gotchas / interview framings\n\n- **Loss of power**: Nonparametric tests sacrifice power when parametric assumptions hold. Use only when necessary.\n- **Median vs. mean**: Mann-Whitney tests the median (or general distribution location), not the mean; conclusions differ if only means are of interest.\n- **Assumption still present**: Nonparametric tests assume independence and identical distributions; they do NOT assume normality but are not free of all assumptions.\n- **Permutation validity**: Permutation tests assume exchangeability under $H_0$; violated if data are clustered or correlated.\n- **Multiple testing correction**: Post-hoc pairwise comparisons require Bonferroni or FDR correction, reducing power further.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "When would you use the Mann-Whitney U test instead of a t-test?",
+        "back": "Use Mann-Whitney U when: (1) data are severely non-normal (heavy tails, skew), (2) sample sizes are small ($n < 30$) and normality is questionable, (3) data are ordinal (rankings) rather than continuous, or (4) outliers are present and cannot be removed. Mann-Whitney compares distributions via ranks, not means, so it is more robust."
+      },
+      {
+        "type": "flip",
+        "front": "Explain how the Mann-Whitney U test works conceptually.",
+        "back": "Combine all observations from both groups and assign ranks 1, 2, ..., $n$ (smallest to largest). Compute the sum of ranks in group 1 (or group 2). If $H_0$ is true (identical distributions), the sums should be roughly proportional to group sizes. Extreme rank sums indicate a difference in distribution location. The test statistic $U$ is derived from these ranks."
+      },
+      {
+        "type": "mcq",
+        "front": "You compare 4 groups using Kruskal-Wallis H test. H = 8.1, p = 0.04. What is your next step?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Conclude all groups differ significantly.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Stop; the test is complete and answers your question.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Conduct pairwise Mann-Whitney tests (with Bonferroni or FDR correction) to identify which groups differ.",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Compute confidence intervals for each group mean.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Describe a permutation test framework. Why is it valuable despite computational cost?",
+        "back": "A permutation test works by: (1) Compute test statistic $T$ on observed data. (2) Generate all possible rearrangements of the data under $H_0$ (exchangeability). (3) Compute $T$ for each permutation. (4) p-value = proportion of permutations yielding $T$ as extreme as observed. **Valuable because**: (a) Exact (not asymptotic), (b) applies to any statistic, (c) no distributional assumptions. Modern computers handle even large datasets."
+      },
+      {
+        "type": "flip",
+        "front": "A nonparametric test shows p = 0.08 (not significant at $\\alpha = 0.05$). Would switching to a parametric t-test increase the chance of significance? When would this be appropriate?",
+        "back": "Possibly, because parametric tests are more powerful when assumptions hold. However, switching only because the nonparametric result is not significant (\"significance shopping\") is p-hacking and inflates Type I error. Only switch if you have strong *prior* justification (e.g., performed normality test before choosing test, or collect more data to improve normality). Document your testing strategy pre-analysis."
+      }
+    ]
+  },
+  {
+    "slug": "multiple-comparison-correction-bonferroni-fdr",
+    "title": "Multiple comparison correction (Bonferroni, FDR)",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "multiple testing",
+      "Bonferroni",
+      "FDR",
+      "family-wise error",
+      "false discovery rate"
+    ],
+    "aliases": [
+      "multiple hypothesis testing",
+      "multiple testing correction",
+      "p-value adjustment",
+      "type I inflation"
+    ],
+    "wikilinks": [
+      "bonferroni-correction",
+      "false-discovery-rate",
+      "family-wise-error-rate",
+      "benjamini-hochberg",
+      "multiple-testing-problem",
+      "q-value"
+    ],
+    "sources": [
+      {
+        "url": "https://edu.abi.am/statistics-theory/multiple-test-correction-bonferroni-fdr",
+        "label": "ABI Bioinformatics: Multiple Test Correction"
+      },
+      {
+        "url": "https://physiology.med.cornell.edu/people/banfelder/qbio/resources_2008/1.5_Bonferroni_FDR.pdf",
+        "label": "Cornell: Bonferroni and FDR Methods"
+      },
+      {
+        "url": "https://www.statsig.com/perspectives/bonferroni-correction-multiple-testing",
+        "label": "Statsig: Bonferroni and Multiple Testing in A/B Testing"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nWhen testing many hypotheses, the probability of making at least one Type I error (false positive) increases rapidly. If you test $m$ independent hypotheses at $\\alpha = 0.05$, the family-wise error rate (FWER)—the probability of at least one false positive—is approximately $1 - (1 - 0.05)^m$. For $m = 20$, this is ~64%, not 5%!\n\nMultiple comparison corrections adjust the rejection threshold to control this inflation. Two main approaches exist: **(1) FWER control** (Bonferroni): stringent, reduces false positives but low power. **(2) False Discovery Rate (FDR)** control (Benjamini-Hochberg): less stringent, balances discoveries with false positives, higher power.\n\n## Detail\n\n**Bonferroni Correction**: Adjust $\\alpha$ by dividing by $m$: $\\alpha_{\\text{corrected}} = \\alpha / m$. If $m = 20$ and $\\alpha = 0.05$, each test uses $\\alpha = 0.0025$. This guarantees FWER $\\leq \\alpha$ but is conservative—it rejects few hypotheses, increasing Type II error (low power). Alternatively, multiply each observed p-value by $m$ and cap at 1.\n\n**False Discovery Rate (FDR)** (Benjamini-Hochberg): Define FDR as the expected proportion of false positives among all rejections. The BH procedure ranks p-values and uses a data-adaptive threshold. For the $i$-th smallest p-value, compute the threshold $\\alpha_{(i)} = \\alpha \\cdot i/m$ and reject all hypotheses with p-values below the largest $\\alpha_{(i)}$ that satisfies $p_{(i)} \\leq \\alpha_{(i)}$. **Key advantage**: Controls FDR (not FWER), allowing more discoveries while bounding false positives.\n\n## Common gotchas / interview framings\n\n- **When to apply**: Needed only when testing multiple related hypotheses (e.g., pairwise comparisons after ANOVA, gwas screening, A/B test multiple variants). Single pre-specified test does not require correction.\n- **Bonferroni is too conservative**: In genomics or high-dimensional screening with thousands of tests, Bonferroni $\\alpha / 1000$ leads to vanishingly small power. FDR is preferable.\n- **FDR allows some false positives**: If you cannot tolerate any false discoveries (e.g., rare disease diagnosis), use FWER. If discoveries guide further research (e.g., gene screening), FDR is appropriate.\n- **Adaptation to observed data**: BH procedure adapts to the p-value distribution; thus, uniform distribution of p-values under $H_0$ is assumed. Positively dependent p-values may require modified procedures.\n- **Not a substitute for pre-registration**: Correction does not eliminate p-hacking; pre-register all hypotheses before data collection.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does testing 20 independent hypotheses at $\\alpha = 0.05$ without correction lead to a ~64% false positive rate?",
+        "back": "Each hypothesis has a 5% chance of a false positive (Type I error). The probability of getting at least one false positive among 20 independent tests is: FWER = $1 - (1 - 0.05)^{20} = 1 - 0.95^{20} \\approx 0.64$ or 64%. This is the family-wise error rate. Correction is needed to control this inflation."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the Bonferroni correction and its main drawback.",
+        "back": "The Bonferroni correction divides the significance level by the number of tests: $\\alpha_{\\text{corrected}} = \\alpha / m$. This guarantees FWER $\\leq \\alpha$. **Drawback**: It is very conservative. With $m = 50$ tests and $\\alpha = 0.05$, each test uses $\\alpha = 0.001$, making it hard to reject any hypothesis. Power drops sharply, so you may miss true discoveries (Type II errors)."
+      },
+      {
+        "type": "mcq",
+        "front": "In a gene expression study, you test 10,000 genes for differential expression at FDR-adjusted $\\alpha = 0.05$. What does FDR = 0.05 mean?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Only 5% of all p-values are false positives.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Among the genes you declare significant, expect ~5% to be false discoveries.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "5% chance that the null hypothesis is true.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The probability of at least one false positive across all tests is 5%.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Compare Bonferroni (FWER control) and Benjamini-Hochberg (FDR control). When would you use each?",
+        "back": "**Bonferroni (FWER)**: Use when false positives are costly (clinical diagnosis, fraud detection). Guarantees ≤ $\\alpha$ probability of any false positive. **Benjamini-Hochberg (FDR)**: Use when you tolerate some false positives among discoveries, guiding further research (genomics, screening, recommendation systems). Higher power and more discoveries. Choose based on the consequence of errors: high cost of any false positive → FWER; many candidates, further validation planned → FDR."
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: You run an A/B test with 5 variants (1 control + 4 treatments) on a single metric. What multiple testing correction would you apply and why?",
+        "back": "You have 4 treatment-vs-control comparisons or $\\binom{5}{2} = 10$ pairwise comparisons. Use **Bonferroni** or **FDR** to adjust for multiple testing. If the business cost of a false positive (shipping a bad variant) is high, use Bonferroni. If variants advance to further testing, FDR is less conservative and preserves power. Always pre-specify the number of comparisons before analyzing."
+      }
+    ]
+  },
+  {
+    "slug": "confidence-intervals-and-their-interpretation",
+    "title": "Confidence intervals and their interpretation",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "confidence intervals",
+      "estimation",
+      "interpretation",
+      "frequentist",
+      "coverage"
+    ],
+    "aliases": [
+      "CI",
+      "confidence level",
+      "margin of error",
+      "interval estimation"
+    ],
+    "wikilinks": [
+      "confidence-interval",
+      "frequentist-inference",
+      "coverage-probability",
+      "margin-of-error",
+      "standard-error",
+      "bootstrap-ci"
+    ],
+    "sources": [
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State STAT: Confidence Intervals and Interpretation"
+      },
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: Estimation and Intervals"
+      },
+      {
+        "url": "https://stats.libretexts.org/Bookshelves/Applied_Statistics/Mikes_Biostatistics_Book_(Dohm)/08:_Inferential_Statistics/8.1:_The_null_and_alternative_hypotheses",
+        "label": "LibreTexts: Interval Estimation"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nA **confidence interval** (CI) is a range of values computed from a sample that is believed to contain the true population parameter with a specified probability (confidence level). For instance, a 95% CI for the mean is constructed so that, if we repeatedly sample and compute CIs the same way, approximately 95% of those intervals will contain the true mean.\n\n## Detail\n\nFor a parameter $\\theta$ estimated by $\\hat{\\theta}$, a 100(1-$\\alpha$)% CI has the form:\n$$\\hat{\\theta} \\pm z_{\\alpha/2} \\cdot SE(\\hat{\\theta})$$\nwhere $SE$ is the standard error and $z_{\\alpha/2}$ is the critical value (e.g., 1.96 for 95% CI under normality).\n\nFor a sample mean with known population standard deviation: $\\bar{x} \\pm 1.96 \\cdot \\frac{\\sigma}{\\sqrt{n}}$. With unknown $\\sigma$, use the t-distribution: $\\bar{x} \\pm t_{\\alpha/2, n-1} \\cdot \\frac{s}{\\sqrt{n}}$.\n\n**Key interpretation**: If we repeated the sampling and CI-construction process infinitely many times, 95% of the intervals would contain the true $\\theta$. This is a statement about the *long-run frequency* of the procedure, not about a single observed interval.\n\n## Common gotchas / interview framings\n\n- **Not \"95% chance the parameter is in the interval\"**: Once computed, the parameter either is or is not in a specific observed interval. The probability is about the procedure.\n- **Narrower CI ≠ higher confidence**: A 90% CI is narrower than a 95% CI for the same data; confidence level and width are distinct concepts.\n- **Multiple CIs**: If you compute 100 independent 95% CIs, expect ~5 to miss the true value due to sampling variation.\n- **Asymmetry in bootstrapped CIs**: For skewed distributions, percentile bootstrap CIs may be asymmetric around the point estimate, which is correct and informative.\n- **Relationship to hypothesis tests**: A 95% CI for $\\mu$ excludes 0 (the null value) if and only if a two-sided t-test rejects $H_0: \\mu = 0$ at $\\alpha = 0.05$.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does a 95% confidence interval actually mean? What is a common misinterpretation?",
+        "back": "**Correct**: If we repeatedly sample and construct CIs using the same method, approximately 95% of the intervals will contain the true parameter. This is about the procedure's long-run coverage. **Misinterpretation**: \"There is a 95% probability the true parameter is in this specific interval.\" Once an interval is computed, it either contains the parameter or it does not; probability is not about a fixed interval."
+      },
+      {
+        "type": "flip",
+        "front": "How does sample size affect the width of a confidence interval?",
+        "back": "Width is proportional to $1/\\sqrt{n}$. Doubling sample size reduces width by $\\sqrt{2}$ (i.e., ~30% narrower). Larger samples yield tighter intervals, higher precision, more actionable estimates. This is why sample size calculations are critical before studies begin."
+      },
+      {
+        "type": "mcq",
+        "front": "You compute a 95% CI for the difference in means between two groups: [−2.5, 1.2]. A colleague says, \"The true difference is 95% likely to be in this interval.\" How do you correct this?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "That statement is correct; a 95% CI guarantees the true difference is in the interval with 95% probability.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The true difference either is or is not in the interval (we don't know which). The 95% confidence refers to the long-run coverage of the procedure, not this specific interval.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The CI is too wide; collect more data.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The colleague is correct, and the interval is uninformative because it includes zero.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the relationship between a 95% CI and a two-sided hypothesis test at $\\alpha = 0.05$.",
+        "back": "A 95% CI for parameter $\\theta$ excludes the null value (e.g., 0) if and only if a two-sided test of $H_0: \\theta = 0$ rejects at $\\alpha = 0.05$. The CI and test are dual: the CI is the set of null values not rejected by the test. This duality allows moving between CIs and hypothesis tests."
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: You estimate the click-through rate (CTR) of an ad and compute a 95% CI of [0.042, 0.058]. The product team wants a narrower CI to make a decision. What are your options?",
+        "back": "Options: (1) Increase sample size (run the experiment longer); width $\\propto 1/\\sqrt{n}$. (2) Decrease confidence level (use 90% CI instead of 95%; narrower but less conservative). (3) Pre-register a hypothesis and reduce to one-sided test (narrower CI but directional). Always communicate the tradeoff: narrower CIs come from larger samples or lower confidence, not from shrinking the data."
+      }
+    ]
+  },
+  {
+    "slug": "bootstrap-methods",
+    "title": "Bootstrap methods",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "bootstrap",
+      "resampling",
+      "nonparametric",
+      "confidence intervals",
+      "bias estimation"
+    ],
+    "aliases": [
+      "resampling",
+      "bootstrap confidence intervals",
+      "percentile bootstrap"
+    ],
+    "wikilinks": [
+      "bootstrap",
+      "resampling-methods",
+      "empirical-distribution",
+      "percentile-method",
+      "bca-bootstrap",
+      "nonparametric-inference"
+    ],
+    "sources": [
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: Bootstrap and Resampling Methods"
+      },
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State STAT: Nonparametric Bootstrap"
+      },
+      {
+        "url": "https://stats.libretexts.org/Bookshelves/Applied_Statistics/Mikes_Biostatistics_Book_(Dohm)/08:_Inferential_Statistics/8.1:_The_null_and_alternative_hypotheses",
+        "label": "LibreTexts: Bootstrap Estimation Methods"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nThe bootstrap is a powerful, distribution-free resampling method that estimates the sampling distribution of a statistic without assuming a parametric form for the data. The idea: repeatedly resample *with replacement* from the observed data and compute the statistic each time. The resulting distribution of bootstrap statistics approximates the true sampling distribution.\n\n## Detail\n\n**Bootstrap procedure**:\n1. Collect original sample of size $n$.\n2. Resample $n$ observations *with replacement* from the sample, creating a bootstrap sample.\n3. Compute the statistic (mean, median, correlation, regression coefficient, etc.) on the bootstrap sample.\n4. Repeat steps 2–3 a large number of times (e.g., 10,000 iterations).\n5. The empirical distribution of bootstrap statistics estimates the sampling distribution.\n\n**Confidence intervals**: Extract percentiles from the bootstrap distribution. For a 95% CI of the mean, use the 2.5th and 97.5th percentiles of bootstrap means. This is the **percentile method**, simple and works for any estimator.\n\n**Advantages**: (1) Works for any estimator, (2) makes no distributional assumptions, (3) captures the actual shape of the sampling distribution (asymmetry, multiple modes), (4) computational, not theoretical.\n\n**Assumptions**: Data are independent and identically distributed (i.i.d.); resampling with replacement preserves this structure under $H_0$.\n\n## Common gotchas / interview framings\n\n- **Not a magic bullet**: Bootstrap still requires i.i.d. assumption; it cannot rescue time-series data or clustered structures without modification (e.g., block bootstrap).\n- **Small samples, large bootstraps**: With $n = 20$, you cannot resample very unique patterns. Bootstrap works best with $n \\geq 30$; smaller samples may lead to biased CIs.\n- **Percentile vs. bias-corrected methods**: Basic percentile bootstrap can be biased for skewed distributions; BCa (bias-corrected and accelerated) bootstrap corrects this.\n- **Multiple estimation targets**: Bootstrapping correlation, regression coefficients, etc. works, but interpret with care if there are underlying parametric assumptions (e.g., linearity in regression).\n- **Computational cost**: For large datasets and many iterations, bootstrap can be slow; vectorized implementations or parallel computing help.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the bootstrap resampling procedure in plain language.",
+        "back": "From your sample of $n$ observations: (1) Draw $n$ observations *with replacement*, creating a bootstrap sample. (2) Compute your statistic (mean, median, etc.) on the bootstrap sample. (3) Repeat steps 1–2 many times (e.g., 10,000). (4) Look at the distribution of bootstrap statistics—it approximates how the true statistic varies across samples. This mimics what would happen if you collected many real samples."
+      },
+      {
+        "type": "flip",
+        "front": "Why is the bootstrap \"distribution-free\" and what does this mean for practice?",
+        "back": "The bootstrap does not assume the data follow a normal, exponential, or any other parametric distribution. Instead, it uses the empirical distribution of the observed data as a proxy for the true population distribution. In practice, this means you can compute CIs and standard errors for any statistic (mean, median, correlation, regression slope) without worrying about whether assumptions like normality hold."
+      },
+      {
+        "type": "mcq",
+        "front": "You compute a 95% bootstrap CI using the percentile method and get [0.35, 0.72] for the median. You notice the distribution of bootstrap medians is right-skewed. Which statement is true?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The CI is symmetric around the observed median; bootstrap doesn't preserve shape.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The CI may be asymmetric around the point estimate, which is correct and reflects the skewness of the sampling distribution.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The percentile method is invalid for skewed data; use parametric normality instead.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The bootstrap has failed; collect more data.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "When would you use bootstrap vs. parametric methods for confidence intervals?",
+        "back": "Use **bootstrap** when: (1) data are non-normal, (2) the statistic of interest is complex (e.g., trimmed mean, median, ratio), or (3) parametric assumptions are unclear. Use **parametric** when: (1) strong prior knowledge supports a distribution (e.g., binary outcome → binomial), (2) theoretical efficiency is needed, (3) sample size is very small ($n < 10$, bootstrap unreliable). For $n \\geq 30$ and complex statistics, bootstrap is often safer."
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: You estimate the median customer lifetime value (CLV) from 100 transactions. Why is bootstrap ideal here, and what potential caveat should you mention?",
+        "back": "Bootstrap is ideal because CLV may be right-skewed (a few high-value customers), violating normality. Bootstrap CIs automatically adapt to this skew without assuming a parametric form. **Caveat**: Your CI is only as good as your sample; with only 100 transactions, you may not capture rare high-value outliers. If you suspect extreme events, consider longer observation windows or robust methods."
+      }
+    ]
+  },
+  {
+    "slug": "maximum-likelihood-estimation-mle",
+    "title": "Maximum likelihood estimation (MLE)",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "MLE",
+      "estimation",
+      "likelihood",
+      "efficiency",
+      "asymptotic properties"
+    ],
+    "aliases": [
+      "ML estimation",
+      "likelihood function",
+      "log-likelihood",
+      "parameter estimation"
+    ],
+    "wikilinks": [
+      "maximum-likelihood-estimation",
+      "likelihood-function",
+      "mle-asymptotic-normality",
+      "fisher-information",
+      "consistency",
+      "efficiency"
+    ],
+    "sources": [
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State STAT: Maximum Likelihood Methods"
+      },
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: Likelihood-Based Inference"
+      },
+      {
+        "url": "https://www.colorado.edu/amath/sites/default/files/attached-files/lesson9_hyptests.pdf",
+        "label": "University of Colorado: Estimation and Hypothesis Testing"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMaximum likelihood estimation (MLE) is a principled method for estimating parameters of a probability distribution. The idea: given observed data, find the parameter values that make the data most likely. Formally, choose $\\hat{\\theta}$ that maximizes the **likelihood function** $L(\\theta; \\text{data})$, the joint probability density of the observations as a function of $\\theta$.\n\n## Detail\n\nFor a sample $x_1, \\ldots, x_n$ from a distribution with parameter(s) $\\theta$, the likelihood is:\n$$L(\\theta) = \\prod_{i=1}^{n} f(x_i | \\theta)$$\nwhere $f$ is the probability mass function (discrete) or density (continuous).\n\nTo find the MLE, compute the **log-likelihood** $\\ell(\\theta) = \\log L(\\theta) = \\sum_{i=1}^{n} \\log f(x_i | \\theta)$ and solve:\n$$\\frac{d\\ell(\\theta)}{d\\theta} = 0$$\nFor multivariate $\\theta$, solve the gradient $\\nabla \\ell(\\theta) = 0$. Often, numerical optimization (Newton-Raphson, gradient descent) is needed.\n\n**Asymptotic properties**: Under regularity conditions, as $n \\to \\infty$:\n- **Consistency**: $\\hat{\\theta}_{\\text{MLE}} \\to \\theta_0$ (true value) in probability.\n- **Asymptotic normality**: $\\sqrt{n}(\\hat{\\theta}_{\\text{MLE}} - \\theta_0) \\xrightarrow{d} N(0, I(\\theta_0)^{-1})$ where $I$ is the Fisher information matrix.\n- **Efficiency**: MLE achieves the Cramér-Rao lower bound; it is the most efficient regular estimator asymptotically.\n\n## Common gotchas / interview framings\n\n- **MLE ≠ unbiased**: MLE may have bias in finite samples, though bias vanishes asymptotically. E.g., sample variance is biased; divide by $n-1$ for unbiased estimate.\n- **Numerical optimization pitfalls**: Likelihood surface may be multimodal; optimization can get stuck at local maxima. Always check multiple starting points.\n- **Misspecified model**: If the true distribution differs from the assumed model, MLE estimates are inconsistent for the true parameters but consistent for the pseudo-true parameters (Kullback-Leibler projection).\n- **Computational burden**: For complex models (e.g., mixed-effects, latent variables), finding the MLE may be infeasible; approximate methods (EM algorithm, MCMC) are alternatives.\n- **Standard errors**: Use the inverse Fisher information $I(\\hat{\\theta})^{-1}$ or bootstrap for confidence intervals and hypothesis tests.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define the likelihood function and explain how it differs from a probability density.",
+        "back": "The **likelihood function** $L(\\theta; \\text{data})$ is the probability density (or mass) of the observed data as a function of the parameter $\\theta$. It is *not* a probability distribution over $\\theta$. For fixed data, the likelihood shows which parameter values are more or less consistent with what we observed. Maximizing the likelihood finds the parameter estimate."
+      },
+      {
+        "type": "flip",
+        "front": "You observe 10 coin flips resulting in 7 heads. Write the log-likelihood for the probability $p$ of heads and find the MLE.",
+        "back": "Log-likelihood: $\\ell(p) = 7 \\log(p) + 3 \\log(1 - p)$. Taking the derivative: $\\frac{d\\ell}{dp} = \\frac{7}{p} - \\frac{3}{1-p} = 0$. Solving: $7(1-p) = 3p \\Rightarrow 7 = 10p \\Rightarrow \\hat{p} = 0.7$. The MLE is the sample proportion of heads."
+      },
+      {
+        "type": "mcq",
+        "front": "Under what conditions is the MLE asymptotically normal and efficient?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Always, for any sample size and model.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "When regularity conditions hold (e.g., continuous and twice-differentiable likelihood, information matrix is non-singular) and n → ∞.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Only if the true distribution matches the assumed model exactly.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "When the likelihood has a unique global maximum and the sample is large.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is the MLE biased for the sample variance, but this bias disappears asymptotically?",
+        "back": "The MLE for variance of a normal distribution is $\\hat{\\sigma}^2_{\\text{MLE}} = \\frac{1}{n} \\sum (x_i - \\bar{x})^2$ (divide by $n$). Its expected value is $\\frac{n-1}{n} \\sigma^2 < \\sigma^2$, so it underestimates. But as $n \\to \\infty$, the ratio $\\frac{n-1}{n} \\to 1$, so the bias vanishes. In finite samples, use the unbiased estimator (divide by $n-1$) instead."
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: You model customer conversion as Bernoulli with parameter $p$. After fitting an MLE, you want a 95% CI for $p$. What methods would you use?",
+        "back": "Methods: (1) **Asymptotic normality**: $\\hat{p} \\pm 1.96 \\cdot \\sqrt{\\frac{\\hat{p}(1-\\hat{p})}{n}}$ (valid for large $n$). (2) **Bootstrap**: Resample with replacement and compute $\\hat{p}$ each time; use percentiles. (3) **Exact (Clopper-Pearson)**: Use the inverse binomial distribution (no asymptotic approximation). For small $n$ or $p$ near 0 or 1, avoid asymptotic normality; use bootstrap or exact method."
+      }
+    ]
+  },
+  {
+    "slug": "method-of-moments",
+    "title": "Method of moments",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "method of moments",
+      "moment matching",
+      "parameter estimation",
+      "robust",
+      "sample moments"
+    ],
+    "aliases": [
+      "moment estimation",
+      "moment matching estimator"
+    ],
+    "wikilinks": [
+      "method-of-moments",
+      "sample-moments",
+      "population-moments",
+      "moment-equations",
+      "robust-estimation"
+    ],
+    "sources": [
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State STAT: Method of Moments Estimation"
+      },
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: Parameter Estimation Methods"
+      },
+      {
+        "url": "https://www.colorado.edu/amath/sites/default/files/attached-files/lesson9_hyptests.pdf",
+        "label": "University of Colorado: Estimation Techniques"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nThe method of moments is a simple, intuitive approach to parameter estimation: equate the sample moments (empirical averages) to the population moments (theoretical expectations) and solve for the parameters. While less sophisticated than MLE, it is often more robust to model misspecification and computationally simpler.\n\n## Detail\n\nFor a distribution with $k$ unknown parameters $\\theta_1, \\ldots, \\theta_k$, the method of moments proceeds as follows:\n1. Express the first $k$ population moments in terms of the parameters: $\\mu_j(\\theta) = E[X^j]$ for $j = 1, \\ldots, k$.\n2. Compute the sample moments: $M_j = \\frac{1}{n} \\sum_{i=1}^{n} x_i^j$.\n3. Set $M_j = \\mu_j(\\hat{\\theta})$ for all $j$ and solve the system of equations.\n\n**Example**: For a normal distribution, $E[X] = \\mu$ and $E[X^2] = \\mu^2 + \\sigma^2$. Equating to sample moments: $\\bar{x} = \\hat{\\mu}$ and $\\frac{1}{n} \\sum x_i^2 = \\hat{\\mu}^2 + \\hat{\\sigma}^2$. Solving yields $\\hat{\\mu} = \\bar{x}$ and $\\hat{\\sigma}^2 = \\frac{1}{n} \\sum (x_i - \\bar{x})^2$.\n\n## Common gotchas / interview framings\n\n- **Closed-form solutions**: Method of moments often yields closed-form estimators, avoiding numerical optimization. This is computationally attractive but may sacrifice statistical efficiency.\n- **Efficiency loss**: MLE is asymptotically more efficient than method of moments (lower asymptotic variance). For well-specified models, prefer MLE. For robustness, method of moments can be useful.\n- **Outliers**: Method of moments can be sensitive to extreme values if using higher moments. Robust variants using trimmed means or medians exist.\n- **When MLE is intractable**: For complex likelihoods (e.g., many latent variables), method of moments may be the only feasible option or a good starting point for numerical MLE optimization.\n- **Not a test**: Method of moments is purely an estimation technique, not a hypothesis test; use supplementary tests (goodness-of-fit) to assess model adequacy.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the method of moments in simple terms and contrast it with MLE.",
+        "back": "**Method of moments**: Compute sample moments (averages like $\\bar{x}$, $\\bar{x^2}$, etc.) and set them equal to population moments (expressed in terms of unknown parameters). Solve for parameters. **Pros**: Simple, closed-form, robust. **Cons**: Less efficient than MLE. **MLE**: Maximizes the likelihood of the observed data. **Pros**: Asymptotically efficient, well-studied. **Cons**: More complex, may require numerical optimization, sensitive to model misspecification."
+      },
+      {
+        "type": "flip",
+        "front": "For a uniform distribution on [0, $\\theta$], derive the method of moments estimator.",
+        "back": "For $X \\sim \\text{Uniform}(0, \\theta)$, the population mean is $E[X] = \\theta/2$. The sample mean is $\\bar{x} = \\frac{1}{n} \\sum x_i$. Setting $\\bar{x} = \\theta/2$, we get $\\hat{\\theta}_{\\text{MoM}} = 2\\bar{x}$. This estimator is intuitive (twice the sample mean) but different from the MLE, which is $\\hat{\\theta}_{\\text{MLE}} = \\max(x_i)$."
+      },
+      {
+        "type": "mcq",
+        "front": "When estimating a two-parameter distribution (e.g., normal), which moment equations would you use in the method of moments?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Any two moment equations; the choice doesn't matter.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The first two moment equations (first and second moments) are standard, providing mean and variance.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Always the third and fourth moments for skewness and kurtosis.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Only the first moment; additional equations are redundant.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: You estimate the rate $\\lambda$ of a Poisson distribution. Compare method of moments and MLE.",
+        "back": "For Poisson, $E[X] = \\lambda$. **Method of moments**: Set $\\bar{x} = \\hat{\\lambda}$. **MLE**: Maximize $\\ell(\\lambda) = \\sum x_i \\log \\lambda - n\\lambda$, yielding $\\hat{\\lambda}_{\\text{MLE}} = \\bar{x}$. **Result**: For Poisson, they coincide! This is rare. In general, MLE is more efficient, but for Poisson's symmetric model, both methods give the same estimate."
+      },
+      {
+        "type": "flip",
+        "front": "When would you choose method of moments over MLE in practice, despite lower efficiency?",
+        "back": "Choose method of moments when: (1) Likelihood is intractable or computationally infeasible. (2) Model robustness is critical; parametric assumptions may fail, and MLE becomes inconsistent. (3) You want a simple, interpretable, closed-form estimator for communication (e.g., \"$\\hat{\\sigma} = $ sample standard deviation\"). (4) As a starting point for numerical MLE optimization to avoid bad local optima."
+      }
+    ]
+  },
+  {
+    "slug": "posterior-estimation-and-credible-intervals",
+    "title": "Posterior estimation and credible intervals",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "Bayesian inference",
+      "posterior",
+      "credible intervals",
+      "prior",
+      "posterior mean"
+    ],
+    "aliases": [
+      "posterior distribution",
+      "Bayesian CI",
+      "credible interval",
+      "Bayesian estimation"
+    ],
+    "wikilinks": [
+      "posterior-distribution",
+      "credible-interval",
+      "bayes-theorem",
+      "prior-distribution",
+      "likelihood",
+      "posterior-mean"
+    ],
+    "sources": [
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: Bayesian Inference"
+      },
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State STAT: Bayesian Methods"
+      },
+      {
+        "url": "https://physiology.med.cornell.edu/people/banfelder/qbio/resources_2008/1.5_Bonferroni_FDR.pdf",
+        "label": "Cornell: Bayesian Approaches in Statistical Inference"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nBayesian inference updates a prior belief about a parameter using observed data to obtain a **posterior distribution**. Unlike frequentist approaches, the posterior directly represents the probability distribution of the parameter *given* the observed data. A **credible interval** is the Bayesian analog of a confidence interval: a range believed to contain the parameter with a specified probability (e.g., 95%).\n\n## Detail\n\nBayes' theorem:\n$$P(\\theta | \\text{data}) = \\frac{P(\\text{data} | \\theta) \\cdot P(\\theta)}{P(\\text{data})}$$\nThe posterior is proportional to likelihood times prior:\n$$P(\\theta | \\text{data}) \\propto P(\\text{data} | \\theta) \\cdot P(\\theta)$$\n\n**Components**:\n- **Prior** $P(\\theta)$: Represents belief before seeing data (e.g., uniform, normal, expert opinion).\n- **Likelihood** $P(\\text{data} | \\theta)$: How likely the data are given $\\theta$.\n- **Posterior** $P(\\theta | \\text{data})$: Updated belief combining prior and data.\n\nPoint estimates from the posterior include:\n- **Posterior mean**: $E[\\theta | \\text{data}] = \\int \\theta \\cdot P(\\theta | \\text{data}) d\\theta$.\n- **Posterior median** or **mode** (MAP, maximum a posteriori).\n\nA **95% credible interval** is any interval $[a, b]$ such that $P(a \\leq \\theta \\leq b | \\text{data}) = 0.95$. A common choice is the **highest posterior density (HPD)** interval: the shortest interval containing 95% of posterior mass.\n\n## Common gotchas / interview framings\n\n- **Credible interval interpretation**: \"There is a 95% probability the true parameter is in this interval.\" This is valid and intuitive, unlike frequentist CIs—but only if your prior is reasonable.\n- **Prior dependence**: Results depend on the choice of prior. Sensitivity analysis (varying the prior) is essential. Informative priors can bias results if misspecified.\n- **\"Objective\" (flat) priors**: Uniform priors are not always non-informative and can lead to improper posteriors. Jeffreys' prior or other principled choices are more robust.\n- **Computational burden**: Computing posteriors requires integration, often infeasible for complex models. MCMC methods (Gibbs sampling, Metropolis-Hastings) are approximations.\n- **Small sample advantage**: Bayesian methods can incorporate prior information; useful when data are limited. Trade-off: prior assumptions must be defensible.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "State Bayes' theorem and explain each component in the context of parameter estimation.",
+        "back": "Bayes' theorem: $P(\\theta | \\text{data}) = \\frac{P(\\text{data} | \\theta) \\cdot P(\\theta)}{P(\\text{data})}$. **Prior** $P(\\theta)$: pre-data belief. **Likelihood** $P(\\text{data} | \\theta)$: how well the data fit parameter $\\theta$. **Posterior** $P(\\theta | \\text{data})$: updated belief combining prior and data. **Evidence** $P(\\text{data})$: normalizing constant (marginal likelihood), same for all $\\theta$."
+      },
+      {
+        "type": "flip",
+        "front": "Compare Bayesian credible intervals to frequentist confidence intervals. How do interpretations differ?",
+        "back": "**Credible interval**: \"Given the data and prior, there is a 95% probability the parameter is in this interval.\" Direct probability statement about the parameter. **Confidence interval**: \"If we repeated sampling and CI construction infinitely, 95% of intervals would contain the parameter.\" Frequentist statement about the procedure, not the parameter. Bayesian interpretation is more intuitive but requires a defensible prior."
+      },
+      {
+        "type": "mcq",
+        "front": "You specify a prior and compute a posterior. The posterior mean differs from the sample mean. Why?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The posterior mean is always biased; prefer the sample mean.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The posterior mean balances the likelihood (data) and the prior (belief). With an informative prior, the posterior mean shrinks toward the prior mean.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The posterior was computed incorrectly.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "This only happens with non-informative priors.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: You estimate the conversion rate for a new product feature using a Bayesian approach. What prior would you choose and why?",
+        "back": "Use a **Beta prior** (conjugate to binomial likelihood): $\\theta \\sim \\text{Beta}(\\alpha, \\beta)$. For a weakly informative prior, use $\\alpha = 1, \\beta = 1$ (uniform). For domain knowledge (e.g., historical rate of 5%), center the prior at 0.05, e.g., $\\text{Beta}(5, 95)$. The posterior combines the prior belief with observed data. With little data, the prior pulls the estimate; with abundant data, the likelihood dominates."
+      },
+      {
+        "type": "flip",
+        "front": "Explain what \"the posterior is proportional to likelihood times prior\" means and why it's useful.",
+        "back": "$$P(\\theta | \\text{data}) \\propto P(\\text{data} | \\theta) \\cdot P(\\theta)$$\nThis simplifies Bayes' theorem by ignoring the evidence (normalizing constant). Computationally, you compute the product of likelihood and prior, then normalize to get the posterior. This is essential in MCMC methods (Metropolis-Hastings), which sample proportional to this product without computing the full evidence."
+      }
+    ]
+  },
+  {
+    "slug": "conjugate-priors",
+    "title": "Conjugate priors",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "conjugate priors",
+      "closed-form posterior",
+      "Bayesian computation",
+      "beta-binomial",
+      "normal-normal"
+    ],
+    "aliases": [
+      "conjugacy",
+      "natural conjugate family",
+      "posterior update"
+    ],
+    "wikilinks": [
+      "conjugate-prior",
+      "beta-binomial",
+      "normal-normal",
+      "exponential-family",
+      "closed-form-posterior",
+      "natural-parameters"
+    ],
+    "sources": [
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: Conjugate Priors and Bayesian Computation"
+      },
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State STAT: Conjugate Families"
+      },
+      {
+        "url": "https://physiology.med.cornell.edu/people/banfelder/qbio/resources_2008/1.5_Bonferroni_FDR.pdf",
+        "label": "Cornell: Computational Bayesian Methods"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nA **conjugate prior** is a prior distribution such that the posterior distribution (after observing data) belongs to the same family as the prior. This means the posterior has a closed-form solution, avoiding numerical integration or MCMC. Conjugacy greatly simplifies Bayesian computation and provides analytical insight into how data update beliefs.\n\n## Detail\n\n**Definition**: A prior $P(\\theta)$ is conjugate to a likelihood $P(\\text{data} | \\theta)$ if the posterior $P(\\theta | \\text{data})$ has the same functional form as the prior.\n\n**Classic examples**:\n1. **Beta-Binomial**: Likelihood is binomial (number of successes out of $n$ trials). Prior is Beta$(\\alpha, \\beta)$. Posterior is Beta$(\\alpha + \\text{successes}, \\beta + \\text{failures})$. The prior parameters act as \"pseudo-counts.\"\n2. **Normal-Normal**: Likelihood is normal with known variance. Prior is normal. Posterior is normal with updated mean and variance.\n3. **Gamma-Exponential**: Likelihood is exponential (rate model). Prior is Gamma. Posterior is Gamma.\n4. **Dirichlet-Multinomial**: Likelihood is multinomial. Prior is Dirichlet. Posterior is Dirichlet.\n\n**Why useful**: (1) Closed-form posterior simplifies inference. (2) Sequential updating: observe data, update prior to posterior; observe new data, use posterior as new prior. (3) Interpretable: prior parameters often correspond to imaginary prior counts or observations. (4) Computationally efficient.\n\n## Common gotchas / interview framings\n\n- **Not always available**: Conjugate priors exist for exponential family likelihoods but may not be flexible enough for complex models. Trade-off: convenience vs. modeling flexibility.\n- **Choosing the right family**: For a binomial likelihood, Beta is conjugate. For normal, the normal prior is conjugate only if variance is known. Mismatched priors require numerical methods.\n- **Informativeness imbalance**: A conjugate prior can be made weakly informative (e.g., Beta$(1, 1)$ is uniform) or informative (e.g., Beta$(50, 50)$ is concentrated near 0.5). Adjust hyperparameters to reflect confidence in prior beliefs.\n- **Empirical Bayes**: You can estimate prior hyperparameters from data, then use the conjugate posterior. This is a data-driven approach but can inflate Type I error if the prior is too tuned to the data.\n- **Why exponential family**: Conjugate priors exist for exponential family models (e.g., binomial, Poisson, exponential, normal). Understanding this connection helps you recognize conjugate structures.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define a conjugate prior and explain why conjugacy simplifies Bayesian inference.",
+        "back": "A prior is conjugate to a likelihood if the posterior has the same functional form as the prior. **Why it matters**: (1) Closed-form posterior—no numerical integration needed. (2) Interpretable: prior hyperparameters often correspond to counts or pseudo-observations. (3) Sequential updating: posterior from one observation becomes the prior for the next, recursively. (4) Efficient computation."
+      },
+      {
+        "type": "flip",
+        "front": "For a binomial likelihood with $n = 100$ trials and 30 successes, derive the posterior under a Beta$(2, 2)$ prior.",
+        "back": "Beta-Binomial conjugacy: Prior is Beta$(\\alpha, \\beta) = (2, 2)$. Likelihood contributes 30 successes and 70 failures. Posterior is Beta$(\\alpha + 30, \\beta + 70) = (32, 72)$. The posterior mean is $\\frac{32}{32+72} = \\frac{32}{104} \\approx 0.308$. The prior added 4 pseudo-observations (2 successes, 2 failures), a weak influence; data dominate."
+      },
+      {
+        "type": "mcq",
+        "front": "You observe data $x_1, \\ldots, x_n$ from a normal distribution with known variance $\\sigma^2 = 4$. Which prior is conjugate to the likelihood?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Beta(1, 1)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Normal with mean $\\mu_0$ and variance $\\tau_0^2$",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Exponential distribution",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Uniform on $[−10, 10]$",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain how to sequentially update a conjugate prior as new data arrive.",
+        "back": "**Sequential update**: (1) Start with prior Beta$(\\alpha_0, \\beta_0)$. (2) Observe data (successes, failures), compute posterior Beta$(\\alpha_0 + s, \\beta_0 + f)$. (3) New data arrive; use the previous posterior as the new prior: Beta$(\\alpha_1, \\beta_1) = (\\alpha_0 + s_1, \\beta_0 + f_1)$. (4) Repeat. The final posterior is Beta$(\\alpha_0 + s_{\\text{total}}, \\beta_0 + f_{\\text{total}})$. All information accumulates without recomputing from scratch."
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: You estimate click-through rate (CTR) sequentially as ads are shown. Why would Beta conjugacy be valuable here?",
+        "back": "With Beta-Binomial conjugacy, as each impression is shown (success or failure), the posterior Beta distribution updates in closed form. No numerical integration needed. The prior hyperparameters ($\\alpha, \\beta$) encode belief: e.g., Beta$(1, 1)$ is neutral, Beta$(10, 90)$ favors low CTR based on historical data. As impressions accumulate, the posterior concentrates around the true CTR. Computational efficiency is critical for real-time decision-making."
+      }
+    ]
+  },
+  {
+    "slug": "bayesian-hypothesis-testing-and-bayes-factors",
+    "title": "Bayesian hypothesis testing and Bayes factors",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "intermediate",
+    "tags": [
+      "Bayes factor",
+      "Bayesian testing",
+      "model comparison",
+      "posterior odds",
+      "likelihood ratio"
+    ],
+    "aliases": [
+      "BF",
+      "Bayes factor",
+      "model evidence",
+      "posterior odds"
+    ],
+    "wikilinks": [
+      "bayes-factor",
+      "posterior-odds",
+      "model-comparison",
+      "bayesian-hypothesis-test",
+      "likelihood-ratio",
+      "model-evidence"
+    ],
+    "sources": [
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: Bayesian Model Comparison"
+      },
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State STAT: Bayes Factors and Model Selection"
+      },
+      {
+        "url": "https://physiology.med.cornell.edu/people/banfelder/qbio/resources_2008/1.5_Bonferroni_FDR.pdf",
+        "label": "Cornell: Bayesian Inference and Hypothesis Testing"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nBayesian hypothesis testing compares competing models or hypotheses directly via the **Bayes factor**, which measures how much the data support one hypothesis over another. Unlike p-values (which test $H_0$ under a repeated sampling framework), Bayes factors quantify evidence for both hypotheses simultaneously.\n\n## Detail\n\nThe **Bayes factor** is the ratio of model likelihoods (marginal likelihoods, integrating over parameter uncertainty):\n$$BF_{10} = \\frac{P(\\text{data} | H_1)}{P(\\text{data} | H_0)}$$\n\nAlternatively, using Bayes' theorem, the posterior odds of $H_1$ vs. $H_0$ are:\n$$\\frac{P(H_1 | \\text{data})}{P(H_0 | \\text{data})} = BF_{10} \\cdot \\frac{P(H_1)}{P(H_0)}$$\nwhere $P(H_1) / P(H_0)$ are the prior odds.\n\n**Interpretation of $BF_{10}$**:\n- $BF > 10$: Strong evidence for $H_1$.\n- $3 < BF < 10$: Moderate evidence for $H_1$.\n- $1/3 < BF < 3$: Weak evidence (inconclusive).\n- $BF < 1/10$: Strong evidence for $H_0$.\n\n**Advantages over p-values**:\n1. **Symmetric**: Can quantify evidence for $H_0$ (p-values only test $H_0$).\n2. **No multiple testing inflation**: Bayes factors do not require correction for multiple comparisons (already integrated over model space).\n3. **Interpretable**: Direct comparison of models, not a significance threshold.\n\n## Common gotchas / interview framings\n\n- **Model specification**: Bayes factors depend heavily on the prior within each hypothesis. Different priors yield different Bayes factors; sensitivity analysis is essential.\n- **Computational burden**: Marginal likelihoods require integration; often approximated via MCMC or Laplace approximation.\n- **Prior odds matter**: $BF_{10} = 5$ with equal prior odds ($P(H_1) = P(H_0) = 0.5$) gives posterior odds 5:1 for $H_1$. Different prior odds change the conclusion.\n- **Not a replacement for p-values in all contexts**: In regulatory settings or pre-specified studies, p-values remain standard. Bayes factors are powerful for exploratory analysis and model comparison.\n- **Information criteria alternatives**: AIC, BIC, and DIC approximate Bayes factors under certain conditions; simpler computationally but less flexible.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define the Bayes factor and explain what it measures.",
+        "back": "The Bayes factor is $BF_{10} = \\frac{P(\\text{data} | H_1)}{P(\\text{data} | H_0)}$, the ratio of marginal likelihoods under two hypotheses. It quantifies how much the data support $H_1$ relative to $H_0$. A Bayes factor > 1 favors $H_1$; < 1 favors $H_0$. Unlike p-values, it treats both hypotheses symmetrically and is a direct measure of evidence."
+      },
+      {
+        "type": "flip",
+        "front": "How do you derive posterior odds from the Bayes factor?",
+        "back": "Posterior odds = Bayes factor × prior odds: $$\\frac{P(H_1 | \\text{data})}{P(H_0 | \\text{data})} = BF_{10} \\cdot \\frac{P(H_1)}{P(H_0)}$$ If prior odds are 1:1 (equal belief), posterior odds = $BF_{10}$. If prior odds favor $H_0$, the posterior odds are more conservative. The Bayes factor updates your initial belief."
+      },
+      {
+        "type": "mcq",
+        "front": "You compute $BF_{10} = 4$ for comparing a treatment effect ($H_1$) vs. no effect ($H_0$). With equal prior odds, what is the posterior probability of $H_1$?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "0.25",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "0.50",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "0.80",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "0.95",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Compare Bayesian hypothesis testing (Bayes factors) with frequentist hypothesis testing (p-values).",
+        "back": "**Bayes factor**: Compares two models directly; symmetric (can favor $H_0$ or $H_1$). Accounts for model complexity (marginalization over parameters). No multiple testing inflation. Depends on prior specification. **p-value**: Tests only $H_0$; cannot favor $H_0$ without additional context. Requires significance levels and multiple testing correction. Asymptotic; interpretation is about repeated sampling. Choose Bayes factors for exploratory analysis and model comparison; p-values for confirmatory, pre-specified tests."
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: You A/B test a feature on two user cohorts. You want to use Bayes factors instead of p-values to declare a winner. How would you proceed?",
+        "back": "Specify two models: $H_1$ (feature improves metric) and $H_0$ (no difference). Use conjugate priors (e.g., Beta for conversion) for closed-form Bayes factors. Compute $BF_{10}$ as data accumulate. When $BF_{10} > 10$ (strong evidence for $H_1$), launch the feature. Advantage: no multiple testing correction, and you can quantify evidence for $H_0$ if data are ambiguous. Always document the priors; sensitivity to prior choice is important."
+      }
+    ]
+  },
+  {
+    "slug": "markov-chain-monte-carlo-mcmc",
+    "title": "Markov Chain Monte Carlo (MCMC)",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "difficulty": "advanced",
+    "tags": [
+      "MCMC",
+      "Metropolis-Hastings",
+      "Gibbs sampling",
+      "posterior sampling",
+      "Bayesian computation"
+    ],
+    "aliases": [
+      "Metropolis-Hastings",
+      "Gibbs sampling",
+      "posterior simulation",
+      "Hamiltonian MC"
+    ],
+    "wikilinks": [
+      "mcmc",
+      "metropolis-hastings",
+      "gibbs-sampling",
+      "convergence-diagnostics",
+      "burn-in-period",
+      "effective-sample-size"
+    ],
+    "sources": [
+      {
+        "url": "https://stat20.berkeley.edu/spring-2024/4-generalization/04-hypothesis-tests/notes.html",
+        "label": "Berkeley Stat 20: MCMC and Bayesian Computation"
+      },
+      {
+        "url": "https://online.stat.psu.edu/statprogram/reviews/statistical-concepts/hypothesis-testing/p-value-approach",
+        "label": "Penn State STAT: Markov Chain Monte Carlo"
+      },
+      {
+        "url": "https://physiology.med.cornell.edu/people/banfelder/qbio/resources_2008/1.5_Bonferroni_FDR.pdf",
+        "label": "Cornell: Advanced Bayesian Computational Methods"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMarkov Chain Monte Carlo (MCMC) is a computational technique for sampling from complex, high-dimensional posterior distributions. When the posterior has no closed form (no conjugate prior), MCMC generates correlated samples that approximate the posterior, enabling estimation of posterior means, quantiles, and credible intervals without explicit integration.\n\n## Detail\n\n**Core idea**: Construct a Markov chain whose stationary distribution equals the target posterior $P(\\theta | \\text{data})$. Run the chain for many iterations; after convergence (\"burn-in\"), samples approximate the posterior.\n\n**Metropolis-Hastings (MH) algorithm**:\n1. Start with initial parameter value $\\theta_0$.\n2. Propose a new value $\\theta^{*}$ from a proposal distribution $q(\\theta^{*} | \\theta_t)$.\n3. Compute acceptance ratio: $\\alpha = \\min\\left(1, \\frac{P(\\theta^{*} | \\text{data}) \\cdot q(\\theta_t | \\theta^{*})}{P(\\theta_t | \\text{data}) \\cdot q(\\theta^{*} | \\theta_t)}\\right)$.\n4. Accept $\\theta^{*}$ with probability $\\alpha$; otherwise, stay at $\\theta_t$.\n5. Repeat; after many iterations, samples approximate the posterior.\n\n**Gibbs sampling**: Special case where full conditional distributions $P(\\theta_j | \\theta_{-j}, \\text{data})$ are known. Sample each parameter in turn from its conditional; often efficient for hierarchical and latent variable models.\n\n**Key concepts**:\n- **Burn-in**: Discard early iterations before convergence (transient behavior).\n- **Thinning**: Keep every $k$-th sample to reduce autocorrelation and storage.\n- **Convergence diagnostics**: Potential scale reduction factor ($\\hat{R}$), trace plots, effective sample size (ESS).\n\n## Common gotchas / interview framings\n\n- **Dependence on starting values**: Poor initialization can lead to slow convergence; run multiple chains with different starting points.\n- **Tuning proposal distributions**: MH acceptance rate should be ~20–50%; too high acceptance (small proposals) or too low (large proposals) wastes iterations. Adaptive MCMC can optimize this.\n- **High-dimensional spaces**: Standard MH is inefficient in high dimensions (curse of dimensionality). Hamiltonian MC and other advanced methods are more efficient.\n- **Not i.i.d. samples**: MCMC samples are autocorrelated; effective sample size (ESS) is much smaller than nominal sample count. Thinning reduces autocorrelation at a computational cost.\n- **Model misspecification**: MCMC samples from the specified posterior, not the truth. If the model is wrong, posterior is misleading.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the Metropolis-Hastings algorithm in plain language.",
+        "back": "Start at a parameter value. Propose a new value (e.g., perturb slightly). Compute how likely the data are under the new vs. old value. Accept the new value with a probability reflecting the likelihood improvement (acceptance ratio). If accepted, move to the new value; if rejected, stay put. Repeat many times. The samples approximate the posterior distribution."
+      },
+      {
+        "type": "flip",
+        "front": "What is the burn-in period and why is it important?",
+        "back": "Burn-in is the initial iterations of MCMC before the chain converges to the stationary (posterior) distribution. Starting from arbitrary initial values, the chain drifts toward high-posterior regions; early samples do not represent the posterior. Discard burn-in samples (e.g., first 1000 iterations) before analysis. Keeping them biases estimates toward the starting value."
+      },
+      {
+        "type": "mcq",
+        "front": "In Metropolis-Hastings, what does the acceptance ratio control?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The variance of the posterior estimate.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The probability of accepting a proposed parameter value, balancing exploration vs. convergence speed.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The final posterior mean.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Whether the chain converges to the correct distribution.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain effective sample size (ESS) and why MCMC samples are not independent.",
+        "back": "MCMC samples are autocorrelated: a proposed value depends on the current value, creating serial correlation. ESS is the number of independent samples equivalent to $N$ correlated samples: $ESS = N / \\tau$ where $\\tau$ is the autocorrelation time. E.g., 10,000 correlated samples might have $ESS = 1,000$ if autocorrelation is strong. This reduces precision; you need more samples for the same effective information."
+      },
+      {
+        "type": "flip",
+        "front": "Design scenario: You fit a hierarchical Bayesian model with random effects for patients and treatments. MCMC is slow. What strategies would you use?",
+        "back": "Strategies: (1) **Gibbs sampling**: Sample patient effects, then treatment effects, from their full conditional distributions (often faster than general MH). (2) **Hamiltonian MC**: More efficient in high dimensions; uses gradient information. (3) **Parallel chains**: Run multiple chains and combine; better for diagnostics. (4) **Reparameterization**: Centered vs. non-centered parameterizations affect mixing. (5) **Approximate methods**: Variational inference, expectation-propagation for faster inference (approximate but scalable)."
+      }
+    ]
+  }
+]

@@ -1,0 +1,86 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "production-systems-mlops-for-llms",
+  "topic_label": "Production Systems & MLOps for LLMs",
+  "concept_count": 11,
+  "concepts": [
+    {
+      "slug": "load-balancing-and-autoscaling-for-llm-endpoints",
+      "title": "Load balancing and autoscaling for LLM endpoints",
+      "difficulty": "intermediate",
+      "hook": "Balance across replicas; scale on latency/QPS.",
+      "subtopic": "Serving Architecture"
+    },
+    {
+      "slug": "model-versioning-and-canary-rollouts",
+      "title": "Model versioning and canary rollouts",
+      "difficulty": "intermediate",
+      "hook": "Shadow traffic, gradual rollouts; compare versions.",
+      "subtopic": "Serving Architecture"
+    },
+    {
+      "slug": "cost-management-prompt-caching-batching-model-selection",
+      "title": "Cost management (prompt caching, batching, model selection)",
+      "difficulty": "intermediate",
+      "hook": "Optimize $ per request; tradeoff latency vs cost.",
+      "subtopic": "Serving Architecture"
+    },
+    {
+      "slug": "multi-model-serving-and-model-router",
+      "title": "Multi-model serving and model router",
+      "difficulty": "advanced",
+      "hook": "Route requests to appropriate model based on size, cost, latency.",
+      "subtopic": "Serving Architecture"
+    },
+    {
+      "slug": "latency-throughput-error-rates-cost",
+      "title": "Latency, throughput, error rates, cost",
+      "difficulty": "beginner",
+      "hook": "SLOs: p99 latency, error rate < X%.",
+      "subtopic": "Monitoring & Observability"
+    },
+    {
+      "slug": "token-usage-and-cost-tracking",
+      "title": "Token usage and cost tracking",
+      "difficulty": "intermediate",
+      "hook": "Count input/output tokens; track spend.",
+      "subtopic": "Monitoring & Observability"
+    },
+    {
+      "slug": "quality-metrics-bleu-rouge-exact-match",
+      "title": "Quality metrics (BLEU, ROUGE, exact match)",
+      "difficulty": "intermediate",
+      "hook": "Monitor outputs against baselines.",
+      "subtopic": "Monitoring & Observability"
+    },
+    {
+      "slug": "user-feedback-and-logging",
+      "title": "User feedback and logging",
+      "difficulty": "beginner",
+      "hook": "Collect thumbs up/down; track user satisfaction.",
+      "subtopic": "Monitoring & Observability"
+    },
+    {
+      "slug": "model-output-drift-quality-change",
+      "title": "Model output drift (quality change)",
+      "difficulty": "intermediate",
+      "hook": "Compare outputs to baseline; detect degradation.",
+      "subtopic": "Drift & Degradation"
+    },
+    {
+      "slug": "distribution-shift-in-inputs",
+      "title": "Distribution shift in inputs",
+      "difficulty": "intermediate",
+      "hook": "User queries change; model may not generalize.",
+      "subtopic": "Drift & Degradation"
+    },
+    {
+      "slug": "retraining-triggers-and-refresh-cadence",
+      "title": "Retraining triggers and refresh cadence",
+      "difficulty": "intermediate",
+      "hook": "When to fine-tune with new data? Cost vs benefit.",
+      "subtopic": "Drift & Degradation"
+    }
+  ]
+}

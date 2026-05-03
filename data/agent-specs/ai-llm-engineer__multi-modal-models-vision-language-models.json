@@ -1,0 +1,72 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "multi-modal-models-vision-language-models",
+  "topic_label": "Multi-Modal Models & Vision-Language Models",
+  "concept_count": 9,
+  "concepts": [
+    {
+      "slug": "image-encoding-and-patch-embeddings",
+      "title": "Image encoding and patch embeddings",
+      "difficulty": "intermediate",
+      "hook": "ViT-style patch encoding; project images to token space.",
+      "subtopic": "Vision-Language Architecture"
+    },
+    {
+      "slug": "visual-language-alignment-clip-align",
+      "title": "Visual-language alignment (CLIP, ALIGN)",
+      "difficulty": "intermediate",
+      "hook": "Contrastive learning of image-text pairs; enables zero-shot classification.",
+      "subtopic": "Vision-Language Architecture"
+    },
+    {
+      "slug": "token-interleaving-and-mixed-modality",
+      "title": "Token interleaving and mixed modality",
+      "difficulty": "intermediate",
+      "hook": "Interleave image and text tokens; enables cross-modal reasoning.",
+      "subtopic": "Vision-Language Architecture"
+    },
+    {
+      "slug": "document-understanding-and-ocr-free-approaches",
+      "title": "Document understanding and OCR-free approaches",
+      "difficulty": "intermediate",
+      "hook": "Models like GPT-4V and Claude 3.5 handle documents natively.",
+      "subtopic": "Vision-Language Architecture"
+    },
+    {
+      "slug": "gpt-4o-claude-35-gemini-3-qwen-vl-models",
+      "title": "GPT-4o, Claude 3.5, Gemini 3, Qwen VL models",
+      "difficulty": "intermediate",
+      "hook": "Understand images, text, video; differences in modality support.",
+      "subtopic": "Multi-Modal Models"
+    },
+    {
+      "slug": "video-understanding-and-long-video-models",
+      "title": "Video understanding and long-video models",
+      "difficulty": "advanced",
+      "hook": "Temporal understanding; sample frames vs dense processing.",
+      "subtopic": "Multi-Modal Models"
+    },
+    {
+      "slug": "audio-and-speech-models",
+      "title": "Audio and speech models",
+      "difficulty": "intermediate",
+      "hook": "Whisper for speech-to-text; Gemini 3 handles audio natively.",
+      "subtopic": "Multi-Modal Models"
+    },
+    {
+      "slug": "chain-of-thought-with-visual-reasoning",
+      "title": "Chain-of-thought with visual reasoning",
+      "difficulty": "intermediate",
+      "hook": "Explain reasoning over images; improves accuracy.",
+      "subtopic": "Multi-Modal Reasoning"
+    },
+    {
+      "slug": "visual-question-answering-vqa",
+      "title": "Visual question answering (VQA)",
+      "difficulty": "intermediate",
+      "hook": "Answer questions about images; benchmark for visual understanding.",
+      "subtopic": "Multi-Modal Reasoning"
+    }
+  ]
+}

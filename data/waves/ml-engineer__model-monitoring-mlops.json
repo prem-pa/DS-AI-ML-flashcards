@@ -1,0 +1,952 @@
+[
+  {
+    "slug": "latency-throughput-error-rates",
+    "title": "Latency, throughput, error rates",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "beginner",
+    "tags": [
+      "slos",
+      "observability",
+      "production-metrics",
+      "alerting",
+      "perf-monitoring",
+      "baselines"
+    ],
+    "aliases": [
+      "SLO monitoring",
+      "operational metrics",
+      "service metrics"
+    ],
+    "wikilinks": [
+      "prediction-drift-and-label-shift",
+      "resource-utilization-gpu-memory-cpu-io",
+      "schema-drift-and-pipeline-monitoring",
+      "experiment-tracking-and-model-registry"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nML systems operate in production environments with strict service-level objectives (SLOs). Beyond accuracy, you must monitor operational metrics: how fast predictions return (latency), how many you process per unit time (throughput), and failure rates. These form the baseline for detecting when something breaks operationally—not just statistically.\n\n## Detail\nLatency (p50, p95, p99 ms) measures prediction speed; throughput (requests/sec) measures capacity. Error rates track failed predictions, timeouts, or crashed services. Set SLOs: e.g., p99 latency < 100ms, uptime > 99.9%. Use histograms and counters (Prometheus, StatsD) to emit these. Alert when p99 latency creeps from 50ms → 200ms even if accuracy holds: this signals resource contention or model complexity drift. Throughput drop may indicate data pipeline issues upstream.\n\n## Common gotchas / interview framings\n- Confusing latency SLO with model inference time alone—network, serialization, feature store lookups matter\n- Not setting percentile-based alerts (p99 vs mean); mean can hide tail latency issues\n- Alerting on raw error rate without context: 0.1% errors on 1M req/day = 1000 failures\n- Not separating input validation errors from model inference errors",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are the three core operational metrics you must monitor in an ML system, and why does p99 latency matter more than mean latency?",
+        "back": "1. **Latency** (p50/p95/p99 ms): prediction response time\n2. **Throughput** (req/sec): request processing capacity\n3. **Error rate** (%): failed predictions/service crashes\n\np99 latency captures tail behavior—users in 1% slowest experience > 200ms wait. Mean (50ms) hides this. p99 degradation signals resource contention or feature store slowness before accuracy degrades."
+      },
+      {
+        "type": "mcq",
+        "front": "Your model's p99 latency jumps from 80ms → 250ms. Accuracy on recent test set is unchanged at 0.92. What is the most likely root cause?",
+        "back": "**Correct: b** Latency ≠ accuracy. A 3x latency spike with stable accuracy suggests operational bottleneck: feature store query slowdown, serialization overhead, or resource contention. Model accuracy is unchanged. (a) concept drift would eventually degrade accuracy. (c) & (d) affect accuracy, not latency.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Model has learned concept drift",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Feature store is slow or network serialization bottleneck",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Input feature distribution shifted",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Label distribution changed",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Define an appropriate SLO for p99 latency and uptime. What happens when you violate the latency SLO for 5 minutes?",
+        "back": "Example SLO: **p99 latency < 100ms, uptime > 99.9% (43 min downtime allowed/month)**.\n\nViolation for 5 min: Trigger **page on-call engineer immediately**. Within 15 min, investigate: (1) Feature store latency spike? (2) Model inference complexity increased? (3) Increased request volume? Scale horizontally or revert model if necessary. Log incident for postmortem."
+      },
+      {
+        "type": "mcq",
+        "front": "Which metric composition issue would NOT be caught by latency/throughput/error-rate monitoring alone?",
+        "back": "**Correct: a** Operational metrics (latency, throughput, errors) do NOT capture statistical performance degradation. Accuracy ↓ 0.95 → 0.87 is invisible to these signals unless paired with held-out validation monitoring or label-delayed ground truth. This is why data/model quality monitoring is separate.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Model returns predictions but accuracy dropped from 0.95 → 0.87",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "All requests timeout due to feature store outage",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Predictions arrive 10x slower than baseline",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Throughput cut in half",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "prediction-drift-and-label-shift",
+    "title": "Prediction drift and label shift",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "advanced",
+    "tags": [
+      "drift-detection",
+      "distribution-shift",
+      "covariate-shift",
+      "label-shift",
+      "divergence-metrics",
+      "monitoring"
+    ],
+    "aliases": [
+      "covariate shift",
+      "output distribution shift",
+      "prior shift"
+    ],
+    "wikilinks": [
+      "feature-distribution-monitoring",
+      "model-performance-degradation-accuracy-drop-calibration-shift",
+      "data-freshness",
+      "retraining-triggers-periodic-drift-based-performance-based"
+    ],
+    "sources": [
+      {
+        "url": "https://www.evidentlyai.com/ml-in-production/data-drift",
+        "label": "Evidently AI: What is data drift and how to detect and handle it"
+      },
+      {
+        "url": "https://www.datacamp.com/tutorial/understanding-data-drift-model-drift",
+        "label": "DataCamp: Understanding Data Drift and Model Drift"
+      }
+    ],
+    "explainer_md": "## Intuition\nYour model trains on data distribution P(X, Y) in development. In production, the distribution shifts to Q(X, Y). **Prediction drift** = input distribution Q(X) ≠ P(X). **Label shift** = P(Y|X) stays same but P(Y) changes. Covariate shift: P(Y|X) unchanged but Q(X) ≠ P(X). These orthogonal shifts degrade performance in different ways.\n\n## Detail\n**Prediction drift**: Features shift (e.g., user income drops in recession). Train on 2020 customers; predict 2024 customers. Detected via PSI (Population Stability Index) or KL divergence on feature distributions. KL divergence: D_KL(Q||P) measures bits of extra info needed to encode Q using P's codebook; asymmetric, sensitive to tail. PSI: symmetric relative entropy divergence; preferred in practice (less sensitive to rare bins).\n\n**Label shift**: P(Y) changes (e.g., fraud rate drops due to fraud prevention). True label distribution P(Y) assumed stable in many algorithms, but in fraud, P(fraud)=5% in train, 0.5% in prod. Causes miscalibration. Detect by monitoring pred distribution drift independently from feature drift. Label shift with covariate shift is hardest to detect without labels.\n\n## Common gotchas / interview framings\n- Assuming P(X) drift always harms model—covariate shift may have no impact if P(Y|X) stable\n- KL divergence sensitive to zero frequencies; requires smoothing (add-one smoothing, Laplace)\n- Confusing prediction shift (monitored via input features) with model performance degradation\n- Label shift invisible without delayed labels; suggests label-free monitoring (e.g., prediction confidence drop)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the difference between prediction drift (covariate shift) and label shift. Why is label shift harder to detect in production?",
+        "back": "**Prediction drift (covariate shift)**: P(X) changes but P(Y|X) stable. Example: customer age distribution shifts. Detection: Monitor feature distributions vs training baseline.\n\n**Label shift**: P(Y) changes but P(Y|X) stable. Example: fraud rate drops 5% → 0.5%. Harder to detect because you see fewer positives, but P(fraud|features) unchanged. Requires:\n- Delayed labels (hard in real-time systems)\n- Label-free signals: prediction confidence collapse, model disagreement\n- Indirect: monitor model's predicted class distribution drift separately from features"
+      },
+      {
+        "type": "mcq",
+        "front": "You compute PSI=0.15 on model input features between train and production. Accuracy drops from 0.94 → 0.89. What is the most likely explanation?",
+        "back": "**Correct: b** PSI=0.15 (moderate drift) + accuracy ↓ 5pts suggests the model's decision boundary is sensitive to the shifted feature distribution. This is covariate shift where P(Y|X) was not stable enough. If drift were purely label shift (P(Y) changed), input features stable, you'd see different symptoms: miscalibration, not uniform accuracy loss.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "PSI=0.15 indicates moderate drift, but accuracy drop is due to label shift (P(Y) changed), not input drift",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Covariate shift (P(X) changed) + non-stable conditional P(Y|X); model was brittle to distribution changes",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Concept drift: the relationship between X and Y completely reversed",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Model is overfitting; PSI is irrelevant",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You compute KL divergence on 10 features. 9 have KL < 0.05, but Feature #7 (rare event flag, 1% positive) has KL = 0.8. Why is this spurious and what should you do?",
+        "back": "KL divergence is **sensitive to zero/rare bins**. Feature #7 with rare events: if train has 1 occurrence and prod has 0, KL explodes even if the meaningful distribution is stable.\n\n**Solution**: (1) Use PSI instead (symmetric, less sensitive). (2) Apply Laplace/add-one smoothing: P_smooth = (count + 1) / (total + k). (3) Use binned KL (group rare events). (4) Set KL thresholds higher for rare features (e.g., KL < 0.2 for features < 5% support)."
+      },
+      {
+        "type": "flip",
+        "front": "In a recommendation system, your model's predicted CTR (click-through rate) distribution shifts: train mean=0.15, prod mean=0.08. But feature distributions are stable. What happened and how do you confirm?",
+        "back": "This suggests **label shift**: P(click) dropped from 15% → 8% in prod (e.g., users are less engaged, or you changed ranking). Features unchanged (covariate shift ≠ 0).\n\nConfirm: (1) Check if delayed ground truth labels show P(Y) actually changed. (2) If labels unavailable, compare model's predicted distribution shift vs feature drift—prediction shift >> feature drift = label shift signal. (3) Monitor calibration: if model was well-calibrated in train, post-shift performance should stay ~0.08 (label shift alone won't break calibration), but accuracy on 8% base rate will look worse than on 15% base rate."
+      }
+    ]
+  },
+  {
+    "slug": "model-performance-degradation-accuracy-drop-calibration-shift",
+    "title": "Model performance degradation (accuracy drop, calibration shift)",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "intermediate",
+    "tags": [
+      "performance-monitoring",
+      "calibration",
+      "validation-monitoring",
+      "accuracy-tracking",
+      "metric-degradation",
+      "alerting"
+    ],
+    "aliases": [
+      "accuracy monitoring",
+      "model performance tracking",
+      "drift-driven degradation"
+    ],
+    "wikilinks": [
+      "latency-throughput-error-rates",
+      "prediction-drift-and-label-shift",
+      "feature-distribution-monitoring",
+      "retraining-triggers-periodic-drift-based-performance-based"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nEven if latency/throughput stay stable, model accuracy decays in production. **Accuracy drop**: F1, AUC, or top-1 accuracy ↓. **Calibration shift**: predicted confidence diverges from true frequency. A model predicting 0.9 confidence 100 times should be correct ~90 times; if only 60 correct, calibration drifted. These indicate data/concept drift, and require intervention (retrain, alert).\n\n## Detail\nMonitor two scenarios: (1) **Labeled**: Hold ground truth validation set; regularly score prod predictions against delayed labels. Expensive but precise. (2) **Label-free**: Monitor proxy signals (feature drift, prediction distribution shift, model disagreement ensemble). For calibration, track: ECE (expected calibration error, bin predictions, compare confidence vs accuracy), Brier score (MSE of predicted prob vs binary outcome), or log-loss. Thresholds: alert if accuracy ↓ >3%, ECE ↑ >0.1. Root cause: drift, label shift, feature engineering bug, or data pipeline corruption.\n\n## Common gotchas / interview framings\n- Confusing performance degradation with label noise—clean labels but distribution shifted\n- Using only test-set accuracy; need continuous monitoring with holdout validation set or delayed labels\n- Ignoring class imbalance; accuracy can stay stable while minority class F1 collapses\n- Not separating calibration drift from accuracy drift; well-calibrated model can have lower accuracy on new data distribution",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your production model's AUC drops from 0.94 → 0.87 over two weeks. Feature distributions are stable. What are your first three investigation steps?",
+        "back": "1. **Check for delayed labels**: Compare predictions from 2 weeks ago vs ground truth arriving now. If labels confirm AUC drop, it's real performance degradation, not monitoring artifact.\n\n2. **Analyze by segment**: Does AUC drop uniformly or concentrate in specific subpopulations (e.g., new users, specific region)? Label shift or covariate shift in subgroup.\n\n3. **Inspect calibration**: Is model overconfident (predicted 0.85, actual 0.65 win rate)? If yes, label shift is likely. If calibration stable, concept drift (P(Y|X) changed) or data quality issue (feature corruption).\n\nNext: Check data pipeline (missing values, schema changes), feature freshness, or trigger retraining."
+      },
+      {
+        "type": "mcq",
+        "front": "Expected Calibration Error (ECE) increases from 0.05 → 0.18, but accuracy only drops from 0.92 → 0.90. Prediction distribution is stable. What happened?",
+        "back": "**Correct: b** Label shift scenario: train on P(Y)=0.5 balanced, prod P(Y)=0.8 (skewed). Model trained to output 0.5 confidence on average stays calibrated for 50-50 split. On 80-20 split, outputs (e.g., 0.5 confidence 100 times, but 80 are positive) = poorly calibrated despite maintaining accuracy (~2% drop in this scenario). ECE explodes. Fix: recalibrate (Platt scaling) or retrain with new label distribution.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Concept drift: P(Y|X) changed",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Label shift: P(Y) changed, model overconfident on new label distribution",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Feature drift in input distribution",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Model overfitting on training data",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design a monitoring system that detects accuracy drop without delayed ground truth labels. What signals compose your alert?",
+        "back": "**Label-free performance monitoring**:\n\n1. **Prediction distribution drift**: Compute PSI on predicted class distribution. Sudden shift may signal label shift or concept drift.\n\n2. **Feature-model disagreement**: Train simple GLM on features; compare GLM predictions vs model predictions. High disagreement = model overfitting or concept drift.\n\n3. **Confidence degradation**: Monitor mean predicted confidence. Drop suggests model uncertainty increasing (data OOD or concept drift).\n\n4. **Prediction-feature correlation**: If feature X ↔ prediction correlation flips, P(Y|X) likely changed.\n\n5. **Hard negatives**: Track predictions on edge cases (low confidence, near decision boundary). If error rate on these spikes, concept drift likely.\n\nCombine via composite alerting: alert if (PSI > 0.15 AND confidence_drop > 10%) OR (feature_model_disagreement > 15%)."
+      },
+      {
+        "type": "flip",
+        "front": "You detect AUC ↓ 5%, but micro-average F1 stable. Why might this happen and what should you investigate?",
+        "back": "AUC vs F1 mismatch suggests **class imbalance shift or minority-class performance collapse**. AUC (ROC curve) robust to class imbalance; F1 (precision-recall) sensitive to positives.\n\nScenario: Positive rate P(Y=1) drops from 10% → 2%. Model's recall on positives may drop 0.95 → 0.80. AUC ↓ (overall ranking quality), but if negatives still ranked well, F1 may stay stable (fewer positives to recall).\n\nInvestigate: (1) Segment metrics by class; check recall, precision separately. (2) Monitor minority-class AUC separately. (3) Check for label shift in minority class. (4) If critical business metric depends on recall, retrain with new class balance or use threshold adjustment."
+      }
+    ]
+  },
+  {
+    "slug": "resource-utilization-gpu-memory-cpu-io",
+    "title": "Resource utilization (GPU memory, CPU, I/O)",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "intermediate",
+    "tags": [
+      "infrastructure-monitoring",
+      "performance-profiling",
+      "capacity-planning",
+      "cost-optimization",
+      "observability",
+      "bottleneck-detection"
+    ],
+    "aliases": [
+      "compute utilization",
+      "hardware efficiency",
+      "system performance"
+    ],
+    "wikilinks": [
+      "latency-throughput-error-rates",
+      "schema-drift-and-pipeline-monitoring",
+      "experiment-tracking-and-model-registry"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nML inference consumes compute: GPU/TPU memory for model weights & activations, CPU for preprocessing, I/O for feature lookups. Monitor utilization to detect inefficiencies (wasted resources), predict capacity needs, and reduce costs. A model using 95% GPU memory leaves no headroom; a model at 10% GPU suggests over-provisioned hardware.\n\n## Detail\nKey metrics: GPU memory (%, GB), GPU utilization (%), CPU %, I/O wait %, disk reads/writes, network bandwidth. Set thresholds: alert if GPU memory > 90% (OOM imminent), CPU > 80% sustained (bottleneck). Use tools: NVIDIA SMI (GPU), htop (CPU), iostat (I/O), Datadog/Prometheus to aggregate. Profile model: measure inference time breakdown—feature store query (40%), model forward pass (30%), serialization (20%), postprocessing (10%). Optimize the bottleneck: cache features, quantize model, batch requests. Plan capacity: if 100 req/sec uses 60% GPU, 200 req/sec needs 2x GPU or else request queuing.\n\n## Common gotchas / interview framings\n- GPU utilization ≠ GPU memory; can have low utilization (kernel idle) with high memory (weight storage)\n- Not accounting for batching overhead; batch size 128 may be faster per-sample than batch size 1 despite higher latency\n- I/O bottleneck misattributed to model; feature store is slow, not model\n- Ignoring warm-up time; GPU kernels compile on first call, skewing latency profiles",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your model's GPU memory is at 92%, but GPU utilization (compute kernels) is only 45%. Is this efficient? What should you investigate?",
+        "back": "**Not efficient**. High memory (92%) with low utilization (45%) means:\n\n- Model weights dominate memory, but compute is underutilized (kernels not busy)\n- Likely causes: (1) Small batch size (model loaded, few samples to compute), (2) I/O-bound (waiting for feature store), (3) CPU bottleneck, (4) Kernel launch overhead\n\nOptimizations: (1) Increase batch size to fill GPU compute pipeline. (2) Check feature store latency—if 500ms/req, model kernels idle. (3) Profile: use NVIDIA Profiler to identify where GPU is stalled. (4) Consider model quantization (int8) to reduce memory, free up budget for batching."
+      },
+      {
+        "type": "mcq",
+        "front": "Inference latency is 150ms (SLO: 100ms). You profile: feature store query 60ms, model forward 40ms, serialization 20ms, postprocessing 30ms. Where should you optimize first?",
+        "back": "**Correct: b** Feature store is 60/150ms = 40% of latency, the largest bottleneck. Reducing by 30ms gets you to 120ms (still over 100ms, but moves needle fastest). Model forward is only 40/150ms = 27%; quantization gives ~10-15% speedup, saving 4-6ms (not enough). Priority: feature store caching, local embedding replica, or batch feature requests.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Optimize model forward pass (use TensorRT quantization)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Optimize feature store query (caching, local replica)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Optimize serialization (faster JSON encoder)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Add GPU to parallelize all components",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Describe how to implement capacity planning for an ML inference service. If current load is 100 req/sec using 70% GPU, how many GPUs do you need for 500 req/sec?",
+        "back": "**Capacity planning steps**:\n1. Profile: Measure resource per req (GPU memory, GPU compute, CPU)\n2. Current: 100 req/sec → 70% GPU utilization on 1 GPU\n3. Linear scaling assumption: 500 req/sec → 500 * (70% / 100) = 350% = 3.5 GPUs\n4. Add headroom (20-30%): 3.5 * 1.3 = 4.55 → **5 GPUs**\n\nRefinements:\n- Verify linearity via load test (batching may improve efficiency at higher req/sec)\n- Account for peak-to-average ratio (if peaks are 2x average, scale to peaks)\n- Monitor tail latency (p99); 5 GPUs at 70% avg may have p99 queuing if bursty\n- Cost trade-off: Can you add CPU preprocessing, cache features, or quantize model to reduce GPU need?"
+      },
+      {
+        "type": "flip",
+        "front": "You notice GPU memory climbs from 65% → 92% over 2 weeks with stable request volume. Feature store cache hit rate drops from 90% → 70%. What is happening?",
+        "back": "**Feature freshness issue**: Cache hit rate ↓ means cache is being invalidated more (or new features entering). If feature store is keeping more features in hot storage (higher memory footprint or GPU-cached tensors), GPU memory climbs.\n\nRoot cause: (1) Feature set expanded (new features added), (2) Cache eviction policy changed, (3) Feature store memory leak, (4) Batch size increased, (5) New feature engineering pipeline with intermediate tensors.\n\nNext steps: (1) Measure GPU memory breakdown (model weights vs feature cache vs activations). (2) Check feature store version/configuration changes. (3) Profile memory allocation over time. (4) Consider reducing batch size or adding GPU memory, or moving feature cache off GPU."
+      }
+    ]
+  },
+  {
+    "slug": "feature-distribution-monitoring",
+    "title": "Feature distribution monitoring",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "intermediate",
+    "tags": [
+      "drift-detection",
+      "feature-stats",
+      "distribution-monitoring",
+      "statistical-testing",
+      "divergence-metrics",
+      "alerting"
+    ],
+    "aliases": [
+      "input distribution monitoring",
+      "covariate monitoring",
+      "statistical drift"
+    ],
+    "wikilinks": [
+      "prediction-drift-and-label-shift",
+      "missing-value-and-anomaly-monitoring",
+      "data-freshness",
+      "model-performance-degradation-accuracy-drop-calibration-shift"
+    ],
+    "sources": [
+      {
+        "url": "https://www.evidentlyai.com/blog/data-drift-detection-large-datasets",
+        "label": "Evidently AI: Which test is best for detecting data drift on large datasets"
+      },
+      {
+        "url": "https://link.springer.com/article/10.1007/s42488-024-00119-y",
+        "label": "Springer: Detecting drifts using KL divergence for data engineering"
+      }
+    ],
+    "explainer_md": "## Intuition\nEach feature has a distribution in training data (baseline). In production, if feature statistics change—mean income ↑ 20%, fraud rate ↓ 50%, feature skewness flips—this signals data drift. Monitor mean, std, quantiles, cardinality (for categorical). Use divergence metrics (KL, PSI, JS) to quantify shift. Features that drift are early warning signs of model degradation.\n\n## Detail\nFor each numerical feature: compute baseline mean μ_train, std σ_train from training data. Monthly, compute μ_prod, σ_prod on production. Alert if |μ_prod - μ_train| / σ_train > 0.5 (0.5 std devs shift). For categorical: monitor distribution of each category. Use Population Stability Index (PSI) = Σ (observed% - expected%) * ln(observed% / expected%); PSI > 0.1 indicates moderate drift. Kolmogorov-Smirnov test compares CDFs (nonparametric, works for any distribution). Tools: Evidently (open-source), Arize, WhyLabs. NannyML excels at predicting drift before performance dips. Precision requires enough samples (central limit theorem; n > 30 per bin for normal approx).\n\n## Common gotchas / interview framings\n- Monitoring raw counts instead of proportions; feature can drift in composition without distributional shift\n- Using univariate tests (KS, PSI) missing multivariate correlations; features drift together\n- Seasonal effects: income naturally higher in Q4; should compare to Q4 baseline, not annual\n- Threshold tuning: PSI=0.1 may be noisy for rare features, unrealistic for high-cardinality features",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You monitor customer age feature: mean=35 years in training, mean=42 in production (std_train=12). Calculate PSI-like shift metric and decide if you should alert.",
+        "back": "Shift magnitude: (42 - 35) / 12 = 0.58 std deviations ≈ **0.58σ shift**\n\nInterpretation: Moderate shift. If baseline threshold is 0.5σ, this triggers alert. Age distribution shifted older (7 year diff). Likely cause: product user base aging, acquisition targeting changed, or cohort composition shift.\n\nDecision: **Alert, but investigate first**. Older users may have different credit profiles, risk, or behavior—this could degrade model if not accounted for. Check:\n1. Is age correlated with target (Y) in your model? If strong, retrain.\n2. Does performance (AUC) actually drop on new age distribution?\n3. Segment model metrics by age; if younger users degrade, retrain with age-stratified data."
+      },
+      {
+        "type": "mcq",
+        "front": "You compute KL divergence on 50 features. 45 have KL < 0.05, but 5 have KL > 0.5. What is your most likely next action?",
+        "back": "**Correct: b** Feature drift ≠ automatic retrain. First assess impact: (1) Are the 5 high-KL features important for your model (high SHAP values)? If marginal, ignore. (2) Do they have data quality issues (nulls, encoding errors)? (3) Does performance degrade on new distribution? Root-cause investigation before action. If 5 features are low-importance and performance stable, drift is not actionable. If features are high-impact and performance ↓, retrain.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Immediately retrain the model",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Investigate the 5 high-KL features for data quality/pipeline issues; assess impact on model",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Ignore; most features are stable",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Disable the 5 drifted features from the model",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design a feature distribution monitoring dashboard. What metrics and visualizations would you include for a numerical feature?",
+        "back": "**Feature distribution monitoring dashboard**:\n\n**Metrics (KPIs)**:\n- Mean, std, quantiles (Q1, median, Q3) vs baseline\n- PSI or KL divergence (scalar drift score)\n- Null count %\n- Cardinality (# unique values, for categorical)\n\n**Visualizations**:\n1. **Histogram overlay**: Training distribution (blue) vs current week (red), aligned x-axis\n2. **Box plot timeline**: Box plots by week, showing trend in median/IQR\n3. **KL divergence time series**: Weekly KL trend; alert threshold line\n4. **Q-Q plot**: Compare quantiles of train vs prod (diagonal = stable)\n5. **Correlation heatmap**: Feature correlations in train vs prod (catch multivariate drift)\n\n**Alerting**:\n- KL or PSI > threshold (e.g., 0.15)\n- Mean drift > 1σ\n- Sudden spike in nulls\n- Cardinality explosion (e.g., new categorical values appearing)\n\nTools: Evidently, Great Expectations, or custom Prometheus + Grafana."
+      },
+      {
+        "type": "flip",
+        "front": "Your model was trained on Q4 (holiday season, high spending). You deploy in January (post-holiday, low spending). Feature distribution shifts drastically. Should you retrain immediately?",
+        "back": "**No—first seasonality-adjust**. Spending is highly seasonal; January vs Q4 shift is expected, not drift.\n\nSteps: (1) **Establish seasonal baseline**: Retrain feature monitoring using same season (Jan vs Jan, Q4 vs Q4). (2) **Adjust monitoring thresholds**: Higher PSI tolerance for seasonal shifts. (3) **Check model performance** on Jan data; if accuracy stays stable, model is robust to seasonality. (4) **Retrain only if**:\n- Performance actually degrades in Jan\n- Jan behavior differs from historical Jan patterns (true drift)\n- Feature relationships changed (e.g., spending no longer correlates with fraud risk)\n\nInstead: Implement seasonal models or train on balanced seasonal mix (multi-year history)."
+      }
+    ]
+  },
+  {
+    "slug": "missing-value-and-anomaly-monitoring",
+    "title": "Missing value and anomaly monitoring",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-quality",
+      "anomaly-detection",
+      "missing-data",
+      "outlier-detection",
+      "validation",
+      "pipeline-monitoring"
+    ],
+    "aliases": [
+      "null rate monitoring",
+      "outlier detection",
+      "data quality metrics"
+    ],
+    "wikilinks": [
+      "feature-distribution-monitoring",
+      "data-freshness",
+      "schema-drift-and-pipeline-monitoring",
+      "model-performance-degradation-accuracy-drop-calibration-shift"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nData quality issues kill ML models silently. Missing features (NaN, null) break inference. Corrupted values (age=999, negative prices) confuse models. Anomalies (feature outliers, extreme combinations) are either real rare events (handle) or data bugs (alert). Monitor null %, outlier count, and value ranges per feature to catch upstream pipeline breaks before they degrade model.\n\n## Detail\nMissing value rate: Alert if null % > baseline (e.g., normally 0.1% age nulls, prod 5% = pipeline issue). Anomaly detection: (1) **Univariate**: Z-score (|x - μ| > 3σ), IQR (x > Q3 + 1.5*IQR), isolation forest. (2) **Multivariate**: Mahalanobis distance, LOF (local outlier factor), DBSCAN. Set thresholds during training (e.g., top 1% outliers in train = normal), then flag anomalies in prod. Value range checks: if age should be [0, 120], flag age=999. Cardinality explosion: if zip_code usually has 1000 values, alert if > 2000. Timestamp checks: ensure data is fresh (recent timestamps), not stale.\n\n## Common gotchas / interview framings\n- Over-alerting on transient nulls; set 1-hour buffer for pipeline catchup\n- Confusing legitimate outliers (high-value transactions) with corrupted data\n- Not accounting for seasonality in anomaly thresholds\n- Z-score assumes normality; IQR more robust for skewed features",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Null rate on a critical feature jumps from 0.2% → 8% in 2 hours. Your SLA says feature must be present for prediction. What is your response?",
+        "back": "**Immediate escalation**: (1) **ALERT**: Page on-call data engineer. 8% nulls likely signal upstream pipeline failure (database query broke, ETL timeout, schema change). (2) **Failover**: If SLA allows, serve stale cached predictions (last 1 hour) while investigating. (3) **Investigation**: Check data source (table exists?), pipeline logs (errors?), schema (column renamed?). (4) **Mitigation**: (a) Impute nulls with recent median/mode (temporary), (b) Use model that handles nulls (tree-based), (c) Predict with subset of features. (5) **RCA**: Update data quality checks upstream to catch this earlier."
+      },
+      {
+        "type": "mcq",
+        "front": "You detect 15 anomalies in a batch of 10,000 transactions (0.15% anomaly rate). Z-score > 3σ on multiple features. Should you quarantine these or investigate further?",
+        "back": "**Correct: b** Z-score > 3σ naturally occurs ~0.3% in normal data—0.15% is actually low. But outliers can be real (high-value legitimate transactions) or corrupted (malformed data). Use domain knowledge: (1) Do outlier values make business sense? (Fraud detection: yes, high amount = legit fraud. Age=999 = data bug). (2) Are outliers multivariate (extreme in multiple features simultaneously) or univariate (extreme in one feature only)? Multivariate = likely corrupt. (3) Check if outlier features are used by model; if not, safe to ignore.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Quarantine immediately; 0.15% is abnormal",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Investigate first; distinguish legitimate outliers (e.g., high-value fraud) from corrupted data",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Ignore; Z-score > 3σ is expected for normal distribution (~0.3%)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Retrain model to be robust to outliers",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design anomaly detection for a feature with multi-modal distribution (e.g., transaction amounts: $5 for vending, $500 for online purchase). Z-score thresholds don't work well. What's your approach?",
+        "back": "**Multi-modal anomaly detection**:\n\n1. **Segment by mode**: Identify modes (e.g., amount < $50 vs $50-$1000). Set separate baselines/thresholds per segment. Z-score works within each mode.\n\n2. **Mixture models**: Fit Gaussian mixture model (GMM) to data; compute likelihood per point. Flag low-likelihood points as anomalies (not just tail extremes).\n\n3. **Isolation Forest**: Tree-based, works for multi-modal data without assuming distribution. Anomalies isolated in few splits.\n\n4. **Domain-based rules**: vending < $20, online $50-$2000. Flag anything outside expected range per transaction type.\n\n5. **Validate on labeled data**: If you have past frauds/errors, train supervised detector (classifier) on legitimate vs corrupted samples.\n\n**Recommendation**: Combine isolation forest (unsupervised, no distribution assumption) + domain rules (interpretable) for robustness."
+      },
+      {
+        "type": "flip",
+        "front": "A feature shows cardinality explosion: normally 50 unique values, now 500. Most new values are one-hot encoded rare categories. Is this a data quality issue or label shift?",
+        "back": "**Likely data quality issue or encoding bug**, not label shift. Reasons:\n\n1. **One-hot encoding explosion**: If a new categorical value appears (e.g., new zip code 99999), one-hot encoder creates new column, increasing feature count. Sign: feature engineering pipeline changed or data source had corrupted entry (e.g., zip scraped from typo field).\n\n2. **Legitimate cardinality increase**: New product categories, new regions. Check if new values are valid (new business expansion) or garbage (encoding artifacts). Query data: what are the 450 new values?\n\n3. **Model impact**: If model can't handle unseen categorical values at inference, it fails (NaN or default behavior). Retrain to include new values or use fallback encoding.\n\n**Action**: (1) Investigate new values: valid or corruption? (2) If valid, retrain with new categories. (3) If corruption, fix upstream. (4) If model can't handle unseen values, add graceful handling (rare category bucket, default encoding)."
+      }
+    ]
+  },
+  {
+    "slug": "data-freshness",
+    "title": "Data freshness",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "beginner",
+    "tags": [
+      "pipeline-monitoring",
+      "data-quality",
+      "staleness-detection",
+      "timeliness",
+      "sla-monitoring",
+      "observability"
+    ],
+    "aliases": [
+      "data staleness",
+      "pipeline timeliness",
+      "recency monitoring"
+    ],
+    "wikilinks": [
+      "latency-throughput-error-rates",
+      "missing-value-and-anomaly-monitoring",
+      "schema-drift-and-pipeline-monitoring",
+      "feature-distribution-monitoring"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nML models depend on fresh feature data: yesterday's customer behavior for today's predictions. If the data pipeline stalls (ETL timeout, database down, upstream dependency failed), models get stale features, producing outdated predictions. Monitor data freshness: how recent is the newest record in your feature store? Alert if data age > SLA (e.g., > 1 hour old).\n\n## Detail\nFreshness metrics: (1) **Max record timestamp**: Latest timestamp in feature table. SLA: now() - max(record_timestamp) < 1 hour. (2) **Expected refresh rate**: If ETL runs every 30min, alert if no new records in 1 hour (2 refreshes missed). (3) **Row count delta**: Compare to yesterday's row count; flat count suggests pipeline stalled. (4) **Pipeline stage latency**: Track time through each ETL stage (extract, transform, load); identify slowest stage. Tools: data quality frameworks (Great Expectations, dbt tests), warehouse monitoring (Datadog, alerts on query run time).\n\n## Common gotchas / interview framings\n- Confusing data freshness with model freshness (model deployed yesterday but features today are fresh)\n- Not accounting for legitimate delays (nightly batch ETL completing at 2am; checking at 1am returns stale)\n- Alerting too aggressively; brief network hiccups cause spikes\n- Ignoring backfill scenarios: historical data may be legitimately older, don't confuse with fresh data staleness",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your feature store has max(record_timestamp) = 3 hours ago. SLA is 30 minutes fresh. How critical is this and what are your first steps?",
+        "back": "**Critical—immediate response needed**. Data is 6x older than SLA.\n\nFirst steps:\n1. **Verify it's not monitoring artifact**: Confirm max timestamp manually; timezone mismatch, clock skew can cause false alerts.\n2. **Check pipeline status**: Is the ETL running? Login to orchestrator (Airflow, Dagster) or query logs. Is upstream data available (source DB accessible)?\n3. **Check for hung processes**: SQL query running 2 hours? Long-running transform? Kill and restart if needed.\n4. **Assess impact**: Does model serving depend on this feature? If yes, either (a) serve cached predictions (last known good), (b) wait for pipeline to catch up (< 30min more?), or (c) disable feature and retrain lightweight model.\n5. **RCA**: What broke? DB credentials rotated? Quota exceeded? Dependency (upstream dataset) missing?\n6. **Communicate**: Notify downstream teams; set ETA for fix."
+      },
+      {
+        "type": "mcq",
+        "front": "Your ETL pipeline runs daily at midnight. You check feature freshness at 10am: max(record_timestamp)=yesterday midnight (12 hours old). Is this a problem?",
+        "back": "**Correct: c** The SLA determines if staleness is acceptable. Daily batch at midnight → data is 12h old by noon. If SLA is 6h max age (hourly ETL expected), this is stale and problematic. If SLA is 24h (once-daily feature refresh acceptable), this is on-time. Set SLA based on business need: real-time recommendation (SLA: 1h), batch scoring (SLA: 24h), historical analysis (SLA: 1 week).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, data is too stale; alert and restart pipeline",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, this is expected; 12 hours old is normal for daily batch",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Maybe, depends on SLA; if SLA < 12h old, it's stale",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Data is too old; should run hourly instead of daily",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Describe how to implement SLA monitoring for data freshness across 50 feature tables. What triggers escalation?",
+        "back": "**Multi-table freshness monitoring**:\n\n**Setup**:\n1. **Define SLA per table**: Some features need hourly refresh (user activity), others daily (user demographics). Document in config.\n2. **Query max(timestamp) per table**: Run daily query checking max(record_timestamp) vs SLA threshold. Store results in monitoring table.\n3. **Alert rules**:\n   - Table **violates SLA** (age > threshold): Warning, investigate root cause\n   - Table **no data for 2x SLA**: Critical, escalate; pipeline likely broken\n   - Table **row count flat** for 24h: Warning; possible stall\n   - Multiple tables stalled simultaneously: Likely shared upstream dependency failed\n\n**Escalation**:\n- **Warning** (age > SLA, but < 2x SLA): Check pipeline logs; no page\n- **Critical** (age > 2x SLA): Page on-call data engineer; assess model serving impact\n- **Mass failure** (>10 tables broken): Assume database/data warehouse issue; page on-call infrastructure\n\n**Tools**: dbt tests, Great Expectations, custom SQL + Prometheus, Datadog monitors."
+      },
+      {
+        "type": "flip",
+        "front": "A feature table is normally updated at 10am daily. A model serving request arrives at 9:55am. Should you hold the request until fresh data arrives in 5 minutes?",
+        "back": "**Context-dependent decision**:\n\n**Hold request (wait 5 min)**:\n- Feature is highly predictive (model accuracy degrades significantly with stale data)\n- 5 minutes is acceptable latency for use case (e.g., batch scoring)\n- SLA allows: customer willing to wait\n\n**Serve with stale data**:\n- Feature is low-impact (predictions stable with 1-day-old feature)\n- Real-time SLA < 5 min (e.g., API response < 100ms)\n- Cache hits: serve from cached prediction (computed at 10am yesterday)\n\n**Best practice**: **Serve with stale + monitor**. Use yesterday's 10am features (24h stale, but consistent quality). Log staleness metric; if staleness > threshold, serve with lower confidence or flag for manual review. Communicate staleness to user (e.g., \"prediction based on data from 1h ago\")."
+      }
+    ]
+  },
+  {
+    "slug": "schema-drift-and-pipeline-monitoring",
+    "title": "Schema drift and pipeline monitoring",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-quality",
+      "schema-validation",
+      "pipeline-monitoring",
+      "backwards-compatibility",
+      "data-contracts",
+      "versioning"
+    ],
+    "aliases": [
+      "data schema changes",
+      "field-level monitoring",
+      "upstream dependency tracking"
+    ],
+    "wikilinks": [
+      "missing-value-and-anomaly-monitoring",
+      "data-freshness",
+      "feature-distribution-monitoring",
+      "model-performance-degradation-accuracy-drop-calibration-shift"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nUpstream data sources change: columns renamed, new fields added, types changed (int → string), nested structures flattened. These schema changes silently break downstream models. Monitor schema: alert when upstream data changes, so you can validate backward-compatibility and adapt your model before predictions fail.\n\n## Detail\nSchema contract: document expected columns, types, nullable status. On each ETL run, compare actual schema to contract. Violations: missing column (breaking), new column (additive, usually safe), type change (int → float safe, int → string breaking), cardinality explosion (new enum values, may need model update). Tools: data catalogs (Apache Atlas, Collibra), validation frameworks (Great Expectations with schema checks), Kafka schema registry (for streaming). Action on violation: (1) Additive (new safe column): ignore. (2) Breaking (column removed, type change): alert + halt model serving, investigate. (3) Cardinality change: assess model's handling of unseen values; retrain if needed.\n\n## Common gotchas / interview framings\n- Not versioning schemas; hard to track what broke when\n- Confusing schema drift (structural change) with data drift (distribution change)\n- Over-strict validation; blocking on non-impactful changes (timestamp format)\n- Not testing downstream effects; schema change may not break feature extraction but breaks downstream business logic",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "A column 'customer_id' changed from INT to STRING (leading zeros added). Your model uses this as a categorical feature. What happens and how do you handle it?",
+        "back": "**What happens**: If your feature preprocessing expects integer, it may fail (type casting error) or silently produce wrong values (e.g., 001 != 1 as strings). Model retrains on STRING type; old INT-trained weights no longer apply.\n\n**Handling**:\n1. **Backward-compatibility check**: Is the change additive (old values still valid)? Leading zeros = valid change, one-to-one mapping preserved.\n2. **Test impact**: Retrain model on new schema; compare performance. If identical, safe. If degraded, STRING representation lost predictive power (e.g., one-hot encoding now treats 001 and 1 as separate categories).\n3. **Adapt preprocessing**: (a) Normalize: strip leading zeros back to INT before encoding, or (b) Accept new encoding, retrain model.\n4. **Version schema**: Document \"v2: customer_id now STRING with leading zeros\" so old models don't load on new data.\n5. **Deploy carefully**: Blue-green deploy old + new model; compare predictions on same data; switch once validated."
+      },
+      {
+        "type": "mcq",
+        "front": "A new column 'user_segment' appeared in your feature table. Schema validator reports 'new field detected'. Your model currently uses 15 features and does NOT use this new column. Should you update your model?",
+        "back": "**Correct: b** Schema change ≠ requires model change. Additive changes (new columns) are safe if not used by model. Your model's input features are fixed; new columns won't affect it. Action: (1) Update schema validator to accept new column. (2) Optionally (low priority): Test if user_segment improves AUC; if yes, retrain next cycle. This is planned improvement, not urgent fix.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, always incorporate new features; more data is better",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, if model doesn't use it and current performance is stable, no action needed",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Yes, retrain to test if new feature improves AUC",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No, new columns always break models",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design a data contract between upstream ETL and your model serving team. What schema violations should trigger an alert vs a halt?",
+        "back": "**Data contract schema violations**:\n\n**HALT (Immediate, break prediction serving)**:\n- Missing required column (feature used by model)\n- Type change that breaks preprocessing (INT → STRING for numerical feature)\n- Column marked nullable changed to NOT NULL (or vice versa; data handling breaks)\n- Major cardinality change in categorical (enum > 10x)\n\n**ALERT (Monitor, investigate, but don't block)**:\n- New column added (additive)\n- Column marked nullable changed to nullable (more flexible, usually safe)\n- Minor cardinality expansion (new enum values < 5x)\n- Column documentation updated\n\n**Config example**:\n```\nschema_contract:\n  required_columns: [customer_id, amount, timestamp]\n  types: {customer_id: INT, amount: FLOAT, timestamp: TIMESTAMP}\n  max_cardinality: {region: 50, product_id: 10000}\n  rules:\n    - if missing(required_columns) -> HALT\n    - if type_change -> HALT\n    - if cardinality > max_cardinality * 2 -> ALERT\n    - if new_column -> ALERT\n```\n\nImplementation: Great Expectations or dbt tests run on every ETL load."
+      },
+      {
+        "type": "flip",
+        "front": "A database schema evolved: a nested JSON field was flattened into separate columns. Your feature extraction code breaks because it expects the nested structure. How do you prevent this in the future?",
+        "back": "**Prevention strategy**:\n\n1. **Version your schema contract**: Document expected structure + versions. Schema v1 = nested JSON, v2 = flattened. \n\n2. **Test backward compatibility**: Before upstream deploys v2, test your feature extraction on both v1 and v2 data. Ensure graceful handling.\n\n3. **Use schema registry**: Tools like Kafka schema registry or data contracts (in dbt, Great Expectations) enforce version compatibility. Upstream change must be marked \"compatible\" before deployment.\n\n4. **Feature extraction versioning**: Version your feature code. Feature extraction v1 expects nested JSON; v2 expects flattened columns. Deploy v2 to serve before upstream deploys v2.\n\n5. **Monitoring**: Alert on schema version changes. If upstream deploys v2 but your code still expects v1, immediately page team.\n\n6. **Integration testing**: Include upstream schema tests in your CI/CD. Each feature extraction code change is tested against current upstream schema AND versioned schemas.\n\n**Best practice**: Coordinate with upstream team; use data contracts (mutual agreement on interface) instead of reactive monitoring."
+      }
+    ]
+  },
+  {
+    "slug": "retraining-triggers-periodic-drift-based-performance-based",
+    "title": "Retraining triggers (periodic, drift-based, performance-based)",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "intermediate",
+    "tags": [
+      "model-refresh",
+      "retraining-strategy",
+      "performance-monitoring",
+      "drift-detection",
+      "automation",
+      "cost-optimization"
+    ],
+    "aliases": [
+      "retraining strategy",
+      "model update triggers",
+      "automated retraining"
+    ],
+    "wikilinks": [
+      "prediction-drift-and-label-shift",
+      "model-performance-degradation-accuracy-drop-calibration-shift",
+      "feature-distribution-monitoring",
+      "online-learning-and-incremental-updates"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nWhen do you retrain? Three strategies: (1) **Periodic**: Retrain every week/month regardless (safest, predictable cost). (2) **Drift-based**: Monitor feature/prediction distribution; retrain if drift exceeds threshold (reactive, cost-efficient). (3) **Performance-based**: Monitor accuracy; retrain if AUC < threshold (precise, requires labels). Tradeoff: periodic is simple but wasteful; drift-based is data-efficient but may miss performance issues; performance-based is accurate but needs delayed labels.\n\n## Detail\nChoose strategy by use case: (1) **High-stakes** (medical diagnosis): Periodic (monthly) + performance-based safeguard (alert if AUC drops). (2) **Fast-changing** (fraud detection): Drift-based (retrain if PSI > 0.15) or daily. (3) **Stable domain** (demographics): Periodic (quarterly). Cost: data labeling, compute, validation. Automate: use CI/CD to trigger retraining pipeline; auto-rollback if new model underperforms validation set. Backtesting: before deploying retrained model, validate on recent held-out test set (avoid train leakage). Monitor model version in serving: log which version served each prediction, for traceability.\n\n## Common gotchas / interview framings\n- Retraining too frequently (overfitting to noise) or too rarely (degradation risk)\n- Not backtesting retrained model; deploying to production without validation\n- Confusing training data version with model version; same training data can have different random seeds\n- Not accounting for labeling delay; if labels arrive 30 days late, performance-based trigger detects issues 1 month too late",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your model's AUC degraded from 0.94 → 0.87. Should you retrain immediately or investigate first? When is each appropriate?",
+        "back": "**Investigate first (unless critical)**:\n\n1. **Confirm the drop is real**: Is this on held-out validation set or production? Validation set may be small (high variance); prod performance may differ. Get 30+ samples before concluding.\n\n2. **Root cause**: Is it drift (feature distribution shifted), label shift (P(Y) changed), data quality (nulls up), or labeling error (ground truth corrupted)? Different root causes = different remedies.\n\n3. **Assess impact**: Does 0.87 violate SLA? If AUC target is 0.90, yes—retrain. If target is 0.85, no—monitor.\n\n**Retrain immediately** only if:\n- AUC breaches critical threshold (e.g., fraud recall < 90%)\n- Business impact is severe (high-value customers at risk)\n- Root cause is known and addressable (e.g., added new feature source)\n\nOtherwise: Investigate + plan retraining for next scheduled cycle (daily/weekly)."
+      },
+      {
+        "type": "mcq",
+        "front": "You implement drift-based retraining with trigger PSI > 0.2 on any feature. In one month, you retrain 15 times. Is this too frequent?",
+        "back": "**Correct: b** 15 retrains/month = twice per day, excessive. Reasons: (1) **Noise**: PSI > 0.2 threshold may be too low; you're reacting to natural variance, not meaningful drift. (2) **Compute cost**: retraining is expensive; 15x/month = $$$. (3) **Overfitting**: frequent retraining on recent data can overfit to recent patterns, hurting generalization. (4) **Model churn**: serving different model versions confuses debugging.\n\n**Fix**: Raise PSI threshold to 0.3-0.4, or require drift in 3+ features simultaneously, or retrain max 1x/day. Validate: does retraining actually improve production AUC? If not, the retraining isn't justified.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "No, frequent retraining is always beneficial",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Yes, 15 retrains per month is excessive; likely overfitting or noisy PSI threshold",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "It depends on model performance; if performance improves, it's justified",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Frequency is fine as long as validation AUC improves each time",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design a retraining pipeline with periodic (weekly) + performance-based (AUC < 0.92) triggers. Include validation and rollback logic.",
+        "back": "**Retraining pipeline**:\n\n**Triggers**:\n1. **Periodic**: Weekly (Monday 2am)\n2. **Performance**: Continuous; if AUC < 0.92 on validation set (computed daily), trigger immediate retrain\n\n**Workflow**:\n```\n1. Trigger (weekly or AUC-based) -> Retrain job\n2. Retrain job:\n   - Fetch training data (last 30 days, avoid data leakage)\n   - Train N-fold CV, compute AUC on fold validation\n   - If mean AUC < threshold on validation: STOP (data issue, investigate)\n3. Validation on held-out test set:\n   - Retrained model AUC on test set\n   - Compare to current prod model AUC\n   - If retrained AUC > prod AUC + margin (e.g., 0.92 > 0.90), PASS\n   - Otherwise, STOP (no improvement, investigate)\n4. Shadow deploy (optional):\n   - Serve new model on 5% traffic for 24h\n   - Monitor performance metrics\n   - Compare latency, error rates to prod model\n5. Blue-green deploy:\n   - Route 100% traffic to new model\n   - Monitor AUC, latency, errors for 1h\n6. Rollback (if issues):\n   - If AUC ↓ 1% or error rate ↑ 5%, auto-rollback to previous model\n   - Alert on-call\n```\n\n**Data leakage prevention**:\n- Training: data before cutoff_date (e.g., last 30 days)\n- Validation: data cutoff_date to cutoff_date + 7 days\n- Test: most recent 7 days (no labels yet, or delayed labels used for validation only)\n\n**Logging**: Record model version, retraining date, performance metrics, trigger reason."
+      },
+      {
+        "type": "flip",
+        "front": "Your fraud model trained on 2023 data. In 2024, fraud patterns changed (new attack types). Periodic retraining (monthly) didn't catch this for 3 weeks. How would drift-based retraining help?",
+        "back": "**Drift-based retraining advantages here**:\n\n1. **Early detection**: Drift-based triggers fire within days of new fraud patterns. Feature distributions of fraudulent samples change (e.g., faster transaction velocity, new merchant categories). PSI exceeds threshold → retrain triggered.\n\n2. **Reactive to real changes**: Monthly periodic retraining is on a fixed schedule; it doesn't react to sudden distribution shifts. Drift-based retrains when data actually changes.\n\n3. **Faster response**: In your scenario, drift-based trigger would fire by week 1 (3 weeks faster), minimizing fraud losses.\n\n**Trade-off in your case**:\n- **Drift-based**: Would catch new fraud patterns quickly (good)\n- **Risk**: May retrain too frequently if fraud tactics vary daily; retraining cost + overfitting risk\n\n**Best solution**: Hybrid strategy:\n- Minimum retraining interval: at least 5 days (avoid thrashing)\n- Retrain if PSI > 0.2 AND 5 days have passed since last retrain\n- Also retrain monthly as fallback (robustness)\n- This balances responsiveness + stability"
+      }
+    ]
+  },
+  {
+    "slug": "online-learning-and-incremental-updates",
+    "title": "Online learning and incremental updates",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "advanced",
+    "tags": [
+      "online-learning",
+      "incremental-training",
+      "stream-processing",
+      "real-time-ml",
+      "model-updates",
+      "stochastic-methods"
+    ],
+    "aliases": [
+      "continual learning",
+      "streaming model updates",
+      "incremental SGD"
+    ],
+    "wikilinks": [
+      "retraining-triggers-periodic-drift-based-performance-based",
+      "model-performance-degradation-accuracy-drop-calibration-shift",
+      "data-freshness"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nFull retraining is expensive (retrain every week = 52 retrains/year, $$$). Online learning updates model on each new sample (or mini-batch) without retraining from scratch. Example: SGD on new batch of user interactions → model learns new patterns immediately, no downtime. Works for linear models, tree ensembles (append new trees), neural nets (fine-tune); less suitable for distance-based models (KNN) or tree-based with structural changes.\n\n## Detail\n**Online learning process**: As new labeled data arrives (or with delayed labels), compute gradient on mini-batch, update model weights incrementally. SGD on each batch is online learning. Trade-off: model adapts faster to changes but may overfit to recent data if learning rate too high. Challenges: (1) **Concept drift**: model adapts but forgets old patterns; maintain some old data mix. (2) **Catastrophic forgetting**: new data on different distribution; model accuracy on old data collapses. (3) **Delayed labels**: can't update immediately; buffer recent predictions, update when label arrives (hours/days later). (4) **Stateless deployment**: updated model must be immutable during serving; async update process. Use cases: recommendation systems (new user interactions), fraud detection (adapt to new attack patterns), time-series forecasting (adapt to trends). Not suitable for: critical systems requiring rigorous validation, models where quick changes are risky (medical diagnosis).\n\n## Common gotchas / interview framings\n- Conflating online learning with real-time serving; they're orthogonal (online learning is training, real-time is serving latency)\n- Not tracking model version in online learning; incremental updates make model history fuzzy\n- Overestimating learning rate; model drifts away from original learned patterns\n- Ignoring catastrophic forgetting; model trained on 2023 data + online learned on 2024 data may fail on original 2023 patterns",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your recommendation model trains weekly on 1M interactions. Each day, 200k new interactions arrive. Should you switch to online learning? What are the trade-offs?",
+        "back": "**Trade-offs**:\n\n**Pros of online learning**:\n- Model adapts daily to user feedback (new trending content, seasonal preferences)\n- Faster response to distribution shifts (label shift in user engagement)\n- Reduced weekly compute (no full retrain)\n- Fresh model, less staleness (batch retrain is 7 days old by end of week)\n\n**Cons of online learning**:\n- Risk of overfitting to recent data (last week's trending content may not generalize)\n- Catastrophic forgetting (model may degrade on older patterns if not careful)\n- Requires delayed labels (feedback on recommendations takes 1-3 days); can't update immediately\n- Model version tracking becomes harder; incremental updates make debugging difficult\n- Risk of feedback loops (model learns to optimize for engagement, amplifies echo chambers)\n\n**Decision**: If recommendation quality can tolerate daily shifts (e.g., TikTok feeds), online learning is great. If you need consistency (e.g., long-term customer lifetime value), periodic retraining is safer. Hybrid: retrain weekly (baseline) + online learning on new interactions (incremental boost)."
+      },
+      {
+        "type": "mcq",
+        "front": "You implement SGD online learning with learning rate=0.1. After 10 days, model accuracy drops from 0.91 → 0.78. What is the likely cause?",
+        "back": "**Correct: b** Learning rate 0.1 is too high for online learning. SGD step: w_new = w_old - 0.1 * gradient. Each batch, weights shift 10%, accumulating over 10 days. If recent data differs from original training data, high learning rate causes model to forget old patterns. Accuracy on old test set (like original 2M training samples) collapses because model adapted to recent 200k samples.\n\n**Fix**: (1) Lower learning rate (0.01 or 0.001). (2) Add regularization (L2, L1) to slow learning. (3) Mix old + new data: retrain on (old 1M samples + new 200k samples) weekly, don't just update on new. (4) Monitor accuracy on validation set of original data; alert if accuracy ↓ > 3%.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Data quality degradation (nulls increased)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Catastrophic forgetting: high learning rate caused model to overfit to recent 10 days and forget original patterns",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Concept drift in the underlying data distribution",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Online learning doesn't work for this model type",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design an online learning system for fraud detection. New fraud labels arrive 48 hours after transaction. How do you handle delayed labels and prevent catastrophic forgetting?",
+        "back": "**Online learning with delayed labels**:\n\n1. **Buffering**: Store recent predictions (last 48h) in a queue. As labels arrive, match prediction_id → label.\n\n2. **Mini-batch updates**: Collect labeled data from queue (e.g., last 24h of newly-labeled transactions). Compute loss, update model weights via SGD.\n\n3. **Prevent catastrophic forgetting**:\n   - **Learning rate decay**: lr = initial_lr / (1 + t), where t = batch number. High updates early (adapt to new fraud), lower updates later (stabilize).\n   - **Replay buffer**: Maintain a small buffer of old transactions (1 week). Each update, mix 80% new labels + 20% old labels. Model learns new patterns while maintaining old knowledge.\n   - **Regularization**: L2 penalty on weight changes: loss = fraud_loss + λ * ||w_new - w_baseline||²\n   - **Monitor validation AUC on old data**: Ensure accuracy on baseline fraud patterns stays stable.\n\n4. **Model versioning**: Log each update with batch timestamp, sample count, AUC on validation. Rollback if AUC ↓ > 2% on old patterns.\n\n5. **Monitoring**: Track model drift (feature importance changes), false positive rate (if increasing, model may be overfitting to recent fraud patterns).\n\n**Implementation**: Stream processing (Kafka) → buffer → mini-batch → SGD update → log metrics."
+      },
+      {
+        "type": "flip",
+        "front": "Can you use online learning for tree-based models (XGBoost)? Why or why not?",
+        "back": "**Limited applicability**:\n\n**Why not standard SGD**: XGBoost optimizes discrete decision trees; SGD (continuous gradient descent) doesn't apply directly. Trees are non-differentiable (splits are discrete).\n\n**Alternatives for online learning with trees**:\n\n1. **Incremental tree addition**: Train new boosting rounds on recent data. Previous rounds frozen, new rounds learn new patterns. Equivalent to adding trees to existing ensemble. Risk: model becomes very deep (many trees), slower prediction.\n\n2. **Hoeffding trees** (streaming decision trees): Grow trees incrementally from stream, one sample at a time. Works for classification; slower than batch XGBoost.\n\n3. **Online gradient boosting** (LightGBM, CatBoost): Some implementations support incremental training on new mini-batches. Update leaf weights, not full retrain.\n\n4. **Retraining on recent data window**: Sliding window: retrain XGBoost daily on last 7 days (not online in strict sense, but frequent retraining). Simpler than true online learning, more stable.\n\n**Best practice**: For trees, prefer frequent full retraining (weekly/daily) over online learning. Online learning shines for linear models (SGD), neural nets (backprop). If you must do online for trees, use incremental tree addition or sliding-window retraining."
+      }
+    ]
+  },
+  {
+    "slug": "experiment-tracking-and-model-registry",
+    "title": "Experiment tracking and model registry",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "beginner",
+    "tags": [
+      "mlops",
+      "experiment-management",
+      "model-versioning",
+      "metadata-tracking",
+      "collaboration",
+      "reproducibility"
+    ],
+    "aliases": [
+      "MLflow",
+      "experiment management",
+      "model versioning"
+    ],
+    "wikilinks": [
+      "reproducibility-and-versioning",
+      "retraining-triggers-periodic-drift-based-performance-based",
+      "online-learning-and-incremental-updates"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nML models iterate: try different architectures, hyperparameters, features. Experiment tracking logs each run: parameters, metrics (AUC, loss), artifacts (trained model). Model registry stores production models, versions them, manages promotion (dev → staging → prod). Tools: MLflow (open-source), Weights & Biases (cloud), Neptune, Kubeflow. Enable collaboration (data scientists share learnings), debugging (why did v2 perform worse?), and compliance (audit trail of production models).\n\n## Detail\n**Experiment tracking**: Each training run logged with run_id, hyperparameters (lr, batch_size), metrics (val_auc, val_loss), start/end time, training code version. Compare runs: \"run_A (lr=0.01) had AUC=0.94, run_B (lr=0.001) had AUC=0.96\" → choose B. Store artifacts: trained model, preprocessing pickle, feature importance plot. **Model registry**: Upload best model from experiments; assign version (v1, v2). Store metadata: model description, training dataset version, performance benchmarks. Promote: v1 in prod, v2 in staging (test on % traffic), v3 in dev (experimental). Rollback: v1 is always available. CI/CD integration: automated retraining job logs to MLflow, best model auto-promoted based on test AUC threshold.\n\n## Common gotchas / interview framings\n- Not versioning code/data along with model; same model_id but different training data = different results\n- Confusing experiment tracking (iterative development) with model registry (production versions)\n- Not setting up reproducibility (don't log random seed, get different results)\n- Hoarding old experiments; cleanup after 1 year or performance improves 10%+",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What should you log in experiment tracking for a training run? List key fields.",
+        "back": "**Essential fields to log**:\n1. **Hyperparameters**: learning_rate, batch_size, num_epochs, regularization, model_type\n2. **Metrics**: train_loss, val_auc, val_f1, test_auc (per epoch and final)\n3. **Data**: training dataset version/path, number of samples, feature list\n4. **Code**: git commit hash, branch, code changes (diff)\n5. **Artifacts**: trained model file, scaler/encoder pickle, preprocessing code\n6. **Environment**: python version, library versions, hardware (CPU/GPU type)\n7. **Metadata**: author, start/end time, notes (e.g., \"tried new feature X\")\n8. **Seed**: random seed (for reproducibility)\n\n**Example log**:\n```\nrun_id: exp_001\nhyperparameters: {lr: 0.01, batch_size: 32}\nmetrics: {val_auc: 0.94, test_auc: 0.92}\ndata_version: \"train_v2 (2M samples, 45 features)\"\ngit_commit: \"abc123d\"\nartifacts: [model.pkl, scaler.pkl]\nseed: 42\ntraining_time: 3600s\n```"
+      },
+      {
+        "type": "mcq",
+        "front": "You logged 50 experiments for a model. 40 have AUC < 0.85, 5 have AUC 0.90-0.92, 5 have AUC 0.93-0.95. Which experiments should you keep?",
+        "back": "**Correct: c** Keep top performers for reproduction/reference. Also keep a few low-AUC runs for learning: \"why did exp_042 (different architecture) underperform?\" insights are valuable. Deletion criteria: (1) AUC > 0.9 for sure, (2) representative failures (low learning rate, bad architecture) for comparison, (3) Latest runs (most recent commit). After 1 year or 100+ experiments, archive old runs (storage cost vs utility trade-off).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Keep all 50; you never know when an old experiment will be useful",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Keep only top 5 with AUC > 0.93",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Keep top 10 (AUC > 0.90) + representative low-AUC runs (for comparison)",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Delete all; start fresh each time",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Set up a model registry with versioning. Model v1 is in production. How do you promote v2 (higher AUC) safely?",
+        "back": "**Safe model promotion workflow**:\n\n**Stage 1: Dev (offline validation)**\n- v2 trained, logged to MLflow\n- Compare v2 vs v1 on historical test set\n- Requirement: v2 test_auc >= v1 test_auc + margin (0.5%)\n- Verify on different data slices (by customer segment, region)\n- If passes: mark v2 as \"staging-ready\"\n\n**Stage 2: Staging (online shadow test)**\n- Deploy v2 alongside v1 in staging environment\n- Route 5% of traffic to v2, 95% to v1\n- Monitor: latency, error rate, predictions (compare v2 vs v1)\n- Duration: 24-48h\n- Requirement: latency < v1 + 10%, errors < 1%\n- If passes: mark v2 as \"prod-ready\"\n\n**Stage 3: Production (gradual rollout)**\n- Day 1: v2 → 10% traffic, v1 → 90%\n- Day 2: v2 → 50% traffic, monitor AUC, errors\n- Day 3: v2 → 100% traffic\n- Have v1 model available for instant rollback\n\n**Monitoring**:\n- AUC (if labels available) should stay >= v1_auc - 1%\n- Error rate < 5% relative increase\n- Latency <= v1_latency + 5%\n\n**Rollback**: If AUC ↓ > 2% at any stage, revert to v1 immediately."
+      },
+      {
+        "type": "flip",
+        "front": "You have 100 experiments in MLflow. A data scientist from another team asks, 'Which experiment gave the best AUC?' How do you help them find it efficiently?",
+        "back": "**Steps to find best experiment**:\n\n1. **Query MLflow**: Use MLflow UI or API\n   ```python\n   from mlflow.tracking import MlflowClient\n   client = MlflowClient()\n   runs = client.search_runs(experiment_ids=[\"exp_id\"])\n   best_run = max(runs, key=lambda r: r.data.metrics.get('val_auc', 0))\n   ```\n\n2. **Inspect best run**:\n   ```\n   Run ID: abc123\n   Val AUC: 0.95\n   Hyperparameters: lr=0.001, batch_size=64\n   Code version: git commit xyz789\n   Dataset: train_v3\n   ```\n\n3. **Document findings**: Create a brief note linking best experiment to insights (\"lr=0.001 works best for this dataset\").\n\n4. **Reproducibility check**: Data scientist can re-run with same hyperparameters + same seed to verify.\n\n**Pro tip**: Add tags to experiments (e.g., \"best_of_batch\", \"production_candidate\") for easier filtering. Use MLflow's UI to sort by metric, or write a script to generate a summary table (top 10 experiments by AUC)."
+      }
+    ]
+  },
+  {
+    "slug": "reproducibility-and-versioning",
+    "title": "Reproducibility and versioning",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "difficulty": "beginner",
+    "tags": [
+      "versioning",
+      "reproducibility",
+      "data-management",
+      "code-versioning",
+      "best-practices",
+      "ci-cd"
+    ],
+    "aliases": [
+      "code versioning",
+      "data versioning",
+      "seed management"
+    ],
+    "wikilinks": [
+      "experiment-tracking-and-model-registry",
+      "retraining-triggers-periodic-drift-based-performance-based",
+      "feature-distribution-monitoring"
+    ],
+    "sources": [
+      {
+        "url": "https://www.peerspot.com/categories/model-monitoring",
+        "label": "PeerSpot: Best Model Monitoring solutions 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\nYou train a model, achieve 0.94 AUC. A month later, you retrain with the same code + data, get 0.88 AUC. Why? Likely: random seed changed, data order changed, or library version updated. Reproducibility = ability to recreate identical results. Version everything: code (git), data (data manifests, DVC), seeds (logged). This enables debugging (\"when did performance drop?\"), auditing (\"what data trained this model?\"), and compliance (\"which exact model version was used for this decision?\").\n\n## Detail\n**Code versioning**: Git commit hash identifies exact code. Store with model artifact. **Data versioning**: Hash training data (MD5 of dataset file) or use tools like DVC (data version control). Log in experiment tracking: train_data_hash = \"abc123\". **Seed management**: Set random seeds (numpy, tensorflow, torch) to fixed values. Enables deterministic results. **Library versions**: requirements.txt or conda.yml pinned to exact versions (e.g., scikit-learn==1.0.2, not ==1.0.*). Environment reproducibility: Docker container or virtual environment snapshot. **Workflow**: train → log code_hash, data_hash, seed, libraries → store in model metadata. Later: pull same code version, data version, set same seed → identical results (up to hardware differences).\n\n## Common gotchas / interview framings\n- Not logging random seed; model is non-deterministic across runs\n- Pinning only major version (sklearn==1.0) not minor (sklearn==1.0.2); library updates break reproducibility\n- Using absolute file paths (won't work on different machines); relative paths or data URIs\n- Forgetting environment: model trained in Python 3.9 fails in Python 3.11 (numpy API changes)\n- Not versioning preprocessing (scaler, encoder); model + data ≠ complete system",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You train a model with 0.94 AUC on Jan 1. You retrain with identical code and data on Jan 15, get 0.88 AUC. What are three possible causes?",
+        "back": "1. **Random seed changed**: Code calls np.random.seed(), but seed value differs (or not set at all). Stochastic algorithms (SGD, random forest) produce different results without fixed seed. Fix: log seed in experiment tracking, reproduce with same seed.\n\n2. **Library version updated**: scikit-learn 1.0.1 → 1.0.2 changes default behavior (e.g., random_state handling). Environment reproduced with different library versions. Fix: pin exact library versions in requirements.txt (e.g., scikit-learn==1.0.1).\n\n3. **Data order or preprocessing changed**: Training data shuffled differently (random split changed), or feature engineering code updated (e.g., missing value imputation strategy). Same data but processed differently. Fix: version training data (MD5 hash), log preprocessing code git commit.\n\n**Also check**: GPU non-determinism (some CUDA ops are non-deterministic), data loading order (Pandas groupby may not be stable)."
+      },
+      {
+        "type": "mcq",
+        "front": "You want to reproduce a model trained 6 months ago. What information do you NEED to log at training time?",
+        "back": "**Correct: b** To reproduce identically 6 months later: (1) **Code git commit**: Pulls exact code (preprocessing, model architecture, seed setting). (2) **Data hash**: Identifies exact training data version (from 6 months ago). (3) **Random seed**: Ensures stochastic elements (SGD, random forest) produce same results. (4) **Library versions**: pinned to prevent API changes. (5) **Hardware**: GPU model matters for floating-point precision differences. With these, you can re-run and get identical results (or very close, within floating-point rounding).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Training loss curve and final AUC",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Code git commit hash, data hash, random seed, library versions, hardware type",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Just the trained model file; code can be inferred from model",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Hyperparameters only; everything else can be reconstructed",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design a data versioning system for a feature store. A data engineer updates feature X (bug fix). How do you track and reproduce old models?",
+        "back": "**Data versioning strategy**:\n\n1. **Version the feature store snapshot**: Before deploying feature X update, compute hash of entire feature store (or at minimum, all features used by models). Example: feature_store_v1_hash = \"abc123\"\n\n2. **Log version with model**: When training model_v1, log feature_store_v1_hash in MLflow. Example:\n   ```\n   model_v1:\n     feature_store_version: \"feature_store_v1_hash\"\n     features_used: [X, Y, Z]\n     training_time: 2024-01-01\n   ```\n\n3. **Tag before breaking changes**: Data engineer planning to update feature X announces change. Allows teams to:\n   - Re-snapshot old feature store (archive)\n   - Re-train models on old data before updating\n\n4. **Handle breaking changes**: If feature X definition changes (bug fix alters values by 10%), models trained on old X may no longer work on new X. Solutions:\n   - Retrain models on new X (preferred)\n   - Maintain two feature stores (old, new) during transition\n   - Version features like code: feature_X_v1 (old logic), feature_X_v2 (new logic)\n\n5. **Audit trail**: Query \"which models used feature_store_v1?\" → Retrain those with feature_store_v2 before deprecating v1.\n\n**Tools**: DVC (data version control), Tecton (feature store versioning), Delta Lake (ACID transactions + versioning)."
+      },
+      {
+        "type": "flip",
+        "front": "Describe how to set up a reproducible ML pipeline in Docker. What must be included?",
+        "back": "**Reproducible ML pipeline in Docker**:\n\n**Dockerfile**:\n```dockerfile\nFROM python:3.10-slim\n\n# Install exact library versions\nCOPY requirements.txt /app/requirements.txt\nRUN pip install --no-cache-dir -r requirements.txt\n\n# Copy code at exact git commit\nCOPY . /app\nWORKDIR /app\n\n# Environment variables\nENV PYTHONHASHSEED=0 CUDA_LAUNCH_BLOCKING=1\n\n# Run training\nENTRYPOINT [\"python\", \"train.py\"]\n```\n\n**requirements.txt**:\n```\nscikit-learn==1.0.2\ntorch==2.0.0\nnumpy==1.23.5\npandas==1.5.2\n```\n\n**train.py**:\n```python\nimport numpy as np\nimport random\nimport torch\n\n# Set seed\nrandom.seed(42)\nnp.random.seed(42)\ntorch.manual_seed(42)\n\n# Training code...\n```\n\n**Versioning**:\n- Git: commit hash identifies code version\n- Data: mount training data as volume (or DVC)\n- Model: save with metadata (git commit, seed, data hash)\n\n**Reproduction**:\n```bash\ngit checkout abc123d  # checkout old commit\ndocker build -t model:v1 .\ndocker run -v /data:/data model:v1  # mount data\n```\n\n**Result**: Identical training across any machine with Docker."
+      }
+    ]
+  }
+]

@@ -1,0 +1,1082 @@
+[
+  {
+    "slug": "select-where-group-by-having",
+    "title": "SELECT, WHERE, GROUP BY, HAVING",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "beginner",
+    "tags": [
+      "fundamentals",
+      "filtering",
+      "aggregation",
+      "grouping"
+    ],
+    "aliases": [
+      "basic query structure",
+      "filtering data",
+      "group and filter"
+    ],
+    "wikilinks": [
+      "where-clause",
+      "group-by-clause",
+      "having-clause",
+      "query-execution-order",
+      "aggregation-fundamentals",
+      "filtering-and-grouping"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/sql-select.html",
+        "label": "PostgreSQL SELECT Documentation"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/sql-where/",
+        "label": "Mode Analytics SQL WHERE Tutorial"
+      },
+      {
+        "url": "https://dataschool.com/sql-optimization/understanding-group-by/",
+        "label": "DataSchool GROUP BY Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nSELECT, WHERE, GROUP BY, and HAVING are the foundational clauses for querying data. They form the core pipeline: SELECT specifies which columns to retrieve, WHERE filters rows before grouping, GROUP BY aggregates rows into groups, and HAVING filters groups after aggregation.\n\n## Detail\n\nThe execution order matters:\n1. FROM/JOIN tables\n2. WHERE filters individual rows\n3. GROUP BY aggregates matching rows\n4. HAVING filters aggregated groups\n5. SELECT chooses final columns\n6. ORDER BY sorts results\n\nExample schema:\n```sql\nCREATE TABLE sales (\n  id INT,\n  product_name VARCHAR(50),\n  amount DECIMAL(10, 2),\n  date DATE\n);\n```\n\nQuery:\n```sql\nSELECT \n  product_name,\n  COUNT(*) as order_count,\n  SUM(amount) as total_revenue\nFROM sales\nWHERE date >= '2025-01-01'\nGROUP BY product_name\nHAVING SUM(amount) > 1000\nORDER BY total_revenue DESC;\n```\n\nKey distinctions:\n- WHERE filters before grouping (row-level predicates)\n- HAVING filters after grouping (group-level predicates)\n- You can only SELECT columns that are grouped or aggregated\n\n## Common gotchas / interview framings\n- **Gotcha**: Putting non-grouped, non-aggregated columns in SELECT\n- **Gotcha**: Using WHERE instead of HAVING for group filters\n- **Interview**: \"Write a query that shows products with total sales > 1000\"\n- **Interview**: \"What's wrong with this GROUP BY query?\" (testing WHERE vs HAVING knowledge)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "WHERE operates on individual rows before GROUP BY, while HAVING operates on aggregated groups after GROUP BY.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "WHERE filters rows before grouping; HAVING filters groups after aggregation",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "WHERE and HAVING are identical and can be used interchangeably",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "HAVING is used for non-grouped columns; WHERE is for grouped columns",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "WHERE is obsolete and HAVING should always be used instead",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "aggregation-functions-count-sum-avg-max",
+    "title": "Aggregation functions (COUNT, SUM, AVG, MAX)",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "beginner",
+    "tags": [
+      "aggregation",
+      "summarization",
+      "analytics",
+      "null-handling"
+    ],
+    "aliases": [
+      "aggregate functions",
+      "summary statistics",
+      "data summarization"
+    ],
+    "wikilinks": [
+      "count-function",
+      "sum-function",
+      "avg-function",
+      "max-function",
+      "min-function",
+      "null-semantics",
+      "aggregation-pitfalls"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/functions-aggregate.html",
+        "label": "PostgreSQL Aggregate Functions"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/sql-aggregate-functions/",
+        "label": "Mode Analytics Aggregate Functions"
+      },
+      {
+        "url": "https://dataschool.com/sql-optimization/aggregations/",
+        "label": "DataSchool Aggregation Patterns"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nAggregation functions collapse multiple rows into a single result, computing summary statistics. COUNT tallies occurrences, SUM totals values, AVG computes mean, and MAX/MIN find extremes. These are essential for generating reports and analytics.\n\n## Detail\n\nCommon aggregation functions:\n\n```sql\nSELECT \n  COUNT(*) as total_rows,              -- counts all rows including NULLs\n  COUNT(column) as non_null_count,     -- counts non-NULL values only\n  SUM(amount) as total,                -- sums numeric values (NULL-safe)\n  AVG(price) as average_price,         -- average (excludes NULLs)\n  MAX(salary) as highest_salary,       -- maximum value\n  MIN(salary) as lowest_salary,        -- minimum value\n  STRING_AGG(name, ', ') as all_names  -- concatenate strings (PostgreSQL)\nFROM employees\nWHERE department = 'Sales';\n```\n\nNull handling is crucial:\n- COUNT(*) includes NULLs\n- COUNT(column) excludes NULLs\n- SUM, AVG, MAX, MIN all ignore NULLs\n- If all values are NULL, SUM/AVG/MAX/MIN return NULL (not 0 or 0 rows)\n\nSchema example:\n```sql\nCREATE TABLE employees (\n  name VARCHAR(100),\n  salary DECIMAL(10, 2),\n  bonus DECIMAL(10, 2)\n);\n```\n\n## Common gotchas / interview framings\n- **Gotcha**: COUNT(*) vs COUNT(column) when NULLs exist\n- **Gotcha**: AVG ignores NULLs, which can bias results\n- **Gotcha**: Dividing aggregates without GROUP BY doesn't work as expected\n- **Interview**: \"Why might COUNT(bonus) differ from COUNT(*)?\"\n- **Interview**: \"How would you calculate the average bonus excluding NULL values?\"",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "COUNT(*) counts all rows, COUNT(column) excludes NULL values in that column.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "COUNT(*) = 100, COUNT(bonus) = 100",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "COUNT(*) = 100, COUNT(bonus) = 90",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "COUNT(*) = 90, COUNT(bonus) = 100",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Both return 90 because NULL rows are excluded",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "joins-inner-left-right-full-outer",
+    "title": "Joins (INNER, LEFT, RIGHT, FULL OUTER)",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "intermediate",
+    "tags": [
+      "joins",
+      "cardinality",
+      "relational-logic",
+      "data-combination"
+    ],
+    "aliases": [
+      "join types",
+      "table joining",
+      "combining tables",
+      "join semantics"
+    ],
+    "wikilinks": [
+      "inner-join",
+      "left-join",
+      "right-join",
+      "full-outer-join",
+      "cross-join",
+      "join-cardinality",
+      "join-conditions"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/tutorial-join.html",
+        "label": "PostgreSQL JOIN Tutorial"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/sql-joins/",
+        "label": "Mode Analytics JOIN Guide"
+      },
+      {
+        "url": "https://dataschool.com/sql-optimization/joins/",
+        "label": "DataSchool Advanced JOIN Patterns"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nJOINs combine rows from multiple tables based on a join condition. INNER JOIN keeps only matching rows, LEFT JOIN keeps all left rows plus matches, RIGHT JOIN keeps all right rows plus matches, and FULL OUTER JOIN keeps all rows from both tables. Understanding cardinality (one-to-one, one-to-many, many-to-many) is essential.\n\n## Detail\n\n```sql\n-- INNER JOIN: only matching rows\nSELECT o.order_id, c.customer_name, o.amount\nFROM orders o\nINNER JOIN customers c ON o.customer_id = c.customer_id;\n\n-- LEFT JOIN: all left rows + matches\nSELECT c.customer_id, c.name, COUNT(o.order_id) as order_count\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_id, c.name;\n\n-- RIGHT JOIN: all right rows + matches (less common)\nSELECT o.order_id, c.customer_name\nFROM orders o\nRIGHT JOIN customers c ON o.customer_id = c.customer_id;\n\n-- FULL OUTER JOIN: all rows from both tables\nSELECT COALESCE(c.customer_id, o.customer_id) as customer_id,\n       c.name, o.order_id\nFROM customers c\nFULL OUTER JOIN orders o ON c.customer_id = o.customer_id;\n```\n\nCardinality matters:\n- One-to-one: joins don't multiply rows\n- One-to-many: left table rows multiply if multiple matches\n- Many-to-many: both tables multiply, creating large result sets\n\nCommon pitfall: joining on non-unique keys without considering cardinality.\n\n## Common gotchas / interview framings\n- **Gotcha**: Silent row multiplication from one-to-many joins\n- **Gotcha**: NULL join keys don't match (even NULL = NULL is false)\n- **Gotcha**: Filtering in WHERE after LEFT JOIN eliminates the \"left\" protection\n- **Interview**: \"What's the difference between filtering in WHERE vs ON clause?\"\n- **Interview**: \"Why did my row count explode after joining?\" (cardinality issue)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "With INNER JOIN returning 4500 rows from 5000 order rows, either 500 orders lack customers OR the join is one-to-many. You need more context.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "500 customers have no orders",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "500 orders have no matching customer",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Both A and B are possible",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "One table has duplicate keys",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "In SQL, NULL is never equal to anything, including NULL. Left rows with NULL keys won't match right rows, even in LEFT JOIN.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The row is included with NULL right-side columns",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The row is excluded (same as INNER JOIN)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The NULL is treated as a special value and matches",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "PostgreSQL throws an error",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "subqueries-and-ctes-with-clauses",
+    "title": "Subqueries and CTEs (WITH clauses)",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "intermediate",
+    "tags": [
+      "modularity",
+      "readability",
+      "query-decomposition",
+      "performance"
+    ],
+    "aliases": [
+      "nested queries",
+      "common table expressions",
+      "CTE patterns",
+      "subquery optimization"
+    ],
+    "wikilinks": [
+      "cte-basics",
+      "subquery-types",
+      "inline-views",
+      "materialized-ctes",
+      "performance-ctes",
+      "recursive-preview"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/queries-with.html",
+        "label": "PostgreSQL CTE Documentation"
+      },
+      {
+        "url": "https://neon.com/postgresql/tutorial/cte",
+        "label": "Neon CTE Tutorial"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/advanced-sql-tutorial/",
+        "label": "Mode Analytics CTE Patterns"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nSubqueries embed queries within queries; CTEs (Common Table Expressions) define named result sets before the main query. CTEs improve readability and allow referencing the same result set multiple times. Use CTEs to break complex logic into digestible steps.\n\n## Detail\n\nSubquery example (less readable):\n```sql\nSELECT customer_id, (SELECT COUNT(*) FROM orders WHERE customer_id = c.customer_id) as order_count\nFROM customers c;\n```\n\nCTE example (more readable):\n```sql\nWITH customer_orders AS (\n  SELECT customer_id, COUNT(*) as order_count\n  FROM orders\n  GROUP BY customer_id\n)\nSELECT c.customer_id, c.name, COALESCE(co.order_count, 0) as order_count\nFROM customers c\nLEFT JOIN customer_orders co ON c.customer_id = co.customer_id;\n```\n\nMultiple CTEs:\n```sql\nWITH high_value_orders AS (\n  SELECT customer_id, SUM(amount) as total\n  FROM orders\n  GROUP BY customer_id\n  HAVING SUM(amount) > 10000\n),\ntop_customers AS (\n  SELECT hvo.customer_id, c.name, hvo.total\n  FROM high_value_orders hvo\n  JOIN customers c ON hvo.customer_id = c.customer_id\n)\nSELECT * FROM top_customers\nORDER BY total DESC;\n```\n\nSubquery types:\n- Scalar subqueries: return single value\n- Correlated subqueries: reference outer query (slower)\n- Subqueries in FROM: inline views\n- Subqueries in WHERE: filtering with complex logic\n\n## Common gotchas / interview framings\n- **Gotcha**: Scalar subqueries that return multiple rows cause errors\n- **Gotcha**: Correlated subqueries are slow (N+1 risk)\n- **Gotcha**: CTEs don't auto-materialize; some databases evaluate inline\n- **Interview**: \"Optimize this correlated subquery\"\n- **Interview**: \"Refactor this deeply nested query as CTEs\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "Correlated subqueries execute once per outer row, creating N+1 query risk. This is why they're usually slower than CTEs or JOINs.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Once (subqueries always execute once)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Once per row in customers table",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Once per DISTINCT value in the join key",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Zero times (correlated subqueries are optimized away)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "window-functions-rownumber-rank-lag-lead",
+    "title": "Window functions (ROW_NUMBER, RANK, LAG, LEAD)",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "intermediate",
+    "tags": [
+      "ranking",
+      "ordering",
+      "analytical",
+      "time-series"
+    ],
+    "aliases": [
+      "window analytics",
+      "ranking functions",
+      "lag lead functions",
+      "running calculations"
+    ],
+    "wikilinks": [
+      "row-number",
+      "rank",
+      "dense-rank",
+      "lag-function",
+      "lead-function",
+      "partition-by",
+      "order-by-window"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/tutorial-window.html",
+        "label": "PostgreSQL Window Functions"
+      },
+      {
+        "url": "https://neon.com/postgresql/postgresql-window-function",
+        "label": "Neon Window Functions Guide"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/sql-window-functions/",
+        "label": "Mode Analytics Window Functions"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nWindow functions compute values across a set of rows (a \"window\") without collapsing rows like aggregates do. ROW_NUMBER ranks rows uniquely, RANK handles ties, LAG/LEAD access previous/next rows, and cumulative functions compute running totals. Perfect for analytics: ranks, percent-of-total, row comparisons.\n\n## Detail\n\n```sql\nSELECT \n  employee_id,\n  salary,\n  -- Ranking functions\n  ROW_NUMBER() OVER (ORDER BY salary DESC) as row_num,\n  RANK() OVER (ORDER BY salary DESC) as rank,\n  DENSE_RANK() OVER (ORDER BY salary DESC) as dense_rank,\n  -- Comparison functions\n  LAG(salary) OVER (ORDER BY salary DESC) as prev_salary,\n  LEAD(salary) OVER (ORDER BY salary DESC) as next_salary,\n  salary - LAG(salary) OVER (ORDER BY salary DESC) as salary_diff,\n  -- Aggregates as window functions\n  SUM(salary) OVER (ORDER BY salary DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as running_total,\n  AVG(salary) OVER (ORDER BY salary DESC) as avg_all,\n  -- With partitioning\n  ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) as dept_rank\nFROM employees\nORDER BY salary DESC;\n```\n\nKey concepts:\n- PARTITION BY divides rows into groups (like GROUP BY but doesn't collapse rows)\n- ORDER BY defines ranking/ordering within window\n- Frame specification (ROWS BETWEEN) defines range for aggregate window functions\n- Window functions don't reduce row count (unlike GROUP BY)\n\nCommon patterns:\n```sql\n-- Top N per group\nWITH ranked_employees AS (\n  SELECT *, ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) as rank\n  FROM employees\n)\nSELECT * FROM ranked_employees WHERE rank <= 3;\n\n-- Month-over-month change\nSELECT month, revenue, LAG(revenue) OVER (ORDER BY month) as prev_month_revenue,\n       revenue - LAG(revenue) OVER (ORDER BY month) as revenue_change\nFROM monthly_revenue;\n```\n\n## Common gotchas / interview framings\n- **Gotcha**: ROW_NUMBER assigns unique ranks even for ties; RANK creates gaps; DENSE_RANK is consecutive\n- **Gotcha**: LAG/LEAD with no PARTITION treats entire result set as one window (often not what you want)\n- **Gotcha**: Misunderstanding frame specifications (ROWS BETWEEN) causes wrong running totals\n- **Interview**: \"Write a query to get the top 3 earners per department\"\n- **Interview**: \"Calculate month-over-month revenue change using window functions\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "ROW_NUMBER assigns unique numbers (1,2,3). RANK skips after ties (1,1,3). DENSE_RANK is consecutive (1,1,2).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "ROW_NUMBER: 1,2; RANK: 1,1; DENSE_RANK: 1,1",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "All return 1,1,2",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "All return 1,2,3",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "ROW_NUMBER: 1,1; RANK: 1,2; DENSE_RANK: 1,1",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "recursive-ctes",
+    "title": "Recursive CTEs",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "advanced",
+    "tags": [
+      "hierarchical-data",
+      "tree-traversal",
+      "graph-algorithms",
+      "recursion"
+    ],
+    "aliases": [
+      "recursive queries",
+      "hierarchy traversal",
+      "org chart queries",
+      "graph traversal"
+    ],
+    "wikilinks": [
+      "recursive-cte-basics",
+      "anchor-member",
+      "recursive-member",
+      "base-case",
+      "tree-structures",
+      "cycle-detection"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/queries-with.html",
+        "label": "PostgreSQL Recursive CTE Documentation"
+      },
+      {
+        "url": "https://neon.com/postgresql/tutorial/cte",
+        "label": "Neon Recursive CTE Patterns"
+      },
+      {
+        "url": "https://www.crunchydata.com/blog/postgres-subquery-powertools-subqueries-ctes-materialized-views-window-functions-and-lateral",
+        "label": "Crunchy Data Recursive CTE Deep Dive"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nRecursive CTEs traverse hierarchical or graph data (org charts, file systems, bill-of-materials). They work through two parts: an anchor (base case) that starts the recursion, and a recursive member that references the CTE itself. Each iteration adds more rows until no new rows are found.\n\n## Detail\n\n```sql\nWITH RECURSIVE org_hierarchy AS (\n  -- Anchor: start with CEO (manager_id IS NULL)\n  SELECT employee_id, name, manager_id, 1 as level\n  FROM employees\n  WHERE manager_id IS NULL\n  \n  UNION ALL\n  \n  -- Recursive member: find reports of current level\n  SELECT e.employee_id, e.name, e.manager_id, oh.level + 1\n  FROM employees e\n  INNER JOIN org_hierarchy oh ON e.manager_id = oh.employee_id\n  WHERE oh.level < 10  -- prevent infinite loops\n)\nSELECT * FROM org_hierarchy\nORDER BY level, name;\n```\n\nAnother example (path building):\n```sql\nWITH RECURSIVE path_finding AS (\n  SELECT source, target, 1 as hops, ARRAY[source, target] as path\n  FROM edges\n  WHERE source = 'A'\n  \n  UNION ALL\n  \n  SELECT pf.source, e.target, pf.hops + 1, pf.path || e.target\n  FROM path_finding pf\n  JOIN edges e ON pf.target = e.source\n  WHERE pf.hops < 5 AND NOT e.target = ANY(pf.path)  -- avoid cycles\n)\nSELECT * FROM path_finding WHERE target = 'Z';\n```\n\nCritical safeguards:\n- Include a termination condition (depth limit, visited check)\n- Use UNION ALL (not UNION) for performance\n- Recursion depth can explode without careful limits\n\n## Common gotchas / interview framings\n- **Gotcha**: Infinite recursion without termination condition\n- **Gotcha**: UNION instead of UNION ALL causes deduplication (slower)\n- **Gotcha**: Forgetting to increment depth or check visited nodes\n- **Interview**: \"Write a query to find all employees under a specific manager\"\n- **Interview**: \"Find the shortest path in a graph\" (advanced)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "UNION deduplicates between recursive iterations, which can prematurely stop recursion. UNION ALL is standard for recursive CTEs.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "UNION and UNION ALL produce the same results",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "UNION removes duplicates (slower); UNION ALL keeps duplicates",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "UNION ALL is invalid in recursive CTEs",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "UNION allows multiple recursion paths; UNION ALL doesn't",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "set-operations-union-intersect-except",
+    "title": "Set operations (UNION, INTERSECT, EXCEPT)",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "intermediate",
+    "tags": [
+      "set-theory",
+      "combining-results",
+      "deduplication",
+      "comparison"
+    ],
+    "aliases": [
+      "union queries",
+      "intersect except",
+      "set combination",
+      "result merging"
+    ],
+    "wikilinks": [
+      "union-operation",
+      "intersect-operation",
+      "except-operation",
+      "union-all",
+      "duplicate-handling",
+      "column-alignment"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/queries-union.html",
+        "label": "PostgreSQL Set Operations"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/sql-union/",
+        "label": "Mode Analytics UNION Tutorial"
+      },
+      {
+        "url": "https://dataschool.com/sql-optimization/set-operations/",
+        "label": "DataSchool Set Operations"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nSet operations combine multiple queries: UNION merges result sets (removing duplicates), UNION ALL merges without dedup, INTERSECT finds common rows, and EXCEPT finds rows in first set but not second. Used for combining data from different sources or filtering based on conditions in other tables.\n\n## Detail\n\n```sql\n-- UNION: combine and deduplicate\nSELECT customer_id, 'online' as channel FROM online_customers\nUNION\nSELECT customer_id, 'offline' as channel FROM offline_customers;\n\n-- UNION ALL: combine without deduplicating (faster)\nSELECT order_id FROM 2024_orders\nUNION ALL\nSELECT order_id FROM 2025_orders;\n\n-- INTERSECT: find common rows\nSELECT customer_id FROM customers_bought_electronics\nINTERSECT\nSELECT customer_id FROM customers_bought_clothing;\n\n-- EXCEPT: set difference\nSELECT customer_id FROM all_customers\nEXCEPT\nSELECT customer_id FROM customers_with_active_orders;\n```\n\nRules:\n- All queries must have the same number of columns\n- Column types must be compatible\n- Column names come from first query\n- UNION removes duplicates (slower); UNION ALL doesn't\n- INTERSECT and EXCEPT are less common but powerful\n\nPerformance note: UNION is expensive due to deduplication. Use UNION ALL if you're confident there are no duplicates.\n\n## Common gotchas / interview framings\n- **Gotcha**: UNION auto-deduplicates; UNION ALL doesn't (know the difference)\n- **Gotcha**: Column count mismatch or type mismatch causes errors\n- **Gotcha**: ORDER BY applies to entire result, not individual queries\n- **Interview**: \"Find customers who bought from both online and offline channels\"\n- **Interview**: \"List all transactions excluding refunds\" (use EXCEPT)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "UNION merges and deduplicates. 1000 + 800 - 200 = 1600 unique rows. UNION ALL would return 1800.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "1000 (only A's rows)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "1800 (all rows)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "1600 (A + non-duplicate B rows)",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "2000 (A + B rows)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "case-statements-for-conditional-logic",
+    "title": "CASE statements for conditional logic",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "intermediate",
+    "tags": [
+      "conditional",
+      "logic",
+      "categorization",
+      "metrics"
+    ],
+    "aliases": [
+      "if-then logic",
+      "conditional expressions",
+      "categorization logic"
+    ],
+    "wikilinks": [
+      "case-simple",
+      "case-searched",
+      "when-then",
+      "else-clause",
+      "null-handling-case",
+      "aggregation-with-case"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/functions-conditional.html",
+        "label": "PostgreSQL CASE Documentation"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/sql-case/",
+        "label": "Mode Analytics CASE Tutorial"
+      },
+      {
+        "url": "https://dataschool.com/sql-optimization/case-statements/",
+        "label": "DataSchool CASE Patterns"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nCASE statements enable if-then-else logic within queries, crucial for creating metrics and categorizing data. Two forms exist: simple CASE (comparing one column to values) and searched CASE (evaluating conditions). CASE transforms data on-the-fly without separate transformations.\n\n## Detail\n\nSimple CASE:\n```sql\nSELECT \n  order_id,\n  status,\n  CASE status\n    WHEN 'completed' THEN 'Success'\n    WHEN 'pending' THEN 'In Progress'\n    WHEN 'cancelled' THEN 'Failed'\n    ELSE 'Unknown'\n  END as status_category\nFROM orders;\n```\n\nSearched CASE (more flexible):\n```sql\nSELECT \n  employee_id,\n  salary,\n  CASE\n    WHEN salary >= 100000 THEN 'Senior'\n    WHEN salary >= 75000 THEN 'Mid-level'\n    WHEN salary >= 50000 THEN 'Junior'\n    ELSE 'Entry-level'\n  END as salary_band,\n  -- Nested CASE for complex logic\n  CASE\n    WHEN salary >= 100000 AND years_employed >= 5 THEN 'Promote'\n    WHEN salary >= 100000 AND years_employed < 5 THEN 'Monitor'\n    ELSE 'Standard'\n  END as action\nFROM employees;\n```\n\nCASE in aggregates (common pattern):\n```sql\nSELECT \n  SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,\n  SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count,\n  SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as completed_revenue,\n  COUNT(CASE WHEN referral_source IS NOT NULL THEN 1 END) as referred_customers\nFROM orders\nGROUP BY order_date;\n```\n\nCommon pattern: conditional counts\n```sql\nSELECT COUNT(*) as total_orders,\n       COUNT(CASE WHEN amount > 1000 THEN 1 END) as high_value_orders\nFROM orders;\n```\n\n## Common gotchas / interview framings\n- **Gotcha**: CASE without ELSE returns NULL for non-matching rows\n- **Gotcha**: Order matters; first matching WHEN wins (like if-elseif chains)\n- **Gotcha**: Type coercion in THEN clauses can cause errors\n- **Interview**: \"Write a query that counts orders by status using CASE\"\n- **Interview**: \"Create a revenue metric that excludes cancelled orders\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "CASE without matching WHEN and no ELSE returns NULL. Always include ELSE to handle unexpected values.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "0 (zero)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "NULL",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "An error",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "An empty string",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "partitioning-and-ordered-analytics",
+    "title": "Partitioning and ordered analytics",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "intermediate",
+    "tags": [
+      "partitioning",
+      "analytics",
+      "cohort-analysis",
+      "funnel-analysis"
+    ],
+    "aliases": [
+      "partition by",
+      "analytical functions",
+      "group analytics",
+      "windowed aggregates"
+    ],
+    "wikilinks": [
+      "partition-by-clause",
+      "over-clause",
+      "frame-specification",
+      "running-aggregates",
+      "cohort-analysis",
+      "funnel-analysis"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/sql-expressions.html#syntax-window-functions",
+        "label": "PostgreSQL Window Function Syntax"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/sql-window-functions/",
+        "label": "Mode Analytics Partitioning Guide"
+      },
+      {
+        "url": "https://dataschool.com/sql-optimization/cohort-retention-analysis/",
+        "label": "DataSchool Cohort Analysis"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nPartitioning divides result sets into groups and applies aggregations within each group without reducing row count. Essential for analytics: cohort analysis (comparing user groups), funnel analysis (tracking progression), and running totals. PARTITION BY groups rows; ORDER BY defines ordering within partitions.\n\n## Detail\n\n```sql\n-- Running totals within partitions\nSELECT \n  user_id,\n  transaction_date,\n  amount,\n  SUM(amount) OVER (PARTITION BY user_id ORDER BY transaction_date) as cumulative_spend,\n  AVG(amount) OVER (PARTITION BY user_id) as avg_user_transaction\nFROM transactions\nORDER BY user_id, transaction_date;\n\n-- Cohort analysis: compare user groups by signup month\nWITH cohorts AS (\n  SELECT \n    DATE_TRUNC('month', signup_date)::DATE as cohort_month,\n    user_id,\n    DATE_TRUNC('month', first_purchase_date)::DATE as first_purchase_month\n  FROM users\n)\nSELECT \n  cohort_month,\n  (DATE_PART('month', first_purchase_month) - DATE_PART('month', cohort_month))::INT as months_to_first_purchase,\n  COUNT(DISTINCT user_id) as user_count\nFROM cohorts\nGROUP BY cohort_month, months_to_first_purchase\nORDER BY cohort_month, months_to_first_purchase;\n\n-- Funnel analysis: track progression through steps\nWITH user_journey AS (\n  SELECT \n    user_id,\n    CASE WHEN action = 'view' THEN 1 ELSE 0 END as viewed,\n    CASE WHEN action = 'add_to_cart' THEN 1 ELSE 0 END as added_to_cart,\n    CASE WHEN action = 'purchase' THEN 1 ELSE 0 END as purchased\n  FROM events\n)\nSELECT \n  COUNT(DISTINCT CASE WHEN viewed = 1 THEN user_id END) as viewers,\n  COUNT(DISTINCT CASE WHEN added_to_cart = 1 THEN user_id END) as added_to_cart_users,\n  COUNT(DISTINCT CASE WHEN purchased = 1 THEN user_id END) as purchasers\nFROM user_journey;\n\n-- Frame specification for running aggregates\nSELECT \n  date,\n  revenue,\n  SUM(revenue) OVER (ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) as running_7day_total,\n  AVG(revenue) OVER (ORDER BY date ROWS BETWEEN 29 PRECEDING AND CURRENT ROW) as moving_30day_avg\nFROM daily_revenue;\n```\n\nFrame types:\n- ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW: cumulative\n- ROWS BETWEEN 6 PRECEDING AND CURRENT ROW: rolling window\n- ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING: entire partition\n\n## Common gotchas / interview framings\n- **Gotcha**: Forgetting PARTITION BY when you need group-level analytics\n- **Gotcha**: Misunderstanding frame specifications (ROWS vs RANGE)\n- **Gotcha**: Performance issues with deep partitions (millions of rows per partition)\n- **Interview**: \"Calculate 7-day rolling average of revenue\"\n- **Interview**: \"Build a cohort retention table\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "Days 1, 2, 3 are only 3 rows (no previous 6 days). Frame expands as you approach day 7.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "7 rows (days 1-7)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "3 rows (days 1-3)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "4 rows (days 0-3, where day 0 is out of bounds)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Depends on how many rows exist before day 3",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "index-strategies",
+    "title": "Index strategies",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "intermediate",
+    "tags": [
+      "performance",
+      "optimization",
+      "indexing",
+      "query-speed"
+    ],
+    "aliases": [
+      "index optimization",
+      "database indexing",
+      "query acceleration"
+    ],
+    "wikilinks": [
+      "index-types",
+      "single-column-index",
+      "composite-index",
+      "index-tradeoffs",
+      "index-maintenance",
+      "covering-index"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/sql-createindex.html",
+        "label": "PostgreSQL CREATE INDEX Documentation"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/index-optimization/",
+        "label": "Mode Analytics Indexing Guide"
+      },
+      {
+        "url": "https://dataschool.com/sql-optimization/indexes/",
+        "label": "DataSchool Index Strategies"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nIndexes speed up WHERE and JOIN conditions by creating efficient lookup structures, but they slow inserts/updates (must maintain index). Strategic indexing balances read speed with write cost. Single-column indexes help equality/range filters; composite indexes help multiple conditions or cover entire queries.\n\n## Detail\n\nBasic index creation:\n```sql\n-- Single-column index (common)\nCREATE INDEX idx_orders_customer_id ON orders(customer_id);\n\n-- Composite index (orders on multiple columns)\nCREATE INDEX idx_orders_customer_date ON orders(customer_id, order_date DESC);\n\n-- Covering index (includes data, avoids table lookup)\nCREATE INDEX idx_orders_covering ON orders(customer_id) INCLUDE (amount, status);\n\n-- Partial index (only index subset of rows, saves space)\nCREATE INDEX idx_active_orders ON orders(customer_id) WHERE status = 'active';\n```\n\nIndex selection rules:\n1. **WHERE columns**: Index columns in WHERE clause (high priority)\n2. **JOIN keys**: Index foreign keys and join columns\n3. **ORDER BY**: Index ORDER BY columns if you have them in WHERE too\n4. **Selectivity**: Index high-cardinality columns (many distinct values) over low-cardinality\n5. **Composite order**: Put equality conditions before range conditions (WHERE id = 5 AND date > '2025-01-01')\n\nWhen NOT to index:\n- Low cardinality (e.g., boolean, status with 3 values): minimal benefit\n- Write-heavy tables: index maintenance slows inserts\n- Tiny tables: full table scan is fast enough\n\nIndex tradeoffs:\n```sql\n-- Good index selection\nCREATE INDEX idx_users_email ON users(email);  -- email is unique lookup key\nCREATE INDEX idx_orders_customer_date ON orders(customer_id, order_date);  -- common WHERE pattern\n\n-- Poor index selection\nCREATE INDEX idx_users_active ON users(is_active);  -- only 2 values, low selectivity\nCREATE INDEX idx_huge_table_col1_col2_col3_col4 ON huge_table(...);  -- too many columns, slow maintenance\n```\n\n## Common gotchas / interview framings\n- **Gotcha**: Indexing low-cardinality columns (boolean, small enum)\n- **Gotcha**: Too many indexes (slows inserts, wastes storage)\n- **Gotcha**: Index on computed expressions (not actual columns)\n- **Gotcha**: Missing index on foreign keys in JOINs\n- **Interview**: \"This query is slow. What indexes would help?\"\n- **Interview**: \"Design index strategy for a write-heavy table\"",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "Low-cardinality columns don't benefit much from indexing. The optimizer may do a full table scan anyway. Index selectivity matters.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, always index WHERE columns",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, too low cardinality; full table scan is fine",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Yes, but mark it as low-priority",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Only if the table is very large (>1M rows)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "query-execution-plans",
+    "title": "Query execution plans",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "advanced",
+    "tags": [
+      "optimization",
+      "execution",
+      "performance-analysis",
+      "bottleneck-identification"
+    ],
+    "aliases": [
+      "EXPLAIN PLAN",
+      "query analysis",
+      "performance debugging",
+      "execution strategy"
+    ],
+    "wikilinks": [
+      "explain-command",
+      "execution-nodes",
+      "sequential-scan",
+      "index-scan",
+      "nested-loop-join",
+      "hash-join",
+      "cost-estimation"
+    ],
+    "sources": [
+      {
+        "url": "https://www.postgresql.org/docs/current/sql-explain.html",
+        "label": "PostgreSQL EXPLAIN Documentation"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/query-performance/",
+        "label": "Mode Analytics Query Performance"
+      },
+      {
+        "url": "https://www.crunchydata.com/developers/playground",
+        "label": "Crunchy Data SQL Playground"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nQuery execution plans show HOW the database executes a query: which indexes it uses, how it joins tables, what order it processes data. Understanding plans helps identify bottlenecks (slow scans, expensive joins) and optimize queries. EXPLAIN shows estimated costs; EXPLAIN ANALYZE shows actual execution.\n\n## Detail\n\n```sql\n-- Show execution plan (estimated)\nEXPLAIN SELECT * FROM orders WHERE customer_id = 5;\n\n-- Show actual execution stats\nEXPLAIN ANALYZE SELECT * FROM orders WHERE customer_id = 5;\n\n-- Full plan output example:\n-- Seq Scan on orders (cost=0.00..35.50 rows=10 width=60)\n--   Filter: (customer_id = 5)\n\n-- With Index\n-- Index Scan using idx_orders_customer_id on orders (cost=0.29..12.00 rows=10 width=60)\n--   Index Cond: (customer_id = 5)\n```\n\nKey plan terms:\n- **Seq Scan**: Full table scan (slow for large tables)\n- **Index Scan**: Using an index (faster)\n- **Nested Loop**: Join algorithm (good for small result sets)\n- **Hash Join**: Join algorithm (good for large result sets)\n- **Sort**: Sorting data (expensive)\n- **Cost**: Estimated I/O and CPU units (lower is better)\n- **Rows**: Estimated output rows\n- **Actual Rows**: Real rows returned (EXPLAIN ANALYZE only)\n\nCommon plan patterns:\n```sql\n-- Expensive join: 1M * 500K rows = huge temporary hash table\nEXPLAIN ANALYZE\nSELECT * FROM large_table a\nJOIN large_table b ON a.id = b.id\nWHERE a.status = 'active';  -- Apply filter FIRST (in CTE or subquery)\n\n-- Better: filter first, then join\nWITH filtered_a AS (\n  SELECT * FROM large_table WHERE status = 'active'\n)\nSELECT * FROM filtered_a a\nJOIN large_table b ON a.id = b.id;\n```\n\nOptimization signals:\n- **Seq Scan on large table**: Add index on WHERE column\n- **Nested Loop with large inner table**: Use Hash Join (rewrite or add indexes)\n- **Sort step**: Check if ORDER BY is necessary; add index on ORDER BY column\n- **Rows >> Actual Rows**: Optimizer is overestimating; stats may be stale (ANALYZE table)\n\n## Common gotchas / interview framings\n- **Gotcha**: Plan cost is estimated; EXPLAIN ANALYZE gives truth\n- **Gotcha**: Indexes don't auto-update stats; run ANALYZE to refresh\n- **Gotcha**: Nested loop join on large tables is very slow\n- **Interview**: \"This query is slow. Walk me through the execution plan.\"\n- **Interview**: \"How would you optimize this plan?\" (with plan shown)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "Huge gap between estimated and actual rows means optimizer stats are wrong. Run ANALYZE table to refresh statistics.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The query is working correctly; estimates match reality",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The optimizer overestimated; statistics may be stale or incorrect",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The index is broken",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The WHERE filter is too permissive",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      }
+    ]
+  },
+  {
+    "slug": "avoiding-common-pitfalls-n1-queries-missing-joins",
+    "title": "Avoiding common pitfalls (N+1 queries, missing JOINs)",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "difficulty": "intermediate",
+    "tags": [
+      "performance",
+      "best-practices",
+      "anti-patterns",
+      "efficiency"
+    ],
+    "aliases": [
+      "N+1 problem",
+      "query anti-patterns",
+      "common mistakes",
+      "data quality"
+    ],
+    "wikilinks": [
+      "n-plus-1-queries",
+      "missing-join-keys",
+      "incorrect-aggregation",
+      "duplicate-logic",
+      "query-smell-tests"
+    ],
+    "sources": [
+      {
+        "url": "https://dataschool.com/sql-optimization/preventing-common-errors/",
+        "label": "DataSchool Common SQL Errors"
+      },
+      {
+        "url": "https://mode.com/sql-tutorial/sql-best-practices/",
+        "label": "Mode Analytics Best Practices"
+      },
+      {
+        "url": "https://www.postgresql.org/docs/current/sql-syntax.html",
+        "label": "PostgreSQL SQL Syntax Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nCommon SQL mistakes reduce query efficiency and data integrity. N+1 queries run a query for each row (exponential explosion). Missing joins create Cartesian products or incorrect aggregations. Implicit logic in code instead of SQL violates separation of concerns. Learning these pitfalls prevents slow/incorrect queries in interviews and production.\n\n## Detail\n\n### N+1 Query Problem\n```python\n# ANTI-PATTERN: N+1 queries in code\ncustomers = get_all_customers()  # 1 query\nfor customer in customers:  # N iterations\n  orders = get_orders_for_customer(customer.id)  # N queries\n  print(customer.name, orders)\n\n# SOLUTION: Single SQL query\nSELECT c.name, COUNT(o.order_id) as order_count\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_id, c.name;\n```\n\n### Missing JOIN: Cartesian Product\n```sql\n-- WRONG: Joins on wrong key (or no key)\nSELECT * FROM customers, orders;\n-- Result: every customer matched to every order (M * N rows)\n\n-- CORRECT: Join on relationship\nSELECT * FROM customers c\nJOIN orders o ON c.customer_id = o.customer_id;\n```\n\n### Missing JOIN in Aggregation\n```sql\n-- WRONG: Forgot to join order_items; counts products not orders\nSELECT o.order_id, COUNT(*)\nFROM orders o\nGROUP BY o.order_id;  -- Counts 1 (only orders row)\n\n-- CORRECT: Include items\nSELECT o.order_id, COUNT(oi.item_id)\nFROM orders o\nJOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY o.order_id;  -- Counts items per order\n```\n\n### Duplicated Data from Many-to-Many Join\n```sql\n-- WRONG: Double-counts revenue when joining orders + order_items + promotions\nSELECT o.order_id, SUM(oi.price) as revenue\nFROM orders o\nJOIN order_items oi ON o.order_id = oi.order_id\nJOIN promotions p ON oi.item_id = p.item_id\nGROUP BY o.order_id;  -- If item has 2 promotions, counted twice!\n\n-- CORRECT: Use derived tables\nWITH item_revenue AS (\n  SELECT order_id, SUM(price) as revenue\n  FROM order_items\n  GROUP BY order_id\n)\nSELECT ir.order_id, ir.revenue\nFROM item_revenue ir\nJOIN promotions p ON ir.order_id = p.order_id;\n```\n\n### Logic in Code vs SQL\n```python\n# ANTI-PATTERN: Business logic in code\norders = select_all_orders()\nhigh_value = [o for o in orders if o.amount > 1000 and o.status == 'completed']\nrevenue = sum(o.amount for o in high_value)\n\n# CORRECT: Logic in SQL\nSELECT SUM(amount) as revenue\nFROM orders\nWHERE amount > 1000 AND status = 'completed';\n```\n\n## Common gotchas / interview framings\n- **Gotcha**: Forgetting to verify join keys are primary/foreign key relationships\n- **Gotcha**: Counting rows when you meant to count distinct entities\n- **Gotcha**: N+1 queries in loops (appears in code reviews)\n- **Interview**: \"This query returns wrong counts. Debug it.\"\n- **Interview**: \"Optimize this code loop that runs a query for each row\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "N+1 problem: 1 initial query + N queries in the loop = 1001 total. A single JOIN query would use 1 query.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "1 query (customers with orders)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "1001 queries (1 for all customers, 1000 for each customer's orders)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "1000 queries (orders per customer)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Depends on caching",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "mcq",
+        "front": "",
+        "back": "All are useful. Check DISTINCT to see if rows duplicated. EXPLAIN shows join cardinality. Compare row count to expectations.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Count DISTINCT values in key columns",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Run EXPLAIN ANALYZE to see cardinality",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Check if the row count equals expected rows * number of joined tables",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above",
+            "correct": true
+          }
+        ]
+      }
+    ]
+  }
+]

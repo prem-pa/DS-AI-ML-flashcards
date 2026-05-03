@@ -1,0 +1,386 @@
+[
+  {
+    "slug": "quantization-aware-training-with-learned-scaling",
+    "title": "Quantization-aware training with learned scaling",
+    "track": "ai-llm-engineer",
+    "topic": "serving-infrastructure-inference-optimization",
+    "difficulty": "advanced",
+    "tags": [
+      "qat",
+      "learned-scaling",
+      "per-channel-quantization",
+      "scale-learning",
+      "gradient-based-optimization"
+    ],
+    "aliases": [
+      "QAT-scaling",
+      "Learnable-scales",
+      "Per-channel-scaling",
+      "KL-divergence-minimization"
+    ],
+    "wikilinks": [
+      "quantization-aware-training",
+      "scale-parameters",
+      "gradient-flow",
+      "kl-divergence",
+      "fine-tuning"
+    ],
+    "sources": [
+      {
+        "url": "https://vrlatech.com/llm-quantization-explained-int4-int8-fp8-awq-and-gptq-in-2026/",
+        "label": "VRLA Tech: QAT with Learned Scaling (2026)"
+      },
+      {
+        "url": "https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks",
+        "label": "Jarvis Labs: QAT Implementation Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\nLearned scaling makes quantization scales **learnable parameters** during QAT fine-tuning, optimizing where precision matters most. Scales update via backprop alongside weights, achieving 0.5-1 point better accuracy than fixed-scale QAT.\n\n## Detail\n### Per-Channel Learned Scaling\n```python\n# Standard QAT: scales frozen after calibration\nscale = compute_scale(activations)  # one-time calibration\nx_q = round(x / scale) * scale      # scale is constant during training\n\n# Learned scaling: scales become parameters\nscale = nn.Parameter(torch.tensor([...]))  # learnable per channel\nx_q = round(x / scale) * scale  # gradient flows through scale!\nscale.grad = backprop()  # scales update to minimize loss\n```\n\nEach channel learns its optimal scale to minimize task loss + KL divergence penalty.\n\n### Optimization\nMinimize: `L = L_task(q_model) + λ * KL(logits_original || logits_q)`\n\nBackprop computes `∂L/∂scale`, updating scales to reduce quantization error.\n\n### Results\n| Method | INT8 Loss | INT4 Loss | Time |\n|--------|-------|-------|-------|\n| Fixed | 0.8 pt | 2.0 pt | 1h |\n| Learned (5 epochs) | 0.2 pt | 0.5 pt | 50h |\n\n## Common gotchas\n- **\"Is learned scaling always better?\"** Yes, but requires fine-tuning data + compute. Not worth it for short-lived models.\n- **\"Can I use learned scales from one model for another?\"** No; scales are task-specific. Must re-train per model.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why do learned scales in QAT produce better accuracy than fixed scales?",
+        "back": "Fixed scales are computed once via calibration and frozen. Learned scales are parameters that update during fine-tuning via backprop, optimizing to minimize task loss + KL divergence. The model learns where precision matters most, allocating finer scales to sensitive channels."
+      },
+      {
+        "type": "mcq",
+        "front": "INT8 QAT with fixed scales loses 0.8 MMLU. Learned scales cost 50 GPU-hours to achieve 0.2-point loss. Worth it?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "A) Yes, always use learned scales",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "B) Only if the model will run for years (amortize compute cost)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "C) No, 50 hours is too expensive",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "D) Depends on accuracy SLA",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What does per-channel learned scaling do?\n```python\nscale = nn.Parameter(torch.ones(out_channels))\nfor c in range(out_channels):\n  w_q[:, c] = fake_quantize(w[:, c], scale[c])\n```",
+        "back": "Each output channel has its own learnable scale. During fine-tuning, backprop updates each scale independently to minimize loss for that channel. Some channels may need finer scales (8-bit), others coarser (4-bit), optimizing per-channel precision."
+      }
+    ]
+  },
+  {
+    "slug": "data-parallelism-for-inference",
+    "title": "Data parallelism for inference",
+    "track": "ai-llm-engineer",
+    "topic": "serving-infrastructure-inference-optimization",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-parallelism",
+      "multi-gpu",
+      "request-parallelism",
+      "horizontal-scaling",
+      "synchronization"
+    ],
+    "aliases": [
+      "Request-parallelism",
+      "Model-replication",
+      "Horizontal-scaling"
+    ],
+    "wikilinks": [
+      "parallelism-strategies",
+      "gpu-utilization",
+      "load-balancing",
+      "batch-processing"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.vllm.ai/en/stable/serving/parallelism_scaling/",
+        "label": "vLLM: Parallelism & Scaling Guide"
+      },
+      {
+        "url": "https://bentoml.com/llm/inference-optimization/data-tensor-pipeline-expert-hybrid-parallelism",
+        "label": "BentoML: Parallelism Types (2026)"
+      }
+    ],
+    "explainer_md": "## Intuition\n**Data parallelism for inference**: Replicate the model across N GPUs. Each GPU processes a **different request**. Zero synchronization needed (unlike training). Throughput scales linearly with GPUs.\n\n**Example**: Llama 70B on 4x A100s.\n- 1 GPU: 50 tok/s, queue time 100ms.\n- 4 GPUs (data parallel): 200 tok/s, queue time 25ms. (4x throughput, 4x lower latency.)\n\n## Detail\n### Setup\n```python\n# vLLM handles data parallelism transparently\nfrom vllm import LLM\n\nllm = LLM('meta-llama/Llama-2-70b',\n          tensor_parallel_size=1,  # no TP\n          pipeline_parallel_size=1,  # no PP\n          # Data parallelism is implicit across remaining GPUs\n         )\n\n# Each GPU holds full model, processes different request\n# GPU 0: request A\n# GPU 1: request B\n# GPU 2: request C\n# GPU 3: request D\n```\n\n### Why Data Parallelism Works for Inference\n- **Training**: Gradients must synchronize across replicas (AllReduce). Expensive.\n- **Inference**: No gradients. Each request is independent. No sync needed (except load balancing).\n\nResult: Perfect linear scaling (no communication overhead).\n\n### Limitations\n1. **Model must fit on one GPU**: 70B model needs A100 80GB (not A100 40GB).\n2. **Diminishing returns**: If requests are long-tail (diverse lengths), load balancing becomes harder. Some GPUs finish early, idle.\n3. **Batching still important**: Within each GPU, continuous batching extracts throughput.\n\n## Common gotchas\n- **\"Data parallelism vs tensor parallelism?\"** Data parallel: each GPU full model, different request. Tensor parallel: split model across GPUs, same request. TP needed when model doesn't fit on one GPU.\n- **\"Can I data-parallel a 70B on 2x A100 40GB?\"** No; model doesn't fit on 40GB. Must use tensor parallelism (split model).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does data parallelism for inference scale perfectly (linear) while training does not?",
+        "back": "In inference, each GPU processes an independent request; no synchronization needed. Throughput scales linearly. In training, gradients must be synchronized across replicas (AllReduce), which adds communication overhead, limiting scaling efficiency."
+      },
+      {
+        "type": "mcq",
+        "front": "Llama 70B on 4x A100 80GB with data parallelism: each GPU holds a full model. Why not split the model (TP)?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "A) Because model fits on one 80GB GPU (140GB / 80GB ≈ split needed)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "B) Because model doesn't fit; must use TP",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "C) Because data parallelism is always better",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "D) Model fits; data parallelism is simpler and scales perfectly",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You have 4x A100 80GB and 100 concurrent requests. Data or tensor parallelism?",
+        "back": "Data parallelism. Model fits on one GPU (70B = 70-140GB BF16 on 80GB A100 possible with quantization). Data parallelism: 4 requests per iteration, 25 iterations to clear queue. TP would halve throughput per-GPU but allow serving larger models."
+      }
+    ]
+  },
+  {
+    "slug": "tensor-parallelism-tp",
+    "title": "Tensor parallelism (TP)",
+    "track": "ai-llm-engineer",
+    "topic": "serving-infrastructure-inference-optimization",
+    "difficulty": "advanced",
+    "tags": [
+      "tensor-parallelism",
+      "model-sharding",
+      "layer-splitting",
+      "allreduce",
+      "latency"
+    ],
+    "aliases": [
+      "TP",
+      "Model-sharding",
+      "Layer-wise-parallelism",
+      "Row-col-parallel"
+    ],
+    "wikilinks": [
+      "model-parallelism",
+      "allreduce",
+      "communication-cost",
+      "latency-optimization"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.vllm.ai/en/stable/serving/parallelism_scaling/",
+        "label": "vLLM: Tensor Parallelism Guide"
+      },
+      {
+        "url": "https://pytorch.org/tutorials/intermediate/TP_tutorial.html",
+        "label": "PyTorch: Tensor Parallel Tutorial"
+      },
+      {
+        "url": "https://engineering.fb.com/2025/10/17/ai-research/scaling-llm-inference-innovations-tensor-parallelism-context-parallelism-expert-parallelism/",
+        "label": "Meta: Scaling LLM Inference (2025)"
+      }
+    ],
+    "explainer_md": "## Intuition\n**Tensor parallelism (TP)**: Split model **layers** across GPUs. Each GPU computes a **partial matmul**. Aggregate results via AllReduce.\n\n**Use case**: Model doesn't fit on one GPU. Trade latency (+AllReduce cost) for memory (split model).\n\n## Detail\n### TP Mechanics\nConsider a linear layer: `output = input @ weight^T`.\n\n**Single GPU**: `output = [batch, seq, hidden] @ [hidden, hidden] → [batch, seq, hidden]`\n\n**TP across 4 GPUs** (split weight row-wise):\n```\nGPU 0: weight_0 [hidden/4, hidden]\nGPU 1: weight_1 [hidden/4, hidden]\nGPU 2: weight_2 [hidden/4, hidden]\nGPU 3: weight_3 [hidden/4, hidden]\n\nForward pass:\n  output_0 = input @ weight_0^T  [batch, seq, hidden/4]  (GPU 0)\n  output_1 = input @ weight_1^T  [batch, seq, hidden/4]  (GPU 1)\n  output_2 = input @ weight_2^T  [batch, seq, hidden/4]  (GPU 2)\n  output_3 = input @ weight_3^T  [batch, seq, hidden/4]  (GPU 3)\n  \n  AllReduce (Concatenate):\n    output = [output_0; output_1; output_2; output_3]  [batch, seq, hidden]\n```\n\nCost: 1 AllReduce per layer = N-1 tensor exchanges (for N GPUs).\n\n### Latency Impact\n```\nSingle GPU latency: 100ms per token\nTP-4 latency: 100ms + 4 × 10ms (AllReduce) ≈ 140ms per token\n                              ↑ communication overhead\n```\n\nTP introduces ~20-40% latency overhead but enables 4x memory reduction.\n\n### When to Use TP\n- **Model doesn't fit on one GPU**: Mandatory.\n- **Memory available but latency SLA loose**: TP is acceptable.\n- **Low-bandwidth cluster**: Avoid TP (AllReduce expensive on slow interconnect).\n\n### TP in vLLM\n```python\nllm = LLM('meta-llama/Llama-2-70b',\n          tensor_parallel_size=4)  # split across 4 GPUs\n```\n\nMemory per GPU: 140GB / 4 ≈ 35GB per A100 80GB (fits).\nLatency per token: ~40ms (vs 20ms on single H100, but needed for fit).\n\n## Common gotchas\n- **\"TP-8 vs TP-4?\"** TP-8 halves memory but doubles AllReduce cost. Sweet spot usually TP-2 or TP-4 (communication scales superlinearly).\n- **\"Can I use TP with quantization?\"** Yes; quantized weights split the same way. AllReduce still needed.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain tensor parallelism: how does splitting a linear layer across GPUs work?",
+        "back": "Split weight matrix row-wise across GPUs. Each GPU computes a partial matmul: `input @ weight_i^T`. Concatenate results via AllReduce, reconstructing full output. Cost: AllReduce communication per layer (~10-20ms overhead)."
+      },
+      {
+        "type": "mcq",
+        "front": "Llama 70B on 2x A100 80GB. Model needs 140GB (FP16). Use TP or data parallel?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "A) Data parallel (replicate full model on each GPU)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "B) TP-2 (split model across 2 GPUs)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "C) Either works equally",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "D) Use smaller model",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "TP-4 on 4x H100s adds 20ms AllReduce latency (vs 50ms single-GPU token time). Total: 70ms per token. Accept or go back to single GPU (50ms, but OOM)?",
+        "back": "Accept TP-4. You must use TP to fit the model (single GPU OOMs). 70ms is acceptable for many apps (batch inference, RAG, non-interactive). If latency SLA is <60ms, reconsider smaller model or optimizations (quantization)."
+      }
+    ]
+  },
+  {
+    "slug": "pipeline-parallelism-pp",
+    "title": "Pipeline parallelism (PP)",
+    "track": "ai-llm-engineer",
+    "topic": "serving-infrastructure-inference-optimization",
+    "difficulty": "advanced",
+    "tags": [
+      "pipeline-parallelism",
+      "layer-sharding",
+      "bubbles",
+      "micro-batching",
+      "async-communication"
+    ],
+    "aliases": [
+      "PP",
+      "GPipe",
+      "PipelineParallel",
+      "Layer-parallelism"
+    ],
+    "wikilinks": [
+      "model-parallelism",
+      "pipeline-bubbles",
+      "micro-batching",
+      "activation-memory"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.vllm.ai/en/stable/serving/parallelism_scaling/",
+        "label": "vLLM: Pipeline Parallelism Guide"
+      },
+      {
+        "url": "https://bentoml.com/llm/inference-optimization/data-tensor-pipeline-expert-hybrid-parallelism",
+        "label": "BentoML: Pipeline Parallel (2026)"
+      }
+    ],
+    "explainer_md": "## Intuition\n**Pipeline parallelism (PP)**: Divide model **layers** sequentially across GPUs. Each GPU processes a **chunk of layers**, passing activations to the next GPU. Enables **asynchronous pipelining**.\n\n**Tradeoff**: More flexible than TP, but pipeline **bubbles** (idle GPUs waiting for data) reduce efficiency.\n\n## Detail\n### PP Setup\n```\nLlama-2 70B: 80 layers total\n\nPP-4 across 4 GPUs:\n  GPU 0: layers 1-20   → output activation → GPU 1\n  GPU 1: layers 21-40  → output activation → GPU 2\n  GPU 2: layers 41-60  → output activation → GPU 3\n  GPU 3: layers 61-80  → output (logits)\n```\n\n### Pipeline Bubbles\nWithout pipelining (sequential):\n```\nGPU 0 computes, sends to GPU 1\nGPU 1 waits for GPU 0 → computes → sends to GPU 2\nGPU 2 waits → computes → sends to GPU 3\nGPU 3 waits → computes\n\nUtilization: Each GPU busy 25% of time (3 GPUs idle at each step)\nEfficiency: 25%\n```\n\nWith micro-batching (pipeline):\n```\nTime step 1: GPU0 processes batch1\nTime step 2: GPU0 processes batch2; GPU1 processes batch1's output\nTime step 3: GPU0 processes batch3; GPU1 processes batch2; GPU2 processes batch1\n            (All GPUs busy!)\n\nUtilization: 100% (with enough micro-batches)\nBut: pipeline bubbles at start/end; efficiency ≈ 70-80%\n```\n\n### Bubble Cost\nWith N GPUs and batch_size = B:\n- Steady-state throughput: B tokens per N-step cycle.\n- Startup: N-1 steps of bubbles (GPUs waiting to fill pipeline).\n- Shutdown: N-1 steps of bubbles (last GPUs idle).\n\nTotal bubbles: 2(N-1) out of B×N steps.\nEfficiency: B×N / (B×N + 2(N-1)) ≈ B×N / (B×N) = 100% for large B.\nFor small B, bubbles dominate; e.g., B=1 → efficiency = 1 / (4+6) = 14%.\n\n### PP vs TP\n| Parallelism | Memory per GPU | Latency | Communication | Bubbles |\n|-------------|--------|---------|--------|----------|\n| Single GPU | Full (140GB) | 50ms | None | None |\n| TP-4 | 35GB | 70ms | AllReduce/layer | None |\n| PP-4 | 35GB | 50ms (ideal) | Sequential | Yes (10-20%) |\n| TP-2 + PP-2 | 70GB | 80ms | Both | Yes |\n\n**In inference, PP is less common than TP** because:\n1. Bubbles waste GPU capacity (inference already memory-bound).\n2. TP's AllReduce overhead is lower for small batches.\n3. Combined TP+PP (2D parallelism) is overkill for most cases.\n\n## Common gotchas\n- **\"Is PP better than TP?\"** TP is dominant in 2026 for inference. PP shines in training (where bubbles are less critical). For inference, TP > PP.\n- **\"Can I use PP-8 to avoid large single-GPU memory?\"** Technically yes, but bubbles kill throughput. TP is better.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is a pipeline bubble, and how does it affect pipeline parallelism efficiency?",
+        "back": "A pipeline bubble is idle GPU time when a layer is waiting for input activations from the previous layer. With N GPUs and small batch size, startup and shutdown require N-1 steps of bubbles. Efficiency = 1 / (1 + 2(N-1)/batch_size). Large batches hide bubbles; small batches suffer."
+      },
+      {
+        "type": "mcq",
+        "front": "Llama 70B with PP-4 across 4 GPUs, batch_size=1. Efficiency?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "A) 100%, all GPUs busy",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "B) ~25%, large startup/shutdown bubbles relative to batch size",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "C) 50%",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "D) Depends on model",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What does this vLLM config do?\n```python\nllm = LLM('meta-llama/Llama-2-70b',\n          pipeline_parallel_size=4,\n          tensor_parallel_size=1)\n```",
+        "back": "Splits 70B into 4 pipeline stages (20 layers each) across 4 GPUs. No tensor parallelism within stages (each stage computes full layers). Enables micro-batching and asynchronous pipelining. Bubbles present but acceptable for batch inference."
+      }
+    ]
+  },
+  {
+    "slug": "unified-serving-frameworks-vllm-distributed-tensorrt-llm-multi-gpu",
+    "title": "Unified serving frameworks (vLLM distributed, TensorRT-LLM multi-GPU)",
+    "track": "ai-llm-engineer",
+    "topic": "serving-infrastructure-inference-optimization",
+    "difficulty": "intermediate",
+    "tags": [
+      "serving-frameworks",
+      "multi-gpu-serving",
+      "distributed-inference",
+      "orchestration",
+      "production-serving"
+    ],
+    "aliases": [
+      "vLLM-distributed",
+      "TensorRT-LLM-multi-GPU",
+      "LLM-serving",
+      "Distributed-systems"
+    ],
+    "wikilinks": [
+      "parallelism-strategies",
+      "serving-architecture",
+      "load-balancing",
+      "fault-tolerance"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.vllm.ai/en/stable/serving/parallelism_scaling/",
+        "label": "vLLM: Distributed Serving Guide"
+      },
+      {
+        "url": "https://nvidia.github.io/TensorRT-LLM/advanced/speculative-decoding.html",
+        "label": "NVIDIA: TensorRT-LLM Distributed"
+      }
+    ],
+    "explainer_md": "## Intuition\nUnified serving frameworks abstract away parallelism complexity. Users specify model + hardware; framework handles TP/PP/DP automatically.\n\n**vLLM**: Defaults to TP (tensor parallelism) — best for inference. Minimal changes needed.\n**TensorRT-LLM**: Custom distributed runtime; requires explicit parallelism config.\n\n## Detail\n### vLLM Distributed\n```python\nfrom vllm import LLM\n\n# Framework auto-selects TP-2 if model doesn't fit on one GPU\nllm = LLM('meta-llama/Llama-2-70b',\n          tensor_parallel_size=2,  # explicit TP-2\n          max_num_seqs=64)         # concurrent sequences\n\n# Behind the scenes:\n# - Split model via TP across 2 GPUs\n# - Continuous batching within each GPU\n# - AllReduce per layer (20-30ms total per forward pass)\n# - Streaming output over gRPC/HTTP\n```\n\nDesign choice: **TP is standard**. PP/DP rarely used (TP sufficient for most scales).\n\n### TensorRT-LLM Distributed\n```bash\n# Compile for distributed inference\ntrtllm-build --checkpoint_dir ./model \\\n  --output_dir ./engine \\\n  --world_size 2 --rank 0 \\\n  --tp_size 2 --pp_size 1 \\\n  ...\n\n# Run 2 engine instances (rank 0 on GPU 0, rank 1 on GPU 1)\nmpirun -n 2 python inference.py\n```\n\nTensorRT requires explicit MPI setup; less automatic than vLLM.\n\n### Scaling Guidelines\n| Scenario | Framework | Config |\n|----------|-----------|--------|\n| 7B on 1 GPU | vLLM | No parallelism |\n| 70B on 2 GPU | vLLM | TP-2 (default) |\n| 70B on 4 GPU | vLLM | TP-4 |\n| 70B on 8 GPU | vLLM | TP-4 + DP-2 (or TP-8, depends on latency SLA) |\n| 540B on 16 GPU | vLLM | TP-8 (or TP-4 + DP-4) |\n\n**Rule of thumb**: Start with TP; add DP (data parallelism) only if TP saturates.\n\n## Common gotchas\n- **\"Should I manually tune parallelism?\"** Usually no; vLLM's default TP is near-optimal. Manual tuning for specific latency/throughput targets.\n- **\"TensorRT-LLM vs vLLM for distributed?\"** vLLM is simpler (no compilation, auto-TP). TensorRT is faster (10-30%) but requires MPI/compilation hassle.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is tensor parallelism (TP) the default for distributed LLM inference, over pipeline or data parallelism?",
+        "back": "TP splits layers across GPUs with AllReduce per layer (~20ms overhead). PP introduces pipeline bubbles (idle GPUs). DP replicates model, requiring large VRAM per GPU. For inference workloads (memory-bandwidth-bound, small batch), TP balances throughput vs latency vs simplicity best."
+      },
+      {
+        "type": "mcq",
+        "front": "Llama 70B needs 140GB VRAM. You have 4x A100 80GB. vLLM auto-config?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "A) TP-2 (fits on 2 GPUs, replicates to 4 with DP-2)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "B) TP-4 (splits across 4 GPUs, one model total)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "C) PP-4 (pipes layers)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "D) Error: doesn't fit",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What does this vLLM config achieve?\n```python\nllm = LLM('meta-llama/Llama-2-70b',\n          tensor_parallel_size=4,\n          pipeline_parallel_size=1)\n```",
+        "back": "TP-4: splits model layers across 4 GPUs. No PP (single pipeline). vLLM orchestrates batch processing with AllReduce per layer, targeting high throughput + moderate latency."
+      }
+    ]
+  }
+]

@@ -1,0 +1,825 @@
+[
+  {
+    "slug": "feature-definitions-and-computation",
+    "title": "Feature definitions and computation",
+    "track": "ml-engineer",
+    "topic": "feature-stores-data-management",
+    "difficulty": "advanced",
+    "tags": [
+      "feature-engineering",
+      "feature-store",
+      "ml-infrastructure",
+      "reproducibility",
+      "reusability",
+      "centralization"
+    ],
+    "aliases": [
+      "feature-library",
+      "feature-registry",
+      "centralized-feature-logic"
+    ],
+    "wikilinks": [
+      "online-vs-offline-feature-stores",
+      "feature-freshness-and-staleness-slos",
+      "point-in-time-correctness-and-data-leakage-prevention",
+      "data-warehouse-architecture-star-schema-factdimension-tables",
+      "etl-vs-elt"
+    ],
+    "sources": [
+      {
+        "url": "https://madewithml.com/courses/mlops/feature-store/",
+        "label": "Made With ML - Feature Store"
+      },
+      {
+        "url": "https://www.featurestore.org/",
+        "label": "Feature Store Official Documentation"
+      }
+    ],
+    "explainer_md": "## Intuition\nFeature definitions are the source of truth for how to compute features. Instead of writing feature logic in notebooks, batch jobs, and serving code separately, a feature store maintains a single definition that can be reused everywhere.\n\n## Detail\nA feature definition specifies:\n- **Transformation logic**: SQL, Python, or framework-specific transformations\n- **Input sources**: Raw tables, other features, APIs\n- **Computation mode**: Batch (offline), streaming (online), or both\n- **Schema and types**: What columns/values the feature produces\n- **Lineage**: Dependencies on upstream features or data sources\n\nExamples:\n- User lifetime value (LTV): aggregation over historical transactions with rolling windows\n- Recent click rate: count clicks in last 7 days / 7 days, computed per user\n- Device type embedding: categorical feature mapped to learned vector\n\nFeature stores like Feast, Tecton, and Hopsworks provide frameworks to define these once and register them in a central registry, eliminating duplication.\n\n## Common gotchas / interview framings\n- **Compute once, use everywhere**: The core promise—same feature logic for training and serving\n- **Latency vs accuracy trade-off**: Simple features are fast; complex aggregations may require caching\n- **Dependency management**: Features that depend on other features create lineage that must be tracked\n- **State management**: Stateful features (like running counters) require careful synchronization\n- **Versioning**: Feature definitions evolve; need backward compatibility for old training datasets",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core problem that feature definition centralization solves?",
+        "back": "It eliminates duplicate feature logic across batch training, streaming serving, and experimentation code. A single definition is computed once and reused, ensuring consistency and reducing maintenance burden."
+      },
+      {
+        "type": "mcq",
+        "front": "In a feature store, what does feature definition include?",
+        "back": "Feature definitions are specifications of how to compute features, including the transformation logic, input data sources, whether computation is batch or streaming, output schema/types, and upstream dependencies.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Only SQL queries for data extraction",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Transformation logic, input sources, computation mode, schema, and lineage",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Only the model training code",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Feature values stored in cache",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is feature lineage important in a feature store?",
+        "back": "Feature lineage tracks which raw data sources and upstream features feed into each feature. This enables impact analysis (if a source changes, which features break), debugging data quality issues, and understanding feature dependencies for orchestration."
+      },
+      {
+        "type": "mcq",
+        "front": "What is a key challenge when features depend on other features?",
+        "back": "When Feature B depends on Feature A, the feature store must compute Feature A first, then Feature B. If Feature A is stale or delayed, Feature B becomes stale. This creates orchestration dependencies that must be managed explicitly.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It makes features impossible to cache",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Dependency ordering and potential cascading staleness if upstream features are delayed",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "It requires duplicating feature definitions",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It eliminates the need for a feature registry",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "online-vs-offline-feature-stores",
+    "title": "Online vs offline feature stores",
+    "track": "ml-engineer",
+    "topic": "feature-stores-data-management",
+    "difficulty": "advanced",
+    "tags": [
+      "feature-store-architecture",
+      "online-serving",
+      "batch-processing",
+      "latency",
+      "cost",
+      "training-serving-skew"
+    ],
+    "aliases": [
+      "dual-store-architecture",
+      "real-time-vs-batch-features",
+      "low-latency-serving"
+    ],
+    "wikilinks": [
+      "feature-definitions-and-computation",
+      "feature-freshness-and-staleness-slos",
+      "point-in-time-correctness-and-data-leakage-prevention",
+      "data-warehouse-architecture-star-schema-factdimension-tables"
+    ],
+    "sources": [
+      {
+        "url": "https://system-design.space/en/chapter/feature-store-model-serving/",
+        "label": "System Design Space - Feature Store & Model Serving"
+      },
+      {
+        "url": "https://uplatz.com/blog/a-comparative-analysis-of-modern-feature-stores-feast-vs-tecton-vs-hopsworks/",
+        "label": "Comparative Analysis of Modern Feature Stores"
+      }
+    ],
+    "explainer_md": "## Intuition\nOnline stores serve features to models in <10ms (sub-millisecond for some systems); offline stores are data warehouses/lakes optimized for batch access during training and analytics. A feature store typically manages both, syncing features between them.\n\n## Detail\n**Offline Store (Training & Analytics)**:\n- Stores historical feature values with timestamps\n- Optimized for bulk reads, point-in-time joins, and complex aggregations\n- Examples: Snowflake, BigQuery, Spark Delta Lake, Parquet files\n- Latency: 100ms to seconds (acceptable for batch)\n- Cost: Lower per-row, bulk access is efficient\n\n**Online Store (Real-time Serving)**:\n- Low-latency key-value store (Redis, DynamoDB, Cassandra, Aerospike)\n- Stores only current/recent feature values\n- Lookup by entity key (user_id, item_id) in <10ms\n- Cost: Higher per-operation, but constrained volume\n\n**Synchronization Challenge**:\n- Offline features computed in batch; online features updated via streaming pipelines\n- Keeping both in sync without data leakage is non-trivial\n- Example: User purchase count—if batch job is 1 hour behind, online count may differ\n\n## Common gotchas / interview framings\n- **Training-serving skew**: If offline and online have different values for the same feature, model performance drops\n- **Staleness**: Online features lag behind the latest data; must decide acceptable lag\n- **Cost-latency trade-off**: Real-time online updates are expensive; batch updates are cheap but add latency\n- **Data duplication**: Storing features in two places increases storage and sync complexity\n- **Consistency model**: Eventual consistency vs strong consistency; what guarantees does your feature store provide?",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the primary purpose of an offline feature store in ML pipelines?",
+        "back": "The offline store stores historical feature values with timestamps, enabling training datasets to be created by joining labels with feature snapshots as of the label date. This supports point-in-time correctness and prevents data leakage."
+      },
+      {
+        "type": "mcq",
+        "front": "Why would you use an online feature store instead of an offline store for real-time predictions?",
+        "back": "Online stores use low-latency datastores (Redis, DynamoDB) optimized for single-key lookups in <10ms. Offline stores (data warehouses) are optimized for batch queries and historical data, not real-time serving.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Online stores are cheaper per operation",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Online stores provide sub-millisecond latency with key-value lookups, vs 100ms+ for warehouse queries",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Online stores are more accurate",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Online stores eliminate the need for training data",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What causes training-serving skew in an online/offline architecture?",
+        "back": "If the online store is not kept in sync with the offline store, features may have different values during training vs serving. Example: User purchase count is 10 in offline (batch), but 12 in online (real-time updates), causing the model to see inconsistent feature distributions."
+      },
+      {
+        "type": "mcq",
+        "front": "Which consistency guarantee is most practical for online stores in production?",
+        "back": "Strong consistency at sub-millisecond latency is expensive. In practice, you accept eventual consistency and define a staleness SLO (e.g., features must be < 5 minutes old) that you monitor and alert on.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Strong consistency—all reads see the latest write",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Eventual consistency with low staleness (seconds to minutes), managed by monitoring SLOs",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "No consistency guarantees",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Causal consistency",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "feature-freshness-and-staleness-slos",
+    "title": "Feature freshness and staleness SLOs",
+    "track": "ml-engineer",
+    "topic": "feature-stores-data-management",
+    "difficulty": "advanced",
+    "tags": [
+      "slo",
+      "monitoring",
+      "freshness",
+      "staleness",
+      "latency-budget",
+      "cost-optimization"
+    ],
+    "aliases": [
+      "feature-recency",
+      "update-frequency",
+      "staleness-threshold"
+    ],
+    "wikilinks": [
+      "online-vs-offline-feature-stores",
+      "feature-definitions-and-computation",
+      "etl-vs-elt",
+      "incremental-and-full-refresh-logic"
+    ],
+    "sources": [
+      {
+        "url": "https://www.hopsworks.ai/",
+        "label": "Hopsworks - The AI Lakehouse for Real-Time ML"
+      },
+      {
+        "url": "https://taylor-amarel.com/2025/04/comprehensive-comparison-feast-vs-tecton-vs-hopsworks-for-cloud-based-feature-stores-2024/",
+        "label": "Comprehensive Comparison of Feature Stores 2025"
+      }
+    ],
+    "explainer_md": "## Intuition\nFeature freshness = how recent the feature value is. A staleness SLO sets a maximum acceptable age for features (e.g., \"purchase count must be < 5 minutes old\"). Different features need different freshness: real-time fraud scores need sub-minute updates; monthly user cohorts can be a week old.\n\n## Detail\n**Freshness SLO Definition**:\n- Acceptable staleness: e.g., 5 minutes, 1 hour, 24 hours\n- How often to update: batch (hourly, daily), streaming (milliseconds to seconds)\n- Monitoring: Track actual staleness against SLO with alerts\n\n**Cost vs Freshness Trade-off**:\n- Streaming/real-time updates: Near-zero latency but 10-100x cost\n- Hourly batch: Cheap but 1-hour staleness\n- Daily batch: Very cheap but 24-hour staleness\n\n**Use-case-driven SLOs**:\n- **Fraud detection**: Sub-minute (streaming needed)\n- **Recommendation ranking**: 5-30 minutes (batch with low interval)\n- **Churn prediction**: Hourly to daily (batch)\n- **Ad targeting**: Minutes to hours (hybrid batch + streaming)\n\n**Monitoring & Alerts**:\n- Track end-to-end latency: data source → feature computation → online store availability\n- Alert if features exceed SLO staleness\n- Distinguish between \"data available but not computed\" vs \"computation delayed\" vs \"online store not updated\"\n\n## Common gotchas / interview framings\n- **SLO vs SLA**: SLO is a target; SLA is a contractual commitment with penalties\n- **Hidden costs of real-time**: Streaming infrastructure, windowing complexity, state management\n- **Cascading delays**: If upstream feature is late, all downstream features miss SLO\n- **Peak vs off-peak**: May need different batch frequencies during high/low load\n- **Timeliness vs cost**: Interview question: \"How would you justify hourly batch if stakeholders want 5-minute freshness?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the relationship between feature freshness and model performance?",
+        "back": "Features that are too stale (beyond their SLO) may reflect outdated user behavior, leading to worse predictions. For example, a user's purchase intent may change within hours; using a 24-hour-old feature is problematic for recommendation models."
+      },
+      {
+        "type": "mcq",
+        "front": "You need fraud detection features to have < 1 minute staleness. What is the most cost-effective approach?",
+        "back": "Batch jobs cannot achieve sub-minute freshness. Streaming pipelines (Kafka, Flink, Spark Streaming) process data as it arrives, pushing updates to the online store within seconds, which is necessary for fraud detection.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Daily batch job",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Hourly batch job",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Streaming pipeline with sub-minute SLO and online store updates",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "No feature store; compute features inline during serving",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How would you balance the cost of real-time feature updates against a high staleness SLO?",
+        "back": "Stratify features by use case: critical features (fraud, safety) → streaming/real-time; moderate features (ranking) → hourly/5-minute batch; non-urgent features (reporting) → daily batch. This optimizes cost by only paying for real-time where needed."
+      },
+      {
+        "type": "mcq",
+        "front": "What does it mean if a feature computation completes but the online store is not updated within SLO?",
+        "back": "Feature freshness is end-to-end: computation + push to online store. If computation finishes in 10 seconds but the online store update takes 5 minutes, the SLO is violated even though computation was fast. You need to monitor each stage separately.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The computation was too slow",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The online store push/sync mechanism is the bottleneck, not the computation itself",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The feature definition is incorrect",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The offline store is not synchronized",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "point-in-time-correctness-and-data-leakage-prevention",
+    "title": "Point-in-time correctness and data leakage prevention",
+    "track": "ml-engineer",
+    "topic": "feature-stores-data-management",
+    "difficulty": "advanced",
+    "tags": [
+      "data-leakage",
+      "temporal-correctness",
+      "training-data",
+      "integrity",
+      "causality",
+      "time-series"
+    ],
+    "aliases": [
+      "temporal-alignment",
+      "feature-leakage",
+      "look-ahead-bias"
+    ],
+    "wikilinks": [
+      "online-vs-offline-feature-stores",
+      "feature-freshness-and-staleness-slos",
+      "data-warehouse-architecture-star-schema-factdimension-tables",
+      "feature-definitions-and-computation"
+    ],
+    "sources": [
+      {
+        "url": "https://apxml.com/courses/feature-stores-for-ml/chapter-3-data-consistency-quality/point-in-time-correctness",
+        "label": "Point-in-Time Correctness for Training Data"
+      },
+      {
+        "url": "https://medium.com/@scoopnisker/solving-the-training-serving-skew-problem-with-feast-feature-store-3719b47e23a2",
+        "label": "Solving Training-Serving Skew with Feast"
+      }
+    ],
+    "explainer_md": "## Intuition\nPoint-in-time correctness ensures that training features reflect only data that was available at the moment the label was recorded. If a label says \"user churned on Jan 1\", features must use only data from before Jan 1, not after. Violating this causes data leakage and overoptimistic model performance.\n\n## Detail\n**The Problem: Data Leakage**:\n- Label: User_123 churned on 2024-01-01\n- Feature: User_123 last_purchase_date = 2024-01-02 (computed from all data)\n- Issue: This feature was not available when the label was recorded; it's future information\n- Result: Model trains on \"magical\" features that predict the label but are unavailable at serving time\n\n**Point-in-Time Join**:\nCreate a training dataset by joining labels with features as-of a specific timestamp:\n```\nLabel table: (user_id, churn_date, label)\nFeature table: (user_id, feature_date, feature_value)\n\nJoin: For each (user_id, churn_date), fetch feature_value where feature_date <= churn_date\nTake the most recent feature_value before the churn_date\n```\n\n**Implementation**:\n- Time-travel support: Offline store must store historical snapshots of features\n- Versioning: Features change over time; must keep versions for reproducibility\n- Latency handling: If data arrives late, decide whether to include it (risk: future data) or exclude it (risk: missing real data)\n\n**Example with Booking Cancellations**:\n- Booking made on Day 5\n- User reviews written on Day 6, 7, 8\n- Booking cancelled on Day 10\n- For label (cancelled, Day 10): Include reviews from Day 5-9 only\n- During serving (predicting if a Day 5 booking will cancel): Only Day 1-5 data is available\n\n## Common gotchas / interview framings\n- **Late-arriving data**: Data that arrives after label but references a time before label (e.g., delayed log). Risk: do you include it?\n- **Timestamp precision**: Unix timestamp vs date—millisecond differences can leak future information\n- **Feature definition changes**: If feature definition changed between training and serving, point-in-time correctness alone doesn't prevent skew\n- **Slowly changing dimensions (SCD)**: When a user's dimension (e.g., country) changes, which version do you use for point-in-time?\n- **Interview question**: \"How do you build a churn prediction model without leaking future user behavior?\"\n- **Reproducibility**: Without versioning, even if you got it right once, you can't reproduce the training dataset later",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is data leakage in the context of feature stores?",
+        "back": "Using features that were not available at the time a label was recorded. Example: predicting churn on Day 10 using a feature computed from data on Day 15. The model trains on 'magical' features unavailable at serving time, resulting in overoptimistic performance."
+      },
+      {
+        "type": "mcq",
+        "front": "How do you implement point-in-time correctness when building a training dataset?",
+        "back": "Point-in-time join: for each label (user, churn_date), fetch the feature values where the feature timestamp is <= churn_date. This ensures the model only sees information that was available when the label was recorded.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Use the most recent feature values available",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "For each label with timestamp T, join with features as-of timestamp T (most recent feature before T)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Average all historical feature values",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use feature values from the same day as the label",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is versioning of feature definitions critical for point-in-time correctness?",
+        "back": "Feature definitions evolve over time. If you change a feature definition on Day 20, but trained a model with data from Day 1-10, you need to store the old definition so you can reproduce the training dataset with the same feature logic. Without versioning, reproducibility is lost."
+      },
+      {
+        "type": "mcq",
+        "front": "You receive a log event with timestamp 2024-01-05, but it arrives in your system on 2024-01-08. A label is dated 2024-01-06. Should this event be included in features for that label?",
+        "back": "Late-arriving data is a trade-off: you can include it (richer features, but risk of non-reproducibility) or exclude it (safe, but features may be incomplete). Document your policy clearly and validate that serving also follows it.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, because the event timestamp is before the label",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, because the event arrived after the label was recorded",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Depends on your late-arrival policy and SLO; if you accept it, validate end-to-end consistency",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Always exclude late-arriving data",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "data-warehouse-architecture-star-schema-factdimension-tables",
+    "title": "Data warehouse architecture (star schema, fact/dimension tables)",
+    "track": "ml-engineer",
+    "topic": "feature-stores-data-management",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-warehouse",
+      "schema-design",
+      "analytics",
+      "normalization",
+      "performance",
+      "dimensional-modeling"
+    ],
+    "aliases": [
+      "dimensional-modeling",
+      "data-mart",
+      "snowflake-schema"
+    ],
+    "wikilinks": [
+      "etl-vs-elt",
+      "incremental-and-full-refresh-logic",
+      "feature-definitions-and-computation",
+      "online-vs-offline-feature-stores"
+    ],
+    "sources": [
+      {
+        "url": "https://www.databricks.com/blog/what-feature-store-complete-guide-ml-feature-engineering",
+        "label": "What is a Feature Store - Databricks"
+      },
+      {
+        "url": "https://www.featurestore.org/",
+        "label": "Feature Store Official Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\nA star schema organizes data into a central fact table (events) surrounded by dimension tables (attributes). Example: fact table = purchases, dimensions = users, products, time. This design optimizes both analytics queries and feature extraction.\n\n## Detail\n**Fact Table**:\n- One row per event (purchase, click, login)\n- Contains foreign keys to dimensions and metrics (amount, duration)\n- Typically immutable or append-only\n- Example: purchases(purchase_id, user_id, product_id, date_id, amount, quantity)\n\n**Dimension Tables**:\n- One row per entity or attribute value\n- Describes the \"who, what, where, when\" of the fact\n- Often slowly changing: user demographics, product categories\n- Examples:\n  - User dimension: user_id, age, country, signup_date\n  - Product dimension: product_id, category, price, vendor_id\n  - Time dimension: date_id, year, month, day_of_week\n\n**Why Star Schema for ML**:\n- **Easy aggregations**: Join fact to dimensions; aggregate metrics by any dimension\n- **Feature engineering**: Pivot dimensions into features; aggregate facts into statistics\n- **Denormalization sweet spot**: Normalized enough for storage efficiency; denormalized enough for fast queries\n- **Slowly changing dimensions (SCD)**: Track dimension changes over time (SCD Type 2 with effective_date, end_date)\n\n**Comparison: Snowflake Schema**:\n- Further normalized: dimensions have sub-dimensions\n- Saves storage but adds join complexity\n- Less common in practice for feature stores\n\n## Common gotchas / interview framings\n- **Fact granularity**: Define clearly (per transaction? per item? per day?). Wrong granularity breaks aggregations\n- **SCD handling**: If a user's country changes, do you keep the old record (SCD Type 2) or overwrite (Type 1)? This affects point-in-time joins\n- **Surrogate keys**: Use auto-increment surrogate key (date_id) instead of natural key (2024-01-01) for performance\n- **Conformed dimensions**: Shared dimensions (e.g., user_dim) must be consistent across fact tables\n- **NULL handling**: NULLs in fact tables can distort aggregations; clarify semantics\n- **Interview question**: \"Design a star schema for an e-commerce recommendation system\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the primary advantage of a star schema for feature engineering?",
+        "back": "A star schema allows easy aggregation and pivoting: join the fact table to dimensions, then group-by or pivot dimensions into features. Example: Group purchases by user & product_category to create features like 'electronics_purchase_count'."
+      },
+      {
+        "type": "mcq",
+        "front": "In a star schema, which table contains event-level metrics?",
+        "back": "The fact table is central and contains the business metrics (amount, duration) and references to dimensions via foreign keys. Each row represents an atomic event (transaction, click, login).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Dimension tables",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Fact table, containing one row per event with metrics and foreign keys to dimensions",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Conformed tables",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The time dimension",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is a slowly changing dimension (SCD), and why does it matter for point-in-time joins?",
+        "back": "A slowly changing dimension is an attribute (e.g., user's country) that changes over time. SCD Type 2 maintains history with effective_date and end_date. This allows point-in-time joins to use the correct attribute value as-of the label timestamp."
+      },
+      {
+        "type": "mcq",
+        "front": "You are designing a fact table for user transactions. What is the most appropriate granularity?",
+        "back": "The finest granularity (per transaction) is most flexible—you can aggregate up to daily, monthly, or user-level. Coarser granularities (per-user-per-day) lose detail and prevent features that require finer aggregations.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "One row per user per day",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "One row per transaction (finest granularity, supports any aggregation)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "One row per user per month",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "One row per product",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "etl-vs-elt",
+    "title": "ETL vs ELT",
+    "track": "ml-engineer",
+    "topic": "feature-stores-data-management",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-pipeline",
+      "etl",
+      "elt",
+      "data-warehouse",
+      "transformation",
+      "scalability"
+    ],
+    "aliases": [
+      "extract-load-transform",
+      "extract-transform-load"
+    ],
+    "wikilinks": [
+      "data-warehouse-architecture-star-schema-factdimension-tables",
+      "incremental-and-full-refresh-logic",
+      "feature-definitions-and-computation"
+    ],
+    "sources": [
+      {
+        "url": "https://www.databricks.com/blog/what-feature-store-complete-guide-ml-feature-engineering",
+        "label": "Feature Store Guide - Databricks"
+      },
+      {
+        "url": "https://www.featurestore.org/",
+        "label": "Feature Store Org - ETL Patterns"
+      }
+    ],
+    "explainer_md": "## Intuition\nETL (Extract, Transform, Load) processes data before loading into the warehouse; ELT (Extract, Load, Transform) loads raw data first, then transforms it inside the warehouse. ELT is more modern and scalable with cloud data warehouses.\n\n## Detail\n**ETL (Traditional)**:\n1. Extract raw data from sources (databases, APIs, logs)\n2. Transform in an external system (Spark cluster, Python scripts)\n3. Load cleaned/aggregated data into data warehouse\n\nAdvantages:\n- Compute can be optimized for the transformation logic\n- Smaller data loaded into warehouse (less storage cost)\n- Can use specialized tools (Spark, DBT if on transformation side)\n\nDisadvantages:\n- Infrastructure overhead: need a separate cluster for transformation\n- Data duplication: raw data extracted, stored locally, loaded to warehouse\n- Harder to recover from transformation errors (rerun entire pipeline)\n\n**ELT (Modern)**:\n1. Extract raw data from sources\n2. Load into data warehouse (as-is, often partitioned Parquet/Delta)\n3. Transform using warehouse-native SQL (Snowflake, BigQuery, Databricks)\n\nAdvantages:\n- Warehouse compute is cheaper per-operation (especially cloud)\n- Simpler architecture: fewer moving pieces\n- Data stays in warehouse; easier recovery and incremental updates\n- Pushdown: transform logic becomes SQL, optimized by warehouse query engine\n\nDisadvantages:\n- Warehouse storage costs if you keep raw data (often mitigated by cheap cloud storage)\n- Transformation logic in SQL can be harder to version/test vs. code\n\n**Feature Store Implication**:\nModern feature stores (Feast, Tecton, Hopsworks) assume ELT: raw data in lake/warehouse, feature definitions as SQL/Python transformations applied at feature store level. Feature computation is the \"T\" in ELT.\n\n## Common gotchas / interview framings\n- **ELT doesn't mean no transformation before warehouse**: You still clean/parse during extract\n- **Cost trade-off**: ELT cheaper for storage (cloud) but may cost more on compute if transformation is expensive\n- **Data lineage**: ELT makes lineage easier (all in one place) vs. ETL (scattered across extract, transform, load)\n- **Testing**: ELT transformations (SQL) are easier to unit test; ETL code (Spark, Python) requires more infrastructure\n- **Interview angle**: \"Design an ELT pipeline for real-time features\" vs \"Why would you choose ETL over ELT?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key difference in where transformation happens between ETL and ELT?",
+        "back": "ETL: Transform before loading (external system → warehouse). ELT: Load raw data first, transform inside the warehouse (warehouse is the transformation engine)."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is ELT often preferred in modern cloud data warehouses for feature stores?",
+        "back": "In ELT, the data warehouse (BigQuery, Snowflake, Databricks) does the heavy lifting. You load raw data cheaply, then write SQL transformations. This is simpler (no external cluster), versioned (SQL in repo), and scales with warehouse capacity.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It requires fewer cloud resources",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Warehouse compute is cheap, simpler architecture, and transformation logic is SQL (easier to version/test)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "ELT guarantees data consistency",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "ELT is faster than ETL",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is a disadvantage of ELT compared to ETL?",
+        "back": "ELT stores raw data in the warehouse, which increases storage costs. However, cloud storage is cheap, so this trade-off is often worth it. The benefit is simpler architecture and easier recovery from transformation errors."
+      },
+      {
+        "type": "mcq",
+        "front": "In an ELT pipeline for feature engineering, what role does the data warehouse play?",
+        "back": "In ELT, the warehouse is not passive. Feature definitions become SQL/transformations executed by the warehouse query engine. The warehouse transforms raw data into features, which are then read for training or synced to online stores.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Passive storage only",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Extraction point",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Active transformation engine—running SQL queries to compute features from raw data",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Load verification",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "incremental-and-full-refresh-logic",
+    "title": "Incremental and full refresh logic",
+    "track": "ml-engineer",
+    "topic": "feature-stores-data-management",
+    "difficulty": "intermediate",
+    "tags": [
+      "incremental-updates",
+      "batch-processing",
+      "data-refresh",
+      "scheduling",
+      "cost-optimization",
+      "idempotency"
+    ],
+    "aliases": [
+      "batch-refresh",
+      "delta-updates",
+      "snapshot-management"
+    ],
+    "wikilinks": [
+      "etl-vs-elt",
+      "data-warehouse-architecture-star-schema-factdimension-tables",
+      "feature-definitions-and-computation",
+      "feature-freshness-and-staleness-slos"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.databricks.com/aws/en/machine-learning/feature-store/time-series",
+        "label": "Point-in-Time Feature Joins - Databricks"
+      },
+      {
+        "url": "https://www.gocodeo.com/post/top-5-feature-stores-in-2025-tecton-feast-and-beyond",
+        "label": "Feature Store Patterns 2025"
+      }
+    ],
+    "explainer_md": "## Intuition\nFull refresh recomputes all features from scratch; incremental refresh only updates changed data. Full is simple, expensive, and slow. Incremental is efficient but complex—you must track what changed and handle late-arriving data correctly.\n\n## Detail\n**Full Refresh**:\n- Recompute all features from raw source data\n- Example: `SELECT user_id, COUNT(*) as purchase_count FROM purchases GROUP BY user_id`\n- Pros: Simple, no state management, idempotent (same result every time)\n- Cons: Expensive (scan all data), slow (takes hours for large datasets), doesn't support real-time\n- When: Use for small datasets, daily batch, or when you suspect data corruption\n\n**Incremental Refresh**:\n- Compute only features for entities where source data changed\n- Track with watermarks: last_processed_timestamp (e.g., \"last processed data up to 2024-01-10 10:00 AM\")\n- Example: `SELECT user_id, COUNT(*) as purchase_count FROM purchases WHERE event_timestamp > last_watermark GROUP BY user_id`\n- Pros: Fast, cheap, supports near-real-time updates\n- Cons: Complex state management, risks of missing data or double-counting\n\n**State Management in Incremental**:\n- **Watermark**: Track the latest timestamp of processed data\n- **Idempotency**: Rerunning a computation must not double-count\n  - Use deduplication (DISTINCT on source key)\n  - Or re-aggregate from scratch for that entity (defeats incremental efficiency)\n- **Late-arriving data**: Data with timestamp before watermark but arriving after\n  - Option 1: Include it (reprocess affected entities, shift watermark back)\n  - Option 2: Exclude it (miss data, but maintain schedule)\n  - Option 3: SCD Type 2 (keep both versions)\n\n**Scheduling**:\n- Full refresh: daily or weekly (low frequency)\n- Incremental: hourly, every 30 minutes, or streaming\n- Hybrid: daily full refresh + hourly incremental (catches errors, stays fresh)\n\n## Common gotchas / interview framings\n- **Watermark backfill**: When you change a feature definition, must you recompute all history? (Usually yes for training data)\n- **Concurrent updates**: If two incremental jobs run simultaneously, they may overwrite each other\n- **Storage overhead**: Incremental requires storing old values to detect changes; full refresh doesn't\n- **Feature dependency**: If Feature B depends on Feature A (incremental), and A is delayed, B doesn't see the update\n- **Interview question**: \"Design an incremental feature refresh for 1 billion users with 100 features. How do you handle late-arriving data?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the main trade-off between full refresh and incremental refresh?",
+        "back": "Full refresh is simple and idempotent but expensive (recomputes all features every time). Incremental is cheap and fast but complex (must track state, handle late-arriving data, and avoid double-counting)."
+      },
+      {
+        "type": "mcq",
+        "front": "What is a watermark in incremental feature refresh?",
+        "back": "A watermark is a timestamp marker that tracks the boundary of processed data. Example: 'last_watermark = 2024-01-10 10:00 AM' means all data up to that time has been processed. New data arriving after the watermark triggers an incremental job.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "A visual marker in dashboards",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The latest timestamp of source data that has been processed; new data beyond the watermark triggers recomputation",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "A threshold for feature values",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "A schema version number",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is idempotency important in incremental refresh?",
+        "back": "If a job fails and reruns, it must produce the same result without double-counting. Example: If a purchase event is processed twice, the purchase_count must still be correct. Without idempotency, rerunning a failed job corrupts features."
+      },
+      {
+        "type": "mcq",
+        "front": "How would you handle late-arriving data (data with timestamp before watermark but arriving after) in incremental refresh?",
+        "back": "If late-arriving data is important for correctness (especially for training), shift the watermark back and reprocess entities affected by the late data. For real-time serving, you may accept the trade-off of missing late data to maintain SLO. Document your policy clearly.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Always ignore it",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Always include it by shifting watermark back and reprocessing affected entities",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Include it without reprocessing (acceptable for some use cases like analytics)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Store it separately and never merge",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "training-serving-skew",
+    "title": "Training-serving skew mitigation",
+    "track": "ml-engineer",
+    "topic": "feature-stores-data-management",
+    "difficulty": "advanced",
+    "tags": [
+      "training-serving-skew",
+      "consistency",
+      "feature-store",
+      "model-reliability",
+      "debugging",
+      "parity"
+    ],
+    "aliases": [
+      "feature-parity",
+      "online-offline-consistency",
+      "skew-detection"
+    ],
+    "wikilinks": [
+      "online-vs-offline-feature-stores",
+      "feature-definitions-and-computation",
+      "point-in-time-correctness-and-data-leakage-prevention",
+      "feature-freshness-and-staleness-slos"
+    ],
+    "sources": [
+      {
+        "url": "https://medium.com/@scoopnisker/solving-the-training-serving-skew-problem-with-feast-feature-store-3719b47e23a2",
+        "label": "Solving Training-Serving Skew with Feast"
+      },
+      {
+        "url": "https://ploomber.io/blog/train-serve-skew/",
+        "label": "Training-Serving Skew Explained"
+      }
+    ],
+    "explainer_md": "## Intuition\nTraining-serving skew occurs when training and serving see different feature values. Root cause: feature logic implemented twice (batch job for training, Python service for serving) with subtle differences. Result: model learns patterns in training data that don't exist at serving time.\n\n## Detail\n**Classic Example**:\n- Training: Spark job computes `user_purchase_count = COUNT(DISTINCT user_id) WHERE amount > 0`\n- Serving: Python service: `user_purchase_count = len([x for x in purchases if x.amount > 0])`\n- Difference: Spark handles NULL amounts differently; Python raises exception\n- Result: Training sees different distribution; serving crashes on NULL or sees different count\n\n**Sources of Skew**:\n1. **Implementation language**: SQL (Spark) vs Python vs Java—numeric precision, NULL handling, string functions differ\n2. **Data freshness**: Offline features are stale (batch); online features are fresh (streaming). User behavior changes between them\n3. **Aggregation windows**: Training uses 30-day window; serving uses 7-day (feature definition changed)\n4. **Missing entity**: Entity doesn't exist in online store (new user, old user was purged)\n5. **Timestamp precision**: Training uses second precision; serving uses millisecond\n\n**Detection**:\n- Monitor feature value distributions: training vs serving samples\n- Log feature values at serving time and compare with what training saw\n- A/B test model on holdout set with actual serving features\n- Profile prediction performance drop after deployment\n\n**Mitigation**:\n1. **Feature store as single source**: Define features once in the store; both training and serving read from it\n   - Training: read from offline store (historical snapshots)\n   - Serving: read from online store (current values)\n2. **Unified feature logic**: SQL is the lingua franca; write features in SQL once, deploy to warehouse\n3. **Monitoring parity**: Track online vs offline distributions in production\n4. **Consistent transformation libraries**: Use same date/NULL/rounding logic everywhere\n5. **Testing**: Generate synthetic data; verify training and serving produce identical features\n\n## Common gotchas / interview framings\n- **Staleness != Skew**: Features can be fresh but wrong (skew due to logic difference); can be stale and correct\n- **Data leakage vs skew**: Related but different. Leakage = using future data in training. Skew = inconsistent logic\n- **Monitoring burden**: Without monitoring, skew goes undetected until model performance degrades\n- **Cascading skew**: If Feature B depends on Feature A (which has skew), Feature B's skew is amplified\n- **Interview question**: \"Your model's performance dropped 15% post-launch. How do you diagnose training-serving skew?\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the root cause of training-serving skew in most cases?",
+        "back": "Feature logic is implemented twice: once in a batch job (training) and once in a serving service (inference). Subtle differences in implementation (NULL handling, language, aggregation logic) cause the two paths to see different feature values."
+      },
+      {
+        "type": "mcq",
+        "front": "How does using a feature store help prevent training-serving skew?",
+        "back": "A feature store maintains a single feature definition. Training reads historical values from the offline store; serving reads current values from the online store. Both use the same computation logic, eliminating double-implementation.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It makes features identical between training and serving",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "It defines features once in a central registry; training reads from offline store, serving from online store, ensuring same logic",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "It prevents data leakage",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It eliminates the need for data warehouses",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How would you detect training-serving skew in production?",
+        "back": "Log feature values at serving time and compare distributions with training data. Track metrics like mean, quantiles, and value frequencies. Alert if online and offline distributions diverge significantly. A/B test the model with holdout data using actual serving features."
+      },
+      {
+        "type": "mcq",
+        "front": "Your model predicts churn with 90% accuracy on holdout test set but only 75% in production. What is a likely cause related to training-serving skew?",
+        "back": "A large drop in accuracy post-deployment (holdout vs production) is a strong signal of training-serving skew. The model learned patterns in training features that don't exist in production features, so predictions are less accurate on real data.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The model is overfitting",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The training features were computed differently than serving features (e.g., different aggregation window, NULL handling)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The serving database is slower",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The model architecture is wrong",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  }
+]

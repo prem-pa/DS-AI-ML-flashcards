@@ -1,0 +1,128 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "transformer-foundations-deep-dive",
+  "topic_label": "Transformer Foundations (Deep Dive)",
+  "concept_count": 17,
+  "concepts": [
+    {
+      "slug": "scaled-dot-product-attention-derivation",
+      "title": "Scaled dot-product attention derivation",
+      "difficulty": "advanced",
+      "hook": "Query-key-value projection; why sqrt(d) normalization.",
+      "subtopic": "Attention Mechanisms"
+    },
+    {
+      "slug": "multi-head-attention-and-head-roles",
+      "title": "Multi-head attention and head roles",
+      "difficulty": "intermediate",
+      "hook": "Different heads learn different attention patterns; interpretability.",
+      "subtopic": "Attention Mechanisms"
+    },
+    {
+      "slug": "cross-attention-vs-self-attention",
+      "title": "Cross-attention vs self-attention",
+      "difficulty": "intermediate",
+      "hook": "Self: within sequence; cross: between encoder and decoder outputs.",
+      "subtopic": "Attention Mechanisms"
+    },
+    {
+      "slug": "grouped-query-attention-gqa-and-multi-query-attention-mqa",
+      "title": "Grouped-query attention (GQA) and multi-query attention (MQA)",
+      "difficulty": "advanced",
+      "hook": "KV heads < Q heads; reduces KV cache size in inference.",
+      "subtopic": "Attention Mechanisms"
+    },
+    {
+      "slug": "efficient-attention-flashattention-flashattention-2-flashattention-3",
+      "title": "Efficient attention (FlashAttention, FlashAttention-2, FlashAttention-3)",
+      "difficulty": "advanced",
+      "hook": "Hardware-aware IO-optimal attention; 2-3x faster on H100.",
+      "subtopic": "Attention Mechanisms"
+    },
+    {
+      "slug": "sparse-attention-patterns-local-strided-longformer-pattern",
+      "title": "Sparse attention patterns (local, strided, longformer pattern)",
+      "difficulty": "advanced",
+      "hook": "Reduce O(n^2) to O(n) for specific patterns; tradeoff: limited receptive field.",
+      "subtopic": "Attention Mechanisms"
+    },
+    {
+      "slug": "absolute-positional-encodings-sinusoidal",
+      "title": "Absolute positional encodings (sinusoidal)",
+      "difficulty": "intermediate",
+      "hook": "Encode position; length generalization limited.",
+      "subtopic": "Positional Encodings"
+    },
+    {
+      "slug": "rotary-position-embeddings-rope",
+      "title": "Rotary position embeddings (RoPE)",
+      "difficulty": "intermediate",
+      "hook": "Rotate query-key vectors; better length extrapolation than sinusoidal.",
+      "subtopic": "Positional Encodings"
+    },
+    {
+      "slug": "relative-position-embeddings-alibi",
+      "title": "Relative position embeddings (ALiBi)",
+      "difficulty": "intermediate",
+      "hook": "Bias attention by relative distance; enables extreme length generalization.",
+      "subtopic": "Positional Encodings"
+    },
+    {
+      "slug": "rope-interpolation-and-extrapolation",
+      "title": "RoPE interpolation and extrapolation",
+      "difficulty": "advanced",
+      "hook": "Extend context length post-training; interpolate or truncate embeddings.",
+      "subtopic": "Positional Encodings"
+    },
+    {
+      "slug": "kv-cache-in-autoregressive-generation",
+      "title": "KV cache in autoregressive generation",
+      "difficulty": "intermediate",
+      "hook": "Store past K and V to avoid recomputation; but consumes GPU memory.",
+      "subtopic": "KV Cache & Memory"
+    },
+    {
+      "slug": "paged-attention-vllms-pagedattention",
+      "title": "Paged attention (vLLM's PagedAttention)",
+      "difficulty": "advanced",
+      "hook": "Treat KV cache as virtual memory; pages reduce fragmentation.",
+      "subtopic": "KV Cache & Memory"
+    },
+    {
+      "slug": "kv-cache-quantization-and-compression",
+      "title": "KV cache quantization and compression",
+      "difficulty": "advanced",
+      "hook": "Store KV in INT4 or INT8; reduces memory at quantization cost.",
+      "subtopic": "KV Cache & Memory"
+    },
+    {
+      "slug": "kv-cache-eviction-policies-and-memory-limits",
+      "title": "KV cache eviction policies and memory limits",
+      "difficulty": "advanced",
+      "hook": "Determine which past tokens to drop when memory full.",
+      "subtopic": "KV Cache & Memory"
+    },
+    {
+      "slug": "extrapolation-on-longer-sequences-post-training",
+      "title": "Extrapolation on longer sequences post-training",
+      "difficulty": "advanced",
+      "hook": "Models train on 2K-4K tokens; serve 32K+; RoPE interpolation helps.",
+      "subtopic": "Generalization Beyond Training Context"
+    },
+    {
+      "slug": "ring-attention-and-paged-attention-for-long-context",
+      "title": "Ring attention and paged attention for long context",
+      "difficulty": "advanced",
+      "hook": "Enable serving long contexts without quadratic memory.",
+      "subtopic": "Generalization Beyond Training Context"
+    },
+    {
+      "slug": "continued-pre-training-on-longer-sequences",
+      "title": "Continued pre-training on longer sequences",
+      "difficulty": "advanced",
+      "hook": "Fine-tune attention for longer contexts; improves but slow.",
+      "subtopic": "Generalization Beyond Training Context"
+    }
+  ]
+}

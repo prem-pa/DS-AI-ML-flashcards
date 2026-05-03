@@ -1,0 +1,969 @@
+[
+  {
+    "slug": "model-checkpoints-and-state-dicts",
+    "title": "Model checkpoints and state dicts",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "beginner",
+    "tags": [
+      "serialization",
+      "model-format",
+      "pytorch",
+      "tensorflow",
+      "persistence",
+      "deployment"
+    ],
+    "aliases": [
+      "model-weights",
+      "checkpoint-saving",
+      "state-preservation"
+    ],
+    "wikilinks": [
+      "onnx-format-and-cross-framework-compatibility",
+      "tensorflow-savedmodel-and-pytorch-torchscript",
+      "container-orchestration-docker-kubernetes"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/index.html",
+        "label": "NVIDIA Triton Inference Server Docs"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/notes/serialization.html",
+        "label": "PyTorch Serialization Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\nA model checkpoint is a snapshot of your trained neural network: weights, biases, architecture metadata, and optimizer state. Think of it as a save-file for a game—you capture the entire state so you can resume later without retraining.\n\n## Detail\nPyTorch's `torch.save()` stores the model state dict (parameter tensors) as a pickle file, while TensorFlow checkpoints use a checkpoint protocol with .ckpt metadata and .ckpt-data shards. For deployment, you extract just the inference-time weights (state dict), discarding optimizer state. Key considerations:\n\n- **State dict format**: Dictionary mapping parameter names to tensor values; framework-agnostic structure\n- **Serialization methods**: pickle (PyTorch), protobuf (TensorFlow), HDF5 (legacy), or standardized formats like ONNX\n- **Version compatibility**: Mismatched PyTorch/TF versions can fail deserialization; pin versions in production\n- **Size**: Large models (GPT-3, 175B params) require sharded checkpoints and streaming loaders to avoid OOM during load\n\n## Common gotchas / interview framings\n- \"How do you handle checkpoint bloat?\" → Use pruning, quantization pre-save, or only serialize inference weights (drop optimizer states)\n- \"Your checkpoint won't load in production.\" → Version mismatch; use ONNX or SavedModel for frame-agnostic export\n- \"Startup latency is killing us.\" → Use memory-mapped checkpoints or lazy-load model layers on-demand during warmup",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the difference between a full checkpoint and a state dict in PyTorch?",
+        "back": "A full checkpoint includes model.state_dict(), optimizer.state_dict(), epoch, loss—everything needed to resume training. A state dict is just {param_name: tensor}; used for inference deployment."
+      },
+      {
+        "type": "flip",
+        "front": "Why can deserialization fail across PyTorch versions?",
+        "back": "Parameter names, tensor shapes, or layer definitions may change between versions. Pickle loads fail if class definitions differ. Pin PyTorch version or use format-agnostic ONNX/SavedModel."
+      },
+      {
+        "type": "mcq",
+        "front": "You need to deploy a PyTorch model to production. Which approach minimizes cold-start latency?",
+        "back": "Quantization reduces file size, memory-mapping avoids eager loading, and streaming loaders parallelize I/O. These minimize model deserialization latency on cold start. Cloud fetches add network overhead.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Save the full checkpoint (model + optimizer state) as pickle",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Extract state_dict, quantize to INT8, use memory-mapped file or streaming loader",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Store weights in a cloud database and fetch during inference",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use torch.jit.script on the training script directly",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How do you safely save a model for long-term deployment without version lock?",
+        "back": "Convert to ONNX (framework-agnostic) or SavedModel (TF) after training. These formats capture the computation graph and weights; deserialization doesn't depend on training framework version."
+      }
+    ]
+  },
+  {
+    "slug": "onnx-format-and-cross-framework-compatibility",
+    "title": "ONNX format and cross-framework compatibility",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "serialization",
+      "interoperability",
+      "standards",
+      "onnx",
+      "model-format",
+      "framework-agnostic"
+    ],
+    "aliases": [
+      "onnx-export",
+      "model-standardization",
+      "framework-neutral-serving"
+    ],
+    "wikilinks": [
+      "tensorflow-savedmodel-and-pytorch-torchscript",
+      "quantization-for-storage-and-inference-speedup",
+      "tensorflow-serving-torchserve-seldon-core-bentoml"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.nvidia.com/deeplearning/transformer-engine/user-guide/examples/onnx/onnx_export.html",
+        "label": "NVIDIA TensorRT ONNX Export Guide"
+      },
+      {
+        "url": "https://onnx.ai/onnx/intro/",
+        "label": "ONNX.ai Introduction"
+      }
+    ],
+    "explainer_md": "## Intuition\nONNX (Open Neural Network Exchange) is a standardized file format for neural networks—think of it as a universal binary that any inference engine can run, regardless of whether the model was trained in PyTorch, TensorFlow, or scikit-learn. Export once, serve anywhere.\n\n## Detail\nONNX represents a model as a computation graph of operators (ops), with input/output tensors and attribute constants. Each operator maps to a standard operation (e.g., MatMul, Conv, ReLU). Advantages:\n\n- **Framework independence**: Train in PyTorch, export to ONNX, serve with TensorRT, ONNX Runtime, TFLite, CoreML, or Triton\n- **Graph optimization**: Static shape inference, constant folding, op fusion reduce compute at serving time\n- **Runtime selection**: Run on CPU (ONNX Runtime), GPU (TensorRT, cuDNN), mobile (CoreML), or edge (ONNX Runtime)\n- **Version stability**: ONNX opset versions allow forward/backward compatibility\n\nExport workflow: `torch.onnx.export()` traces or scripts the model, converts PyTorch ops to ONNX ops, validates the graph, and serializes to a .onnx protobuf file. TensorFlow uses `tf2onnx` converter. After export, quantization (INT8) or graph simplification tools optimize further.\n\n## Common gotchas / interview framings\n- \"ONNX export failed on a custom layer.\" → Custom ops require manual mapping or fallback to framework-specific serving\n- \"Serving latency improved 3x with ONNX+TensorRT—why?\" → Graph optimization, op fusion, and kernel tuning unlock hardware-specific speedups\n- \"ONNX model gives different outputs than the original.\" → Precision changes (float32 → float16), missing attributes on ops, or shape mismatches in tracing vs scripting",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the ONNX computation graph, and why is it useful for serving?",
+        "back": "ONNX is a DAG of operators (MatMul, Conv, ReLU, etc.) with fixed I/O tensors. It's useful because inference engines can optimize the graph once (fuse ops, reorder, allocate buffers) and execute on any hardware without re-exporting."
+      },
+      {
+        "type": "mcq",
+        "front": "You train a model in PyTorch but want to serve it on a mobile device and a GPU cluster. What's the best path?",
+        "back": "ONNX is the universal intermediate format. Export once, then convert the ONNX to platform-specific formats (CoreML, TensorRT, TFLite) or runtimes. Avoids maintaining multiple training-framework-specific versions.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Save two versions: .pth for GPU, .pt for mobile",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Export to ONNX, then convert ONNX to CoreML (mobile) and load into TensorRT (GPU)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Use torch.jit.script and compile separately for each platform",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Keep the PyTorch model and use framework-specific deployment tools only",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why might ONNX inference produce slightly different outputs than the original PyTorch model?",
+        "back": "Precision changes (float32 → float16), unsupported custom ops that fallback to slower implementations, shape inference mismatches between tracing (static) vs scripting (dynamic), or missing attributes on mapped operators."
+      },
+      {
+        "type": "flip",
+        "front": "Describe the typical ONNX export workflow for a PyTorch model.",
+        "back": "1) Call torch.onnx.export() with dummy inputs; 2) PyTorch traces/scripts the forward pass and converts ops to ONNX; 3) ONNX graph is validated; 4) .onnx file (protobuf) is serialized; 5) Post-export optimization (quantization, simplification) is optional."
+      }
+    ]
+  },
+  {
+    "slug": "tensorflow-savedmodel-and-pytorch-torchscript",
+    "title": "TensorFlow SavedModel and PyTorch TorchScript",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "serialization",
+      "computation-graph",
+      "inference",
+      "optimization",
+      "framework-specific"
+    ],
+    "aliases": [
+      "savedmodel",
+      "torchscript",
+      "graph-export",
+      "serving-format"
+    ],
+    "wikilinks": [
+      "model-checkpoints-and-state-dicts",
+      "onnx-format-and-cross-framework-compatibility",
+      "tensorflow-serving-torchserve-seldon-core-bentoml"
+    ],
+    "sources": [
+      {
+        "url": "https://www.tensorflow.org/guide/saved_model",
+        "label": "TensorFlow SavedModel Documentation"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/jit.html",
+        "label": "PyTorch TorchScript Documentation"
+      }
+    ],
+    "explainer_md": "## Intuition\nTensorFlow SavedModel and PyTorch TorchScript are framework-specific serialization formats that capture both the computation graph and weights. Unlike raw checkpoints, they bundle the model definition (layers, operations) so inference engines can optimize and execute without the original training code.\n\n## Detail\n**TensorFlow SavedModel**: Represents a TF model (graph, variables, metadata) as a directory with an assets folder, variables (weights), and a saved_model.pb (graph definition in protobuf). Supports eager execution, tf.function tracing, and concrete functions for multiple input signatures. Benefit: TensorFlow Serving natively loads SavedModel; no conversion needed.\n\n**PyTorch TorchScript**: A statically-typed subset of Python compiled to an intermediate representation (IR). Two modes:\n- Tracing: Records tensor operations during a forward pass; works for pure data-flow models but fails on control flow (if/for)\n- Scripting: Parses Python syntax directly; handles control flow but requires type annotations\n\nOwnage: SavedModel works out-of-box with TensorFlow Serving; TorchScript must be manually integrated into TorchServe or custom inference code. Both enable graph optimization (op fusion, memory planning) for faster inference than eager execution.\n\n## Common gotchas / interview framings\n- \"SavedModel is huge; why?\" → Includes full graph definition + variable shards; compress with quantization or convert to ONNX\n- \"TorchScript tracing lost my control flow logic.\" → Use scripting mode instead; annotate types (List[Tensor], Dict[str, float])\n- \"Eager execution is 2x faster than my TorchScript; why?\" → Possible graph bug; benchmark both; scripting overhead may dominate on small models",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key difference between TorchScript tracing and scripting?",
+        "back": "Tracing records tensor ops during a forward pass (good for pure data flow, bad for control flow). Scripting parses Python code directly (handles if/for loops, but requires type annotations). Tracing is simpler; scripting is more flexible."
+      },
+      {
+        "type": "mcq",
+        "front": "You have a PyTorch model with conditional logic (if self.training: ...). How do you export it for serving?",
+        "back": "Tracing records only the inference-time path (if not self.training). For correct behavior, use scripting to preserve conditional logic. Then deploy via TorchServe or custom inference code.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Use torch.jit.trace() to record the inference path",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Use torch.jit.script() with type annotations to preserve control flow",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Convert to SavedModel (TensorFlow only)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Keep the .pth checkpoint and load at serving time",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why does TensorFlow Serving prefer SavedModel over raw checkpoints?",
+        "back": "SavedModel bundles the computation graph (saved_model.pb), signatures (input/output shapes), and weights in one package. Serving can load, validate, and optimize the graph without the original training code or TensorFlow eager-mode overhead."
+      },
+      {
+        "type": "flip",
+        "front": "Describe the directory structure of a TensorFlow SavedModel.",
+        "back": "saved_model/\n  ├─ saved_model.pb (protobuf graph definition)\n  ├─ assets/ (e.g., vocabulary files)\n  └─ variables/ (variable shards: checkpoint index, data files)"
+      }
+    ]
+  },
+  {
+    "slug": "quantization-for-storage-and-inference-speedup",
+    "title": "Quantization for storage and inference speedup",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "optimization",
+      "compression",
+      "inference",
+      "precision",
+      "model-size"
+    ],
+    "aliases": [
+      "int8-quantization",
+      "model-compression",
+      "precision-reduction",
+      "post-training-quantization"
+    ],
+    "wikilinks": [
+      "model-checkpoints-and-state-dicts",
+      "onnx-format-and-cross-framework-compatibility",
+      "cold-start-and-model-loading-time"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/quick-start-guide.html",
+        "label": "NVIDIA TensorRT Quick Start"
+      },
+      {
+        "url": "https://pytorch.org/docs/stable/quantization.html",
+        "label": "PyTorch Quantization Docs"
+      }
+    ],
+    "explainer_md": "## Intuition\nQuantization shrinks model weights from float32 (4 bytes per value) to int8 (1 byte) or bfloat16 (2 bytes). For a 1GB model, int8 quantization cuts it to 250MB—4x smaller, faster to load, cheaper to store, and often faster to compute if hardware has int8 kernels.\n\n## Detail\nQuantization maps float32 range [min, max] to int8 range [0, 255] using a scale and zero-point: `int8_val = round((float32_val - zero_point) / scale)`. Strategies:\n\n- **Post-training quantization (PTQ)**: Quantize a trained float32 model without retraining; simple but may lose accuracy\n- **Quantization-aware training (QAT)**: Simulate quantization during training so weights learn to be quantization-friendly; better accuracy, more effort\n- **Symmetric vs. asymmetric**: Symmetric uses [-128, 127]; asymmetric uses [0, 255] and allows zero-point offset\n- **Per-channel vs. per-layer**: Per-channel scales per output channel (better accuracy); per-layer uses one scale for entire layer (simpler, faster)\n\nHardware support: x86 has AVX512, ARM has NEON, NVIDIA GPUs support INT8 Tensor Cores (Turing+). Inference engines (TensorRT, ONNX Runtime, TFLite) auto-fuse ops and dispatch to int8 kernels.\n\n## Common gotchas / interview framings\n- \"Accuracy dropped 2% after quantization.\" → Use QAT or per-channel quantization; or increase batch size during calibration to capture activation ranges\n- \"Quantized model is slow on my phone.\" → Hardware lacks int8 support; fallback to int16 or bfloat16, or use dynamic quantization (weight-only)\n- \"Why not quantize everything to int4?\" → int4 is harder to implement; scales accumulate error; most frameworks default to int8 or int16",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the quantization formula: how does float32 map to int8?",
+        "back": "int8_val = round((float32_val - zero_point) / scale). Scale is derived from the float32 range [min, max] and int8 target range [0, 255]. Zero-point ensures 0.0f maps exactly to int8_zero."
+      },
+      {
+        "type": "mcq",
+        "front": "You want to quantize a model to int8 with minimal effort and maintain >99.5% accuracy. Which approach?",
+        "back": "QAT lets weights adapt during training; combined with a diverse calibration set, it preserves accuracy. PTQ is faster but may lose accuracy. Dynamic is simpler but only quantizes weights, not activations.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Post-training quantization (PTQ) with histogram-based calibration",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Quantization-aware training (QAT) with a representative calibration dataset",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Dynamic quantization (weights only), no calibration",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Manual bit-shifting without proper scale/zero-point",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between symmetric and asymmetric quantization?",
+        "back": "Symmetric: [-128, 127] range; zero_point = 0; simpler, used for weights. Asymmetric: [0, 255] range; zero_point ≠ 0; captures activation ranges better; used for activations and fully symmetric models."
+      },
+      {
+        "type": "flip",
+        "front": "A quantized int8 model runs slow on your edge device. What are possible causes and fixes?",
+        "back": "Causes: hardware lacks int8 support (e.g., older ARM, lack of NEON). Fixes: 1) Fall back to float16 or bfloat16; 2) Use weight-only dynamic quantization; 3) Replace int8 ops with float32 fallbacks; 4) Upgrade hardware if possible."
+      }
+    ]
+  },
+  {
+    "slug": "batch-inference-vs-online-real-time-inference",
+    "title": "Batch inference vs online (real-time) inference",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "serving-patterns",
+      "latency",
+      "throughput",
+      "real-time",
+      "batch-processing"
+    ],
+    "aliases": [
+      "batch-serving",
+      "online-serving",
+      "latency-throughput-tradeoff",
+      "request-batching"
+    ],
+    "wikilinks": [
+      "rest-apis-and-grpc-for-model-endpoints",
+      "load-balancing-and-horizontal-scaling",
+      "cold-start-and-model-loading-time"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.ray.io/en/latest/serve/tutorials/triton-server-integration.html",
+        "label": "Ray Serve Triton Integration"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Batch_processing",
+        "label": "Batch Processing Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\nBatch inference processes many samples in one call (100 images at once). Online inference processes single or small requests immediately (1 image per request). Batch is fast per-sample and cheap but has high latency for individual requests. Online is responsive but underutilizes compute (low GPU occupancy).\n\n## Detail\n**Batch inference**: Load 100 samples into a batch tensor, forward pass once, output 100 predictions. Per-sample latency = (load time + forward pass + unload) / 100 samples. GPUs achieve high throughput by parallelizing matrix ops across samples. Use when: queries can wait (nightly report generation, recommendation ranking), user tolerance is high (seconds), or cost matters more than latency.\n\n**Online inference**: Client sends single request, server runs forward pass immediately, client gets response. Latency = model forward time (+ overhead). Throughput limited by model latency; to serve N requests/sec, need N/model_latency replicas. Use when: users expect <100ms response (search, fraud detection), query rate is unpredictable, or SLA is strict.\n\n**Hybrid approach**: Request batching—server accumulates requests for T_max milliseconds or until batch_size samples, then runs one forward pass. Balances latency (don't wait forever) and throughput (batch ops). TensorFlow Serving, TorchServe, Triton support automatic batching configurations.\n\n## Common gotchas / interview framings\n- \"We switched to batching and latency tripled.\" → Batching window too long; reduce T_max or batch_size\n- \"GPU utilization is only 5% in online mode.\" → Expected; too few concurrent requests. Increase timeout, batch_size, or add request batching\n- \"Batch inference fails on variable-size inputs.\" → Pad to max size or use dynamic batching (reshape as needed); no simple fix for ragged tensors",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the latency vs. throughput tradeoff between batch and online inference.",
+        "back": "Batch: low latency per sample, high throughput, high latency to get result (wait for batch). Online: high latency per sample, low throughput per replica, low latency for user. Hybrid: request batching—wait up to T_ms for batch or timeout."
+      },
+      {
+        "type": "mcq",
+        "front": "Your fraud-detection service must respond to each transaction in <50ms. Should you use batch or online inference?",
+        "back": "Online (or light request batching) is required for <50ms SLA. Pure batch processing introduces unacceptable delays. Small batches trade throughput for lower latency, but require more replicas.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Batch inference with 1000 samples per batch",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Online inference (immediate per-request) with multiple replicas and request batching timeout ~10-20ms",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Batch inference with small batches (10 samples)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Pure online, no batching; overProvision replicas until SLA is met",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is request batching, and how does it help in online inference systems?",
+        "back": "Server accumulates individual requests for up to T_max milliseconds (e.g., 50ms) or until batch_size is reached, then runs one forward pass. Reduces per-sample latency compared to single-inference but keeps client latency <T_max."
+      },
+      {
+        "type": "flip",
+        "front": "You're processing 1000 image classification requests per second. Should you batch? How?",
+        "back": "Yes. With 1000 req/s, a single replica can batch ~100 images per ~100ms or use dynamic batching with 10-50ms timeout. This amortizes forward-pass cost across samples, raising GPU utilization from ~5% (online only) to 40-80%."
+      }
+    ]
+  },
+  {
+    "slug": "rest-apis-and-grpc-for-model-endpoints",
+    "title": "REST APIs and gRPC for model endpoints",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "api",
+      "networking",
+      "protocol",
+      "grpc",
+      "rest",
+      "performance"
+    ],
+    "aliases": [
+      "http-inference",
+      "grpc-serving",
+      "protobuf",
+      "binary-protocol"
+    ],
+    "wikilinks": [
+      "batch-inference-vs-online-real-time-inference",
+      "load-balancing-and-horizontal-scaling",
+      "model-versioning-and-ab-testing-in-production"
+    ],
+    "sources": [
+      {
+        "url": "https://grpc.io/docs/",
+        "label": "gRPC Documentation"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Representational_state_transfer",
+        "label": "REST API Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\nREST uses HTTP (text-based JSON), simple but verbose and slow. gRPC uses HTTP/2 with binary Protocol Buffers, faster and streaming-capable. REST is common for web UIs; gRPC is preferred for high-throughput ML services.\n\n## Detail\n**REST API**: Client sends HTTP POST with JSON body `{\"inputs\": [...]}`, server parses JSON, runs inference, returns JSON response. Overhead: JSON serialization/parsing (slow), plain-text HTTP headers, connection reuse (HTTP/1.1 limited). Latency per call: 10-50ms including network roundtrip.\n\n**gRPC**: Client calls remote method as if it were local (stub), request is serialized to Protocol Buffers (compact binary), sent over HTTP/2 (multiplexed streams), server deserializes and responds. Overhead: minimal (binary format), connection reuse built-in, streaming supported. Latency: 1-5ms for same hardware as REST.\n\nTrade-offs:\n- REST: Easy to debug (curl), browser-friendly, polyglot (any language). gRPC: Fast, type-safe (proto schemas), streaming, but requires gRPC clients.\n- Bandwidth: gRPC ~10x smaller for same data (binary vs. JSON)\n- Latency: gRPC ~5-10x lower (fewer roundtrips, no parsing)\n\nPractice: Use REST for browser-based UIs, external APIs. Use gRPC for internal services, high-frequency requests, or streaming predictions. Mix both if needed (gRPC backend, REST gateway in front).\n\n## Common gotchas / interview framings\n- \"gRPC latency is higher than REST—why?\" → Possible proxy/networking issue, misconfiguration (HTTP/1.1 instead of HTTP/2), or Protobuf encoding overhead on small messages\n- \"We switched to gRPC and lost 30% throughput.\" → Likely custom serialization overhead; benchmark with profiler\n- \"Can we use REST for real-time predictions?\" → Yes, but expect higher latency; batch requests if possible",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Compare the serialization overhead of REST (JSON) vs. gRPC (Protocol Buffers).",
+        "back": "REST: JSON is human-readable but verbose (~30-50 bytes for small data). gRPC/Protobuf: compact binary (~5-10 bytes). Trade-off: gRPC is 3-5x smaller but requires proto schema + code generation."
+      },
+      {
+        "type": "mcq",
+        "front": "You need to serve predictions at 10,000 requests/second with <5ms latency. REST or gRPC?",
+        "back": "gRPC + HTTP/2 is required for <5ms latency at 10k req/s. HTTP/2 multiplexes requests on one connection; Protobuf is binary and fast. REST + gzip still has JSON parsing overhead.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "REST with JSON—easy to debug and widely supported",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "gRPC with Protocol Buffers and HTTP/2 multiplexing",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "REST with JSON compression (gzip)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Either; latency is determined by model, not protocol",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Name one scenario where you'd use REST instead of gRPC for a model endpoint.",
+        "back": "Browser-based UI (requires HTTP), external third-party integrations (may not support gRPC), debugging (curl is easier), or low-throughput services where latency is not critical."
+      },
+      {
+        "type": "flip",
+        "front": "How does HTTP/2 improve gRPC performance compared to HTTP/1.1 REST?",
+        "back": "HTTP/2 multiplexes multiple streams over one connection (no head-of-line blocking), uses binary framing (faster parsing), and enables server push. Reduces latency by ~50% compared to serial HTTP/1.1 requests."
+      }
+    ]
+  },
+  {
+    "slug": "model-versioning-and-ab-testing-in-production",
+    "title": "Model versioning and A/B testing in production",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "deployment",
+      "testing",
+      "canary",
+      "shadow-traffic",
+      "version-control",
+      "a-b-testing"
+    ],
+    "aliases": [
+      "canary-rollout",
+      "shadow-traffic",
+      "model-comparison",
+      "blue-green-deployment"
+    ],
+    "wikilinks": [
+      "rest-apis-and-grpc-for-model-endpoints",
+      "load-balancing-and-horizontal-scaling",
+      "caching-and-memoization"
+    ],
+    "sources": [
+      {
+        "url": "https://kserve.github.io/website/docs/model-serving/predictive-inference/frameworks/overview",
+        "label": "KServe Model Serving Overview"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Canary_release",
+        "label": "Canary Release Strategy"
+      }
+    ],
+    "explainer_md": "## Intuition\nA/B testing means running two model versions (old, new) simultaneously and comparing metrics (accuracy, latency, business KPI) before fully switching. Canary rollout: route 1% traffic to new model, monitor for errors/latency, increase % over hours/days. Shadow traffic: silently run new model in parallel, compare outputs without affecting users.\n\n## Detail\n**A/B testing strategies**:\n- **Canary**: 1% → 10% → 50% → 100% traffic over time; fast rollback if error rate spikes\n- **Shadow/dark launch**: New model runs on 100% requests but predictions are not returned to user; compare accuracy, latency offline\n- **Blue/green**: Two identical environments (blue, green); switch router instantly; enables fast rollback but uses 2x resources\n- **Multi-armed bandit**: Dynamically adjust routing based on real-time reward signal (e.g., click-through rate)\n\n**Implementation**:\n- Load balancer or proxy (e.g., Envoy, Nginx, Kubernetes Ingress) splits traffic by percentage\n- Log new model predictions alongside ground truth for offline analysis\n- Monitor: latency, error rate, business metrics (revenue, precision, recall)\n- Rollback threshold: if latency +50% or error rate >1%, revert to old model\n\n**Versioning**: Tag models (v1.0, v1.1, v2.0); store metadata (training date, dataset, hyperparams) in model registry. Associate version with git commit, training run, and deployment timestamp for reproducibility.\n\n## Common gotchas / interview framings\n- \"Canary test shows no difference, but full rollout is slow.\" → Sample size too small in canary; increase % or duration before incrementing\n- \"A/B test is biased: new model only served to subset of users.\" → Use stratified sampling or synchronized time-based comparison\n- \"Old model crashed; can't quickly roll back.\" → Blue/green or hot standby required; canary alone is risky without fast rollback mechanism",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the difference between canary rollout and shadow traffic deployment.",
+        "back": "Canary: route 1% → 10% → 100% traffic to new model; users see predictions; fast rollback if metrics degrade. Shadow: run new model on 100% requests but don't show predictions; compare offline; no user impact but more infrastructure."
+      },
+      {
+        "type": "mcq",
+        "front": "Your new model has higher accuracy but 20ms higher latency. How would you deploy it safely?",
+        "back": "Both canary and shadow are valid. Canary exposes risk to users (acceptable if SLA buffer exists). Shadow is safer (users unaffected) but requires 2x infrastructure. Choose based on SLA tolerance and infrastructure budget.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Canary rollout: 1% → 10% → 100% over days; monitor latency, only increase % if p99 latency <SLA+5ms",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Shadow traffic: run new model parallel to old, compare latency/accuracy offline, roll out if differences are acceptable",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Full rollout immediately; users will accept latency increase for better accuracy",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Keep old model; don't deploy because latency is unacceptable",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What metrics would you monitor during a canary rollout to decide whether to increase traffic % or roll back?",
+        "back": "Latency (p50, p99), error rate, model accuracy (if ground truth is available quickly), business metrics (conversion, revenue), and resource usage. Rollback if any metric breaches SLA by >5%."
+      },
+      {
+        "type": "flip",
+        "front": "Describe the blue/green deployment strategy and its pros/cons.",
+        "back": "Two identical environments (blue, green); run new model on green, route 100% traffic from blue→green instantly. Pros: instant rollback. Cons: 2x infrastructure cost, no gradual validation, higher blast radius if bug exists."
+      }
+    ]
+  },
+  {
+    "slug": "caching-and-memoization",
+    "title": "Caching and memoization",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "performance",
+      "optimization",
+      "caching",
+      "latency",
+      "throughput",
+      "memory"
+    ],
+    "aliases": [
+      "prediction-cache",
+      "result-cache",
+      "feature-cache",
+      "memoization"
+    ],
+    "wikilinks": [
+      "batch-inference-vs-online-real-time-inference",
+      "rest-apis-and-grpc-for-model-endpoints",
+      "load-balancing-and-horizontal-scaling"
+    ],
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Cache_(computing)",
+        "label": "Computing Cache Overview"
+      },
+      {
+        "url": "https://redis.io/",
+        "label": "Redis In-Memory Cache"
+      }
+    ],
+    "explainer_md": "## Intuition\nIf a user asks for a prediction on the same input, don't rerun the model—return the cached result. Caching speeds up repeat queries (1ms vs. 100ms), reduces GPU load, and saves money. Downside: stale predictions if model updates, memory overhead, and invalidation complexity.\n\n## Detail\n**Caching strategies**:\n- **Prediction cache**: Cache (input_hash → prediction) in Redis or in-process hashmap. Hit rate depends on query distribution; high if users repeat queries (e.g., recommendations, search).\n- **Feature cache**: Pre-compute and cache features (e.g., embeddings) to avoid repeated feature extraction. Often higher ROI than prediction cache.\n- **Model cache**: Load model once, reuse across requests (standard); or cache intermediate activations (not common due to memory overhead).\n\n**TTL (time-to-live)**: Cache entries expire after T seconds. Trade-off: short TTL (10s) keeps predictions fresh but misses hits; long TTL (1h) increases hits but serves stale predictions. Model updates may invalidate cache; flush on deploy.\n\n**Eviction policies**:\n- **LRU (Least Recently Used)**: Remove oldest unused entry when cache is full; good for hotspot workloads\n- **LFU (Least Frequently Used)**: Remove least-accessed entries; better for long-tail patterns\n\n**Implementation**:\n- In-process: `functools.lru_cache` (Python), `@Cached` decorator. Fast (no network), memory-limited by RAM\n- Distributed: Redis, Memcached. Shared across replicas, larger capacity, network latency (~1-2ms)\n\n## Common gotchas / interview framings\n- \"Cache hit rate is 5%; we're wasting memory.\" → Analyze query distribution; if truly random, caching won't help; consider feature-level caching instead\n- \"Cached predictions are stale after model update.\" → Implement versioned cache keys (model_v2.0:input_hash); flush on deploy, or use short TTL\n- \"Cache memory is the bottleneck.\" → Use lossy compression (store quantized predictions), or focus on feature cache (smaller than predictions)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "When is prediction caching most valuable?",
+        "back": "High repeat-query rate (e.g., recommend same product to multiple users), long model latency (>100ms), and predictable query patterns. Low value if query distribution is random or model updates frequently."
+      },
+      {
+        "type": "mcq",
+        "front": "Your model takes 200ms to infer, and 40% of requests are exact repeats. Should you add prediction caching? Where?",
+        "back": "40% hit rate saves 200ms × 0.4 = 80ms average latency. In-process cache is fast (1-5μs lookup). Distributed cache (Redis) adds network latency (~1-2ms) and may not be worth it here unless replicas share state.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "No; 40% hit rate is too low to justify overhead",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Yes; in-process cache (lru_cache) for speed; 40% hit rate saves ~80ms avg latency",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Yes; Redis for distributed cache across replicas",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No; cache only works if 100% of requests are identical",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your model is updated to v2.0. How do you ensure cached predictions from v1.0 aren't used?",
+        "back": "Include model version in cache key: f'{model_version}:{input_hash}' or use separate Redis namespaces. Or flush entire cache on deploy, or use short TTL (e.g., 5min) to auto-expire stale entries."
+      },
+      {
+        "type": "flip",
+        "front": "Compare in-process caching (lru_cache) vs. distributed caching (Redis) for predictions.",
+        "back": "In-process: fast (<5μs), limited by RAM per replica, not shared. Redis: slower (~1-2ms network), larger capacity, shared across replicas. Use in-process for single-replica or high-frequency hits; Redis for multiple replicas or large caches."
+      }
+    ]
+  },
+  {
+    "slug": "tensorflow-serving-torchserve-seldon-core-bentoml",
+    "title": "TensorFlow Serving, TorchServe, Seldon Core, BentoML",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "serving-frameworks",
+      "deployment",
+      "orchestration",
+      "model-management",
+      "inference-server"
+    ],
+    "aliases": [
+      "tf-serving",
+      "pytorch-serving",
+      "model-server",
+      "serving-platform"
+    ],
+    "wikilinks": [
+      "tensorflow-savedmodel-and-pytorch-torchscript",
+      "onnx-format-and-cross-framework-compatibility",
+      "container-orchestration-docker-kubernetes"
+    ],
+    "sources": [
+      {
+        "url": "https://www.truefoundry.com/blog/model-deployment-tools",
+        "label": "Model Deployment Tools Comparison 2026"
+      },
+      {
+        "url": "https://www.kunalganglani.com/learning-paths/ml-engineer/ml-serving-frameworks",
+        "label": "ML Serving Frameworks Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\nThese are pre-built servers that load models and expose HTTP/gRPC endpoints. Instead of building inference from scratch, you point them to a SavedModel or .pth, and they handle batching, versioning, autoscaling, monitoring. Different frameworks support different model types and have different operational overhead.\n\n## Detail\n**TensorFlow Serving**: Optimized for TensorFlow SavedModel. Features: multi-model serving, batching, versioning (A/B), gRPC/REST endpoints, model warming. Drawback: TensorFlow-only; complex Kubernetes setup; harder to customize inference logic.\n\n**TorchServe** (AWS/PyTorch): For PyTorch models (.pth, TorchScript). Features: custom inference handlers (pre/post-process), batch inference, multi-worker scaling, metrics/logging. Drawback: PyTorch-only; less mature than TF Serving; custom logic requires Python code.\n\n**Seldon Core**: Kubernetes-native, framework-agnostic. Deploy any model (TF, PyTorch, scikit-learn) in a Docker container. Features: A/B testing, shadow traffic, canary, monitoring via Prometheus. Drawback: requires Kubernetes; more ops overhead; slower inference (containerized model).\n\n**BentoML**: Framework-agnostic, Python-based. Package model + custom code as a service. Features: easy to use, multi-framework, built-in A/B/canary, Docker export. Drawback: Python runtime (slower than native), less battle-tested than TensorFlow Serving.\n\n**Positioning (2025-2026)**:\n- **KServe**: Kubernetes operator for TF Serving, TorchServe, Triton, Seldon; emerging standard, best for cloud-native Kubernetes deployments\n- **Triton Inference Server** (NVIDIA): Multi-framework, GPU-optimized, gRPC/HTTP, batching; industry standard for high-performance inference\n- **Ray Serve**: Distributed inference framework, integrates with Triton; good for custom Python logic and distributed workloads\n\n## Common gotchas / interview framings\n- \"TF Serving is slow; why?\" → Possible network latency (gRPC), large model load time, or misconfigured batching timeout\n- \"Customizing inference in TF Serving is hard.\" → Use SavedModel with custom ops, or switch to TorchServe/BentoML for easier pre/post-processing\n- \"Which framework for multi-framework shop?\" → Seldon Core or KServe on Kubernetes; BentoML if no K8s available",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Compare TensorFlow Serving and TorchServe in terms of model format support and customization.",
+        "back": "TF Serving: SavedModel only, minimal custom logic, configuration-based. TorchServe: .pth/TorchScript, custom Python handlers for pre/post-processing, more flexible. Trade-off: TF Serving is simpler; TorchServe is more extensible."
+      },
+      {
+        "type": "mcq",
+        "front": "Your team uses PyTorch, but you want framework-agnostic serving to future-proof. Should you use TorchServe, BentoML, or Seldon Core?",
+        "back": "Seldon Core is most future-proof: wrap any model in a container, serve via Kubernetes. BentoML is simpler but less battle-tested. TorchServe locks you to PyTorch ecosystem.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "TorchServe; it's the official PyTorch server",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "BentoML; framework-agnostic, easy to use, export to Docker",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Seldon Core with Kubernetes; full framework agnosticity, A/B testing built-in",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Build custom inference server to avoid vendor lock-in",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is KServe, and how does it relate to TensorFlow Serving and TorchServe?",
+        "back": "KServe is a Kubernetes operator that standardizes serving for multiple backends (TF Serving, TorchServe, Triton, Seldon). Use KServe to deploy, version, and canary models across frameworks on Kubernetes with a unified API."
+      },
+      {
+        "type": "flip",
+        "front": "When would you choose Triton Inference Server over TensorFlow Serving or TorchServe?",
+        "back": "Triton: supports ONNX, TensorRT, TF, PyTorch in one server; highly optimized for GPU; streaming RPC; industry standard for high-throughput inference. Choose Triton if you need multi-framework support or GPU optimization is critical."
+      }
+    ]
+  },
+  {
+    "slug": "container-orchestration-docker-kubernetes",
+    "title": "Container orchestration (Docker, Kubernetes)",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "devops",
+      "containerization",
+      "orchestration",
+      "scaling",
+      "deployment",
+      "infrastructure"
+    ],
+    "aliases": [
+      "docker",
+      "kubernetes",
+      "k8s",
+      "container-runtime",
+      "pod-scheduling"
+    ],
+    "wikilinks": [
+      "tensorflow-serving-torchserve-seldon-core-bentoml",
+      "load-balancing-and-horizontal-scaling",
+      "cold-start-and-model-loading-time"
+    ],
+    "sources": [
+      {
+        "url": "https://www.docker.com/",
+        "label": "Docker Official Site"
+      },
+      {
+        "url": "https://kubernetes.io/docs/",
+        "label": "Kubernetes Official Docs"
+      }
+    ],
+    "explainer_md": "## Intuition\nDocker packages model + code + dependencies in a container image. Kubernetes orchestrates (schedules, scales, updates) containers across a cluster. Docker ensures \"works on my laptop\" → \"works in production\"; Kubernetes ensures the container scales automatically as traffic changes.\n\n## Detail\n**Docker**:\n- Dockerfile defines base OS, installs dependencies (torch, tf), copies model, sets entry point\n- `docker build` creates image; `docker run` spawns container (isolated process with own filesystem, network)\n- Image is immutable; container is ephemeral. Push image to registry (Docker Hub, ECR, GCR); pull and run anywhere\n- Overhead: ~100MB per image (OS + libs), ~50-200ms startup (vs. native ~10ms)\n\n**Kubernetes**:\n- Cluster: nodes (VMs) + master (scheduler, API server). Pod: smallest unit, wraps 1+ containers\n- Deployment: describes desired replicas of a pod; Kubernetes auto-creates, replaces failed pods\n- Service: load balancer + DNS; routes traffic to pods\n- Autoscaling: HPA (Horizontal Pod Autoscaler) scales replicas based on CPU, memory, or custom metrics (model latency)\n\n**ML-specific setup**:\n- Model stored in pod's container image, or mounted from shared storage (NFS, S3, PVC)\n- GPU support: node must have GPU; pod requests `nvidia.com/gpu: 1`\n- Readiness probe: check if model is loaded; don't route traffic until ready (avoids cold-start).\n- Namespace for isolation, RBAC for access control\n\n## Common gotchas / interview framings\n- \"Container startup is slow; why?\" → Large image (→ reduce layer, use .dockerignore), slow model loading (→ use readiness probe), or network latency pulling image\n- \"Pod keeps crashing.\" → Check logs: `kubectl logs pod_name`. Common: OOM (model too large), missing dependencies (pip install in Dockerfile), or network issues\n- \"Autoscaling doesn't kick in.\" → Check HPA target (metrics-server running?), pod resource requests (must be set for CPU-based scaling), or custom metrics not scraped",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is a Dockerfile, and what should it include for serving a PyTorch model?",
+        "back": "Dockerfile defines: base image (python:3.11), install deps (pip install torch), copy model and code, expose port, set entrypoint (python serving_script.py). Build produces immutable image; run produces container."
+      },
+      {
+        "type": "mcq",
+        "front": "Your model server container takes 30s to start up, delaying rolling updates. How do you speed it up?",
+        "back": "Preloading model into image avoids download on startup. Readiness probe is good practice but doesn't reduce startup time. Light base images also help. SSD is not under your control in cloud K8s.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Reduce Docker image size by using lighter base image (python:3.11-slim, not full Ubuntu)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Add readiness probe to detect when model is loaded; K8s won't route traffic until ready, but doesn't reduce startup time itself",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Preload model in container image (bake model into image, not download at startup)",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Use SSD instead of HDD to speed up model I/O",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is a Kubernetes Pod, Deployment, and Service? How do they relate?",
+        "back": "Pod: container(s) in shared network namespace. Deployment: declares desired state (N replicas of pod). Service: stable IP/DNS + load balancer pointing to pods. Deployment creates/replaces pods; Service routes traffic to live pods."
+      },
+      {
+        "type": "flip",
+        "front": "Your model server needs a GPU. How do you configure the Kubernetes pod spec?",
+        "back": "In pod spec, set resource request: `resources: {limits: {nvidia.com/gpu: 1}}`. Node must have GPU; K8s scheduler places pod on GPU node. Without request, scheduling may fail or exceed node capacity."
+      }
+    ]
+  },
+  {
+    "slug": "load-balancing-and-horizontal-scaling",
+    "title": "Load balancing and horizontal scaling",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "scaling",
+      "load-balancing",
+      "performance",
+      "autoscaling",
+      "availability",
+      "qps"
+    ],
+    "aliases": [
+      "horizontal-scaling",
+      "replica-management",
+      "autoscaling",
+      "qps-scaling"
+    ],
+    "wikilinks": [
+      "batch-inference-vs-online-real-time-inference",
+      "rest-apis-and-grpc-for-model-endpoints",
+      "container-orchestration-docker-kubernetes"
+    ],
+    "sources": [
+      {
+        "url": "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/",
+        "label": "Kubernetes HPA Documentation"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Load_balancing_(computing)",
+        "label": "Load Balancing Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\nOne model replica can handle ~100 requests/second. To serve 1000 req/s, run 10 replicas. Load balancer distributes incoming requests round-robin or least-connections. Autoscaler monitors latency/CPU; if latency rises above SLA, spawn new replicas; if drops, scale down to save cost.\n\n## Detail\n**Load balancing**:\n- **Round-robin**: Send requests 1 → replica1, 2 → replica2, ..., N+1 → replica1. Simple, works if all replicas are equal\n- **Least-connections**: Send request to replica with fewest active connections. Better if request duration varies\n- **Weighted**: Some replicas get more traffic (e.g., new hardware 70%, old hardware 30% during upgrade)\n- Sticky sessions: Route same client to same replica (used for stateful services; not needed for stateless ML servers)\n\n**Horizontal autoscaling** (Kubernetes HPA):\n- Metrics: CPU usage, memory, or custom metrics (latency, QPS from Prometheus)\n- Trigger: if avg latency > 100ms, scale replicas × 1.5; if < 50ms, scale down\n- Cool-down period: wait 5min after scaling before evaluating again (avoid flapping)\n- Min/max: e.g., min 2 (availability), max 50 (cost/quota)\n\n**Vertical scaling** (scaling up): Bigger machine (GPU → more GPUs). Harder than horizontal; usually done once at deployment time.\n\n**Bottlenecks**:\n- Model inference latency: parallelize with batching or add replicas\n- I/O (loading model): cache in memory, use memory-mapped files\n- Networking: optimize protocol (gRPC vs. REST), reduce payload size\n\n## Common gotchas / interview framings\n- \"We added 10 replicas; throughput only increased 2x.\" → Not a load-balancing issue; likely model is I/O-bound (GPU, disk) or network-bound (not compute-bound)\n- \"Autoscaler keeps flapping (up-down-up).\" → Increase cool-down period, or adjust thresholds (e.g., scale up at 80% CPU, down at 20%)\n- \"P99 latency is still high despite scaling.\" → Possible: (a) requests are not evenly distributed (sticky sessions, hashing), (b) some replicas are slow (node overloaded), or (c) queueing latency (requests wait for free replica)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You have 5 replicas of a model server. Requests arrive at 500 req/s, and each takes 100ms to complete. Is load balancing the bottleneck?",
+        "back": "No. 5 replicas × 10 req/s per replica = 50 req/s max. You're receiving 500 req/s. You need ~50 replicas, not better load balancing. Bottleneck is replica count, not load balancer."
+      },
+      {
+        "type": "mcq",
+        "front": "Your autoscaler is flapping: scaling up to 20 replicas, then down to 5, then back up. How do you fix it?",
+        "back": "Both mechanisms prevent flapping. Cool-down delays the next scale decision; wider thresholds create hysteresis (must drop to 30% to scale down, not 70%). Together, they stabilize.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Increase cool-down period (e.g., 5-10min) so HPA doesn't re-evaluate too quickly",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Widen thresholds: scale up at 80% CPU, down at 30%, not 70% and 50%",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Both A and B; flapping is often caused by too-sensitive thresholds + quick re-evaluation",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Disable autoscaling; manually set replica count",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Compare round-robin vs. least-connections load balancing for model inference servers.",
+        "back": "Round-robin: simple, fair if all replicas identical. Least-connections: better if request duration varies (don't overload slow replicas). For ML inference, least-connections is often better because some requests may take longer."
+      },
+      {
+        "type": "flip",
+        "front": "What custom metric would you use for autoscaling a model server, instead of just CPU?",
+        "back": "Model inference latency (p99), or queue depth (requests waiting for free replica), or throughput (req/s). These directly reflect service quality. CPU can be misleading if inference is I/O-bound (waiting for GPU/network)."
+      }
+    ]
+  },
+  {
+    "slug": "cold-start-and-model-loading-time",
+    "title": "Cold start and model loading time",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "difficulty": "intermediate",
+    "tags": [
+      "latency",
+      "startup",
+      "initialization",
+      "optimization",
+      "performance",
+      "warmup"
+    ],
+    "aliases": [
+      "model-warmup",
+      "startup-latency",
+      "initialization-time",
+      "first-request-latency"
+    ],
+    "wikilinks": [
+      "model-checkpoints-and-state-dicts",
+      "quantization-for-storage-and-inference-speedup",
+      "container-orchestration-docker-kubernetes"
+    ],
+    "sources": [
+      {
+        "url": "https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/index.html",
+        "label": "Triton Inference Server Documentation"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Cold_start_(computing)",
+        "label": "Cold Start Computing Overview"
+      }
+    ],
+    "explainer_md": "## Intuition\nWhen a new replica starts, it must load the model into memory/GPU before serving requests. A 1GB model might take 10-30 seconds to deserialize and allocate GPU memory. Until then, requests are blocked or rejected. Cold-start latency is the time from pod creation to first successful prediction.\n\n## Detail\n**Sources of cold-start latency**:\n1. **Container startup**: 1-5s for OS, runtime, dependencies\n2. **Model deserialization**: 5-30s depending on format (pickle slow, ONNX/SavedModel faster)\n3. **GPU memory allocation**: 2-5s for GPU context creation, buffer allocation\n4. **Warm-up iterations**: 5-10s for GPU kernel compilation (CUDA/TensorRT kernels compile on first use)\n5. **Dependency loading**: TensorFlow may spend seconds on graph construction, optimizer setup\n\n**Optimization strategies**:\n- **Pre-load in image**: Bake model into Docker image (no download at startup); trade-off: larger image, slower build/push\n- **Streaming deserialization**: Load weights incrementally into GPU; start inference while loading (if possible)\n- **Memory mapping**: Use mmap for large checkpoint files; kernel pages in chunks on-demand\n- **Quantization**: INT8 models are 4x smaller, deserialize faster\n- **Warmup requests**: After pod starts, send dummy requests to trigger JIT compilation before routing real traffic\n- **Fast deserializers**: Use ONNX Runtime (C++ backend) instead of pickle (Python)\n\n**Readiness probe**: K8s tool—pod reports \"ready\" only after model is loaded. Don't route traffic until ready; avoids cascading request timeouts.\n\n## Common gotchas / interview framings\n- \"Cold-start is 60s; unacceptable.\" → Measure each phase; likely model deserialization + GPU warmup. Pre-load in image, quantize, or switch to faster format\n- \"Autoscaling creates cascade of cold-starts; user experience degrades.\" → Increase min replicas, or pre-warm new replicas with synthetic requests\n- \"Readiness probe passes but first real request times out.\" → Warmup time extends beyond readiness; increase probe delay or add synthetic requests",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "List the main contributors to cold-start latency when a new replica is created.",
+        "back": "1) Container startup (~1-5s); 2) Model deserialization/loading (~5-30s); 3) GPU context & memory allocation (~2-5s); 4) JIT/kernel compilation (~5-10s); 5) Dependency initialization."
+      },
+      {
+        "type": "mcq",
+        "front": "Cold-start latency is 45s. Most time is spent on model deserialization. Which optimization has the biggest impact?",
+        "back": "Quantization directly reduces deserialization time (file size & decompression). Faster deserializer helps but is secondary. Pre-loading helps only if model is downloaded at runtime.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Use faster deserializer (ONNX Runtime C++ vs. PyTorch pickle); saves ~30% (5-10s)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Quantize model to INT8; shrinks size 4x, deserializes 4x faster (~30-40s → 10-15s)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Pre-load model in Docker image; eliminates download time (~0-5s savings if downloaded)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Increase GPU batch size (doesn't affect cold-start)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is a Kubernetes readiness probe, and how does it prevent cold-start issues?",
+        "back": "Readiness probe: periodic health check that returns ready/not-ready. Pod reports not-ready until model is loaded. K8s doesn't route traffic until ready; prevents timeouts on cold-start. Probe delay must be >= actual warmup time."
+      },
+      {
+        "type": "flip",
+        "front": "You have a 10GB model; deserialization takes 2 minutes. Autoscaling creates new replicas during traffic spikes, causing cascading failures. How do you fix it?",
+        "back": "1) Quantize to INT8 (2.5GB, 30s deserialize); 2) Pre-load in Docker image; 3) Increase min replicas (prevent scaling); 4) Pre-warm new replicas with synthetic requests; 5) Use streaming deserialization if possible."
+      }
+    ]
+  }
+]

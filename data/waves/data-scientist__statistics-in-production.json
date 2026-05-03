@@ -1,0 +1,892 @@
+[
+  {
+    "slug": "guardrail-metrics-and-alert-thresholds",
+    "title": "Guardrail metrics and alert thresholds",
+    "track": "data-scientist",
+    "topic": "statistics-in-production",
+    "difficulty": "intermediate",
+    "tags": [
+      "monitoring",
+      "alerting",
+      "guardrails",
+      "statistical-thresholds",
+      "false-positives"
+    ],
+    "aliases": [
+      "alert design",
+      "threshold optimization",
+      "statistical guardrails",
+      "production monitoring"
+    ],
+    "wikilinks": [
+      "anomaly-detection",
+      "dashboards-and-real-time-reporting",
+      "seasonality-and-deseasonalization",
+      "data-validation-and-schema-checks",
+      "guardrail-metrics"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/lessons-from-building-observability-tools-at-netflix-7cfafed6ab17",
+        "label": "Netflix: Lessons from Building Observability Tools"
+      },
+      {
+        "url": "https://www.thedataletter.com/p/how-netflix-does-data-reliability",
+        "label": "How Netflix Does Data Reliability"
+      },
+      {
+        "url": "https://twosigmaventures.com/blog/article/the-rise-of-ml-ops-why-model-performance-monitoring-could-be-the-next-billion-dollar-industry/",
+        "label": "Two Sigma: The Rise of MLOps"
+      },
+      {
+        "url": "https://www.bigeye.com/blog/data-in-practice-anomaly-detection-for-data-quality-at-netflix",
+        "label": "Bigeye: Anomaly Detection for Data Quality at Netflix"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nGuardrail metrics act as safety rails in production systems, triggering alerts when your models or pipelines deviate from expected performance. Unlike hard thresholds that alarm constantly, sophisticated guardrails use statistical baselines to distinguish signal from noise, allowing teams to respond to genuine degradation without alert fatigue.\n\n## Detail\n\nGuardrail metrics combine three elements:\n\n**Baseline Estimation**: Compute a rolling or fixed baseline (e.g., mean/median over past 7 days, stratified by hour or day-of-week) to account for natural variation.\n\n**Threshold Design**: Set alert triggers at ±2σ to ±3σ depending on risk tolerance. Tighter guardrails catch issues faster but risk false positives; looser ones reduce noise but miss slower drift. Netflix's observability tools track percentile-based deviations to handle skewed distributions.\n\n**Composability**: Single-metric guardrails can miss problems (a model's accuracy may stay high while precision tanks). Multi-metric guardrails look at business metrics (conversion, click-through rate), statistical metrics (model calibration), and operational metrics (latency, error rate).\n\n**Temporal Context**: Guardrail thresholds should adapt to seasonality, day-of-week effects, and known external events. Deseasonalized metrics reduce false alarms from predictable patterns.\n\n## Common gotchas / interview framings\n\n- **Alert fatigue**: Over-tuned guardrails trigger hundreds of false alerts daily; teams ignore them, missing real issues. Industry practice: aim for 5–10% false positive rate in testing.\n- **Lag in detection**: If guardrails are computed hourly but issues emerge within minutes, alerts arrive too late. Near-real-time aggregation (Kafka streams, Spark Streaming) is essential.\n- **Correlation vs. causation**: A spike in model error may correlate with upstream data quality issues, not model degradation. Include data validation guardrails alongside model performance metrics.\n- **Static vs. adaptive thresholds**: Fixed thresholds miss growing drift over time; adaptive thresholds (e.g., EWMA-based) stay responsive but can be gamed by adversaries in competitive settings.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You notice your recommender model's NDCG metric dropped from 0.75 to 0.70. How do you determine if this warrants an alert without triggering false positives?",
+        "back": "Compute a statistical baseline (e.g., mean and std dev of NDCG over the past 7 days at this hour). Use a z-score: (0.70 - mean) / std_dev. If |z| > 2–3σ (depending on risk tolerance), fire alert. Account for seasonality—weekends may naturally have lower NDCG. Set guardrail at mean - 2.5σ to balance detection speed vs. false alarms."
+      },
+      {
+        "type": "mcq",
+        "front": "When designing guardrail thresholds, which approach best handles both sudden spikes and gradual drift?",
+        "back": "EWMA gradually updates the baseline while remaining responsive to recent shifts, catching both sudden degradation and slow drift. Fixed thresholds miss drift; percentile methods can miss outliers in skewed data; alerting on any change causes alert fatigue.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Fixed static threshold at mean - 2σ; reset monthly.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Exponentially weighted moving average (EWMA) baseline with dynamic threshold; adapts daily.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Percentile-based threshold (e.g., 5th percentile) ignoring distribution shape.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Threshold set at zero; alert on any change.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your guardrail metric fires 500 alerts per week but teams ignore 95% because they're false positives. What's your first diagnostic step?",
+        "back": "Analyze alert timing: do most alerts occur at predictable hours (e.g., batch jobs, ETL runs)? If yes, deseasonalize or stratify thresholds by time-of-day. Check for correlated metrics—if model performance alerts always coincide with data quality issues, investigate upstream data sources. Finally, run a post-hoc audit: for each alert, did the metric actually recover? If recovery was slow or manual intervention required, the guardrail is too sensitive."
+      },
+      {
+        "type": "mcq",
+        "front": "You want to set guardrail alerts for click-through rate (CTR). CTR is skewed (heavy tail of high-engagement hours). Should you use z-scores or a robust alternative?",
+        "back": "Skewed distributions violate normality assumptions of z-scores, causing poorly calibrated thresholds. MAD-based or percentile approaches are robust to outliers and skew, improving alert accuracy.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Z-scores work fine; normal approximation is adequate.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Use modified z-scores (median absolute deviation / 0.6745) or percentile-based thresholds to handle skewness.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "CTR doesn't need guardrails; it's a business metric, not a model metric.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use only standard deviation; ignore mean.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "seasonality-and-deseasonalization",
+    "title": "Seasonality and deseasonalization",
+    "track": "data-scientist",
+    "topic": "statistics-in-production",
+    "difficulty": "intermediate",
+    "tags": [
+      "time-series",
+      "seasonality",
+      "detrending",
+      "forecasting",
+      "signal-processing"
+    ],
+    "aliases": [
+      "seasonal adjustment",
+      "trend removal",
+      "STL decomposition",
+      "seasonal patterns"
+    ],
+    "wikilinks": [
+      "guardrail-metrics-and-alert-thresholds",
+      "dashboards-and-real-time-reporting",
+      "anomaly-detection",
+      "outlier-detection"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/lessons-from-building-observability-tools-at-netflix-7cfafed6ab17",
+        "label": "Netflix: Observability Tools and Seasonal Patterns"
+      },
+      {
+        "url": "https://www.thedataletter.com/p/how-netflix-does-data-reliability",
+        "label": "How Netflix Does Data Reliability"
+      },
+      {
+        "url": "https://twosigmaventures.com/blog/article/the-rise-of-ml-ops-why-model-performance-monitoring-could-be-the-next-billion-dollar-industry/",
+        "label": "Two Sigma: Model Performance Monitoring"
+      },
+      {
+        "url": "https://www.datacouncil.ai/talks/anomaly-detection-for-data-quality-and-metric-shifts-at-netflix",
+        "label": "Data Council: Anomaly Detection at Netflix"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nSeasonality is predictable, recurring variation in metrics at fixed intervals (daily, weekly, yearly). Deseasonalization removes these known patterns, exposing underlying anomalies. Without deseasonalization, your guardrails trigger on expected fluctuations (Monday traffic is always 30% lower), burying real issues.\n\n## Detail\n\n**Seasonal Patterns in Production**:\n- **Intra-day**: Traffic peaks at lunch, evening; drops at 3 AM. Model accuracy may vary by traffic profile.\n- **Weekly**: Weekends show different user behavior (lower B2B engagement, higher social usage).\n- **Yearly**: Black Friday/Cyber Monday spike; holiday season drops; back-to-school surge.\n- **Event-based**: Product launches, marketing campaigns, competitor moves inject non-seasonal anomalies.\n\n**Deseasonalization Techniques**:\n\n**Simple Subtraction**: Compute hourly/daily/weekly median for each season, subtract from current observation. Fast, interpretable, works for stable patterns.\n\n**STL Decomposition** (Seasonal-Trend decomposition via LOESS): Splits time series into seasonal, trend, and residual components via robust regression. Handles slowly-changing seasonal patterns. Netflix uses variants for high-cardinality metrics.\n\n**Regression-based**: Fit a model with seasonal dummies (one-hot encoded day-of-week, hour-of-day). Residuals are deseasonalized. Flexible, supports covariates (temperature, campaign spend).\n\n**Anomaly Detection on Residuals**: After removing seasonality, anomalies in the residual component reveal true shifts (e.g., model drift, data quality issues).\n\n## Common gotchas / interview framings\n\n- **Changing seasonality**: User behavior evolves; last year's seasonal pattern no longer applies. Use adaptive methods (EWMA, online learning) to update seasonal factors.\n- **Overfitting to noise**: If you deseasonalize too aggressively (capturing day-level noise), residuals hide true anomalies. Use rolling windows (last 30 days) and validate on holdout.\n- **Missing external context**: Deseasonalization assumes the only pattern is time-of-period. But marketing campaigns, weather, or competitor actions add irregular seasonality. Include exogenous variables in regression.\n- **Lag in deseasonalization**: If you compute seasonal factors hourly but lag by 1 hour, alerts trigger late. Pre-compute seasonal factors at inference time.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your model's accuracy is 92% on Mondays and 88% on Thursdays, every week. Your guardrail fires Monday alerts due to high variance. How do you fix this?",
+        "back": "Compute day-of-week seasonal factors: for each day, calculate the median accuracy over the past 12 weeks. Subtract the day-of-week factor from the current accuracy to deseasonalize. Set guardrail thresholds on the deseasonalized metric (residual), not raw accuracy. This isolates true anomalies from expected variation."
+      },
+      {
+        "type": "mcq",
+        "front": "You're monitoring a production metric with both hourly and daily seasonality (e.g., CTR). Which decomposition method is most robust to changing patterns?",
+        "back": "STL with rolling windows detects and adapts to changing seasonality patterns. Fixed factors miss evolution; simple subtraction ignores trends; ignoring seasonality floods guardrails with false positives.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Fixed seasonal factors; recompute once per month.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "STL decomposition with a rolling window (e.g., last 60 days) to adapt to evolving seasonality.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Simple median subtraction for each hour of the day.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Ignore seasonality; set very wide guardrails.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "During Black Friday, your model's performance deviates wildly from seasonal patterns. Your deseasonalized residual shows a large anomaly. Is this a model failure or a known event?",
+        "back": "This is likely a known event (Black Friday traffic surge), not a model failure. Deseasonalization removes calendar seasonality but not event-based spikes. Add an exogenous variable (e.g., 'is_black_friday' or 'marketing_spend') to the deseasonalization model, or maintain a calendar of planned events. Flag calendar events separately so on-call teams don't confuse expected anomalies with real failures."
+      },
+      {
+        "type": "mcq",
+        "front": "You've deseasonalized a time series and now monitor the residuals. The residuals show a slow drift from 0 to +2. Your guardrail (threshold = 3σ of residuals) doesn't fire. Why is this dangerous?",
+        "back": "As residuals drift, their variance increases, causing the threshold to widen (σ grows). CUSUM or online learning methods are better for detecting gradual shifts than fixed thresholds on growing variance.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The guardrail is too tight; should be 2σ.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Slow drift is expected; no alert needed.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "The 3σ threshold assumes stationarity; drift inflates residual variance, widening the threshold. Use a smaller window or CUSUM to detect gradual drift.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Residuals should always be zero; something is wrong with deseasonalization.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "anomaly-detection",
+    "title": "Anomaly detection",
+    "track": "data-scientist",
+    "topic": "statistics-in-production",
+    "difficulty": "intermediate",
+    "tags": [
+      "anomaly-detection",
+      "outlier-detection",
+      "statistical-testing",
+      "unsupervised-learning",
+      "time-series"
+    ],
+    "aliases": [
+      "outlier detection",
+      "deviation detection",
+      "change-point detection",
+      "statistical monitoring"
+    ],
+    "wikilinks": [
+      "guardrail-metrics-and-alert-thresholds",
+      "outlier-detection",
+      "seasonality-and-deseasonalization",
+      "data-validation-and-schema-checks",
+      "dashboards-and-real-time-reporting"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/tracking-down-the-villains-outlier-detection-at-netflix-40360b31732",
+        "label": "Netflix: Tracking Down the Villains—Outlier Detection"
+      },
+      {
+        "url": "https://www.bigeye.com/blog/data-in-practice-anomaly-detection-for-data-quality-at-netflix",
+        "label": "Bigeye: Anomaly Detection for Data Quality at Netflix"
+      },
+      {
+        "url": "https://www.datacouncil.ai/talks/anomaly-detection-for-data-quality-and-metric-shifts-at-netflix",
+        "label": "Data Council: Anomaly Detection at Netflix"
+      },
+      {
+        "url": "https://www.twosigma.com/articles/treating-data-as-code-at-two-sigma/",
+        "label": "Two Sigma: Treating Data as Code"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nAnomalies are observations that deviate significantly from expected behavior. In production, anomalies signal data quality issues (corrupt records, upstream failures), model failures (distribution shift, feature engineering bugs), or real events (security breaches, system overload). Detecting them early prevents cascading failures.\n\n## Detail\n\n**Statistical Approaches**:\n\n**Z-score / Standard Deviation**: Flag values > mean ± 3σ. Fast, interpretable, assumes normality. Fails on skewed data (outliers inflate σ) and multimodal distributions.\n\n**Median Absolute Deviation (MAD)**: Robust z-score using median and MAD instead of mean/std. Better for skewed data. Threshold: |x - median| > 2.5 * MAD is approximately 99% confidence interval under normality.\n\n**Robust PCA (RPCA)**: Netflix's RAD tool decomposes high-dimensional metrics into low-rank (normal behavior) and sparse (anomalies) components. Effective for correlated, high-cardinality metrics (per-server, per-country).\n\n**DBSCAN / Isolation Forest**: Unsupervised clustering/tree-based methods. DBSCAN groups dense regions; points in sparse regions are anomalies. Isolation Forest isolates points using random decision trees. Both handle multivariate, non-Gaussian data but require tuning.\n\n**Time-series Methods**:\n- **ARIMA Residuals**: Fit an ARIMA model, flag residuals > threshold.\n- **Exponential Smoothing**: Forecast with Holt-Winters, compare forecast to observation.\n- **CUSUM (Cumulative Sum Control Chart)**: Detect small sustained shifts by accumulating deviations. More sensitive to drift than fixed thresholds.\n\n**Contextual Anomalies**: An observation may be normal in isolation but anomalous given context (e.g., model accuracy 80% is normal, but 80% on a Thursday is anomalous if Thursdays are usually 85%).\n\n## Common gotchas / interview framings\n\n- **High false-positive rate**: Anomaly detection methods flag too many innocuous deviations. Root cause: no deseasonalization, no adaptation to natural variance. Solution: deseasonalize first, tune thresholds on historical data.\n- **Delay in detection**: Methods that fit models (ARIMA, RPCA) have latency. For real-time alerts, use lightweight methods (MAD, z-score) with frequent updates.\n- **Ignoring domain context**: Statistical anomalies (unusual but harmless) differ from business anomalies (costly). A 5% traffic spike is anomalous but not concerning; a 5% accuracy drop is both.\n- **Concept drift**: Anomaly thresholds based on old data become miscalibrated as data distributions shift. Use online learning (update model incrementally) or sliding windows.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You're monitoring a recommendation system's precision across 1,000 user segments in real-time. Precision is skewed (median 0.70, mean 0.65, some segments 0.95). Z-scores fire alerts on segments with 0.95 precision. Why, and how do you fix it?",
+        "back": "Z-scores assume normality and use mean/std; skewed data has high std (due to outliers), so the z-score threshold is too tight. Instead, use Median Absolute Deviation (MAD): |precision - median| > 2.5 * MAD. Or use Robust PCA to detect anomalies in the segment-level correlation structure, treating individual segments as low-rank (normal) + sparse (anomalous)."
+      },
+      {
+        "type": "mcq",
+        "front": "Your DBSCAN-based anomaly detector requires tuning eps and min_samples. In production, data distribution shifts weekly. Which approach best handles this?",
+        "back": "Retraining with sliding windows adapts to evolving distributions. Percentile-based eps automatically scales with data density changes. Fixed parameters lead to concept drift; z-scores are simpler but less robust to multimodality.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Use fixed eps/min_samples; tune once, never change.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Retrain DBSCAN daily with a sliding 30-day window; use percentile-based eps (e.g., 99th percentile distance).",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Switch to z-scores; no parameters.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use CUSUM only; DBSCAN is overkill for production.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your time-series anomaly detector uses Exponential Smoothing. It forecast yesterday's value correctly but missed today's sudden 20% drop. Why, and how do you detect this drop faster?",
+        "back": "Exponential smoothing is retrospective—it forecasts based on past values, so sudden shifts lag detection by ~1 period. To detect faster, combine Exponential Smoothing with CUSUM: accumulate the standardized residuals (actual - forecast) / std_forecast. CUSUM detects small sustained shifts faster than fixed thresholds on individual residuals."
+      },
+      {
+        "type": "mcq",
+        "front": "A contextual anomaly detector flags model accuracy as anomalous on Thursdays (85%) vs. other days (92%), even though both are within historical ranges for those days. Is this a bug or a feature?",
+        "back": "Contextual anomalies are real but should be detected after deseasonalization. If 85% is normal for Thursdays, it shouldn't trigger an alert. Deseasonalize first, then detect anomalies in residuals.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Bug; both are normal. Detector is too sensitive.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Feature; 85% is anomalous on Thursdays because Thursdays are usually 92%. Indicates real degradation on that day.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Neither; seasonality should be removed first. After deseasonalization, 85% would be flagged only if it's unexpectedly low for a Thursday.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Indicates data quality issue; investigate Thursday data sources.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "dashboards-and-real-time-reporting",
+    "title": "Dashboards and real-time reporting",
+    "track": "data-scientist",
+    "topic": "statistics-in-production",
+    "difficulty": "beginner",
+    "tags": [
+      "visualization",
+      "dashboards",
+      "real-time",
+      "monitoring",
+      "BI-tools"
+    ],
+    "aliases": [
+      "real-time metrics",
+      "observability dashboards",
+      "metric visualization",
+      "live reporting"
+    ],
+    "wikilinks": [
+      "guardrail-metrics-and-alert-thresholds",
+      "anomaly-detection",
+      "seasonality-and-deseasonalization",
+      "data-validation-and-schema-checks",
+      "missing-data-and-imputation"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/lessons-from-building-observability-tools-at-netflix-7cfafed6ab17",
+        "label": "Netflix: Lessons from Building Observability Tools"
+      },
+      {
+        "url": "https://www.thedataletter.com/p/how-netflix-does-data-reliability",
+        "label": "How Netflix Does Data Reliability"
+      },
+      {
+        "url": "https://www.bigeye.com/blog/data-in-practice-anomaly-detection-for-data-quality-at-netflix",
+        "label": "Bigeye: Data Quality Monitoring Dashboards"
+      },
+      {
+        "url": "https://www.sigmacomputing.com/blog/automate-data-validation",
+        "label": "Automated Data Validation and Dashboards"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDashboards translate raw metrics into actionable insights. A well-designed dashboard surfaces anomalies, explains context (seasonal patterns, recent changes), and enables rapid decision-making. Poor dashboards hide problems or overwhelm with irrelevant detail, leading to slow detection and wasted alerting.\n\n## Detail\n\n**Dashboard Design Principles for Production**:\n\n**Hierarchy of Metrics**: Separate layers—executive (overall system health), operational (model-specific metrics), technical (data quality, latency). Users drill down as needed.\n\n**Deseasonalized Context**: Display raw metrics alongside deseasonalized residuals. This clarifies whether a dip is seasonal (expected) or anomalous (needs investigation).\n\n**Historical Baselines**: Show 7-day, 30-day, 1-year bands for context. A 10% dip looks minor next to a 30% historical variance but alarming if variance is typically 2%.\n\n**Anomaly Highlighting**: Use color coding (red for statistical anomalies, yellow for warnings) and annotations (why did accuracy drop? correlation with deployment, data source change).\n\n**Multi-metric Correlation**: Show related metrics on the same plot—model accuracy, data quality score, latency. Helps identify root causes (latency spike → accuracy drop = inference timeout, not model failure).\n\n**Real-time vs. Batch**: Real-time dashboards update second-by-second (via Kafka, event streams). Batch dashboards refresh hourly (SQL, Spark jobs). Choose based on decision speed needed.\n\n**Drill-down Capability**: Click a metric to see segment breakdowns (accuracy by geography, user cohort, feature version). Identifies if anomalies are global or localized.\n\n## Common gotchas / interview framings\n\n- **Vanity metrics**: Dashboards showing only aggregate metrics hide segment-level degradation. A model's overall accuracy may stay at 90%, but one segment (new users) drops to 60%.\n- **Stale dashboards**: If refresh lag is 1 hour, alerts are outdated. Prioritize real-time data pipelines for critical metrics.\n- **Alert fatigue on dashboards**: Too many red indicators (all high-variance metrics, no deseasonalization) cause teams to ignore dashboards. Use statistical significance, not raw thresholds.\n- **Lack of drill-down**: A user sees overall accuracy is 90% on a dashboard but can't see it's 85% in segment X. Without drill-down, root-cause analysis is impossible.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your model-monitoring dashboard shows accuracy is 91%, within the normal range of 88-93%, but the on-call engineer is flagging it as concerning. What context is missing from the dashboard?",
+        "back": "The dashboard shows aggregate accuracy but lacks: (1) trend direction—is it drifting downward? (2) deseasonalized residual—is 91% anomalous for this day-of-week? (3) segment breakdowns—is accuracy 91% overall but 75% in a critical segment? (4) correlated metrics—did accuracy drop correlate with a feature deployment or data source change? Add these layers: a sparkline showing trend, a comparison to historical baseline for this day-of-week, segment tables, and recent event annotations."
+      },
+      {
+        "type": "mcq",
+        "front": "You're designing a real-time dashboard for a recommendation system serving 10M daily users. Metric updates must be < 10 seconds. Which architecture is most suitable?",
+        "back": "Streaming architecture (b) delivers < 10s latency. Batch every hour (a) is too slow. Direct production database queries (c) risk OLTP load; 5-minute polling misses 10s SLA. Offline daily (d) is unacceptable for real-time monitoring.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Batch job every hour; publish to dashboard.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Kafka/Kinesis streaming pipeline → aggregation window (10s) → publish to ClickHouse/TimescaleDB → dashboard.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "SQL queries directly on production database; dashboard polls every 5 minutes.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Offline batch model; update once per day.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your dashboard shows overall CTR is normal (4.2%), but 30% of traffic comes from a new user segment with 2% CTR. Why is this important, and how should the dashboard expose it?",
+        "back": "This is a segment-specific anomaly hidden by aggregate metrics. The dashboard should include: (1) a segment breakdown table showing CTR by cohort/geography/device, highlighting outliers; (2) a cohort trend chart comparing new vs. returning users; (3) a heatmap of CTR by segment and time to detect if the anomaly is recent. This helps on-call teams identify if the model is failing in a specific segment (e.g., new recommendation algorithm doesn't generalize to new users)."
+      },
+      {
+        "type": "mcq",
+        "front": "Your dashboard refresh lag is 30 minutes (batch SQL query runs hourly). An anomaly occurs at 2:00 PM but isn't visible until 3:00 PM. How do you reduce detection latency?",
+        "back": "Streaming (b) reduces dashboard latency to 10-30s. Alerts (c) notify teams immediately, decoupled from dashboard updates. Combined, you get fast alerts (no blind spots) + detailed dashboards (root-cause analysis). (a) is still too slow for critical issues.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Increase batch frequency to every 5 minutes.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Replace batch with event streaming (Kafka) for critical metrics; refresh every 10-30 seconds.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Add separate real-time alerts that notify teams before dashboard updates.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use b and c together; streaming for real-time alerts + batch for detailed dashboards.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "data-validation-and-schema-checks",
+    "title": "Data validation and schema checks",
+    "track": "data-scientist",
+    "topic": "statistics-in-production",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-quality",
+      "validation",
+      "schema",
+      "data-pipelines",
+      "upstream-errors"
+    ],
+    "aliases": [
+      "schema validation",
+      "data contracts",
+      "input validation",
+      "data integrity checks"
+    ],
+    "wikilinks": [
+      "missing-data-and-imputation",
+      "outlier-detection",
+      "data-lineage-and-versioning",
+      "guardrail-metrics-and-alert-thresholds"
+    ],
+    "sources": [
+      {
+        "url": "https://www.thedataletter.com/p/how-netflix-does-data-reliability",
+        "label": "How Netflix Does Data Reliability"
+      },
+      {
+        "url": "https://www.twosigma.com/articles/treating-data-as-code-at-two-sigma/",
+        "label": "Two Sigma: Treating Data as Code"
+      },
+      {
+        "url": "https://www.sigmacomputing.com/blog/automate-data-validation",
+        "label": "Automated Data Validation"
+      },
+      {
+        "url": "https://www.bigeye.com/blog/data-in-practice-anomaly-detection-for-data-quality-at-netflix",
+        "label": "Bigeye: Data Quality at Netflix"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nData validation catches upstream errors before they propagate through ML pipelines. A misconfigured data producer (wrong timestamp format, missing column) could corrupt downstream models. Validation at the source (catching errors early) is cheaper than debugging at the sink (finding bad predictions).\n\n## Detail\n\n**Schema Validation**: Check that incoming data matches expected structure—column names, types, required fields. Use JSON Schema, Avro, Protobuf, or SQL constraints. Catch type errors (string in a numeric field) and structural changes (missing column).\n\n**Statistical Validation**: Check that values fall within expected ranges—age ∈ [18, 120], price ∈ [0.01, 10,000]. Detect errors like negative counts, future timestamps, or outliers indicating data corruption.\n\n**Cardinality Checks**: Categorical fields should have a bounded set of values. If a user_id field suddenly has 10M unique values (instead of typical 100K), that's an error—likely a join bug or data duplication.\n\n**Freshness Checks**: Data should arrive on schedule. If yesterday's batch didn't arrive by 6 AM, alert—the ETL pipeline may have failed.\n\n**Referential Integrity**: Foreign keys should exist. If an order references a missing user_id, that's a join error, not valid data.\n\n**Anomaly Detection on Metadata**: Count of nulls, distinct values, min/max should be stable. A sudden spike in nulls indicates upstream failure.\n\n**Sample-based Validation**: For large tables, sample rows and validate; trade off completeness for speed.\n\n## Common gotchas / interview framings\n\n- **Validation paralysis**: Over-strict validation rejects edge cases (legitimate outliers). Set thresholds based on business context, not just statistical extremes.\n- **Downstream propagation**: If validation fails, what happens to downstream consumers? Queue messages? Skip batch? Wait for manual intervention? Define SLOs for validation failures.\n- **Silent failures**: Validation passes but data is subtly wrong (e.g., timezone inconsistency, encoding mismatch). Add semantic validation, not just schema checks.\n- **Retroactive detection**: Validation often happens post-ingestion. Prefer pre-ingestion (producers validate before sending) to reduce latency.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your data pipeline ingests user events with a 'timestamp' field. One upstream service changes format from ISO-8601 to Unix seconds. Validation passes (type is still numeric). How do you prevent silent data corruption?",
+        "back": "Schema-only validation is insufficient. Add a semantic check: timestamp should be recent (e.g., within last 24 hours). Unix seconds since 1970 would be ~1.7e9, placing events in 2024. ISO-8601 parsed as seconds would place events in year 1970–1980, failing the recency check. Alternatively, validate against a known range (e.g., timestamp > cutoff_date) or add a 'timestamp_format' field to the schema."
+      },
+      {
+        "type": "mcq",
+        "front": "A downstream recommender model relies on 'item_embeddings' from a feature store. A bug causes null values in 50% of embeddings one morning. Your validation rule was 'embedding is not null.' It passed because the overall table is 50% null, within the 'tolerable' 10% null threshold. How do you improve this?",
+        "back": "Fixed thresholds (a) may be too strict or too loose. Anomaly detection on null rate (b) catches sudden increases. Combined, you detect both chronic (always 50% null) and acute (jumped from 5% to 50%) issues. (d) is also important but doesn't address the null spike.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Lower null threshold to 0.1%.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Add a 'null rate change' metric: alert if null rate increases by > 5% from yesterday.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Use both (a) and (b); detect static violations and sudden changes.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Check embedding values, not nulls; validate that embeddings are normalized.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your model uses a 'user_country' field. Yesterday, cardinality was ~200 countries. Today, you see 50,000 unique values. Your validation rule 'cardinality < 100,000' passes. Is this a problem, and how do you detect it?",
+        "back": "Yes, this is suspicious. 50,000 countries is impossible; likely a data quality bug (join error, encoding corruption, leaked internal IDs). Add a validation rule: 'cardinality should match historical values ± 10%.' Flag if cardinality >> expected range. Alternatively, use a probabilistic cardinality check (HyperLogLog) or compare recent distinct values to a 30-day rolling median."
+      },
+      {
+        "type": "mcq",
+        "front": "You validate a user-events table and find null values in the 'session_id' field. Your rule says nulls are acceptable (platform allows anonymous events). But for your model, session_id is required. Where should this validation live?",
+        "back": "Producer-level (a) catches errors early. Model-level (c) handles legitimate nulls (other consumers may accept them). Warehouse-level (b) is too rigid if different consumers have different tolerances. Both layers protect against different failure modes.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "At the data producer (source system)—reject null session_ids before ingestion.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "At the data warehouse schema level—enforce NOT NULL constraint.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "In your model's data loader—skip rows with null session_id before training.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "At the producer (a) and model level (c); separate concerns.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "missing-data-and-imputation",
+    "title": "Missing data and imputation",
+    "track": "data-scientist",
+    "topic": "statistics-in-production",
+    "difficulty": "intermediate",
+    "tags": [
+      "missing-data",
+      "imputation",
+      "MCAR",
+      "MAR",
+      "MNAR",
+      "bias"
+    ],
+    "aliases": [
+      "data imputation",
+      "missingness mechanisms",
+      "handling nulls",
+      "incomplete data"
+    ],
+    "wikilinks": [
+      "data-validation-and-schema-checks",
+      "outlier-detection",
+      "data-lineage-and-versioning"
+    ],
+    "sources": [
+      {
+        "url": "https://www.thedataletter.com/p/how-netflix-does-data-reliability",
+        "label": "How Netflix Does Data Reliability"
+      },
+      {
+        "url": "https://www.twosigma.com/articles/treating-data-as-code-at-two-sigma/",
+        "label": "Two Sigma: Treating Data as Code"
+      },
+      {
+        "url": "https://www.bigeye.com/blog/data-in-practice-anomaly-detection-for-data-quality-at-netflix",
+        "label": "Bigeye: Data Quality Monitoring"
+      },
+      {
+        "url": "https://medium.com/geekculture/how-the-tech-giants-are-ensuring-data-quality-with-12d1f731681d",
+        "label": "Tech Giants: Data Quality with ML"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMissing data is unavoidable in production (sensors fail, users skip optional fields, integrations lag). Imputation (filling missing values) is necessary, but naive approaches introduce bias. The choice between listwise deletion, mean imputation, or sophisticated methods depends on why data is missing.\n\n## Detail\n\n**Missingness Mechanisms** (Rubin's taxonomy):\n\n**MCAR (Missing Completely At Random)**: Missingness is independent of observed and unobserved data. E.g., sensor randomly fails 5% of the time. Listwise deletion (remove rows with any missing value) is unbiased but wasteful.\n\n**MAR (Missing At Random)**: Missingness depends on observed data, not the missing value itself. E.g., users with low income are less likely to report income (missing income depends on observed education). Solution: multiple imputation by chained equations (MICE), maximum likelihood, or inverse probability weighting.\n\n**MNAR (Missing Not At Random)**: Missingness depends on the unobserved value. E.g., users with high debt don't report debt (missing debt depends on debt itself). No unbiased solution; requires assumptions or sensitivity analysis.\n\n**Imputation Methods**:\n\n**Listwise Deletion**: Remove rows with any missing value. Unbiased under MCAR but loses data; biased under MAR/MNAR.\n\n**Mean/Median Imputation**: Replace missing values with column mean/median. Fast, reduces variance, but underestimates true variance and correlation. Use cautiously.\n\n**Forward-fill / Backward-fill** (time-series): For temporal data, use last observed value. Reasonable for slowly-changing features (customer demographics) but biased if true values drift.\n\n**Multiple Imputation**: Generate m (e.g., 5–20) imputed datasets, train models on each, combine predictions (pool via Rubin's rules). Preserves uncertainty, reduces bias under MAR.\n\n**Model-based Imputation** (KNN, regression, trees): Use observed features to predict missing values. Reduces bias under MAR but risks overfitting if imputation model is misspecified.\n\n## Common gotchas / interview framings\n\n- **Imputation leakage**: Training data uses imputation trained on all data (including test labels). At inference, you can't impute the same way. Solution: fit imputation on training data only, apply to test data.\n- **Misidentifying missingness mechanism**: Assuming MCAR when truly MAR/MNAR introduces bias. Audit missing patterns: does missingness correlate with observed variables?\n- **Over-imputation**: Imputing many columns can induce complex correlation patterns, leading to overfitting. Consider feature selection—drop columns with > 50% missingness.\n- **Monitoring post-imputation**: After imputation, synthetic values may not reflect true distributions. Monitor imputation rates; if they surge, investigate the cause (upstream failure, schema change).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "In your training data, income is missing for 30% of users, primarily those reporting < 50K annual income (strong correlation). You use mean imputation. Will your model have bias?",
+        "back": "Yes, strong bias. This is MAR (missingness depends on observed income level). Mean imputation replaces missing low-income values with the overall mean (diluting low-income representation), biasing the model toward overestimating income. Solution: use multiple imputation (MICE) or maximum likelihood, which preserve the relationship between income and other features. Alternatively, use a separate indicator variable (is_income_missing) to let the model learn the pattern."
+      },
+      {
+        "type": "mcq",
+        "front": "You have time-series data with 20% missing values in daily temperature. Missingness is random (broken sensor). At inference, you must impute, but you can't use future values. Which method is best?",
+        "back": "Missingness is MCAR (random), so any method is theoretically unbiased. Forward-fill is practical for inference because you only use past data (no future leakage). Mean imputation (a) works statistically but forward-fill is more realistic temporally. MICE (c) is powerful but overkill for MCAR. Listwise deletion (d) discards data unnecessarily.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Mean imputation using all historical data.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Forward-fill (last known value).",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "MICE (multiple imputation by chained equations).",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Listwise deletion (remove days with missing temps).",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You deploy a model trained with mean imputation for missing values. At inference, missingness jumps from 5% to 40% due to a data source outage. Your model's performance drops. Explain why and propose a fix.",
+        "back": "The model was trained on data with 5% mean imputation (close to true values). At inference, 40% are means (synthetic), far from true distributions. This distribution shift causes poor calibration. Fix: (1) retrain with higher missingness to match the new regime, (2) use a missingness indicator feature to let the model learn the pattern, or (3) switch to MICE, which better handles OOD missingness by modeling relationships, not just using overall means."
+      },
+      {
+        "type": "mcq",
+        "front": "During model development, you impute missing values in training and test sets using the combined mean (all data). At deployment, you impute using only training data mean. Which scenario is this addressing, and is it correct?",
+        "back": "In development, using combined mean leaks test information into imputed values (test labels influence the mean). At deployment (no test data yet), you impute using training mean only. This is a standard precaution against overfitting / leakage.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Addressing data leakage; correct. Development mean includes test labels; production mean is unbiased.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Addressing concept drift; incorrect. Should use the same mean for consistency.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Both (a) and additional insurance against test contamination; correct.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Unnecessary complication; using combined mean everywhere is fine.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "outlier-detection",
+    "title": "Outlier detection",
+    "track": "data-scientist",
+    "topic": "statistics-in-production",
+    "difficulty": "intermediate",
+    "tags": [
+      "outlier-detection",
+      "statistical-testing",
+      "anomaly-detection",
+      "data-quality",
+      "robustness"
+    ],
+    "aliases": [
+      "extreme-value detection",
+      "anomalies",
+      "statistical outliers",
+      "domain outliers"
+    ],
+    "wikilinks": [
+      "anomaly-detection",
+      "data-validation-and-schema-checks",
+      "missing-data-and-imputation",
+      "guardrail-metrics-and-alert-thresholds"
+    ],
+    "sources": [
+      {
+        "url": "https://netflixtechblog.com/tracking-down-the-villains-outlier-detection-at-netflix-40360b31732",
+        "label": "Netflix: Tracking Down the Villains—Outlier Detection"
+      },
+      {
+        "url": "https://www.bigeye.com/blog/data-in-practice-anomaly-detection-for-data-quality-at-netflix",
+        "label": "Bigeye: Anomaly Detection for Data Quality"
+      },
+      {
+        "url": "https://www.twosigma.com/articles/treating-data-as-code-at-two-sigma/",
+        "label": "Two Sigma: Data as Code"
+      },
+      {
+        "url": "https://www.datacouncil.ai/talks/anomaly-detection-for-data-quality-and-metric-shifts-at-netflix",
+        "label": "Data Council: Anomaly Detection at Scale"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nOutliers are extreme values that don't match the bulk of data. In production, outliers can be legitimate (billion-dollar transactions, superusers) or errors (sensor malfunction, data corruption). Detecting and handling outliers is critical for model training (outliers skew parameters) and inference (outliers may be adversarial).\n\n## Detail\n\n**Statistical Outlier Detection**:\n\n**Z-score**: Flag values > mean ± 3σ. Assumes normality; breaks on skewed/heavy-tailed data.\n\n**Modified Z-score (MAD-based)**: Flag values where |x - median| > 2.5 * MAD. Robust to skewness and outliers in parameter estimation.\n\n**IQR (Interquartile Range)**: Flag values < Q1 - 1.5*IQR or > Q3 + 1.5*IQR. Common in exploratory analysis, robust, but arbitrary multiplier.\n\n**Percentile-based**: Flag values in tails (e.g., < 1st percentile or > 99th percentile). Simple, adapts to data, but misses subtle anomalies.\n\n**Domain-based Outlier Detection**: Business logic defines valid ranges. E.g., age must be in [18, 120], price must be > 0. Catches errors that statistical methods miss (a price of -$10 is unusual statistically, but a business rule catches it).\n\n**Multivariate Outliers**: A single feature may be normal, but the combination is rare. E.g., age 85 + income $500K is unusual. Use Mahalanobis distance, Isolation Forest, or DBSCAN.\n\n**Contextual Outliers**: An observation may be normal in isolation but anomalous in context. E.g., CPU usage 80% is normal at peak hours but anomalous at 3 AM.\n\n## Common gotchas / interview framings\n\n- **Removing outliers without investigation**: Outliers may be real (superusers, large transactions, security breaches). Removing them loses information. Better: flag for review, fit robust models (resistant to outliers), or use separate modeling paths for outliers.\n- **Outlier leakage**: Identifying outliers on the full dataset, then training on the outlier-removed set, introduces bias. Identify outliers on training data only; apply same threshold to test data.\n- **Conflating statistical and domain outliers**: A statistically extreme value (e.g., 6σ) may be legitimate; a statistically normal value may violate business rules. Use both approaches.\n- **Temporal outliers**: Outlier thresholds should adapt over time (distributions change). Use sliding windows or online learning.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your dataset has user purchase amounts: median $50, IQR [$20–$100]. You flag outliers as > Q3 + 1.5*IQR = $150. A purchase of $155 is removed as an outlier. But that customer has 100 purchases averaging $100. Is this outlier real?",
+        "back": "This is a false positive. The purchase is statistically outlying (> 150) but normal for this user in context. Better approach: use contextual outliers—flag values that are anomalous relative to user history (e.g., > user_mean + 3*user_std). Or use a domain rule: high purchases are normal if the customer has high lifetime value. Domain context reduces false positives."
+      },
+      {
+        "type": "mcq",
+        "front": "Your training data has 1% of values as statistical outliers (> mean + 3σ). You remove them before training. At inference, 1% of new data are also outliers. Your model performs poorly. Why?",
+        "back": "Train/test shift: model is trained on data without 1% outliers, but at inference, 1% are outliers (distribution mismatch). Solutions: keep outliers in training, use robust models (e.g., Huber loss, Isolation Forest), or flag outliers at inference with a separate handling pathway.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Training data had insufficient outliers; model didn't learn to handle them.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Removing outliers during training but not inference causes distribution mismatch (train/test shift).",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "The outlier threshold should be wider (e.g., 4σ instead of 3σ).",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Outliers should never be removed; use robust loss functions instead.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You monitor a metric with a 99th percentile threshold for outlier detection. For 12 months of data, the 99th percentile is $1000. One month, you see values > $1000 suddenly appear—is this outlier inflation or real change?",
+        "back": "Unclear without context. This could be: (1) real business change (e.g., holiday season, new market), (2) data quality issue (encoding error, currency conversion bug), or (3) concept drift (customer behavior evolving). Investigate: (a) check timestamps—if outliers are recent, use a rolling percentile (last 30 days) to adapt. (b) Correlate with external events (campaign, policy change). (c) Validate data quality. Don't use static percentiles; use sliding windows."
+      },
+      {
+        "type": "mcq",
+        "front": "You want to detect multivariate outliers (e.g., unusual combinations of features). Between Mahalanobis distance, Isolation Forest, and DBSCAN, which is best for high-dimensional production data (100+ features)?",
+        "back": "Mahalanobis distance (a) requires estimating covariance (100×100 matrix), prone to numerical instability in high dims. DBSCAN (c) requires tuning and doesn't scale well. Isolation Forest (b) avoids distance computation, scales well, and is fast. It's a strong default for high-dimensional production outlier detection.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Mahalanobis distance; works in all dimensions.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Isolation Forest; scales well, works on any distribution, less sensitive to curse of dimensionality.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "DBSCAN; requires tuning eps but very accurate.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All three equally; choose by accuracy on holdout.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "data-lineage-and-versioning",
+    "title": "Data lineage and versioning",
+    "track": "data-scientist",
+    "topic": "statistics-in-production",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-lineage",
+      "versioning",
+      "reproducibility",
+      "data-provenance",
+      "metadata"
+    ],
+    "aliases": [
+      "data provenance",
+      "pipeline tracking",
+      "feature versioning",
+      "reproducibility"
+    ],
+    "wikilinks": [
+      "data-validation-and-schema-checks",
+      "missing-data-and-imputation",
+      "outlier-detection"
+    ],
+    "sources": [
+      {
+        "url": "https://www.twosigma.com/articles/treating-data-as-code-at-two-sigma/",
+        "label": "Two Sigma: Treating Data as Code"
+      },
+      {
+        "url": "https://www.thedataletter.com/p/how-netflix-does-data-reliability",
+        "label": "How Netflix Does Data Reliability"
+      },
+      {
+        "url": "https://www.bigeye.com/blog/data-in-practice-anomaly-detection-for-data-quality-at-netflix",
+        "label": "Bigeye: Data Quality and Lineage"
+      },
+      {
+        "url": "https://www.datacouncil.ai/talks/anomaly-detection-for-data-quality-and-metric-shifts-at-netflix",
+        "label": "Data Council: Data Reliability at Scale"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nData lineage tracks how data flows through ETL pipelines—which source tables, transformations, and features feed into your model. Versioning enables reproducibility: \"which training data produced this model?\" and \"did results change after we updated the feature definition?\" Without lineage, debugging production issues is blind; without versioning, you can't reproduce or rollback.\n\n## Detail\n\n**Data Lineage**: A DAG (directed acyclic graph) showing:\n- **Source**: Raw data tables (logs, databases, third-party APIs).\n- **Transformations**: ETL/feature engineering jobs (SQL, Spark, Python).\n- **Derived Tables**: Intermediate and final feature sets.\n- **Consumers**: Models, dashboards, reports.\n\nUseful for: impact analysis (if source schema changes, which models break?), debugging (trace bad predictions back to bad features), and compliance (audit trail).\n\n**Versioning Strategies**:\n\n**Snapshot Versioning**: Periodically freeze feature datasets with a version ID (v1, v2). Models point to specific versions. Enables rollback but requires storage.\n\n**Deterministic Materialization**: Features are deterministic functions of raw data + parameters. Version parameters (feature SQL, thresholds), not data. Requires recomputation.\n\n**Hybrid**: Store recent snapshots; older versions are recomputed. Trade off storage vs. computation.\n\n**Metadata Tracking**:\n- **Data Profile**: Row count, column types, null rates, min/max, cardinality at each version.\n- **Transformation Logs**: Which code version, parameters, and execution time for each job.\n- **Model Lineage**: Which training data (table versions, date range, features) trained which model version.\n\n**Reproducibility**:\n- Pin dependencies (Python version, library versions).\n- Record random seeds for train/test splits.\n- Store feature computation code and parameters.\n- Commit all to version control.\n\n## Common gotchas / interview framings\n\n- **Silent feature changes**: Feature definition evolves (e.g., zip code bucketing changes from 5-digit to 3-digit), but versioning isn't updated. Model behavior shifts mysteriously. Use schema versioning with validation.\n- **Implicit dependencies**: Feature A depends on Feature B, but not documented. When Feature B breaks, Feature A silently degrades. Use explicit lineage tooling (Great Expectations, dbt, Airflow).\n- **Reproducibility gaps**: Training used local Python scripts and manual data exports; lineage is lost. Require all training to flow through versioned pipelines (no manual steps).\n- **Scalability of lineage tracking**: Tracking millions of micro-features across thousands of jobs is expensive. Focus lineage on critical paths (features used in production models).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Your model was trained on features from a source table that was updated yesterday (rows deduplicated). The model's accuracy dropped 5%. How do you diagnose if the source change caused it?",
+        "back": "Without data lineage, you're blind. With lineage: (1) Identify which version of the source table was used to train (lineage metadata). (2) Check if that version is still available (snapshot or recomputable). (3) Retrain on the old version; if accuracy recovers, the source change caused the issue. (4) Investigate the deduplication logic—did it remove legitimate duplicates or collapse important user events? Use tools like dbt or Airflow to track lineage automatically."
+      },
+      {
+        "type": "mcq",
+        "front": "You discover a bug in your feature engineering code (e.g., wrong aggregation window). The bug was deployed 2 months ago. Which versioning approach enables the fastest rollback?",
+        "back": "Snapshot versioning enables instant rollback—switch model to the old feature snapshot. Deterministic versioning (b) requires recomputation (time-consuming). Hybrid (c) works if snapshot is available; if not, falls back to recomputation. Manual (d) is unreliable at scale.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Snapshot versioning: revert to the last-known-good snapshot from 2 months ago.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Deterministic versioning: fix the code, recompute all historical features.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Hybrid: store recent snapshots (last month); recompute older features if needed.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Manual versioning: ask the team for the old dataset.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your model's performance varies depending on the time-of-day when features are computed (morning features → 92% accuracy, evening features → 88%). Should lineage track time-of-computation?",
+        "back": "Yes, absolutely. This indicates time-dependent data quality or feature shifts (e.g., features computed from streaming data differ in latency/freshness depending on time-of-day). Lineage should include: (1) timestamp features were materialized, (2) data cutoff times for aggregations, (3) any time-dependent sources. This helps identify whether the issue is data freshness (evening features use stale data) or data quality (evening ETL produces different results)."
+      },
+      {
+        "type": "mcq",
+        "front": "You're implementing feature versioning for 10,000 features across 50 models. Snapshot versioning requires storing full feature datasets (massive storage). How do you balance versioning and storage?",
+        "back": "Pure snapshots (a) is expensive. Pure recomputation (b) is slow at scale. Hybrid (c) prioritizes storage for critical paths (high-revenue models), recomputes others, and maintains full lineage for auditing. (d) is insufficient if data sources evolve.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Snapshot everything; storage is cheap.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Track lineage of all features and code; recompute features from source code on-demand.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Snapshot only features used by critical models; recompute others; track lineage everywhere.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No snapshots; rely on git history of code.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,921 @@
+[
+  {
+    "slug": "cnn-architectures-resnet-efficientnet-vision-transformers",
+    "title": "CNN architectures (ResNet, EfficientNet, Vision Transformers)",
+    "track": "verticals",
+    "topic": "computer-vision",
+    "difficulty": "intermediate",
+    "tags": [
+      "classification",
+      "backbone",
+      "efficiency",
+      "vision-transformers",
+      "architecture-design"
+    ],
+    "aliases": [
+      "ResNet",
+      "EfficientNet",
+      "ViT"
+    ],
+    "wikilinks": [
+      "httpsarxivorgabs151203385",
+      "httpsarxivorgabs190511946",
+      "httpsarxivorgabs201011929",
+      "httpspaperswithcodecommethodresidual-connection",
+      "httpspaperswithcodecommethodvision-transformer"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1512.03385",
+        "label": "Deep Residual Learning for Image Recognition (ResNet)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1905.11946",
+        "label": "EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks"
+      },
+      {
+        "url": "https://arxiv.org/abs/2010.11929",
+        "label": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale (ViT)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nImage classifiers form the foundation of computer vision. ResNet introduced residual connections to train very deep networks. EfficientNet optimizes the tradeoff between accuracy, latency, and model size through compound scaling. Vision Transformers (ViT) replace convolutions entirely with pure self-attention, showing that \"an image is worth 16x16 words\" when you patch it into tokens.\n\n## Detail\n\n**ResNet (Residual Networks):**\n- Skip connections allow gradients to flow through deep networks (50, 101, 152 layers)\n- Bottleneck blocks reduce computation: 1x1 conv → 3x3 conv → 1x1 conv\n- Enables training of networks 100+ layers deep without vanishing gradients\n\n**EfficientNet:**\n- Compound scaling: jointly scale depth, width, and resolution\n- Mobile-friendly variants (B0–B7) for different compute budgets\n- Achieves SOTA accuracy with fewer parameters than ResNet/Inception\n\n**Vision Transformers (ViT):**\n- Divide image into patches, embed as tokens, apply standard transformer\n- Requires large pretraining datasets (ImageNet-21k) to match CNN performance\n- Excels with transfer learning; scales better than CNNs on large datasets\n- Enables multimodal learning (CLIP, ALIGN) via shared embedding space\n\n## Common gotchas / interview framings\n- ResNets still strong baseline; don't assume ViT always better\n- EfficientNet FLOPs vs. latency: hardware matters (GPU vs. mobile)\n- ViT needs big data; small-scale datasets favor CNNs\n- Hybrid architectures (e.g., Swin Transformer) combine convolution and attention\n- Batch norm in ResNet is critical; different optimizers for ViT (warmup, learning rate scheduling)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key innovation of ResNet that enables training of 100+ layer networks?",
+        "back": "Residual (skip) connections that allow gradients to flow directly across layers, preventing vanishing gradients. F(x) + x instead of just F(x)."
+      },
+      {
+        "type": "mcq",
+        "front": "EfficientNet improves over ResNet/Inception primarily by:",
+        "back": "Compound scaling jointly optimizes network depth (# layers), width (# channels), and input resolution, achieving better accuracy-efficiency tradeoffs. EfficientNet-B0 matches ResNet-50 accuracy with ~10x fewer parameters.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Adding more convolutional layers",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Using compound scaling of depth, width, and resolution uniformly",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Replacing convolutions with attention",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Removing batch normalization",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "When should you prefer CNNs over Vision Transformers, and why?",
+        "back": "Small-scale datasets (<10k images) favor CNNs due to inductive bias (locality, weight sharing). ViTs require large pretraining datasets (ImageNet-21k or 400M+ image-text pairs) to match CNN performance; smaller datasets lead to overfitting."
+      },
+      {
+        "type": "mcq",
+        "front": "Vision Transformers divide an image into patches and embed them as tokens. For a 224x224 image with 16x16 patches, how many tokens are created?",
+        "back": "224 / 16 = 14 patches per dimension. 14 × 14 = 196 patches. ViT processes these as a sequence of tokens, plus 1 [CLS] token, for 197 total.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "14",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "196",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "224",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "784",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "object-detection-yolo-faster-r-cnn-retinanet",
+    "title": "Object detection (YOLO, Faster R-CNN, RetinaNet)",
+    "track": "verticals",
+    "topic": "computer-vision",
+    "difficulty": "intermediate",
+    "tags": [
+      "detection",
+      "real-time",
+      "anchor-free",
+      "bounding-boxes",
+      "speed-accuracy-tradeoff"
+    ],
+    "aliases": [
+      "YOLO",
+      "Faster R-CNN",
+      "RetinaNet",
+      "YOLOv12"
+    ],
+    "wikilinks": [
+      "httpsarxivorgabs150602640",
+      "httpsarxivorgabs161208242",
+      "httpsarxivorgabs170802002",
+      "httpsdocsultralyticscommodelsyolo12",
+      "httpsgithubcomsunsmarterjieyolov12"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1506.02640",
+        "label": "You Only Look Once: Unified, Real-Time Object Detection"
+      },
+      {
+        "url": "https://arxiv.org/abs/1612.08242",
+        "label": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks"
+      },
+      {
+        "url": "https://arxiv.org/abs/1708.02002",
+        "label": "Focal Loss for Dense Object Detection (RetinaNet)"
+      },
+      {
+        "url": "https://docs.ultralytics.com/models/yolo12/",
+        "label": "YOLOv12: Attention-Centric Real-Time Object Detectors"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nObject detection finds and labels objects in images using bounding boxes. Three paradigms: (1) one-stage detectors (YOLO) regress boxes directly—fast but less accurate; (2) two-stage detectors (Faster R-CNN) propose regions first, then refine—slower but more accurate; (3) attention-based detectors (DETR, YOLOv12) use transformers for set prediction.\n\n## Detail\n\n**YOLO (You Only Look Once):**\n- Single-stage: divide image into grid, predict class + bbox offset per grid cell\n- Real-time: 45-155 FPS on GPU depending on variant\n- YOLOv12 (2025): introduces Area Attention for efficient large receptive fields; R-ELAN for feature aggregation; ~2% mAP improvement over v11\n- Trade-off: lower accuracy than two-stage but massively faster\n\n**Faster R-CNN (Two-Stage):**\n- Region Proposal Network (RPN) generates candidate boxes; ROI pooling extracts fixed-size features\n- Second stage classifies proposals and refines boxes\n- Higher accuracy (~76 mAP COCO) but 0.1–1 fps depending on backbone\n- Standard for object detection in research\n\n**RetinaNet (Focal Loss):**\n- Single-stage detector addressing class imbalance via focal loss\n- Focal loss downweights easy negatives, focuses on hard examples\n- Achieves ~59 mAP at 5 fps; bridges one-stage/two-stage gap\n- Outperforms YOLO and matches Faster R-CNN accuracy at higher speed\n\n**Modern Evolution (YOLOv12):**\n- Area Attention: divides feature maps into equal-sized regions for efficient self-attention\n- Removes positional encoding; uses FlashAttention for speed\n- Handles multi-scale detection, instance segmentation, pose estimation\n- YOLO26 (Sept 2025): removes NMS bottleneck, introduces MuSGD optimizer\n\n## Common gotchas / interview framings\n- YOLO trades accuracy for speed; Faster R-CNN opposite\n- Class imbalance is critical in dense detection; focal loss fixes this\n- Anchor-free detectors (YOLO center point, FCOS) simplify design\n- NMS post-processing is a bottleneck; recent models explore NMS-free decoding\n- Evaluate on COCO metrics: AP (average precision), AR (recall), APsmall/APmedium/APlarge\n- YOLOv12 attention mechanism avoids quadratic complexity of standard self-attention",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "Which detector is fastest but trades accuracy, and which is slowest but most accurate?",
+        "back": "YOLO: ~100 fps, ~50 mAP (speed-first). Faster R-CNN: ~0.5 fps, ~76 mAP (accuracy-first). RetinaNet: ~5 fps, ~59 mAP (middle ground via focal loss).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "YOLO fastest, RetinaNet slowest",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "YOLO fastest, Faster R-CNN slowest",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "RetinaNet fastest, Faster R-CNN slowest",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Faster R-CNN fastest, YOLO slowest",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is focal loss and why does it help RetinaNet work better than YOLO?",
+        "back": "Focal loss downweights easy negative examples (background) that dominate training, focusing on hard positives. YOLO suffers from class imbalance (999:1 background:object); focal loss rebalances this, improving accuracy without complex proposal mechanisms."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the two stages in Faster R-CNN and why they are separate.",
+        "back": "Stage 1 (RPN): generates ~2000 region proposals from anchors. Stage 2 (classification): ROI pooling extracts fixed-size features, then classifies proposals and refines boxes. Separation allows RPN to learn region quality independently, improving proposal quality before final refinement."
+      },
+      {
+        "type": "mcq",
+        "front": "YOLOv12's key innovation for efficient large receptive fields is:",
+        "back": "Area Attention avoids O(n²) complexity of full self-attention by dividing feature maps into equal-sized regions and computing attention within/across regions. Maintains large effective receptive field with low computational cost.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Stacked dilated convolutions",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Area Attention: dividing feature maps into regions for efficient self-attention",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Replacing convolutions with GraphConvNets",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Multi-head grouped convolutions",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Name the primary bottleneck in traditional YOLO pipelines that YOLO26 addresses.",
+        "back": "Non-Maximum Suppression (NMS): post-processing step that sequentially suppresses overlapping boxes. YOLO26 removes NMS entirely via end-to-end learnable decoding, reducing latency and simplifying deployment."
+      }
+    ]
+  },
+  {
+    "slug": "data-augmentation-for-vision-autoaugment-randaugment",
+    "title": "Data augmentation for vision (AutoAugment, RandAugment)",
+    "track": "verticals",
+    "topic": "computer-vision",
+    "difficulty": "intermediate",
+    "tags": [
+      "augmentation",
+      "regularization",
+      "robustness",
+      "training",
+      "generalization"
+    ],
+    "aliases": [
+      "AutoAugment",
+      "RandAugment",
+      "CutMix",
+      "Mixup"
+    ],
+    "wikilinks": [
+      "httpsarxivorgabs180509501",
+      "httpsarxivorgabs190913719",
+      "httpsarxivorgabs190504412",
+      "httpsarxivorgabs171009412",
+      "httpspaperswithcodecommethodsaugmentation"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1805.09501",
+        "label": "AutoAugment: Learning Augmentation Policies from Data"
+      },
+      {
+        "url": "https://arxiv.org/abs/1909.13719",
+        "label": "RandAugment: Practical automated data augmentation with a reduced search space"
+      },
+      {
+        "url": "https://arxiv.org/abs/1905.04412",
+        "label": "CutMix: Regularization Strategy to Train Strong Classifiers"
+      },
+      {
+        "url": "https://arxiv.org/abs/1710.09412",
+        "label": "mixup: Beyond Empirical Risk Minimization"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nData augmentation artificially increases training data diversity without new labels. It improves generalization and robustness to distribution shift. Manual augmentation (rotate, crop, blur) is simple but suboptimal. AutoAugment and RandAugment automatically search for or sample augmentation policies, consistently improving model accuracy.\n\n## Detail\n\n**Manual Augmentation (Baseline):**\n- Rotation, horizontal flip, color jitter, random crop, Gaussian blur\n- Improves generalization but hand-crafted policies are domain-specific\n\n**AutoAugment:**\n- Searches for optimal augmentation policy using reinforcement learning (RNN controller)\n- Samples magnitude + probability for each of 16 operations (rotate, shear, translate, etc.)\n- Finds policies that boost accuracy by 0.5–2% on ImageNet/CIFAR\n- Downside: expensive search (~5 GPU days); policies don't transfer across datasets\n\n**RandAugment:**\n- Simplified: randomly apply N augmentation operations with magnitude M\n- Decouples policy search from magnitude selection\n- Faster, more transferable than AutoAugment; comparable accuracy gains\n- Hyperparameters: N (# operations, typically 2), M (magnitude, 0–30)\n\n**CutMix & Mixup:**\n- CutMix: cut a square patch from one image, paste onto another; mix labels\n- Mixup: blend two images/labels via weighted sum λ * x₁ + (1-λ) * x₂\n- Both reduce overfitting; CutMix more effective than Mixup for detection\n\n**Modern Practice:**\n- Combine AutoAugment + CutMix for SOTA: often +2–4% accuracy\n- Used in top contest solutions (ImageNet competitions)\n\n## Common gotchas / interview framings\n- Augmentation must be domain-aware (e.g., don't rotate medical images)\n- Autoaugment policies learned on ImageNet don't transfer to medical/satellite imagery\n- Magnitude is more important than finding the \"optimal\" operation set\n- Augmentation in test time? No—only train; test on clean data\n- Beware: excessive augmentation can hurt if your model is weak (underfitting)\n- CutMix can cause label inconsistency if patch covers multiple objects",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "AutoAugment improves accuracy by learning optimal augmentation policies. What is its main limitation?",
+        "back": "AutoAugment uses RL to search the augmentation space, which is computationally expensive. More critically, a policy learned on ImageNet doesn't generalize to CIFAR, medical, or satellite imagery—you must re-search per domain.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Requires human annotation of augmentation parameters",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Expensive search (~5 GPU days) and policies don't transfer across datasets",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Only works on ImageNet",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Policies are too aggressive and cause image degradation",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does RandAugment simplify AutoAugment, and what is the tradeoff?",
+        "back": "RandAugment: randomly sample N operations (fixed, e.g., 2) and apply with random magnitude M (0–30). Eliminates expensive policy search; policies are more transferable. Tradeoff: may miss domain-specific improvements that RL finds, but gains are comparable in practice."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the difference between CutMix and Mixup.",
+        "back": "Mixup: blend entire images λ*x₁ + (1-λ)*x₂ with blended labels. CutMix: cut a square patch from x₂, paste onto x₁, mix labels proportional to patch area. CutMix preserves image structure better and is more effective for detection tasks."
+      },
+      {
+        "type": "mcq",
+        "front": "When should you NOT apply aggressive data augmentation?",
+        "back": "Aggressive augmentation can hurt weak models (increases variance, underfitting). Also, domain-specific transformations (e.g., rotation in radiology) can destroy labels. Always validate augmentation improves validation accuracy, not just training.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "When you have a weak/underfitting model",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "When augmentation contradicts domain semantics (e.g., rotating medical images)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Both (a) and (b)",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Only during test time",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "semantic-segmentation-fcn-u-net-deeplab",
+    "title": "Semantic segmentation (FCN, U-Net, DeepLab)",
+    "track": "verticals",
+    "topic": "computer-vision",
+    "difficulty": "intermediate",
+    "tags": [
+      "segmentation",
+      "dense-prediction",
+      "pixel-classification",
+      "encoder-decoder",
+      "atrous-convolution"
+    ],
+    "aliases": [
+      "FCN",
+      "U-Net",
+      "DeepLab",
+      "semantic segmentation"
+    ],
+    "wikilinks": [
+      "httpsarxivorgabs14114038",
+      "httpsarxivorgabs150504597",
+      "httpsarxivorgabs160602128",
+      "httpsarxivorgabs170605587",
+      "httpspaperswithcodecomtasksemantic-segmentation"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1411.4038",
+        "label": "Fully Convolutional Networks for Semantic Segmentation"
+      },
+      {
+        "url": "https://arxiv.org/abs/1505.04597",
+        "label": "U-Net: Convolutional Networks for Biomedical Image Segmentation"
+      },
+      {
+        "url": "https://arxiv.org/abs/1606.02128",
+        "label": "DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs"
+      },
+      {
+        "url": "https://arxiv.org/abs/1706.05587",
+        "label": "DeepLabv3: Rethinking Atrous Convolution for Semantic Image Segmentation"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nSemantic segmentation labels every pixel in an image with a class (e.g., \"road\", \"tree\", \"car\"). Unlike classification (one label per image) or object detection (boxes), segmentation is pixel-level dense prediction. Key challenge: preserve spatial resolution while capturing context.\n\n## Detail\n\n**FCN (Fully Convolutional Networks):**\n- Replace fully connected layers with 1x1 convolutions\n- Downsampling path (encoder) extracts features; upsampling path (decoder) restores resolution\n- Skip connections from early layers preserve fine details\n- Transposed convolutions / bilinear upsampling restore resolution\n- Simple but suffers from coarse predictions due to information loss\n\n**U-Net:**\n- Encoder-decoder with skip connections between corresponding levels\n- Contracting path: 3x3 conv → ReLU → 2x2 max pool (downsample)\n- Expanding path: transposed conv → concatenate with encoder feature → 3x3 conv (upsample)\n- Excellent for medical imaging (small datasets); skip connections preserve edges\n- Minimal parameters; works with ~100 training images (transfer learning)\n\n**DeepLab:**\n- Atrous (dilated) convolution: increases receptive field without pooling (no resolution loss)\n- ASPP (Atrous Spatial Pyramid Pooling): multi-scale context via parallel atrous convolutions (rates 1, 6, 12, 18)\n- CRF (Conditional Random Field) post-processing refines boundaries\n- DeepLabv3: removes CRF; improves ASPP design; achieves ~82% mIoU on Cityscapes\n\n**Comparison:**\n- FCN: simplest, slower on boundary precision\n- U-Net: best for small medical datasets, strong edge preservation\n- DeepLab: SOTA on large scenes (Cityscapes, ADE20K); atrous convolution scales context\n\n## Common gotchas / interview framings\n- Downsampling loses spatial detail; atrous/dilated convolution recovers context without pooling\n- Skip connections are critical: without them, decoder can't recover fine structure\n- Evaluation metric: mIoU (mean Intersection over Union) per class; IoU = TP / (TP + FP + FN)\n- Class imbalance: rare classes (person) vs common (background); weighted loss or hard mining helps\n- Postprocessing: CRF improves boundaries but adds latency; learned refinement (e.g., DeepLabv3) preferred\n- Full resolution output is expensive; most models output 1/4 resolution, then upsample\n- Boundary errors common: interleave low-level (encoder skip) and high-level (decoder) features",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "What is the core innovation of U-Net compared to standard FCN?",
+        "back": "U-Net concatenates encoder features to decoder layers at matching resolutions, preserving spatial detail and gradients. This dramatically improves edge preservation and enables training on small datasets (100 images) unlike FCN.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Using atrous convolution for large receptive fields",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Adding skip connections between encoder and decoder at corresponding resolution levels",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Replacing convolutions with attention",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Using CRF post-processing",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain atrous (dilated) convolution and why DeepLab uses it instead of pooling.",
+        "back": "Atrous convolution applies a kernel with gaps (dilation rate d): stride d between kernel elements. A 3x3 kernel with dilation=3 sees a 7x7 effective receptive field. Benefits: increases receptive field without downsampling (no resolution loss), enabling per-pixel prediction at full resolution."
+      },
+      {
+        "type": "flip",
+        "front": "What is mIoU and why is it the standard metric for semantic segmentation?",
+        "back": "mIoU = mean Intersection over Union. For each class: IoU = TP / (TP + FP + FN). Average across all classes. Handles class imbalance (rare objects weighted equally to common ones) and penalizes false positives and negatives fairly."
+      },
+      {
+        "type": "mcq",
+        "front": "Which architecture is best suited for medical image segmentation with limited training data?",
+        "back": "U-Net: skip connections enable effective training on ~100 images. FCN: needs more data. DeepLabv3: designed for large-scale semantic segmentation (Cityscapes). U-Net's strength is parameter efficiency + edge preservation on small datasets.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "FCN",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "U-Net",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "DeepLabv3",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All equally suitable",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Name two design choices that address boundary precision in segmentation.",
+        "back": "1) Skip connections (U-Net): preserve fine details from encoder. 2) Atrous convolution (DeepLab): maintains resolution while expanding receptive field. Both prevent information loss during downsampling."
+      }
+    ]
+  },
+  {
+    "slug": "instance-segmentation-mask-r-cnn-detr",
+    "title": "Instance segmentation (Mask R-CNN, DETR)",
+    "track": "verticals",
+    "topic": "computer-vision",
+    "difficulty": "intermediate",
+    "tags": [
+      "instance-segmentation",
+      "object-detection",
+      "mask-prediction",
+      "set-prediction",
+      "transformer-detection"
+    ],
+    "aliases": [
+      "Mask R-CNN",
+      "DETR",
+      "instance segmentation"
+    ],
+    "wikilinks": [
+      "httpsarxivorgabs170306870",
+      "httpsarxivorgabs200512677",
+      "httpsgithubcomfacebookresearchdetectron2",
+      "httpspaperswithcodecomtaskinstance-segmentation",
+      "httpsarxivorgabs221109437"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1703.06870",
+        "label": "Mask R-CNN (He et al., 2017)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2005.12677",
+        "label": "End-to-End Object Detection with Transformers (DETR)"
+      },
+      {
+        "url": "https://github.com/facebookresearch/detectron2",
+        "label": "Detectron2: A PyTorch-based modular object detection library"
+      },
+      {
+        "url": "https://arxiv.org/abs/2211.09437",
+        "label": "Segment Anything (SAM): zero-shot instance segmentation"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nInstance segmentation combines object detection (find objects + bounding boxes) with semantic segmentation (label each pixel). Goal: identify and segment each individual object with a mask, not just one class label per pixel. More complex than semantic segmentation (per-pixel class only) or detection (boxes only).\n\n## Detail\n\n**Mask R-CNN:**\n- Extends Faster R-CNN: adds a mask prediction branch alongside box classification/regression\n- Two-stage: (1) RPN generates proposals, (2) ROI head classifies + regresses boxes + predicts masks\n- Mask head: small FCN applied to each ROI, predicts per-pixel class (binary mask per class per object)\n- ROI Align: bilinear interpolation (not ROI Pooling's harsh quantization) preserves spatial precision\n- SOTA for instance segmentation; ~42 mAP on COCO\n- Flexible: easily adapted for keypoint detection, panoptic segmentation\n\n**DETR (Detection Transformer):**\n- End-to-end object detection without NMS or hand-crafted components (anchors, etc.)\n- Vision transformer encoder + learned object queries (N=100 learnable embeddings)\n- Transformer decoder: cross-attention between queries and encoder features\n- Bipartite matching loss (Hungarian algorithm) matches predictions to ground-truth targets\n- Output: set of (class, bbox) predictions; naturally extends to masks with DETR-Segm\n- Slower than YOLO (slower convergence, requires strong augmentation, large batch), but elegant and modular\n\n**Mask DETR / DETR with mask prediction:**\n- Adds FPN + mask head to DETR\n- Predicts masks for each object query via iterative refinement\n- Similar accuracy to Mask R-CNN but end-to-end differentiable\n\n**SAM (Segment Anything Model):**\n- Zero-shot instance segmentation: given any prompt (point, box, text), predicts mask\n- Transformer-based encoder-decoder; trained on 1B masks\n- Can segment novel objects without finetuning\n- Recently SAM 2: extends to videos with streaming memory (6 frames, 1 prompted)\n\n## Common gotchas / interview framings\n- Instance vs semantic: semantic = all people are \"person\"; instance = person1, person2, person3\n- Mask R-CNN ROI Align crucial: standard ROI Pooling loses alignment, hurting mask quality\n- DETR slower than Faster R-CNN / YOLO; needs warmup, large batches, longer training\n- DETR: queries are learnable; each query predicts one object (or background if unused)\n- Hungarian matching: many queries won't match any target; loss from background queries\n- SAM zero-shot requires prompt engineering; fine-tuning on domain-specific data often needed\n- Panoptic segmentation: combines semantic (stuff = background) + instance (things = objects)",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "How does Mask R-CNN extend Faster R-CNN for instance segmentation?",
+        "back": "Mask R-CNN: Faster R-CNN box head outputs (class, bbox) + additional mask head outputs per-pixel mask. ROI Align (bilinear interpolation) preserves spatial precision for mask prediction, critical for high-quality masks.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Replaces RPN with a transformer",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Adds a mask prediction branch (FCN head) alongside box classification and regression",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Uses atrous convolution instead of pooling",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Removes the RPN entirely",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the key difference between ROI Pooling (Faster R-CNN) and ROI Align (Mask R-CNN).",
+        "back": "ROI Pooling: divides ROI into grid, max pools each cell (lossy quantization). ROI Align: bilinear interpolation samples ROI at sub-pixel locations, preserving alignment. ROI Align improves mask quality by ~10% mAP because mask prediction requires precise spatial correspondence."
+      },
+      {
+        "type": "flip",
+        "front": "What is the Hungarian matching algorithm in DETR, and why is it necessary?",
+        "back": "DETR generates N=100 object queries; ground-truth has M objects (M << N). Hungarian algorithm finds optimal 1-1 matching between queries and targets (minimizes cost). Loss computed only on matched queries; unmatched queries penalized as background. Avoids NMS; enables end-to-end training."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is DETR slower to train and converge than Faster R-CNN despite being end-to-end?",
+        "back": "DETR's global attention and set-based loss lack the inductive biases of RPN (proposal filtering). Requires augmentation (random crops, strong color jitter), large batch sizes (16+), and 500 epochs vs Faster R-CNN's ~120. Learning rate scheduling (warmup crucial) and late fusion backbone needed.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "DETR uses more parameters",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Transformer self-attention is slower than convolution",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Hungarian matching is computationally expensive",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Requires strong augmentation, large batches, and ~500 epochs to converge; harder optimization landscape",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does SAM (Segment Anything Model) achieve zero-shot instance segmentation?",
+        "back": "SAM trained on 1B masks with diverse prompts (points, boxes, text). Encoder embeds image; prompt encoder embeds prompt. Decoder predicts mask conditioned on both. At test time: provide any prompt (e.g., click a point), SAM outputs mask—no finetuning needed. Recently SAM 2 adds video support via streaming memory."
+      }
+    ]
+  },
+  {
+    "slug": "clip-and-vision-language-pre-training",
+    "title": "CLIP and vision-language pre-training",
+    "track": "verticals",
+    "topic": "computer-vision",
+    "difficulty": "intermediate",
+    "tags": [
+      "vision-language",
+      "contrastive-learning",
+      "zero-shot",
+      "multimodal",
+      "foundation-model"
+    ],
+    "aliases": [
+      "CLIP",
+      "contrastive learning",
+      "zero-shot classification",
+      "image-text alignment"
+    ],
+    "wikilinks": [
+      "httpsopenaicomindexclip",
+      "httpsarxivorgabs210300020",
+      "httpsgithubcomopenaiclip",
+      "httpshuggingfacecolearncomputer-vision-courseenunit4multimodal-modelsclip-and-relativesclip",
+      "httpspaperswithcodecomtaskzero-shot-image-classification"
+    ],
+    "sources": [
+      {
+        "url": "https://openai.com/index/clip/",
+        "label": "CLIP: Connecting Text and Images (OpenAI Blog)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2103.00020",
+        "label": "Learning Transferable Visual Models From Natural Language Supervision"
+      },
+      {
+        "url": "https://github.com/openai/CLIP",
+        "label": "CLIP: Official GitHub repository"
+      },
+      {
+        "url": "https://huggingface.co/learn/computer-vision-course/en/unit4/multimodal-models/clip-and-relatives/clip",
+        "label": "Hugging Face CLIP course"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nCLIP bridges vision and language by training on 400M image-text pairs to align images and text in a shared embedding space. Result: zero-shot classification—describe a new class in natural language (\"a photo of a cat\"), and CLIP recognizes it without seeing training examples. Enables flexible, language-driven vision without task-specific labels.\n\n## Detail\n\n**Architecture:**\n- Vision encoder (ViT or ResNet50): encodes image → 512D embedding\n- Text encoder (Transformer): encodes caption → 512D embedding\n- Contrastive loss: maximize similarity for matching (image, text) pairs; minimize for non-matching\n- Training: 400M image-text pairs from WIT dataset, ~32 TPU days\n\n**Contrastive Learning:**\n- Each batch: N images + N texts; goal: match each image to its caption\n- Loss = -(1/N) * Σ log(exp(sim(image_i, text_i) / τ) / Σ_j exp(sim(image_i, text_j) / τ))\n- Temperature τ ≈ 0.07 controls sharpness of softmax\n- Pushes matching pairs together, non-matching pairs apart\n\n**Zero-Shot Classification:**\n- No finetuning required\n- For class \"cat\", embed text: \"a photo of a cat\" (or prompt engineering)\n- For image, compute similarity to all class embeddings\n- Predict highest-similarity class\n- Works for novel classes not in training data (distributional shift robustness)\n\n**Key Advantages:**\n- No task-specific labels needed; language is the interface\n- Robust to distribution shift (12% higher accuracy than supervised ResNet on new domains)\n- Flexible: add new classes by writing text; no retraining\n- Multi-modal: can search images by text, find visual analogies, etc.\n\n**Related Models:**\n- ALIGN (Google): similar contrastive approach, larger scale\n- BLIP, LLaVA: vision-language with generative (captioning) + discriminative (VQA) tasks\n\n## Common gotchas / interview framings\n- Zero-shot doesn't mean perfect; requires good prompt engineering (e.g., \"a photo of a cat\" > \"cat\")\n- Domain shift: CLIP trained on web images; fails on medical/specialized domains\n- Text bias: captions reflect web biases; CLIP inherits them (fairness concern)\n- In-context learning: CLIP supports K-shot learning (embed K examples) to improve accuracy\n- Downstream tasks: finetuning CLIP backbone on labeled data still beats training from scratch\n- Comparison to supervised: zero-shot CLIP ≈ 70% ImageNet accuracy; supervised ResNet-50 ≈ 76%\n- Computational cost: inference is expensive (embed all text prompts per image)",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "How does CLIP enable zero-shot classification without seeing any examples of a class?",
+        "back": "CLIP learns a shared embedding space for images and text via contrastive learning. At test time: for new class \"dog\", embed text \"a photo of a dog\". For test image, compute similarity. Highest similarity = predicted class. No task-specific training needed.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Memorizes class labels during training",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Embeds natural language descriptions (prompts) and matches image embeddings via similarity",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Uses a pre-trained classifier for all classes",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Performs transfer learning from ImageNet",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the contrastive loss in CLIP and why it aligns image-text pairs.",
+        "back": "Loss = -(1/N) Σ log(exp(sim(image_i, text_i) / τ) / Σ_j exp(sim(image_i, text_j) / τ)). Maximizes similarity for matching pairs (numerator), minimizes for non-matching (denominator). Temperature τ controls sharpness. In-batch negatives (other images/texts) provide negative examples."
+      },
+      {
+        "type": "flip",
+        "front": "What is prompt engineering for CLIP, and why does it matter?",
+        "back": "Embedding text \"a photo of a cat\" outperforms \"cat\" because it's more aligned with training captions (image-text pairs). Prompts like \"This is a photo of a {class}\" boost accuracy. Engineering is critical: poor prompts degrade zero-shot performance significantly."
+      },
+      {
+        "type": "mcq",
+        "front": "CLIP shows higher robustness to domain shift compared to supervised ResNet. Why?",
+        "back": "CLIP trained on 400M diverse image-text pairs captures semantic relationships beyond ImageNet's 1000 classes. Language supervision forces learning generalizable concepts. Result: 12% higher accuracy than ResNet on new domains (e.g., sketch, satellite imagery).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "CLIP uses more parameters",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Natural language supervision is more diverse than ImageNet labels; learns semantic features",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "CLIP uses stronger data augmentation",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "CLIP is trained on more data",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Name a limitation of CLIP for real-world deployment and a mitigation strategy.",
+        "back": "Limitation: zero-shot accuracy ~70% (vs 76% supervised ResNet); inference expensive (embed text per image). Mitigation: (1) K-shot adaptation (embed K examples), (2) finetuning CLIP on downstream task (beats training from scratch), (3) ensemble text prompts."
+      }
+    ]
+  },
+  {
+    "slug": "visual-question-answering-vqa",
+    "title": "Visual question answering (VQA)",
+    "track": "verticals",
+    "topic": "computer-vision",
+    "difficulty": "intermediate",
+    "tags": [
+      "vision-language",
+      "multimodal",
+      "vqa",
+      "attention",
+      "reasoning"
+    ],
+    "aliases": [
+      "VQA",
+      "visual reasoning",
+      "image-question-answer"
+    ],
+    "wikilinks": [
+      "httpsarxivorgabs150500468",
+      "httpsvisualqaorg",
+      "httpsarxivorgabs170403162",
+      "httpsarxivorgabs201001057",
+      "httpspaperswithcodecomtaskvisual-question-answering"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1505.00468",
+        "label": "VQA: Visual Question Answering (Antol et al., 2015)"
+      },
+      {
+        "url": "https://visualqa.org/",
+        "label": "VQA: Large-Scale Visual Question Answering Dataset"
+      },
+      {
+        "url": "https://arxiv.org/abs/1704.03162",
+        "label": "Bottom-Up and Top-Down Attention for Image Captioning and Visual Question Answering"
+      },
+      {
+        "url": "https://arxiv.org/abs/2010.01057",
+        "label": "LXMERT: Learning Cross-Modality Encoder Representations from Transformers"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nVisual Question Answering (VQA) combines vision and language understanding: given an image and a question (\"How many people are in the image?\"), the model generates an answer. Requires object detection, scene understanding, counting, reasoning over relationships, and commonsense knowledge. Benchmark: VQA v2 dataset (65k images, 614k questions).\n\n## Detail\n\n**Problem Formulation:**\n- Input: image I, question Q (text)\n- Output: answer A (text or from vocabulary of ~3k answers)\n- Challenges: compositional reasoning (\"What color is the object on the left?\"), counting, spatial relationships, commonsense\n\n**Architecture Components:**\n\n**1. Image Encoder:**\n- CNN (ResNet, ViT) extracts features\n- Bottom-up attention (Faster R-CNN): detects objects, outputs region features (e.g., 36 regions per image)\n- Region features preserve object information (more interpretable than grid features)\n\n**2. Question Encoder:**\n- LSTM or Transformer encodes question text to embedding\n- Attention mechanism learns to focus on question words relevant to visual features\n\n**3. Fusion / Reasoning:**\n- Bilinear pooling: multiply image features by question features (captures interactions)\n- Transformer cross-attention: questions attend to visual regions\n- Iterative reasoning: apply transformer decoder multiple times (ViLBERT, LXMERT)\n\n**4. Answer Decoder:**\n- MLP classifier: output probability over answer vocabulary (~3k answers)\n- Or generative: LSTM decodes answer token-by-token\n\n**Modern Approaches:**\n- LXMERT: cross-modality transformer; separate streams for image/text, cross-attention layer\n- ViLBERT: vision + language BERT; co-attentional layer between modalities\n- Large LMs + vision encoders (LLaVA, GPT-4V): leverage pretrained LLM for reasoning\n\n## Common gotchas / interview framings\n- VQA v1 had answer bias (e.g., \"yes\" appears in 50% of questions); VQA v2 balanced\n- Reasoning types: object detection (\"what\"), counting (\"how many\"), spatial (\"where\"), comparison (\"which\")\n- Attention visualization: show which image regions the model attended to for each question word\n- Compositionality: models struggle with complex questions (negation, comparison, multiple hops)\n- Bias & fairness: VQA trained on web images; gender bias in person-related questions\n- Generalization: VQA trained on natural images; fails on charts, diagrams, medical images\n- Dataset artifacts: models exploit statistical patterns rather than true reasoning (e.g., \"What color?\" → \"white\" likely correct)\n- Evaluation: accuracy (exact match to ground truth) or BLEU/CIDEr for generative answers",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "What is the primary advantage of bottom-up attention over grid-based features in VQA?",
+        "back": "Bottom-up attention (Faster R-CNN proposals): ~36 object regions per image. More interpretable: each region corresponds to an object (e.g., \"person\", \"car\"). Grid features: spatial but may attend to background or edges. Bottom-up regions better align with semantic VQA questions.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Grid features are more interpretable",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Bottom-up attention (region proposals) focuses on objects, reducing noise and improving reasoning",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Bottom-up attention is faster",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Both approaches are equivalent",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Describe the VQA v2 dataset and why it addressed a critical flaw in VQA v1.",
+        "back": "VQA v1: answer bias (e.g., \"yes\" appears in 50% of QA pairs). Model could achieve high accuracy by guessing \"yes\". VQA v2: balanced dataset; 3 different questions per image to ensure diversity. Reduced dataset artifacts, more faithful evaluation of reasoning."
+      },
+      {
+        "type": "flip",
+        "front": "How do modern VQA models like LXMERT achieve cross-modality understanding?",
+        "back": "LXMERT: separate transformer streams for vision (image regions) and language (question tokens). Co-attentional transformer layer enables vision-to-language and language-to-vision attention. Fusion happens in latent space, not at input level."
+      },
+      {
+        "type": "mcq",
+        "front": "Which of these VQA question types is most challenging for current models?",
+        "back": "Complex reasoning: requires multi-hop attention, negation handling, implicit comparison. Models tend to exploit dataset artifacts or surface patterns. Single-hop (object detection) and basic counting are more solved.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Object detection (\"What color is the car?\")",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Counting (\"How many people?\")",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Complex reasoning (negation, comparison, multiple hops: \"Is there a larger dog than a cat?\")",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Spatial (\"Where is the person?\")",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does CLIP transfer to VQA, and what modifications are needed?",
+        "back": "CLIP zero-shot: embed question as text (e.g., \"a dog\"), embed image, compute similarity. Naive VQA uses CLIP but accuracy ~50% (below fine-tuned models ~70%). Modification: add question-image fusion layers, finetuning adapter (LoRA) on VQA dataset; combine CLIP features with task-specific reasoning."
+      }
+    ]
+  },
+  {
+    "slug": "document-understanding-and-ocr",
+    "title": "Document understanding and OCR",
+    "track": "verticals",
+    "topic": "computer-vision",
+    "difficulty": "intermediate",
+    "tags": [
+      "ocr",
+      "document-understanding",
+      "layout-analysis",
+      "text-detection",
+      "table-extraction"
+    ],
+    "aliases": [
+      "OCR",
+      "optical character recognition",
+      "document-analysis",
+      "layout-understanding"
+    ],
+    "wikilinks": [
+      "httpsarxivorgabs190401169",
+      "httpsgithubcompaddlepaddlepaddleocr",
+      "httpsgithubcomopen-mmlabmmocr",
+      "httpsarxivorgabs200513588",
+      "httpspaperswithcodecomtaskscene-text-detection"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1904.01169",
+        "label": "CRAFT: Character Region Awareness for Text detection"
+      },
+      {
+        "url": "https://github.com/PaddlePaddle/PaddleOCR",
+        "label": "PaddleOCR: Multilingual OCR Toolkit"
+      },
+      {
+        "url": "https://github.com/open-mmlab/mmocr",
+        "label": "MMOCR: OpenMMLab OCR Toolbox"
+      },
+      {
+        "url": "https://arxiv.org/abs/2005.13588",
+        "label": "Towards Accurate Scene Text Recognition with Semantic Reasoning Networks"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDocument understanding extracts structured information from documents (invoices, forms, contracts, books). Three stages: (1) detect text regions (text detection), (2) recognize characters (OCR), (3) understand layout & structure (table extraction, relation extraction). Challenges: multiple languages, handwriting, poor image quality, complex layouts.\n\n## Detail\n\n**Text Detection:**\n- Goal: localize text regions (bounding boxes or polygons)\n- CRAFT (Character Region Awareness): detects individual characters, merges into words\n- PixelLink: detects text pixels, links adjacent pixels\n- DBNet: differentiable binarization for real-time detection\n- Output: bounding boxes (axis-aligned) or polygons (rotated text)\n\n**Text Recognition (OCR):**\n- Goal: transcribe detected text regions into character sequences\n- CNN encoder (ResNet): extracts region features → sequences\n- RNN/Transformer decoder: generates character sequence (CTC or attention)\n- CRNN: CNN backbone + RNN (GRU/LSTM) for sequence decoding\n- Attention-based: visual attention over region, generate character-by-character\n- CTC (Connectionist Temporal Classification): aligns variable-length sequences without explicit alignment labels\n\n**Layout Analysis & Structure:**\n- Paragraph detection: group text lines into paragraphs\n- Table detection & cell extraction: identify tables, extract cell content\n- Document classification: invoice vs. receipt vs. form\n- Relation extraction: link text to regions (e.g., table header → column values)\n- Key-value extraction: e.g., \"Name: John Doe\" → {\"Name\": \"John Doe\"}\n\n**End-to-End Document Understanding:**\n- Vision transformer (ViT) backbone for layout understanding\n- Hierarchical tokenization: character → word → line → region\n- Multimodal fusion: text + spatial features (bounding box coordinates)\n- LLM-based: encode document as text + images, use LLM (GPT-4V) for Q&A\n\n**Challenges:**\n- Handwriting: high variability, fewer labeled datasets\n- Multiple scripts: English, Chinese, Arabic, etc.\n- Degraded images: low contrast, noise, blur\n- Complex layouts: multi-column, rotated text, irregular spacing\n- Contextual understanding: read semantically (e.g., dates from context)\n\n## Common gotchas / interview framings\n- OCR quality bottleneck: 99% detection accuracy but 85% recognition → low end-to-end accuracy\n- CTC assumes monotonic alignment; fails on curved/rotated text (need polygon detection)\n- Language models improve OCR: Beam search with language model penalties boosts accuracy\n- Domain-specific: fine-tuning on domain data (invoices, medical forms) critical\n- Evaluation: character error rate (CER), word error rate (WER); IoU for detection\n- End-to-end: avoid error propagation; joint detection+recognition models emerging\n- Synthetic data: generate document images with controlled noise/rotation for data augmentation\n- Modern approaches: foundation models (CLIP, GPT-4V) as OCR backbones via zero-shot prompting",
+    "cards": [
+      {
+        "type": "mcq",
+        "front": "What does CTC (Connectionist Temporal Classification) do in OCR recognition?",
+        "back": "CTC: CNN encodes image → feature sequence; CTC loss aligns features to character labels without needing frame-level annotations. Outputs probability over character sequences. Handles variable-length text & character repetition (e.g., \"aaa\" in \"book\").",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Detects text bounding boxes",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Aligns variable-length sequences without explicit character-level labels; handles repetitive characters",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Extracts table structure",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Translates OCR text to other languages",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Name the three main stages of a complete document understanding pipeline.",
+        "back": "1) Text detection: localize text regions (bounding boxes/polygons). 2) Text recognition: transcribe regions to character sequences (OCR). 3) Layout/structure understanding: extract tables, key-value pairs, document structure."
+      },
+      {
+        "type": "flip",
+        "front": "Why is language modeling important in OCR post-processing, and give an example.",
+        "back": "OCR recognition can misread characters (e.g., \"l\" vs \"1\"). Language model penalizes non-words. Example: OCR outputs \"1975\" (digit 1), language model corrects to \"1975\" or \"l975\" (letter l). Beam search with LM improves WER by ~5-10%."
+      },
+      {
+        "type": "mcq",
+        "front": "What is a key difference between CRAFT text detection and standard bounding box detection?",
+        "back": "CRAFT: character-level region awareness. Detects character regions (affinity maps), links adjacent characters. Benefits: detects curved/rotated text, handles arbitrary-shaped regions. Outputs polygons instead of axis-aligned boxes.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "CRAFT uses RNN for sequence recognition",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "CRAFT detects individual characters first, then merges into words; handles curved/rotated text better",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "CRAFT uses CTC loss",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "CRAFT only works on English text",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain how foundation models (CLIP, GPT-4V) are being used for OCR and document understanding.",
+        "back": "Zero-shot OCR: encode document image with CLIP/ViT, prompt GPT-4V (\"Extract text from this invoice\"). Advantages: no task-specific finetuning, handles multimodal (text + tables + images). Disadvantage: slower inference than specialized OCR models."
+      }
+    ]
+  }
+]

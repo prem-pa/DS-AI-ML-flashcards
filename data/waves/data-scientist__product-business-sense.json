@@ -1,0 +1,970 @@
+[
+  {
+    "slug": "defining-success-metrics-and-north-star",
+    "title": "Defining success metrics and north star",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "beginner",
+    "tags": [
+      "metrics",
+      "north-star",
+      "kpi",
+      "alignment",
+      "product-strategy"
+    ],
+    "aliases": [
+      "north star metric",
+      "primary metric",
+      "success metric",
+      "OKR"
+    ],
+    "wikilinks": [
+      "actionable-metrics-vs-vanity-metrics",
+      "leading-vs-lagging-indicators",
+      "cost-benefit-analysis-and-roi",
+      "stakeholder-alignment-and-communication"
+    ],
+    "sources": [
+      {
+        "url": "https://userpilot.com/blog/north-star-metric/",
+        "label": "North Star Metric: How to Find Yours & Measure Progress"
+      },
+      {
+        "url": "https://gopractice.io/product/the-product-managers-guide-to-north-star-metrics/",
+        "label": "Product Manager's Guide to North Star Metrics"
+      },
+      {
+        "url": "https://articles.sequoiacap.com/retention",
+        "label": "Sequoia Capital on Retention"
+      }
+    ],
+    "explainer_md": "## Intuition\nA North Star metric is the single primary metric that defines product success. It should directly tie to business value, be influenced by product decisions, and guide all teams. Without it, teams optimize locally and misalign.\n\n## Detail\nChoosing a North Star requires three things:\n1. **Causality**: Does the team's work directly influence it? (Pageviews are vanity; engagement leading to purchases is north star)\n2. **Business correlation**: Does it predict revenue, retention, or survival? (DAU for a social network; Gross Margin for a marketplace)\n3. **Comprehensiveness**: Does it capture all you care about? (Signups alone miss churn; retention is more complete)\n\nCommon North Stars by business model:\n- **SaaS**: MRR or retention (30-day, 90-day)\n- **Marketplaces**: GMV per supplier or take rate\n- **Social/Consumer**: DAU or engagement hours\n- **Creator platforms**: Creator monthly revenue\n\nWhy not multiple metrics? Multiple metrics create misalignment. Product optimizes one, growth optimizes another. Use a primary North Star + supporting tier-2 metrics.\n\n## Common gotchas / interview framings\n- **Gaming the metric**: If North Star is signups, product adds dark patterns. Measure what you truly value or it will be gamed.\n- **Lag problem**: If North Star lags (only visible in 90 days), you need leading indicators to steer faster.\n- **Survivorship bias**: Retention at day 30 looks good, but cohorts from acquisition channel A have higher lifetime value—you're measuring the wrong cohort.\n- **Interview scenario**: \"Our signup metric grew 40% but revenue didn't. Why?\" → Quality vs. quantity. Cheap CAC users might have poor LTV.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What makes a metric a good North Star? Name three criteria.",
+        "back": "1. Causality: Your work must directly influence it (not lagged or external). 2. Business correlation: It predicts revenue, retention, or long-term viability. 3. Comprehensiveness: It captures the full spectrum of value (not just acquisition)."
+      },
+      {
+        "type": "flip",
+        "front": "Your company optimizes for weekly active users (WAU). Why is this risky as a sole North Star?",
+        "back": "WAU ignores quality and monetization. You might acquire cheap, low-LTV users or retain unprofitable cohorts. A better North Star: user LTV, gross margin, or 30-day retention. WAU is a useful tier-2 metric, not the primary."
+      },
+      {
+        "type": "mcq",
+        "front": "Which statement about North Star metrics is true?",
+        "back": "Multiple North Stars create misalignment. A north star must be actionable (changing it is within team control). Neither retention nor acquisition is universally better—it depends on business stage and model.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "You should have multiple North Stars to ensure balanced optimization.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "A North Star must be actionable by the product team within a sprint.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Retention is always a better North Star than acquisition.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "North Star metrics should be reviewed and updated only if business model changes.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Signups to your app grew 50% YoY, but annual revenue is flat. Your CEO asks if something is wrong. What hypotheses would you test?",
+        "back": "1. **Cohort quality shift**: Are newer cohorts lower-LTV? Check LTV by acquisition month. 2. **Pricing/monetization change**: Did monetization or pricing decrease? 3. **Mix shift**: Are signups coming from lower-ARPU segments? 4. **Retention cliff**: Do new cohorts churn faster? Run cohort retention curves. 5. **Time lag**: Revenue lags signups by months; is this a forecasting issue? Frame the answer: 'Which of these is most likely depends on our acquisition channels and product changes in the last 6 months.'"
+      }
+    ]
+  },
+  {
+    "slug": "actionable-metrics-vs-vanity-metrics",
+    "title": "Actionable metrics vs vanity metrics",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "beginner",
+    "tags": [
+      "metrics",
+      "analytics",
+      "causality",
+      "product-decision",
+      "business-impact"
+    ],
+    "aliases": [
+      "vanity metric",
+      "meaningful metric",
+      "metric quality",
+      "actionable KPI"
+    ],
+    "wikilinks": [
+      "defining-success-metrics-and-north-star",
+      "feature-adoption-and-engagement-metrics",
+      "stakeholder-alignment-and-communication"
+    ],
+    "sources": [
+      {
+        "url": "https://www.statsig.com/perspectives/active-users-dau-wau-and-mau-explained",
+        "label": "DAU, WAU, and MAU Explained"
+      },
+      {
+        "url": "https://andrewchen.com/dau-mau-is-an-important-metric-but-heres-where-it-fails/",
+        "label": "Andrew Chen: DAU/MAU and Its Limits"
+      }
+    ],
+    "explainer_md": "## Intuition\nActionable metrics are ones you can influence with product changes and that correlate to business outcomes. Vanity metrics look good in a report but don't tell you whether your product is working.\n\n## Detail\nAn actionable metric has two properties:\n1. **You can influence it**: Your product team's decisions directly move it. (Engagement time is actionable; pageviews on auto-refresh is vanity.)\n2. **It predicts business value**: When it moves, revenue or retention moves. (Checkout completion rate predicts revenue; total traffic pageviews don't.)\n\nVanity metric examples:\n- Total cumulative signups (ignores quality, churn)\n- Total pageviews (ignores depth, intent)\n- Visits (passive, doesn't imply engagement)\n- Total users ever registered (includes dead accounts)\n\nActionable metric examples:\n- W1 retention (% of week-1 signups still active week 2) → predicts LTV\n- Feature usage rate (% of users using feature X monthly) → guides feature roadmap\n- Checkout completion by step → pinpoints conversion bottleneck\n- DAU/MAU ratio (stickiness) → signals habituality\n\n## Common gotchas / interview framings\n- **Correlation trap**: Pageviews correlate with revenue in aggregate, but optimizing pageviews alone (click-baiting) can tank revenue. Ensure causality, not just correlation.\n- **Survivor bias**: Monthly active users (MAU) includes churn you can't see. A cohort that looks sticky in MAU might be losing half its users month 1, then stabilizing.\n- **Segment blindness**: Average DAU/MAU hides that half your users are power users (80% DAU/MAU) and half are dormant. Measure by segment.\n- **Interview scenario**: \"We launched a new feature. Users loved it—we got 10K new signups. Should we double down?\" → Check: Do these signups retain? Do they engage the feature? Or is viral novelty inflating vanity metrics?",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define actionable metric. What two properties must it have?",
+        "back": "1. You can directly influence it with product changes. 2. It correlates with (and ideally causes) business value (revenue, retention, lifetime value). A vanity metric looks impressive but lacks one or both properties."
+      },
+      {
+        "type": "mcq",
+        "front": "Which metric is most actionable for an e-commerce platform?",
+        "back": "Checkout completion is actionable: you can A/B test forms, payment methods, etc., and it directly predicts revenue. Cumulative visitors ignores quality; pageviews don't drive purchase; YTD revenue is lagged and depends on many factors outside product control.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Total site visitors ever (cumulative)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Checkout completion rate (% of cart-starters who purchase)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Average daily pageviews per user",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Total revenue generated YTD",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your team launched a referral feature. A week later, you see 50K new signups (up 3x). But W1 retention hasn't changed. What's the actionable insight?",
+        "back": "The growth is vanity. High-volume signups don't mean product improvement unless retention improves. The referral feature may be attracting non-target users or driving low-quality invites. Next: Measure retention by acquisition channel and referral depth. If referral signups have sub-par retention, optimize incentives or targeting. If overall retention is flat, the feature isn't working despite signup spikes."
+      },
+      {
+        "type": "flip",
+        "front": "Why is DAU/MAU ratio (stickiness) more actionable than total DAU alone?",
+        "back": "Total DAU can grow by acquiring many new users without retention improvements (vanity). DAU/MAU ratio measures habituality: it tells you what % of monthly users return daily. A rising ratio signals product engagement improvement; flat/falling ratio despite DAU growth suggests poor retention, which predicts churn."
+      }
+    ]
+  },
+  {
+    "slug": "leading-vs-lagging-indicators",
+    "title": "Leading vs lagging indicators",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "intermediate",
+    "tags": [
+      "metrics",
+      "forecasting",
+      "predictive",
+      "early-signals",
+      "strategy"
+    ],
+    "aliases": [
+      "leading indicator",
+      "lagging indicator",
+      "leading metric",
+      "predictive signal"
+    ],
+    "wikilinks": [
+      "defining-success-metrics-and-north-star",
+      "feature-adoption-and-engagement-metrics",
+      "churn-prediction-and-retention-modeling",
+      "data-driven-decision-culture"
+    ],
+    "sources": [
+      {
+        "url": "https://www.statsig.com/perspectives/understanding-daumau-key-metrics-for-product-success",
+        "label": "Understanding DAU/MAU: Key Metrics for Product Success"
+      },
+      {
+        "url": "https://userpilot.com/blog/north-star-metric/",
+        "label": "Defining North Star Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nLeading indicators predict future outcomes; lagging indicators measure past results. To steer in real-time, you need leading indicators. Lagging indicators validate strategy but arrive too late to course-correct.\n\n## Detail\nLeading indicators appear first and predict lagging outcomes:\n- **User engagement metrics** (DAU, feature engagement, time-in-app) → predict 30-day retention\n- **Invites sent** → predict viral growth (leading K-factor)\n- **Onboarding completion** → predicts W1 retention\n- **Payment method on file** → predicts subscription renewal\n- **Feature adoption rate** → predicts feature stickiness\n\nLagging indicators are the end result:\n- **30-day cohort retention** (visible 30 days after signup)\n- **Revenue / MRR** (aggregates many user behaviors from weeks/months back)\n- **Churn rate** (you only know after a user churns)\n- **LTV** (requires years of data)\n\nTime lag examples:\n- A/B test launches on day 1. Engagement signal (leading) moves day 2–7. Retention signal (lagging) visible day 30–35. Revenue signal visible day 60+.\n- New feature release: usage rate is leading; impact on DAU/MAU visible days later; impact on MRR visible months later.\n\n## Common gotchas / interview framings\n- **Leading ≠ causal**: High onboarding completion correlates with retention, but if you force users through bad onboarding, correlation breaks. Leading indicators guide; they don't guarantee causation.\n- **Segment mismatch**: Engagement metric for power users predicts *their* retention, not free-tier users. Ensure leading indicator matches the lagging population.\n- **Diminishing predictivity**: A leading indicator strong last quarter might weaken this quarter if product or user mix shifts. Monitor and re-validate.\n- **Interview scenario**: \"We shipped a redesign on Monday. Tuesday we see no improvement in DAU. Should we revert?\" → DAU is lagging; look for leading signals (session length, feature usage rate, early cohort retention). Week-long test window is too short for lagging validation.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What's the difference between a leading and lagging indicator? Give one product example of each.",
+        "back": "Leading: Appears early, predicts future outcome. Example: Feature adoption % predicts feature stickiness weeks later. Lagging: Summarizes past behavior. Example: 30-day cohort retention (visible 30 days after signup). Use leading to steer; use lagging to validate strategy."
+      },
+      {
+        "type": "mcq",
+        "front": "Which is a leading indicator for 30-day subscription retention?",
+        "back": "Feature usage in week 1 predicts month-1 retention and beyond. Churn rate is lagging (you see it after churn happens). ARR and support tickets are lagging/aggregate metrics, not predictive of individual retention.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Churn rate in month 3",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Feature usage days in week 1",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Annual recurring revenue",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Number of support tickets resolved",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You A/B test a new onboarding flow. After 3 days, the test variant shows higher DAU. After 30 days, cohort retention is identical. What happened?",
+        "back": "DAU at day 3 is a leading signal, but it's misleading here. The new flow likely increases early engagement (users are in the flow more) but doesn't improve long-term retention. The leading indicator (DAU day 3) didn't predict the lagging outcome (retention day 30) because the causal mechanism was wrong. Lesson: Validate that your leading indicator mechanistically predicts the lagging outcome, not just correlates in retrospect."
+      },
+      {
+        "type": "flip",
+        "front": "Why do you need both leading and lagging indicators?",
+        "back": "Lagging indicators (retention, revenue, churn) are true outcome measures but arrive weeks/months later, too late to course-correct mid-experiment. Leading indicators (engagement, feature usage) give you feedback within days, letting you pivot quickly. But leading indicators can be gamed or misaligned, so you validate with lagging metrics."
+      }
+    ]
+  },
+  {
+    "slug": "cohort-analysis-and-retention-curves",
+    "title": "Cohort analysis and retention curves",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "intermediate",
+    "tags": [
+      "analytics",
+      "retention",
+      "cohort",
+      "lifecycle",
+      "user-segmentation"
+    ],
+    "aliases": [
+      "cohort retention",
+      "retention curve",
+      "cohort tracking",
+      "user lifecycle"
+    ],
+    "wikilinks": [
+      "leading-vs-lagging-indicators",
+      "feature-adoption-and-engagement-metrics",
+      "churn-prediction-and-retention-modeling"
+    ],
+    "sources": [
+      {
+        "url": "https://articles.sequoiacap.com/retention",
+        "label": "Sequoia Capital on Retention"
+      },
+      {
+        "url": "https://www.geckoboard.com/best-practice/kpi-examples/dau-mau-ratio/",
+        "label": "DAU/MAU Ratio and KPI Examples"
+      }
+    ],
+    "explainer_md": "## Intuition\nCohort analysis groups users by a shared characteristic (signup week, acquisition channel, feature adoption date) and tracks their behavior over time. Retention curves show how many users remain active at week 1, week 2, week 4, etc. This reveals user lifecycle patterns, identifies problem cohorts, and validates product improvements.\n\n## Detail\nA cohort is a group of users sharing one attribute, usually signup date (\"week of Feb 2\") or acquisition channel (\"organic search\" vs. \"paid ads\"). For each cohort, you calculate:\n- **N0**: Users in cohort (e.g., 1,000 signups)\n- **N1**: Users active week 1 after signup (900, so 90% retention)\n- **N4**: Users active week 4 (500, so 50% retention)\n- **N12**: Users active week 12 (300, so 30% retention)\n\nRetention curves are plots of N_t / N_0 vs. time. Healthy patterns:\n- **Day 1 retention**: 50–70% (half of signups don't return)\n- **Week 1 retention**: 30–50% (major drop-off; if >70%, sticky product)\n- **Month 1 retention**: 20–40%\n- **Month 3 retention**: 5–20% (if still >10%, strong product-market fit)\n\nCohorts reveal:\n- **Seasonal shifts**: Summer cohorts churn faster (school, vacation)\n- **Acquisition quality**: Paid-search cohorts more engaged than display cohorts\n- **Product changes**: Cohorts before/after feature launch show improvement\n- **Geographic/demographic patterns**: Users from Asia vs. US have different lifecycle curves\n\n## Common gotchas / interview framings\n- **Selection bias**: Only tracked users retained at day 1 in some systems, so your W1 retention looks artificially high. Always include signup-to-day-1 drop-off.\n- **Interval mismatch**: Measuring weekly but users engage on weekends differently. Use daily cohorts for weekly analysis, or weekly for monthly, to smooth.\n- **Reactivation paradox**: A user inactive for 60 days comes back. Which cohort? Usually: original signup cohort, but flag as reactivation separately.\n- **Interview scenario**: \"Our month-1 retention dropped 5 points YoY. Investigate.\" → Run cohort analysis: Which acquisition channel(s) dropped? Which feature adoption dropped? Is it onboarding, feature quality, or mix shift? Segment by device, region, or new features.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define a cohort and explain why cohort analysis is better than overall DAU/MAU trends.",
+        "back": "A cohort is a group of users sharing a common attribute (usually signup date). Cohort analysis tracks each cohort independently over time. It's better than overall DAU/MAU because DAU can mask mixing effects: if old cohorts (low retention) shrink and new cohorts (high retention) grow, overall DAU looks flat when both are degrading. Cohorts isolate user lifecycle signals."
+      },
+      {
+        "type": "mcq",
+        "front": "You see overall MAU is flat month-over-month, but cohort analysis shows all cohorts declining in retention. What's happening?",
+        "back": "Flat MAU with declining cohort retention is classic mix-shift masking. New acquisition offsets churn, so DAU/MAU look stable, but long-term each cohort is healthier or worse. Real issue: declining retention. Investigate product changes, onboarding quality, or feature adoption.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Product quality is improving (users staying longer)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "User acquisition volume increased, masking retention decay",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Seasonal trends are averaging out retention changes",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Revenue is increasing despite flat user counts",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Week-1 retention for organic signups is 60%; paid ads is 40%. Same product. Why the difference, and what's your recommendation?",
+        "back": "Organic users likely have higher intent (they searched for you) and are better qualified. Paid ads may be attracting low-fit users. Options: (1) Improve onboarding to help paid-ads users. (2) Refine ad targeting/messaging to attract higher-intent users. (3) Measure LTV: if paid-ads users have lower W1 retention but higher LTV (they convert on monetization), the channel is still valuable. Benchmark: which channel is more profitable despite retention difference?"
+      },
+      {
+        "type": "flip",
+        "front": "What's the difference between week-1 retention and month-1 retention, and why should you track both?",
+        "back": "Week-1 retention shows early engagement (onboarding effectiveness, initial product clarity). Month-1 retention shows habit formation (is the product sticky enough to build routine usage?). Week-1 helps diagnose onboarding problems; month-1 helps validate product-market fit. Declining week-1 with stable month-1 suggests onboarding issue, not product issue."
+      }
+    ]
+  },
+  {
+    "slug": "cost-benefit-analysis-and-roi",
+    "title": "Cost-benefit analysis and ROI",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "beginner",
+    "tags": [
+      "business",
+      "decision-making",
+      "investment",
+      "experimentation",
+      "prioritization"
+    ],
+    "aliases": [
+      "ROI",
+      "cost-benefit",
+      "value of information",
+      "experiment cost"
+    ],
+    "wikilinks": [
+      "defining-success-metrics-and-north-star",
+      "opportunity-sizing",
+      "data-driven-decision-culture"
+    ],
+    "sources": [
+      {
+        "url": "https://qubit.capital/blog/evaluating-traction-metrics-consumer-apps",
+        "label": "Evaluating Traction Metrics for Consumer Apps"
+      },
+      {
+        "url": "https://www.northbeam.io/blog/what-is-mau-tracking-monthly-active-users-to-gauge-growth",
+        "label": "Tracking and Measuring MAU for Growth"
+      }
+    ],
+    "explainer_md": "## Intuition\nBefore running an experiment or launching a feature, estimate: Does the potential value (uplift * users affected * time horizon) exceed the cost (development, infra, opportunity cost)? ROI = Net Benefit / Cost. High-ROI bets get prioritized; low-ROI ideas are shelved or deprioritized.\n\n## Detail\nCost-benefit analysis has two sides:\n\n**Costs:**\n- Engineering effort (weeks to build)\n- Infra/maintenance (server, support)\n- Opportunity cost (engineers not working on other projects)\n- Experimentation cost (time to run A/B test, data analysis)\n\n**Benefits:**\n- Expected lift (e.g., +5% retention)\n- Population size (e.g., 10M users)\n- Monetization impact (e.g., $1 LTV increase)\n- Time horizon (one-time vs. recurring annual benefit)\n\nExample calculation:\n- Feature: Improve onboarding. Cost: 2 weeks engineering = 80 hours. Benefit: +3% W1 retention on 50K weekly signups, +$0.50 LTV per user. Annual NPV = 50K * 52 weeks * 3% * $0.50 = $39K. ROI = $39K / (80 * $150/hr) = $39K / $12K ≈ 3.25x. If cost is $12K and benefit is $39K annually, ROI is positive.\n\nValue of information: Sometimes the cost is not building, but testing. Running a 2-week A/B test costs ~$5K in engineering time but tells you if a $200K investment is worth it. That's high ROI (avoid $200K mistake).\n\n## Common gotchas / interview framings\n- **Sunk cost fallacy**: Don't justify continuing a low-ROI project because \"we've already spent $100K.\" That $100K is gone; evaluate forward-looking ROI only.\n- **Probability discount**: Not every experiment succeeds. 70% of features don't move the needle. Adjust expected value: $39K benefit * 30% success rate = $11.7K expected value. Then ROI = $11.7K / $12K ≈ 1x (break-even).\n- **Cannibalization**: A new feature might increase overall engagement but shift time from higher-monetization features. Measure net revenue impact, not gross feature adoption.\n- **Interview scenario**: \"We can either spend 3 weeks optimizing checkout (estimated +2% conversion, +$500K annual) or build a new feature (unknown upside, 6 weeks). Which has higher ROI?\" → Checkout: $500K / $18K (3 weeks) ≈ 27x (higher if you discount for 80% success rate). New feature: unknown upside, but likely won't pay back 6 weeks unless it's a bet-the-company move.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define ROI in the context of a product experiment. What three components go into the calculation?",
+        "back": "ROI = Net Benefit / Cost. (1) Cost: engineering time, infra, opportunity cost, analytics effort. (2) Benefit: expected lift (%) * user population * monetization impact * time horizon. (3) Risk: adjust for probability of success (most features don't move the needle—default 30–50% success rate)."
+      },
+      {
+        "type": "mcq",
+        "front": "Your team proposes a 4-week feature with estimated +1% LTV impact on 5M users ($1 annual LTV increase). The cost is 4 weeks of engineering (1 eng @ $150/hr, 160 hrs). What's the approximate ROI if 50% of features succeed?",
+        "back": "Benefit = 5M users * $1 * 1% = $50K annually. Cost = 160 * $150 = $24K. Unadjusted ROI = $50K / $24K ≈ 2.1x. With 50% success rate: $50K * 50% = $25K expected benefit. Expected ROI = $25K / $24K ≈ 1x (break-even). Realistic: only build if strategic or if success rate is higher than 50%.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "0.3x (negative ROI, don't build)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "1.6x (break-even with success discount)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "3.1x (positive ROI, consider building)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "8.3x (very positive, highest priority)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your team has already spent $100K developing a feature (sunk cost), but early internal testing shows it likely won't move key metrics. Engineering wants to ship it anyway (\"we're already in\"). How do you evaluate ROI?",
+        "back": "Ignore the $100K sunk cost. Evaluate forward: (1) Cost to ship and maintain (ongoing dev, support). (2) Benefit: likely nil if testing shows no metric improvement. (3) Risk: shipping a feature that doesn't work erodes user trust and clutters the product. Forward-looking ROI is negative. Recommendation: Don't ship. The sunk cost is already lost; shipping compounds the loss."
+      },
+      {
+        "type": "flip",
+        "front": "Why is 'value of information' important in cost-benefit analysis?",
+        "back": "Sometimes testing is cheap relative to the decision. A $5K 2-week A/B test tells you whether a $500K feature investment is worthwhile. ROI of the test = (expected value of decision) / (test cost). If the test prevents a bad $500K investment, the test has 100x+ ROI."
+      }
+    ]
+  },
+  {
+    "slug": "opportunity-sizing",
+    "title": "Opportunity sizing",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "intermediate",
+    "tags": [
+      "strategy",
+      "prioritization",
+      "impact",
+      "business-math",
+      "data-analysis"
+    ],
+    "aliases": [
+      "impact sizing",
+      "opportunity quantification",
+      "market size",
+      "addressable market"
+    ],
+    "wikilinks": [
+      "defining-success-metrics-and-north-star",
+      "cost-benefit-analysis-and-roi",
+      "funnel-analysis"
+    ],
+    "sources": [
+      {
+        "url": "https://qubit.capital/blog/evaluating-traction-metrics-consumer-apps",
+        "label": "Evaluating Traction Metrics for Consumer Apps"
+      },
+      {
+        "url": "https://userpilot.com/blog/north-star-metric/",
+        "label": "Sizing Opportunities in North Star Context"
+      }
+    ],
+    "explainer_md": "## Intuition\nOpportunity sizing estimates the potential revenue or impact of solving a problem. Not all problems are worth solving—some affect 100 users, others affect 10M. Size the opportunity first to prioritize ruthlessly.\n\n## Detail\nA complete opportunity sizing has three dimensions:\n\n1. **Population**: How many users or transactions are affected?\n   - Total addressable market (TAM): e.g., \"10M DAU\"\n   - Serviceable market: e.g., \"5M DAU in the US, English-speaking\"\n   - Serviceable obtainable: e.g., \"2M DAU who have Premium subscription\"\n\n2. **Impact per unit**: How much does solving it improve the metric?\n   - \"Reduce checkout friction: +2% conversion rate\"\n   - \"Improve recommendations: +5% engagement hours\"\n   - \"Launch in new country: +20% DAU\"\n\n3. **Time & revenue**: What's the economic value over a period?\n   - \"2M users * +2% conversion * $5 ARPU = $200K annual revenue\"\n   - \"1M engaged users * +$1 LTV = $1M annual LTV increase\"\n\nExample: Reducing checkout abandonment\n- Population: 500K weekly visitors, 30% add to cart = 150K cart-starters\n- Current checkout completion: 60% (90K transactions)\n- Opportunity: +5% checkout completion = 7.5K new transactions\n- Revenue: 7.5K * $50 ARPU = $375K annual\n- Cost to improve: 3 weeks engineering\n- ROI: $375K / (3 weeks * $150/hr * 40 hrs) ≈ $375K / $18K ≈ 20x\n\nPrioritization: Size multiple opportunities, rank by ROI or impact, work top-down.\n\n## Common gotchas / interview framings\n- **Overlap**: Two improvements might not stack. If you reduce checkout friction AND improve product quality, the combined impact isn't 2% + 3% = 5%; it's closer to 2% + 2.9% = 4.9% (diminishing returns on the same user).\n- **Segment variance**: Improving mobile checkout helps mobile users (30% of traffic), but overall impact is 5% * 30% = 1.5%, not 5%.\n- **Cannibalization**: Launching a cheaper tier might increase DAU but reduce ARPU. Net impact: DAU +10%, ARPU -20%. If ARPU is 80% of revenue, net revenue impact is negative.\n- **Interview scenario**: \"We want to reduce onboarding friction. Which improvement has the highest ROI: skip email verification (saves 10% at step 1) or shorten form to 3 fields (saves 5% at step 2)? Population: 100K weekly signups.\" → Skip email: 100K * 10% = 10K users saved. Shorten form: 90K (after email) * 5% = 4.5K saved. But email verification catches bots (reduce fraud by $2/user prevented). Include fraud savings in the ROI calculation.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are the three dimensions of opportunity sizing?",
+        "back": "1. Population: How many users/transactions affected (e.g., 5M DAU in feature flag X). 2. Impact per unit: % improvement or absolute delta (e.g., +3% retention). 3. Time & revenue: Total value over a period (e.g., 5M * 3% * $0.50 LTV = $75K annual)."
+      },
+      {
+        "type": "flip",
+        "front": "You're prioritizing two features: (A) Improve mobile app speed (affects 40% of users, ~+8% engagement). (B) Add dark mode (affects 20% of users, ~+15% engagement). Which has higher opportunity sizing?",
+        "back": "Calculate impact: (A) 100% user base * 40% * 8% = 3.2% overall engagement lift. (B) 100% * 20% * 15% = 3% overall engagement lift. (A) is slightly higher (3.2% vs 3%). BUT, also consider: (A) affects power users (mobile), so if those drive more revenue, (A) is higher. (B) is aspirational (dark mode is nice but maybe not core). Size by affected DAU, apply LTV weight, and rank by revenue impact, not just engagement %."
+      },
+      {
+        "type": "mcq",
+        "front": "You're considering reducing onboarding steps from 5 to 3. Currently, 100K weekly signups complete step 1, 70K complete step 2, 40K complete step 3, 30K complete step 4, 20K complete step 5. Simplification is expected to save 20% at steps 3-5. What's the opportunity?",
+        "back": "Steps 3-5 have 40K, 30K, 20K users (90K user-steps in total). Removing 2 steps and saving 20% attrition = ~18K saved, but simpler math: average of steps 3–5 is ~30K. 30K * 20% drop-off saved ≈ 6–10K. Conservative estimate: 10K.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "4K users saved (20% of 20K at step 5)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "10K users saved (20% of 50K from steps 3-5 combined)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "14K users saved (summing 20% drop-off avoidance)",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "20K users gained (100% savings at step 5)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is cannibalization important in opportunity sizing?",
+        "back": "A feature might increase one metric (DAU, signups) but decrease another (ARPU, profit margin). If you launch a free tier, DAU might +30%, but ARPU might -25%. Net revenue impact depends on weighting: if ARPU drives 80% of revenue, -25% ARPU + 30% DAU is a net negative. Always size impact on the true north star (revenue, LTV, profit), not just vanity metrics."
+      }
+    ]
+  },
+  {
+    "slug": "stakeholder-alignment-and-communication",
+    "title": "Stakeholder alignment and communication",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "beginner",
+    "tags": [
+      "communication",
+      "stakeholder",
+      "framing",
+      "narrative",
+      "business-context"
+    ],
+    "aliases": [
+      "stakeholder management",
+      "executive summary",
+      "narrative framing",
+      "audience adaptation"
+    ],
+    "wikilinks": [
+      "defining-success-metrics-and-north-star",
+      "cost-benefit-analysis-and-roi",
+      "data-driven-decision-culture"
+    ],
+    "sources": [
+      {
+        "url": "https://articles.sequoiacap.com/retention",
+        "label": "Retention as a Stakeholder Metric"
+      },
+      {
+        "url": "https://gopractice.io/product/the-product-managers-guide-to-north-star-metrics/",
+        "label": "Metrics for Cross-Functional Alignment"
+      }
+    ],
+    "explainer_md": "## Intuition\nDifferent stakeholders care about different things. Engineers care about technical feasibility and debt. Product cares about user outcomes and roadmap. Execs care about revenue and quarterly targets. Communicate findings in language each audience understands, with metrics that matter to them.\n\n## Detail\nFrame results for different audiences:\n\n**Engineering:**\n- Lead with impact on technical debt and system health (\"75% reduction in checkout latency\")\n- Quantify engineering effort: \"2 weeks to implement, 0.5 weeks to monitor\"\n- Highlight stability wins: \"Reduces error rate by 0.05%\"\n\n**Product:**\n- Lead with user outcomes: \"W1 retention improved from 40% to 43%\"\n- Explain feature impact: \"New recommendations feature drives +8% engagement for power users\"\n- Tie to roadmap: \"Unblocks 3 downstream features\"\n\n**Executive / Finance:**\n- Lead with revenue or growth: \"Feature expected to drive +$2M annual ARR\"\n- Provide confidence interval: \"Conservative scenario: +$1M; optimistic: +$3M\"\n- Give payback period: \"Breaks even in 6 months; 2.5x ROI in 12 months\"\n\n**Marketing / Growth:**\n- Lead with acquisition or engagement: \"Referral feature drives +15% viral coefficient\"\n- Segment by channel: \"High-value users (LTV>$500) are 2x more likely to refer\"\n\nCommon mistakes:\n- Leading with technical details instead of business impact\n- Using p-values and confidence intervals for non-technical audiences\n- Showing raw data instead of stories (\"DAU +150K\" without context)\n- Ignoring caveats or alternative explanations\n\n## Common gotchas / interview framings\n- **Selective framing**: Showing only the metric that looks good (\"signups +40%\") while hiding the bad one (\"churn +15%\") erodes trust. Communicate the full picture, even hard truths.\n- **Jargon mismatch**: Saying \"cohort retention\" to an exec who only knows \"LTV\" confuses. Translate: \"cohort retention predicts lifetime value.\"\n- **Overconfidence**: \"This feature will increase revenue by 20%\" without caveats. Better: \"Based on comparable products, we expect a +10–20% uplift; we'll test and measure.\"\n- **Interview scenario**: \"Present the same result (W1 retention +3%) to engineering, product, and the CFO.\" → Engineering: \"Onboarding optimization reduced tutorial friction by 40%, latency impact negligible.\" Product: \"Improved early user experience; retention cohorts 3pp higher across all channels.\" CFO: \"W1 retention predictor of LTV; +3pp suggests +$X million annual LTV impact; ROI of improvement is Y.\"",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does stakeholder communication matter in data science? How would you frame the same result differently for engineering vs. an exec?",
+        "back": "Different stakeholders optimize for different metrics. Engineering cares about technical feasibility and system health. Execs care about revenue and quarterly targets. Same finding (\"feature reduces latency by 200ms\"): Engineering frame: \"Improves system efficiency, reduces load by 15%.\" Exec frame: \"Faster experience drives +2% engagement, estimated +$500K annual impact.\""
+      },
+      {
+        "type": "flip",
+        "front": "You ran an A/B test: test variant has +5% engagement but -8% monetization. Revenue is net negative. How do you present this to (a) Product, (b) Execs?",
+        "back": "(a) Product: 'The feature increases engagement and is directionally good for retention, but monetization suffers in the short term. We recommend: (1) explore monetization levers (ads, paywalls) alongside this feature, or (2) use this as a low-monetization feature for free tier to increase DAU, monetizing separately.' (b) Execs: 'Test shows +5% engagement but -8% monetization, resulting in -$X revenue impact over [timeframe]. Not recommended for ship in current form. Options: (1) refine to preserve monetization (add pricing lever), (2) use as acquisition feature (tier differentiation), or (3) shelf until we have monetization strategy.'"
+      },
+      {
+        "type": "mcq",
+        "front": "You present a finding to your CEO: 'W1 retention improved from 40% to 43%.' The CEO asks, 'So we'll make more money?' What's the most complete answer?",
+        "back": "The CEO cares about money, not abstract metrics. You must bridge W1 retention to dollars. Higher W1 retention is a leading indicator of higher LTV, so estimate impact. But acknowledge uncertainty and other factors (churn might happen at week 8, monetization might be static). Option (a) is oversimplified; (c) is cautious but avoids the question; (d) is false.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, higher retention means more users will pay.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Likely yes. Higher W1 retention predicts higher LTV. Conservative estimate: +$X per cohort. Across 100K weekly signups, +$Y annual impact. But other factors (monetization, churn cliff) matter too.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "We need to run a longer test to see revenue impact.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Retention improvements always drive revenue growth.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What's the difference between a data-driven narrative and selective framing?",
+        "back": "Data-driven narrative: Show the full picture, including caveats and alternative explanations. ('Retention +3%, but churn curve shows cliff at week 8; product changes to address this are...') Selective framing: Cherry-pick metrics that look good and hide bad ones. ('DAU +20% Q3!' while hiding '-40% cohort retention'). Selective framing erodes trust; narrative with caveats builds credibility."
+      }
+    ]
+  },
+  {
+    "slug": "data-driven-decision-culture",
+    "title": "Data-driven decision culture",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "beginner",
+    "tags": [
+      "culture",
+      "experimentation",
+      "decision-making",
+      "testing",
+      "iteration"
+    ],
+    "aliases": [
+      "testing culture",
+      "experimentation",
+      "A/B testing",
+      "decision framework"
+    ],
+    "wikilinks": [
+      "defining-success-metrics-and-north-star",
+      "cost-benefit-analysis-and-roi",
+      "stakeholder-alignment-and-communication"
+    ],
+    "sources": [
+      {
+        "url": "https://userpilot.com/blog/north-star-metric/",
+        "label": "Metrics Framework for Data-Driven Culture"
+      },
+      {
+        "url": "https://qubit.capital/blog/evaluating-traction-metrics-consumer-apps",
+        "label": "Traction and Growth Culture"
+      }
+    ],
+    "explainer_md": "## Intuition\nData-driven decision culture means: before shipping a feature or making a strategic call, run an experiment and measure the impact. Hunches and intuition are fast but often wrong. Testing and metrics take longer but reduce risk and waste.\n\n## Detail\nA strong data-driven culture has these traits:\n\n1. **Metrics are clear and aligned**: Everyone knows the north star and supporting metrics. Engineers and product see them in dashboards daily.\n\n2. **Testing is operational**: A/B tests are the default decision method. If 80% of ideas are tested, not launched on intuition, you're data-driven.\n\n3. **Feedback loops are fast**: From launch to \"did it work?\" is days/weeks, not months. Speed allows iteration.\n\n4. **Experimentation investment**: Dedicated analytics team, robust testing tools, and a review process for results. Time and money signal priority.\n\n5. **Failures are blameless**: If 70% of experiments fail (typical), teams don't fear shipping tests. Failure is learning, not career risk.\n\n6. **Trade-off acceptance**: Not every decision is tested (too slow). But team agrees on which decisions get tested and respects the outcome.\n\nIndustry benchmarks:\n- Spotify, Netflix: 100+ A/B tests running simultaneously\n- Amazon, Google: Every feature goes through randomized experiment\n- Most B2B SaaS: Testing is common but not universal; many decisions still made on intuition\n\n## Common gotchas / interview framings\n- **Cargo-cult testing**: Running tests without clear hypotheses or guardrails. Test is positive (\"DAU +2%\") but misses the real metric (retention flat). Leads to metric gaming.\n- **Test fatigue**: Running so many simultaneous tests that interactions are hard to predict. Test A wins, Test B wins, but A+B interact negatively. Need to test combinations or use causal inference.\n- **Sample size myopia**: Ship a test after 3 days because it looks good, but sample size is too small for significance. Real metric might regress.\n- **Interview scenario**: \"Our team launches features without testing. How would you build a testing culture?\" → (1) Choose north star and public dashboards. (2) Require all features >2 weeks effort to run an A/B test. (3) Hire or train analytics person to manage tests. (4) Celebrate learnings from negative results. (5) Use standard significance thresholds (p<0.05, min 1-week sample) to avoid false positives.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does 'data-driven decision culture' mean, and why does it matter?",
+        "back": "Data-driven culture means decisions are backed by experimentation and metrics, not gut feel. It matters because: (1) reduces risk of bad launches (most features don't help), (2) accelerates iteration (you know fast what works), (3) aligns teams on outcomes (not opinions), (4) scales decisions (metrics replace human review as org grows)."
+      },
+      {
+        "type": "mcq",
+        "front": "Which signal is strongest for a company having a data-driven culture?",
+        "back": "Team size and dashboards don't guarantee testing discipline. Celebrating negative results is the signal that testing is embedded, not superficial. Negative results mean some ideas didn't work, which is normal if testing is done right.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "They have a big analytics team (50+ people).",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "They run A/B tests on most non-trivial features, and celebrate learning from negative results.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "They have a north star metric displayed on a dashboard.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Their CEO talks about 'being data-driven' in public statements.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your company launches features based on intuition. Only 20% move the north star metric. Build a plan to shift toward a data-driven culture.",
+        "back": "Phase 1 (Month 1): Pick a north star metric; build a dashboard. Require all >2-week features to run a 1-week A/B test before full launch. Phase 2 (Month 2–3): Hire or upskill analytics person to manage tests, set significance thresholds (p<0.05, min 1K sample). Phase 3 (Month 4+): Review test results weekly; celebrate negative results (learning). Expect: Test pass rate will rise from 20% as teams learn what works. Goal: 30–50% feature pass rate (realistic) within 6 months."
+      },
+      {
+        "type": "flip",
+        "front": "Why is 'celebrating negative results' important for a data-driven culture?",
+        "back": "If teams fear negative test results (seen as failure), they'll: (1) underpower tests to avoid shipping, (2) avoid testing risky ideas, (3) cherry-pick metrics to show success. Celebrating learning shifts the frame: a negative result is data that guides roadmap. It encourages hypothesis-driven experimentation."
+      }
+    ]
+  },
+  {
+    "slug": "funnel-analysis",
+    "title": "Funnel analysis",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "beginner",
+    "tags": [
+      "analytics",
+      "conversion",
+      "user-journey",
+      "bottleneck",
+      "optimization"
+    ],
+    "aliases": [
+      "conversion funnel",
+      "drop-off analysis",
+      "funnel step",
+      "user flow"
+    ],
+    "wikilinks": [
+      "cohort-analysis-and-retention-curves",
+      "feature-adoption-and-engagement-metrics",
+      "actionable-metrics-vs-vanity-metrics"
+    ],
+    "sources": [
+      {
+        "url": "https://www.wudpecker.io/blog/how-to-use-funnel-analysis-and-data-to-reduce-user-churn",
+        "label": "Funnel Analysis and User Churn Reduction"
+      },
+      {
+        "url": "https://www.geckoboard.com/best-practice/kpi-examples/dau-mau-ratio/",
+        "label": "KPI Examples and Funnel Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nA funnel is a sequence of steps users must complete to reach a goal (signup → email verify → onboarding → activation, or browse → add-to-cart → checkout → purchase). Funnel analysis measures drop-off at each step, revealing bottlenecks and optimization opportunities.\n\n## Detail\nA typical e-commerce funnel:\n- **Step 1**: Landing page viewed: 100K users\n- **Step 2**: Product page viewed: 80K (20% drop)\n- **Step 3**: Add to cart: 40K (50% drop)\n- **Step 4**: Checkout started: 35K (12.5% drop)\n- **Step 5**: Payment info entered: 30K (14% drop)\n- **Step 6**: Purchase completed: 27K (10% drop)\n\nFunnel metrics:\n- **Drop-off**: # users at step N - # at step N+1 (e.g., 40K−35K = 5K drop at checkout)\n- **Conversion rate**: Users completing step / entering step. (e.g., 27K / 100K = 27% overall; 27K / 35K = 77% from checkout start to purchase)\n- **Friction**: % of users lost. (e.g., step 3 has 50% friction; 50% don't add to cart)\n\nWhere to focus:\n- **Biggest drop-off**: Step 3 (50% friction). Even 10% improvement = 4K users, likely high ROI.\n- **Unexplained drop**: Step 2 to 3 (50% jump from typical 20% churn). Suggests friction on product page, not elsewhere.\n- **Segment analysis**: Mobile has 60% step 3 drop; desktop 40%. Mobile checkout is the bottleneck.\n\n## Common gotchas / interview framings\n- **Survivor bias**: Funnel only tracks users who enter. If someone lands on page but bounces before event fires, they're not in the funnel. The true step-1 count is higher.\n- **Multiple paths**: Real funnels aren't linear (e.g., some users add to cart via wishlist, not product page). Multi-funnel analysis captures this.\n- **Attribution**: If step 2→3 drop rises after a mobile redesign, is the redesign bad or did mobile traffic mix change? Segment by device and timing.\n- **Interview scenario**: \"Checkout completion dropped 5pp in the last week. Diagnose.\" → (1) When exactly (by day, time)? (2) Which devices/geographies? (3) Did you change payment provider, page design, or validation logic? (4) Segment funnel by cohort/device. If drop is mobile-only, it's a frontend issue; if all devices, it's backend/payment.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define funnel analysis. What does it reveal, and why should you focus on the biggest drop-off step?",
+        "back": "Funnel analysis tracks users through a series of steps toward a goal (e.g., signup → activation). It reveals drop-off at each step, showing where users abandon. Focus on biggest drop-off because: (a) it's where most users are lost, (b) even small % improvement affects many users, (c) likely highest ROI (remove biggest friction first)."
+      },
+      {
+        "type": "mcq",
+        "front": "A mobile checkout funnel: 1M landing, 800K product page, 400K add-to-cart, 350K checkout start, 315K complete. Which step should you optimize first?",
+        "back": "Step 2→3 has 50% friction (400K / 800K), the highest %. Even 10% improvement = 40K users. Step 1→2 looks big (200K), but it's 25% of traffic (200K / 800K), typical for landing-to-product-page drop. Rule of thumb: optimize highest % friction first unless segment analysis reveals a cheaper fix elsewhere.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Step 1→2: 200K users drop (highest absolute)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Step 2→3: 400K users drop (50% friction, highest %)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Step 4→5: 35K users drop (lowest absolute)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Step 3→4: depends on effort to optimize relative to impact",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Desktop checkout completion: 70%. Mobile: 45%. Mobile traffic is 60% of total. What's the weighted average, and where should you focus?",
+        "back": "Weighted avg = 45% * 60% + 70% * 40% = 27% + 28% = 55%. Mobile is the bottleneck: 25pp gap vs. desktop. But before optimizing, confirm: (1) Is the gap real or data quality (tracking bug)? (2) Which mobile step is the problem (onboarding, payment entry, button size)? (3) What's ROI: 60M mobile users * 10pp improvement * ARPU. If ROI is positive, mobile checkout is your priority."
+      },
+      {
+        "type": "flip",
+        "front": "Why is segment analysis important in funnel analysis? Give an example.",
+        "back": "Overall funnel hides segment differences. Example: Overall signup-to-activation drop is 30%, but paid-ads cohorts are 50% while organic is 20%. Optimizing the average funnel won't help—paid-ads users have different needs (onboarding, value prop clarity). Segment by acquisition channel, device, geography, and user type to find root causes."
+      }
+    ]
+  },
+  {
+    "slug": "feature-adoption-and-engagement-metrics",
+    "title": "Feature adoption and engagement metrics",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "intermediate",
+    "tags": [
+      "analytics",
+      "feature",
+      "adoption",
+      "engagement",
+      "dau-mau",
+      "product-health"
+    ],
+    "aliases": [
+      "feature adoption rate",
+      "engagement metrics",
+      "feature activation",
+      "feature usage"
+    ],
+    "wikilinks": [
+      "actionable-metrics-vs-vanity-metrics",
+      "leading-vs-lagging-indicators",
+      "cohort-analysis-and-retention-curves"
+    ],
+    "sources": [
+      {
+        "url": "https://www.statsig.com/perspectives/active-users-dau-wau-and-mau-explained",
+        "label": "DAU, WAU, and MAU Explained"
+      },
+      {
+        "url": "https://www.statsig.com/perspectives/understanding-daumau-key-metrics-for-product-success",
+        "label": "Understanding DAU/MAU for Product Success"
+      }
+    ],
+    "explainer_md": "## Intuition\nDAU (Daily Active Users) and MAU (Monthly Active Users) measure engagement breadth. Feature adoption measures depth: what % of users actually use a feature? Combined, these metrics show if your product is engaging and if new features drive stickiness.\n\n## Detail\nKey engagement metrics:\n\n**Breadth metrics:**\n- **DAU**: # unique users active (any interaction) in a day\n- **MAU**: # unique users active in a month\n- **DAU/MAU ratio (stickiness)**: DAU / MAU. >20% is healthy; >50% is exceptional.\n- **WAU**: Weekly active users (in between)\n\n**Feature-level:**\n- **Feature adoption rate**: % of DAU who used feature X (e.g., 60% of users use search)\n- **Feature depth**: % of DAU who used feature X + secondary feature (e.g., saved a search result)\n- **Time to adoption**: Days until user first uses feature after signup\n- **Feature engagement decay**: Usage over weeks—does it drop off or stabilize?\n\n**Interpretation:**\n- New feature with 40% adoption week 1, 35% week 2, 25% week 4 → early curiosity, low stickiness. Not core to product.\n- Feature with 40% adoption week 1, 38% week 2, 37% week 4 → sticky. Driving habit formation.\n\nRoadmap implications:\n- High DAU/MAU + stable DAU → product is sticky, focus on monetization\n- Rising DAU/MAU + rising DAU → product is improving engagement, growth is solid\n- Flat DAU + low DAU/MAU + declining feature adoption → engagement crisis, need product refresh\n\n## Common gotchas / interview framings\n- **Adoption ≠ engagement**: 80% of users might try a feature once, but 10% use it regularly. Measure repeat usage, not just \"ever used.\"\n- **Time-of-day effects**: DAU can spike on certain days (weekends) or times (evenings). Use weekly or monthly aggregates to smooth.\n- **Missing definition**: If \"active\" means \"logged in\" vs. \"took an action,\" metrics diverge. Define clearly and consistently.\n- **Feature cannibalization**: A new feature might increase engagement but shift time from older features (net engagement flat). Measure overall DAU/engagement time, not just feature adoption.\n- **Interview scenario**: \"Feature X launched 4 weeks ago; adoption is 50%. Is it successful?\" → Context matters: (1) Is it sticky (adoption staying at 50% or declining)? (2) Do adopters have higher retention/revenue? (3) What's comparable to similar features? (4) Is it a primary or secondary feature? (50% adoption is great for a secondary feature, disappointing for core.)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define DAU, MAU, and DAU/MAU ratio. What does a high ratio indicate?",
+        "back": "DAU = daily active users. MAU = monthly active users. DAU/MAU ratio = DAU / MAU (e.g., if 1M DAU and 5M MAU, ratio is 20%). High ratio (>50%) indicates habituality—users return daily. Low ratio (<10%) indicates usage is sporadic. Healthy ratio is 20–40% for social/consumer products."
+      },
+      {
+        "type": "flip",
+        "front": "Your app's DAU is flat at 2M, but MAU grew from 5M to 7M. DAU/MAU dropped from 40% to 29%. What's happening?",
+        "back": "More users are signing up (MAU +40%) but aren't returning regularly (DAU flat). This is acquisition without retention—classic sign of churn masking. Each cohort might be getting stickier, but older cohorts are churning fast. Next: (1) Check cohort retention curves—do new cohorts have better W1 retention? (2) Check DAU composition—is DAU still from early cohorts (bad) or new cohorts (good)? (3) Engagement issue: users try the app once but don't return. Focus on onboarding and early engagement."
+      },
+      {
+        "type": "mcq",
+        "front": "Feature X launched to 100% of users 4 weeks ago. Adoption: Week 1: 60%, Week 2: 55%, Week 3: 50%, Week 4: 48%. Is this feature successful?",
+        "back": "60% adoption week 1, declining to 48%, suggests novelty factor or forced onboarding. Healthy feature adoption stabilizes (e.g., 60% → 55% → 55% → 55%). Declining adoption suggests the feature isn't sticky. Context: If it's a secondary feature (nice-to-have), 48% stable might be fine. If it's primary, declining is bad and warrants investigation (is the feature valuable? Is it discoverable?).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, 60% adoption is very high.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, adoption is declining; the feature is losing interest.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Unclear; need to know if the decline is normal (novelty wearing off) or bad (feature doesn't deliver value).",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Yes if adopters have higher LTV, no if they don't.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is 'feature adoption rate' more actionable than 'total feature usage count'?",
+        "back": "Total usage count can grow by simply adding more users (DAU growth), masking that the feature is actually less popular per user. Adoption rate (% of DAU using feature) isolates the feature's appeal. If DAU grows 20% but adoption rate falls 10%, the feature is becoming less attractive per user—a signal to investigate quality or discoverability."
+      }
+    ]
+  },
+  {
+    "slug": "churn-prediction-and-retention-modeling",
+    "title": "Churn prediction and retention modeling",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "intermediate",
+    "tags": [
+      "predictive",
+      "retention",
+      "churn",
+      "machine-learning",
+      "lifecycle",
+      "intervention"
+    ],
+    "aliases": [
+      "churn risk",
+      "retention prediction",
+      "at-risk users",
+      "survival analysis"
+    ],
+    "wikilinks": [
+      "leading-vs-lagging-indicators",
+      "cohort-analysis-and-retention-curves",
+      "feature-adoption-and-engagement-metrics"
+    ],
+    "sources": [
+      {
+        "url": "https://articles.sequoiacap.com/retention",
+        "label": "Sequoia Capital on Retention and Churn"
+      },
+      {
+        "url": "https://clevertap.com/blog/viral-coefficient/",
+        "label": "Viral Coefficient and Customer Lifecycle"
+      }
+    ],
+    "explainer_md": "## Intuition\nChurn prediction uses historical user behavior to identify users at risk of leaving soon. With early warning, you can intervene (discounts, re-engagement campaigns, support outreach) before they churn. This is far cheaper than acquisition and improves retention metrics.\n\n## Detail\nA churn prediction model typically:\n\n1. **Define churn**: 30 days inactive (varies by product; daily-active apps may use 7 days, subscription may use 60 days)\n\n2. **Feature engineering**: Build signals from user history\n   - Engagement trend: Is usage rising, stable, or declining? (Declining predicts churn)\n   - Feature adoption: Did user try key features? (Non-adopters churn more)\n   - Session length / frequency: Short sessions or infrequent access signal risk\n   - Monetization: Did user ever pay? (Paying users churn less)\n   - Support signals: Open tickets, refund requests (predict churn)\n   - Cohort age: When did they sign up? (Early cohorts more at-risk)\n\n3. **Training data**: Label users as churned/not churned at a certain horizon (e.g., \"user churned in days 30–60\") and build a classifier\n\n4. **Ranking users**: Score each active user 0–1 (churn risk). Intervene on top 10–20%\n\nIntervention examples:\n- **Email re-engagement**: \"We noticed you haven't used X in a week. Here's what you're missing.\"\n- **Discount offer**: \"Come back for 20% off. Valid 7 days.\"\n- **Support outreach**: \"You flagged difficulty with feature Y. Our team can help.\"\n- **Onboarding gap**: \"You haven't tried personalized recommendations. Let's set it up.\"\n\nMetrics:\n- **Precision**: Of users flagged, what % actually churn? (If you're wrong, you waste discount offers)\n- **Recall**: Of users who churn, what % did you catch? (Miss some, some interventions fail)\n- **Lift**: Do at-risk users who receive intervention churn less than control? (A/B test to measure impact)\n\n## Common gotchas / interview framings\n- **Survivorship bias**: Only users who survived to day 30 are in your training data. Day 1 churners are invisible. Build separate models for early churn (day 1–7) and late churn (day 30+).\n- **Stale data**: If prediction happens on weekly batch, there's a lag. By the time you score, user might already have churned. Real-time prediction requires streaming data and fast scoring.\n- **Intervention paradox**: Targeting at-risk users might signal that the app knows you're losing interest (negative user experience). Frame positively: \"New feature you'll love\" vs. \"Come back or lose access.\"\n- **Interview scenario**: \"You built a churn model; it's 85% accurate. Why wouldn't you use it to intervene on all high-risk users?\" → (1) Precision matters: is 85% accuracy good precision (low false positives)? (2) Intervention ROI: cost of intervention vs. LTV of retained user. (3) A/B test impact: does intervention actually prevent churn? (4) Frequency: over-emailing causes more churn.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define churn prediction. What are three signals that predict a user is at risk of churning?",
+        "back": "Churn prediction: Use historical behavior to score each user's risk of inactivity in a future period (e.g., next 30 days). Three signals: (1) Engagement decline: usage dropping over weeks. (2) Feature adoption gap: never tried key features (lower sticky). (3) Session metrics: short sessions or infrequent logins (low engagement). (Other: not monetizing, support tickets, cohort age.)"
+      },
+      {
+        "type": "mcq",
+        "front": "You built a churn model: 90% accuracy, 70% precision (of flagged at-risk users, 70% actually churn), 50% recall (of all churners, you caught 50%). Should you intervene on all flagged users?",
+        "back": "Accuracy is misleading (class imbalance: most users don't churn, so \"predict no one churns\" is 95% accurate but useless). Precision (70%) means 30% of interventions are wasted on false positives. Intervention ROI depends on: cost of intervention vs. LTV of retained user. If LTV = $100 and intervention = $5, even 30% FP is worth it. Must A/B test to confirm intervention actually prevents churn.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, 90% accuracy is excellent.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, 30% of interventions waste budget on false positives.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Maybe, depends on intervention cost vs. LTV and whether intervention actually prevents churn (A/B test).",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Yes, 70% precision is high enough to warrant broad intervention.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your churn model flags 100K at-risk users. You send a $5 discount offer. 30% accept (30K), and 70% of those (21K) would have churned anyway (vs. 30% baseline churn in control). Did the intervention work?",
+        "back": "Intervention prevented 21K churn. Cost: 100K * $5 = $500K. Savings: 21K users * $100 LTV (example) = $2.1M. ROI is positive (4x). BUT: 70% of intervention cost ($350K) went to false positives or users who would have stayed anyway. Real ROI: net 21K prevented churn / 100K users = 21pp lift, or $2.1M - $500K = $1.6M net gain. Decision: scale up, but test more targeted interventions to improve precision."
+      },
+      {
+        "type": "flip",
+        "front": "Why is 'survivorship bias' a problem in churn prediction?",
+        "back": "If you only model users who survived to day 30, you miss day 1–7 churners. These early churners have different predictors (onboarding friction, wrong product-market fit for segment) than late churners. Build separate models for early churn (1–7 day) and late churn (30+) to avoid bias."
+      }
+    ]
+  },
+  {
+    "slug": "network-effects-and-viral-loops",
+    "title": "Network effects and viral loops",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "difficulty": "advanced",
+    "tags": [
+      "growth",
+      "viral",
+      "network-effects",
+      "user-acquisition",
+      "product-leverage"
+    ],
+    "aliases": [
+      "viral coefficient",
+      "K-factor",
+      "network value",
+      "viral loop"
+    ],
+    "wikilinks": [
+      "feature-adoption-and-engagement-metrics",
+      "opportunity-sizing",
+      "cost-benefit-analysis-and-roi"
+    ],
+    "sources": [
+      {
+        "url": "https://www.wallstreetprep.com/knowledge/viral-coefficient/",
+        "label": "Viral Coefficient: SaaS Formula & Calculator"
+      },
+      {
+        "url": "https://clevertap.com/blog/viral-coefficient/",
+        "label": "How to Calculate Your Viral Coefficient"
+      }
+    ],
+    "explainer_md": "## Intuition\nNetwork effects occur when a product becomes more valuable as more users join (Slack, Zoom, TikTok). Viral loops happen when users naturally invite others, creating exponential growth without paid acquisition. Both compound and can make a product defensible and profitable.\n\n## Detail\nTwo types of network effects:\n\n**Direct network effects**: Product value increases with more users\n- E.g., phone network: each new user makes it more valuable to all\n- Measure: How much does utility increase per 1K new users?\n- Plateau: Eventually, value per user saturates (you have enough friends)\n\n**Indirect network effects**: More users drive better product (e.g., more data → better recommendations, more content creators → more viewers)\n- E.g., TikTok: more creators → more videos → better algorithm → more viewers\n- Measure: Does video quality/personalization improve with user base?\n\nViral metrics:\n\n**Viral coefficient (K)**: Average # of new users each user brings in\n- K = (# of invites sent per user) × (% who accept invite)\n- Example: User sends 5 invites. 40% accept = K = 2\n- K > 1 = exponential growth (viral)\n- K < 1 = sublinear growth (requires paid acquisition)\n\n**Viral cycle time**: Days from signup to when you send invites (and they convert)\n- 3-day cycle, K=1.5: Doubling every log(2)/log(1.5) = 2.4 cycles = 7 days\n- Fast cycle time (1 day) with K=1.2 beats slow cycle (14 days) with K=3 for near-term growth\n\nMeasuring viral loops:\n1. Track invite-to-signup funnel: Of 1M invites sent, how many convert to signup?\n2. Track signup-to-activation: Of those signups, how many become active (N-day retention)?\n3. Calculate K: (invites per user) × (conversion rate) × (activation rate)\n4. A/B test viral mechanics: offer incentive for invites, make sharing easier, etc.\n\n## Common gotchas / interview framings\n- **Distinction**: Network effects ≠ virality. Network effects are structural (more users = higher utility). Virality is a tactic (referrals, sharing). Slack has strong network effects (more users = better) and viral mechanics (easy sharing, team growth).\n- **Saturation**: A K=3 viral loop is amazing, but only if there's an addressable market. If you need coworkers in Slack to derive value, you saturate at your company size.\n- **Incentive-driven**: Incentivized referrals (\"get $5 off if your friend signs up\") boost K artificially. When incentive ends, K drops. Organic viral loops are more sustainable.\n- **Retention cliff**: A feature with high referrals but low retention (users churn in week 2) burns budget. Viral loop ROI = K × LTV. If LTV is low, high K doesn't matter.\n- **Interview scenario**: \"TikTok has viral loops but your B2B SaaS doesn't. Why, and how would you add virality?\" → TikTok's value is in content (social graph). B2B SaaS value is in privacy/data (can't share easily). Virality mechanisms: (1) Team collaboration (Slack-style, invite colleagues), (2) Integration incentives (Dropbox: free storage if invites sign up), (3) Content sharing (if SaaS has shareable artifacts). Measure K for each and focus on highest.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define viral coefficient (K). What does K > 1 mean, and why does cycle time matter?",
+        "back": "K = (invites per user) × (% who accept). K > 1 means each user brings in >1 new user on average, creating exponential growth. Cycle time is when invites convert to active users. Fast cycle (1 day, K=1.2) beats slow (30 days, K=3) for near-term growth. Why: days double users faster than 3x does, and speed lets you scale marketing earlier."
+      },
+      {
+        "type": "flip",
+        "front": "Your app: 1M users send 2 invites each (2M invites). 20% convert to signup (400K signups). 50% of those become active (200K). What's your viral coefficient?",
+        "back": "K = (2 invites per user) × (20% conversion) × (50% activation) = 2 × 0.2 × 0.5 = 0.2. K < 1, so not viral. You need paid acquisition. Options to improve K: (1) Increase invites per user (make sharing easier, incentivize), (2) Increase conversion (better invite message), (3) Increase activation (better onboarding). Focus on highest-leverage lever."
+      },
+      {
+        "type": "mcq",
+        "front": "Which best describes a strong network effect (vs. viral loop)?",
+        "back": "Network effects are structural: more users = higher utility (Slack, Zoom). Viral loops are tactics: referrals and invites drive growth. A product can have strong network effects without virality (Gmail has weak referral mechanisms but strong network effects). Or strong virality without network effects (a gambling app with referral bonuses but no utility from more players).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "New users drive rapid exponential growth through referrals.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Product value to users increases as more users join, making the product sticky and defensible.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Users are incentivized to invite friends, creating a compounding user base.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The product integrates with competitors, increasing adoption.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why do incentivized viral loops (e.g., '$5 credit if you refer') have different properties than organic viral loops?",
+        "back": "Incentivized referrals boost K artificially. When the incentive ends, K drops (users stop referring). Organic viral loops (users naturally refer because it's valuable/fun) are more sustainable and indicate true network effects. Measure: run the same viral mechanic with/without incentive. If K drops significantly when incentive ends, it's not organic."
+      }
+    ]
+  }
+]

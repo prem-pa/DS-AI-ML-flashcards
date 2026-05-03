@@ -1,0 +1,93 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "evaluation-benchmarking",
+  "topic_label": "Evaluation & Benchmarking",
+  "concept_count": 12,
+  "concepts": [
+    {
+      "slug": "standard-benchmarks-mmlu-gsm8k-humaneval-arc",
+      "title": "Standard benchmarks (MMLU, GSM8K, HumanEval, ARC)",
+      "difficulty": "intermediate",
+      "hook": "Know what they measure; limitations.",
+      "subtopic": "LLM Benchmarks"
+    },
+    {
+      "slug": "long-context-benchmarks-longbench-infinitebench",
+      "title": "Long-context benchmarks (LongBench, InfiniteBench)",
+      "difficulty": "intermediate",
+      "hook": "Evaluate context window capability.",
+      "subtopic": "LLM Benchmarks"
+    },
+    {
+      "slug": "reasoning-benchmarks-math-codeforces",
+      "title": "Reasoning benchmarks (MATH, Codeforces)",
+      "difficulty": "intermediate",
+      "hook": "Hard tasks; discriminate capabilities.",
+      "subtopic": "LLM Benchmarks"
+    },
+    {
+      "slug": "leaderboards-open-llm-leaderboard-lmsys",
+      "title": "Leaderboards (Open LLM Leaderboard, LMSYS)",
+      "difficulty": "beginner",
+      "hook": "Track progress; understand limitations of rankings.",
+      "subtopic": "LLM Benchmarks"
+    },
+    {
+      "slug": "ragas-for-rag-evaluation",
+      "title": "Ragas for RAG evaluation",
+      "difficulty": "intermediate",
+      "hook": "Retrieval, answer relevance, groundedness, context precision.",
+      "subtopic": "Evaluation Frameworks"
+    },
+    {
+      "slug": "deepeval-50-metrics-pytest-integration",
+      "title": "DeepEval (50+ metrics, pytest integration)",
+      "difficulty": "intermediate",
+      "hook": "Comprehensive open-source eval framework.",
+      "subtopic": "Evaluation Frameworks"
+    },
+    {
+      "slug": "langfuse-for-observability-and-tracing",
+      "title": "Langfuse for observability and tracing",
+      "difficulty": "intermediate",
+      "hook": "Track latency, cost, errors; vendor-agnostic.",
+      "subtopic": "Evaluation Frameworks"
+    },
+    {
+      "slug": "braintrust-for-full-lifecycle-evaluation",
+      "title": "Braintrust for full lifecycle evaluation",
+      "difficulty": "intermediate",
+      "hook": "Eval, monitoring, release gates; competitive with DeepEval.",
+      "subtopic": "Evaluation Frameworks"
+    },
+    {
+      "slug": "arize-phoenix-for-agent-evaluation",
+      "title": "Arize Phoenix for agent evaluation",
+      "difficulty": "intermediate",
+      "hook": "Multi-step tracing; assess agent decision-making.",
+      "subtopic": "Evaluation Frameworks"
+    },
+    {
+      "slug": "manual-evaluation-and-annotation",
+      "title": "Manual evaluation and annotation",
+      "difficulty": "beginner",
+      "hook": "Gold standard; expensive but ground truth.",
+      "subtopic": "Custom Evaluation"
+    },
+    {
+      "slug": "llm-as-judge-evaluation",
+      "title": "LLM-as-judge evaluation",
+      "difficulty": "intermediate",
+      "hook": "Use LLM to score outputs; bias risk; cheaper than manual.",
+      "subtopic": "Custom Evaluation"
+    },
+    {
+      "slug": "user-based-evaluation-and-feedback-loops",
+      "title": "User-based evaluation and feedback loops",
+      "difficulty": "intermediate",
+      "hook": "Online evaluation; real performance metrics.",
+      "subtopic": "Custom Evaluation"
+    }
+  ]
+}

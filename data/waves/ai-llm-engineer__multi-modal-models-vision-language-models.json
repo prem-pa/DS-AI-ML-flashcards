@@ -1,0 +1,831 @@
+[
+  {
+    "slug": "image-encoding-and-patch-embeddings",
+    "title": "Image encoding and patch embeddings",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "difficulty": "intermediate",
+    "tags": [
+      "patch-embeddings",
+      "vision-encoder",
+      "ViT",
+      "image-encoding",
+      "tokenization"
+    ],
+    "aliases": [
+      "image tokenization",
+      "ViT patches",
+      "spatial embeddings"
+    ],
+    "wikilinks": [
+      "vision-transformer",
+      "patch-embedding",
+      "spatial-encoding",
+      "siglip-2",
+      "image-feature-extraction",
+      "token-projection"
+    ],
+    "sources": [
+      {
+        "url": "https://jina.ai/vision-encoder-survey.pdf",
+        "label": "Vision Encoders in Vision-Language Models: A Survey"
+      },
+      {
+        "url": "https://github.com/huggingface/pytorch-image-models",
+        "label": "PyTorch Image Models (timm) - ViT & Vision Encoders"
+      },
+      {
+        "url": "https://github.com/huggingface/transformers/blob/main/src/transformers/models/siglip/modeling_siglip.py",
+        "label": "HuggingFace SigLIP Implementation"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nVision-language models must project images into a shared token space with text. Rather than flattening entire images, modern approaches divide images into fixed-size patches (typically 14×14 or 16×16 pixels), linearly embed each patch into a hidden dimension, and optionally add positional encodings. This mirrors how text is tokenized.\n\n## Detail\n\nVision Transformers (ViT) pioneered patch-based encoding: divide $H \\times W \\times C$ image into $P^2$ patches, project each to $D$ dimensions: $z^{(0)} = W_p x_p^{(l)} \\in \\mathbb{R}^{N \\times D}$ where $N = (HW)/P^2$. Modern variants (SigLIP-2, EVA) adapt this with different backbone scales (ViT-B/16 86M → ViT-g/16 1B parameters) and resolution strategies. SigLIP-2 adds self-supervised pretraining objectives to stabilize dense features. Some models use 2D-RoPE or complex positional embeddings to preserve spatial locality. Resolution impacts efficiency: 336×336 = 576 tokens vs 1344×1344 = 14,400 tokens.\n\n## Common gotchas / interview framings\n- Patch size trade-off: smaller patches (8×8) preserve fine detail for OCR but explode token count; larger patches (16×16) are efficient but lose small object detection\n- Linear projection assumes patch independence; learned projections or CNNs can capture local spatial structure\n- Position encoding can be frozen (ROPE) or learnable; absolute vs relative encodings affect scaling to new resolutions\n- SigLIP-2 (Feb 2025) outperforms older ViT-based encoders on VLM tasks despite fewer parameters via superior pretraining\n- Many models discard patch embeddings after alignment layer; others preserve them for dense prediction (segmentation, localization)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core idea behind patch-based image encoding in ViTs?",
+        "back": "Divide the image into non-overlapping patches (e.g., 16×16), linearly project each patch to a fixed dimension, and add positional encodings. This converts the image into a sequence of tokens that transformer layers can process, similar to word tokens in NLP."
+      },
+      {
+        "type": "flip",
+        "front": "How do vision encoders balance resolution vs. token count in VLMs?",
+        "back": "**Trade-off**: Higher resolution (e.g., 1344×1344) with adaptive patching (e.g., smaller patches on key regions) increases quality but token usage. SigLIP-2 and GPT-4o use ~2000-10000 tokens for high-res images. Lower resolution (336×336) uses ~576 tokens. Some models compress via learned pooling or dynamic patch selection."
+      },
+      {
+        "type": "flip",
+        "front": "What role does positional encoding play in patch embeddings?",
+        "back": "Positional encodings preserve spatial relationships between patches. Methods include: absolute (learned grids), relative (2D-RoPE), or implicit (spatial transformer). Without it, the model loses 2D structure and treats patches as an unordered set."
+      },
+      {
+        "type": "mcq",
+        "front": "Why does SigLIP-2 (Feb 2025) outperform larger ViT backbones on VLM benchmarks despite having fewer parameters?",
+        "back": "SigLIP-2 uses superior pretraining: dual-tower contrastive learning + captioning-based objectives + self-supervised losses (masked prediction, self-distillation) + online data curation. Training methodology now outperforms parameter scaling.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It uses a deeper transformer architecture",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Superior pretraining methodology (contrastive + captioning + self-supervised objectives) outweighs parameter disadvantage",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "It processes images at 10x higher resolution",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It uses ensembling with 4 different encoders",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the relationship between patch size and downstream task performance?",
+        "back": "Smaller patches (8×8): better for OCR, dense tasks (segmentation), but high token cost. Larger patches (16×16): efficient, good for image classification. Adaptive/dynamic patching balances both but adds complexity."
+      }
+    ]
+  },
+  {
+    "slug": "visual-language-alignment-clip-align",
+    "title": "Visual-language alignment (CLIP, ALIGN)",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "difficulty": "intermediate",
+    "tags": [
+      "contrastive-learning",
+      "CLIP",
+      "alignment",
+      "zero-shot",
+      "image-text-pairs"
+    ],
+    "aliases": [
+      "CLIP contrastive loss",
+      "dual-tower alignment",
+      "image-text matching"
+    ],
+    "wikilinks": [
+      "clip-model",
+      "contrastive-learning",
+      "zero-shot-classification",
+      "dual-tower-architecture",
+      "siglip",
+      "alignment-loss"
+    ],
+    "sources": [
+      {
+        "url": "https://jina.ai/vision-encoder-survey.pdf",
+        "label": "Vision Encoders in Vision-Language Models: A Survey"
+      },
+      {
+        "url": "https://arxiv.org/pdf/2502.14786",
+        "label": "SigLIP2: Dual-Tower Multilingual Vision-Language Encoders (Feb 2025)"
+      },
+      {
+        "url": "https://www.emergentmind.com/topics/siglip2-encoder",
+        "label": "SigLIP2 Encoder for Multimodal AI"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nCLIP revolutionized vision-language understanding by learning a shared embedding space where images and their text descriptions cluster together. Instead of labeling images directly, it trains on internet-scale (image, text) pairs and learns to align their embeddings via contrastive loss. This enables zero-shot classification: describe a class in text, compute its embedding, and find nearest image embeddings.\n\n## Detail\n\nCLIP uses a **dual-tower** architecture:\n- Vision encoder $V_{\\theta}$ projects image $x$ to embedding $\\mathbf{v} = V_{\\theta}(x) \\in \\mathbb{R}^{d}$\n- Text encoder $T_{\\phi}$ projects text $t$ to embedding $\\mathbf{t} = T_{\\phi}(t) \\in \\mathbb{R}^{d}$\n- Contrastive loss: $\\mathcal{L} = -\\log \\frac{\\exp(\\text{sim}(\\mathbf{v}, \\mathbf{t}) / \\tau)}{\\sum_k \\exp(\\text{sim}(\\mathbf{v}, \\mathbf{t}_k) / \\tau)}$ where $\\tau$ is temperature.\n\nModern variants (SigLIP-2, ALIGN) add:\n- **Captioning losses**: learn to predict full captions, not just binary matching\n- **Self-supervised losses**: masked prediction, self-distillation from a momentum encoder\n- **Multilingual pretraining**: SigLIP-2 aligns embeddings across 100+ languages\n- **Hard negative mining**: explicit sampling of difficult negatives improves convergence\n\n## Common gotchas / interview framings\n- CLIP alignment is **not transitive**: aligned image-text doesn't guarantee aligned text-text embeddings (requires separate text-only pretraining)\n- Temperature $\\tau$ is critical: too high → all pairs equally probable, too low → collapsed gradients\n- Zero-shot classification requires careful prompt engineering (e.g., \"a photo of a {class}\" vs. raw class name)\n- SigLIP uses sigmoid loss instead of softmax, more stable at scale\n- Downstream task performance depends heavily on pretraining data distribution (e.g., CLIP struggles on medical images not in training set)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the CLIP contrastive loss in one sentence.",
+        "back": "Learn embeddings where matched (image, text) pairs have high dot product similarity, while unmatched pairs have low similarity, using cross-entropy loss over all in-batch negatives."
+      },
+      {
+        "type": "flip",
+        "front": "Why does CLIP enable zero-shot classification?",
+        "back": "The shared embedding space allows you to encode class descriptions as text, then compute their embeddings. An image's embedding is compared to all class embeddings; the nearest class wins. No task-specific training needed."
+      },
+      {
+        "type": "flip",
+        "front": "What is the key architectural difference between dual-tower (CLIP) and merged (late-fusion) approaches?",
+        "back": "Dual-tower: separate vision & text encoders, align in a shared space, **efficient** for retrieval (pre-compute all embeddings). Merged: concatenate patches + text tokens early, process jointly, **better reasoning** but no pre-computation."
+      },
+      {
+        "type": "mcq",
+        "front": "What problem does SigLIP-2 solve that original CLIP had?",
+        "back": "CLIP sigmoid loss vs softmax: SigLIP uses sigmoid (binary classification per pair), not softmax over all negatives. More stable at large batch sizes, doesn't require synchronized batching across GPUs, better for multilingual pretraining.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Adds video support with temporal fusion",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Sigmoid loss is more stable than softmax at scale; doesn't require synchronized batching",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Uses a CNN instead of ViT backbone",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Automatically generates captions during inference",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does hard negative mining improve contrastive alignment?",
+        "back": "Instead of random negatives, explicitly sample image-text pairs that are hard to distinguish (e.g., similar images with different captions). Forces the model to learn fine-grained distinctions, improving downstream performance."
+      }
+    ]
+  },
+  {
+    "slug": "token-interleaving-and-mixed-modality",
+    "title": "Token interleaving and mixed modality",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "difficulty": "intermediate",
+    "tags": [
+      "multimodal-fusion",
+      "token-interleaving",
+      "early-fusion",
+      "cross-modal-reasoning",
+      "mixed-tokens"
+    ],
+    "aliases": [
+      "interleaved tokens",
+      "early fusion",
+      "cross-modal fusion",
+      "image-text mixing"
+    ],
+    "wikilinks": [
+      "token-fusion",
+      "early-fusion",
+      "cross-modal-reasoning",
+      "multimodal-transformer",
+      "vision-language-pretraining",
+      "modality-mixing"
+    ],
+    "sources": [
+      {
+        "url": "https://developers.openai.com/cookbook/examples/multimodal/document_and_multimodal_understanding_tips",
+        "label": "Getting the Most out of GPT-5.4 for Vision and Document Understanding"
+      },
+      {
+        "url": "https://ai.google.dev/gemini-api/docs/video-understanding",
+        "label": "Video understanding | Gemini API"
+      },
+      {
+        "url": "https://jina.ai/vision-encoder-survey.pdf",
+        "label": "Vision Encoders in Vision-Language Models: A Survey"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nInstead of processing images and text separately then combining them (late fusion), token interleaving mixes image patches and text tokens in a single sequence fed to a unified transformer. This allows early layers to see cross-modal context, enabling richer fusion and better reasoning about how visual and textual information relate.\n\n## Detail\n\nToken interleaving architectures treat all modalities uniformly:\n1. Convert image → patch embeddings: $[v_1, v_2, \\ldots, v_N]$\n2. Tokenize text: $[t_1, t_2, \\ldots, t_M]$\n3. Interleave: $[v_1, t_1, v_2, t_2, v_3, \\ldots]$ or grouped: $[t_1, v_1, t_2, v_2, \\ldots]$\n4. Process jointly through transformer with self-attention\n\n**Cross-attention variants**: Some models use separate vision & text transformers, then fuse via:\n- Cross-attention layers: text queries, image values/keys\n- Gated fusion: learnable gates control flow between modalities\n- Early + late fusion: patch embeddings in transformer, but final hidden states also fused\n\nBenefits:\n- Allows attending to specific image regions when predicting text tokens\n- Enables reasoning about relationships (e.g., \"what text labels does this region contain?\")\n- Unified representation supports streaming (interleave tokens as they arrive)\n\n## Common gotchas / interview framings\n- Computational cost: cross-attention over all patch-token pairs is $O(N \\cdot M)$ where $N$ is patches, $M$ is text length. GPT-4o/Gemini 2.5 use selective attention or hierarchical fusion to reduce cost\n- Modality imbalance: if image tokens >> text tokens, text may be drowned out; needs careful normalization\n- Interleaving order matters: grouped by region, temporal order, or learned soft assignment\n- Vision transformers (ViT) already have self-attention; adding cross-modal self-attention creates bidirectional flow (image→text and text→image)\n- Dense video frames require sparse sampling or hierarchical pooling; GPT-4o samples key frames, Gemini 2.5 uses learnable frame selection",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the core advantage of token interleaving over late fusion (separate encoders + concatenation)?",
+        "back": "Token interleaving allows early-layer cross-modal attention: image patches can attend to text context and vice versa. Late fusion only fuses at the final layer, missing fine-grained cross-modal reasoning opportunities."
+      },
+      {
+        "type": "flip",
+        "front": "Describe a simple token interleaving strategy for an image with caption.",
+        "back": "Convert image to $N$ patch embeddings $[v_1, \\ldots, v_N]$, tokenize caption to $[t_1, \\ldots, t_M]$, then concatenate or group: e.g., $[\\text{[CLS]}, v_1, v_2, \\ldots, v_N, \\text{[SEP]}, t_1, t_2, \\ldots, t_M]$. Feed to unified transformer."
+      },
+      {
+        "type": "flip",
+        "front": "What computational challenge arises from dense interleaving (many image + text tokens)?",
+        "back": "Self-attention is $O(n^2)$ where $n = N + M$. For high-res images (10k+ patches) + long text, this explodes. Solutions: sparse attention, hierarchical pooling, multi-head attention with local windows, or query-key compression."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is modality normalization important in interleaved architectures?",
+        "back": "Image tokens (e.g., 100k+ dimensions summed) can dominate text tokens (e.g., 10k dimensions) in magnitude. Layer norm per modality or learnable scaling factors prevent one modality from drowning out the other.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "To ensure tokens from different modalities have similar gradient scales",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "To reduce the vocabulary size of the model",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "To enable better compression for storage",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "To speed up attention computation",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How do GPT-4o and Gemini 2.5 handle dense video frames without exploding token counts?",
+        "back": "**Selective sampling**: key-frame extraction (e.g., 1 frame per second), learned frame selection based on motion, or temporal pooling. GPT-4o samples keyframes; Gemini 2.5 uses hierarchical fusion with audio-visual cues for moment retrieval."
+      }
+    ]
+  },
+  {
+    "slug": "document-understanding-and-ocr-free-approaches",
+    "title": "Document understanding and OCR-free approaches",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "difficulty": "intermediate",
+    "tags": [
+      "OCR-free",
+      "document-understanding",
+      "dense-text",
+      "layout-reasoning",
+      "PDF-processing"
+    ],
+    "aliases": [
+      "end-to-end document analysis",
+      "native document understanding",
+      "layout-aware vision"
+    ],
+    "wikilinks": [
+      "ocr",
+      "document-layout-analysis",
+      "text-detection-and-recognition",
+      "gpt-4v",
+      "claude-vision",
+      "geometric-reasoning"
+    ],
+    "sources": [
+      {
+        "url": "https://developers.openai.com/cookbook/examples/multimodal/document_and_multimodal_understanding_tips",
+        "label": "Getting the Most out of GPT-5.4 for Vision and Document Understanding"
+      },
+      {
+        "url": "https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/gpt-with-vision",
+        "label": "How to use vision-enabled chat models"
+      },
+      {
+        "url": "https://openai.com/index/introducing-gpt-5-4/",
+        "label": "Introducing GPT-5.4"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nTraditional document processing pipelines chain: OCR (extract text) → layout detection (find structure) → language understanding (interpret meaning). Modern vision-language models skip this by processing images end-to-end, learning to read text directly from pixels. GPT-5.4 (March 2026) processes >10M pixel images; Claude 3.5 Sonnet achieves state-of-the-art on dense text benchmarks; both handle scans, forms, diagrams without external OCR tools.\n\n## Detail\n\nOCR-free document understanding leverages:\n1. **High-resolution vision encoding**: GPT-5.4 handles 10M+ pixel inputs without compression. Claude 3.5/4 uses 2K-pixel vision patches with 2D positional embeddings\n2. **Dense text recognition**: trained on synthetic + real document datasets to predict text at pixel level. Unlike traditional OCR (which outputs bounding boxes), VLMs output semantic understanding directly\n3. **Layout-aware attention**: spatial transformer or 2D-RoPE preserves geometric structure. Dense scans, handwritten forms, engineering diagrams all maintain relative positioning\n4. **Multi-scale processing**: hierarchical fusion of patch embeddings + spatial reasoning (e.g., \"table in bottom-left region, text above it\")\n\nKey models & capabilities:\n- **GPT-5.4**: Documents that strained older systems (dense scans, handwritten forms, engineering diagrams) now \"often interpreted in a single pass\"\n- **Claude 3.5 Sonnet**: SOTA on dense text transcription; handles imperfect images for retail, logistics, finance\n- **Gemini 2.5**: efficient video document scanning; audio+visual moment retrieval\n\n## Common gotchas / interview framings\n- Hallucination risk: VLMs may invent text not present in image; use confidence scores or re-read critical fields\n- OCR-free != perfect; performance depends on image quality, font size, language (non-Latin scripts harder)\n- Layout understanding requires spatial reasoning; simple models may lose structure in dense tables\n- Trade-off: high-res input (10M pixels) enables detail but increases compute 100x vs. low-res (336×336)\n- Document rotations, skews, reflections are harder than natural images; data augmentation critical\n- Chain-of-thought prompting on documents (\"what is the header? what columns?\") improves accuracy",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key advantage of OCR-free document understanding over traditional OCR pipelines?",
+        "back": "End-to-end processing: no separate OCR → layout detection → interpretation steps. VLMs directly predict semantic understanding of text, layout, and relationships. Fewer failure modes and better handling of imperfect scans, handwriting, and complex diagrams."
+      },
+      {
+        "type": "flip",
+        "front": "How does GPT-5.4 handle 10M+ pixel document images without exploding token counts?",
+        "back": "Adaptive resolution scaling: GPT-5.4 can compress high-res images via hierarchical patching or selective region-of-interest processing. High-res for text-dense areas, lower-res for backgrounds. May use learned dynamic patching."
+      },
+      {
+        "type": "flip",
+        "front": "What is the role of 2D positional embeddings in dense document understanding?",
+        "back": "Preserve 2D spatial structure: tables, columns, reading order. 2D-RoPE encodes row/column positions. Without it, a model cannot distinguish \"text in table column A vs column B\" even if nearby in embedding space."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is chain-of-thought reasoning important for document understanding?",
+        "back": "Documents have hierarchical structure (header → sections → tables → footer). Asking the model to explicitly state \"Is there a table? Where? What are the column headers?\" before extracting values reduces hallucination and improves accuracy.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It reduces the model size by 50%",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Explicit reasoning over structure reduces hallucination and improves multi-step reasoning",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "It enables processing without any image input",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It automatically converts PDFs to JSON",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What are the main failure modes of OCR-free document understanding?",
+        "back": "Low image quality (blur, compression), non-Latin scripts, document rotations/skews, synthetic fonts, and hallucinated text not in image. Confidence thresholds and re-reading critical fields help mitigate."
+      }
+    ]
+  },
+  {
+    "slug": "gpt-4o-claude-35-gemini-3-qwen-vl-models",
+    "title": "GPT-4o, Claude 3.5, Gemini 3, Qwen VL models",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "difficulty": "intermediate",
+    "tags": [
+      "model-comparison",
+      "proprietary-vlms",
+      "multimodal-capabilities",
+      "vision-text-models",
+      "capabilities-matrix"
+    ],
+    "aliases": [
+      "frontier VLMs",
+      "closed-source multimodal models",
+      "leading vision models"
+    ],
+    "wikilinks": [
+      "gpt-4o",
+      "claude-35-sonnet",
+      "gemini-3",
+      "qwen-vl",
+      "pixtral",
+      "model-evaluation"
+    ],
+    "sources": [
+      {
+        "url": "https://openai.com/index/introducing-gpt-5-4/",
+        "label": "Introducing GPT-5.4 | OpenAI"
+      },
+      {
+        "url": "https://www.anthropic.com/news/claude-3-5-sonnet",
+        "label": "Introducing Claude 3.5 Sonnet"
+      },
+      {
+        "url": "https://developers.googleblog.com/en/gemini-2-5-video-understanding/",
+        "label": "Advancing the frontier of video understanding with Gemini 2.5"
+      },
+      {
+        "url": "https://github.com/QwenLM/Qwen-VL",
+        "label": "Qwen-VL GitHub"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nAs of May 2026, the frontier of vision-language understanding is dominated by:\n- **GPT-5.4** (OpenAI, March 2026): best dense document handling, 10M+ pixel support, computer use via UI understanding\n- **Claude 3.5/4.x** (Anthropic, April 2026): highest vision resolution (2,576px = 3.75MP), strongest on charts/graphs; Opus 4.7 adds verification layer\n- **Gemini 2.5** (Google, Dec 2024): SOTA video understanding, efficient long-video processing (6+ hours with low-res parameter), audio-visual fusion\n- **Qwen-3-VL** (Alibaba): strongest multilingual VLM, localization + video, long-context, agentic reasoning\n\nNo single model dominates all tasks; choose based on: image density (GPT-5.4 for docs), temporal reasoning (Gemini 2.5 for video), charts (Claude 3.5), multilingual (Qwen-3), or open-source (Pixtral 12B, LLaVA, Llama 3.2-Vision).\n\n## Detail\n\n**GPT-5.4 (OpenAI)**\n- Vision: 10M+ pixels natively; handles dense scans, handwritten forms, diagrams in single pass\n- Architecture: cross-attention fusion; selective region processing for efficiency\n- Context: 128k tokens (text), image tokens vary with resolution\n- Strengths: document understanding, computer use (UI parsing), dense visual reasoning\n- Weaknesses: highest inference cost\n\n**Claude 3.5 Sonnet / Opus 4.7 (Anthropic)**\n- Vision: 2,576px max (April 2026 Opus 4.7); 1M context window with 3.75MP image support\n- Architecture: early-fusion token interleaving; verification layer (Opus 4.7) for output checking\n- Strengths: chart/graph interpretation, reliable text transcription, strong reasoning\n- Weaknesses: lower video support; vision integrated into general model (vs. specialized vision transformer)\n\n**Gemini 2.5 Pro/Flash (Google)**\n- Vision: video > images; processes 6+ hours with low-res parameter (~66 tokens/sec vs. 258 normal)\n- Architecture: unified multimodal transformer; audio-visual fusion for moment retrieval\n- Context: 2M tokens (overall); efficient video moment understanding\n- Strengths: temporal reasoning, audio+video, long-sequence processing\n- Weaknesses: document understanding lags GPT-5.4; less specialized for dense text\n\n**Qwen-3-VL (Alibaba)**\n- Vision: localization + bounding box prediction; video support; 200+ languages\n- Architecture: SigLIP-2 vision encoder + long-context Qwen-3 LLM\n- Strengths: multilingual, agentic (tool use), localization, video understanding\n- Weaknesses: closed to Chinese region; less widely integrated into APIs\n\n**Open-source alternatives** (for inference cost & privacy):\n- **Pixtral 12B** (Mistral): best open-source; outperforms Qwen2-VL 7B, LLaVA-OneVision 7B; native multi-image, 128k context, variable resolution\n- **Llama 3.2-Vision** (Meta): 11B/90B; long context for documents, fine-tuning friendly\n- **Qwen2.5-VL-72B** (Alibaba): video + multilingual; local inference viable\n\n## Common gotchas / interview framings\n- No \"best\" model: GPT-5.4 dominates dense docs, Gemini 2.5 dominates video, Claude 3.5 dominates charts. Evaluate on your use case\n- Cost vs. accuracy: Pixtral 12B inference ~1/100th GPT-5.4 but lower accuracy on complex reasoning\n- Modality support varies: Gemini 2.5 excels at audio+video; GPT-5.4 at static docs; Claude at general reasoning\n- Context window growth (1M+ tokens) enables in-context learning (show examples) but increases inference time\n- Proprietary models improve monthly (GPT-5 → 5.4 in 3 months); open-source lags but catches up via quantization + fine-tuning",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key differentiator between GPT-5.4, Claude 3.5, and Gemini 2.5 as of May 2026?",
+        "back": "GPT-5.4: best for dense documents (10M+ pixels). Claude 3.5/Opus 4.7: best for charts/graphs (high resolution, strong reasoning). Gemini 2.5: best for video/audio temporal reasoning. Choose based on modality."
+      },
+      {
+        "type": "flip",
+        "front": "How does Gemini 2.5's video understanding outperform prior video VLMs?",
+        "back": "Low-res parameter reduces video tokens from ~258 to ~66 per second, enabling 6+ hour processing in 2M context. Audio-visual moment retrieval (counting, temporal reasoning) via attention over aligned audio+video embeddings."
+      },
+      {
+        "type": "flip",
+        "front": "What is the main trade-off between proprietary (GPT-5.4, Claude) and open-source (Pixtral, Llama-3.2) VLMs?",
+        "back": "Proprietary: higher accuracy, more modalities (video, audio), larger context. Open-source: local inference, lower cost (~1/100th GPT-5.4), privacy, but lower accuracy on complex tasks and fewer modalities."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is Qwen-3-VL particularly suited for multilingual document understanding?",
+        "back": "Uses SigLIP-2 multilingual encoder + Qwen-3 LLM trained on 200+ languages. Handles non-Latin scripts (Chinese, Arabic, etc.) natively; predicts localization (bounding boxes) for structured extraction.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It translates all images to English first",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "SigLIP-2 multilingual encoder + 200+ language LLM support",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "It uses separate OCR for each language",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It has a built-in translation API",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What does Claude Opus 4.7's verification layer (April 2026) add to vision understanding?",
+        "back": "A secondary check step: after generating a response about an image, the model re-reads the image to verify its output for errors. Reduces hallucinations on critical tasks (e.g., document extraction, medical imaging)."
+      }
+    ]
+  },
+  {
+    "slug": "video-understanding-and-long-video-models",
+    "title": "Video understanding and long-video models",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "difficulty": "advanced",
+    "tags": [
+      "video-understanding",
+      "temporal-reasoning",
+      "frame-sampling",
+      "video-llms",
+      "long-context-video"
+    ],
+    "aliases": [
+      "temporal VLMs",
+      "video reasoning",
+      "motion understanding",
+      "frame fusion"
+    ],
+    "wikilinks": [
+      "temporal-reasoning",
+      "video-llms",
+      "frame-sampling",
+      "optical-flow",
+      "moment-retrieval",
+      "gemini-25",
+      "clip-video"
+    ],
+    "sources": [
+      {
+        "url": "https://developers.googleblog.com/en/gemini-2-5-video-understanding/",
+        "label": "Advancing the frontier of video understanding with Gemini 2.5"
+      },
+      {
+        "url": "https://ai.google.dev/gemini-api/docs/video-understanding",
+        "label": "Video understanding | Gemini API | Google AI"
+      },
+      {
+        "url": "https://medium.com/google-cloud/video-understanding-with-gemini-notes-from-the-field-82dd0cd130ea",
+        "label": "Video Understanding with Gemini: Notes From the Field"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nVideos add a **temporal dimension** to vision-language understanding. Instead of independent frames, models must reason about motion, causal relationships (\"A happens, then B\"), and duration (\"how long is the event?\"). Modern approaches split into: (1) frame sampling (efficient), (2) dense frame processing (accurate but expensive), and (3) hierarchical fusion (balance both). Gemini 2.5 (Dec 2024) achieves SOTA by fusing audio+visual cues for moment retrieval (e.g., finding the exact second when \"person enters room\").\n\n## Detail\n\n**Frame Sampling Strategies**\n1. **Fixed FPS**: extract frames at constant rate (e.g., 1 fps for 1-hour video = 3600 frames). Misses key moments if FPS too low.\n2. **Keyframe extraction**: detect high-motion frames (optical flow, scene cuts). Reduces redundancy, captures events.\n3. **Learned selection**: transformer attends to frames; gradient-based pruning identifies salient frames. GPT-4V samples keyframes; Gemini 2.5 learns selection end-to-end.\n4. **Hierarchical**: pyramid of resolutions; coarse pass identifies regions of interest, fine pass examines them.\n\n**Temporal Reasoning**\n- **Optical flow**: compute motion between frames; represents as features or learned embeddings\n- **Temporal attention**: self-attention over frame embeddings with learned temporal positional encoding\n- **Causal reasoning**: RNNs (LSTM) or TCN (temporal convolutional networks) capture sequential dependencies\n- **Moment retrieval**: align text query to specific timestamp. Gemini 2.5 fuses audio+visual embeddings, predicts (start, end) timestamps with temporal attention\n\n**Gemini 2.5 Architecture**\n- Unified transformer over video frames + audio\n- Low-res parameter: adaptive frame resolution to reduce tokens (~66 tokens/sec vs. 258 normal)\n- Audio-visual alignment: CTC loss or contrastive learning to synchronize audio events with visual frames\n- Long-context: 2M token window enables processing 6+ hours of video\n- Moment retrieval: temporal attention over aligned embeddings predicts event boundaries\n\n**Trade-offs**\n- **Dense frames** (24-30 fps): high accuracy but $O(T)$ tokens where $T$ = video duration. Infeasible for hours-long content\n- **Sparse sampling** (1 fps): efficient but may miss brief events\n- **Learned selection**: adaptive to content but requires pretraining on labeled datasets\n\n## Common gotchas / interview framings\n- Temporal understanding is not image understanding repeated: models must track object identity across frames (\"is this person the same in frame 5 and frame 10?\")\n- Audio is critical for moment retrieval: speech/music provides temporal cues (e.g., \"speaker says X at timestamp Y\"). Models ignoring audio fail on podcast/audiobook tasks\n- Long-video efficiency: Gemini 2.5 reduces token usage from 258 to 66 tokens/sec via low-res; further reductions via sparse sampling (e.g., 1 frame per 10 seconds for static scenes)\n- Domain shift: models trained on internet videos (action, faces, objects) may fail on specialized domains (medical, surveillance, industrial)\n- Benchmark bias: VQA datasets favor simple questions (\"what color is the car?\"); harder temporal questions (\"how many times does X happen?\") underexplored",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is video understanding fundamentally harder than image understanding?",
+        "back": "Videos require **temporal reasoning**: tracking object identity across frames, understanding causality (A causes B), and predicting duration. Images are independent; videos have sequential structure and motion."
+      },
+      {
+        "type": "flip",
+        "front": "What is the key insight behind Gemini 2.5's efficient long-video processing (6+ hours)?",
+        "back": "Low-res parameter: reduce frame resolution adaptively (~66 tokens/sec instead of 258). Combined with 2M context window, fits 6+ hours of video. Trade-off: lower resolution but maintains audio-visual synchronization."
+      },
+      {
+        "type": "flip",
+        "front": "Describe the difference between fixed FPS, keyframe extraction, and learned frame selection.",
+        "back": "**Fixed FPS** (1 fps): every frame sampled uniformly; simple but redundant. **Keyframe** (optical flow): extract high-motion frames; efficient but hand-crafted. **Learned** (attention): model predicts which frames matter; adaptive to content."
+      },
+      {
+        "type": "mcq",
+        "front": "How does audio-visual fusion improve moment retrieval in videos?",
+        "back": "Audio provides temporal landmarks: speech, music, silence. Aligning audio embeddings with visual frames via contrastive loss or CTC enables precise event localization. Finding \"when person says X\" combines audio detection + visual confirmation.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Audio is converted to visual spectrograms and processed identically",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Audio provides temporal landmarks (speech, music) that align with visual events, enabling precise moment retrieval",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Audio is ignored; only visual frames are processed",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Audio is used only for speech-to-text, not for alignment",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the computational bottleneck for dense (24-30 fps) video understanding, and how do models mitigate it?",
+        "back": "Dense frames → $O(T)$ tokens where $T$ = duration. A 1-hour video at 30 fps = 108k frames = 108k+ tokens (exceeds most context windows). Mitigations: sparse sampling (1-2 fps), keyframe extraction, learned pruning, or hierarchical processing."
+      }
+    ]
+  },
+  {
+    "slug": "audio-and-speech-models",
+    "title": "Audio and speech models",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "difficulty": "intermediate",
+    "tags": [
+      "audio-understanding",
+      "speech-to-text",
+      "multimodal-audio",
+      "Whisper",
+      "audio-embedding"
+    ],
+    "aliases": [
+      "speech recognition",
+      "audio-language models",
+      "audio LLMs",
+      "Whisper model"
+    ],
+    "wikilinks": [
+      "whisper-model",
+      "speech-to-text",
+      "audio-embeddings",
+      "gemini-audio",
+      "multimodal-fusion",
+      "speech-understanding"
+    ],
+    "sources": [
+      {
+        "url": "https://ai.google.dev/gemini-api/docs/video-understanding",
+        "label": "Video understanding | Gemini API"
+      },
+      {
+        "url": "https://developers.googleblog.com/en/gemini-2-5-video-understanding/",
+        "label": "Advancing the frontier of video understanding with Gemini 2.5"
+      },
+      {
+        "url": "https://www.labellerr.com/blog/top-open-source-vision-language-models/",
+        "label": "Best Open-Source Vision Language Models of 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nAudio adds a fourth modality (beyond image, text, video). Models can process speech, music, ambient sound, and sync them with video. **Whisper** (OpenAI) pioneered robust speech-to-text; **Gemini 3** extends this: native audio input to LLM (no separate STT), audio-visual alignment for video understanding. Interview prep focuses on: (1) when to use dedicated STT (Whisper) vs. end-to-end, (2) audio embeddings for retrieval, (3) multimodal fusion with vision.\n\n## Detail\n\n**Whisper Architecture**\n- Encoder: mel-spectrogram → CNN → transformer encoder; learns acoustic representations\n- Decoder: transformer decoder with cross-attention to encoder outputs; generates text tokens\n- Training: 680k hours of multilingual audio from web; unsupervised (no human labels needed)\n- Robustness: handles accents, background noise, technical terms without explicit fine-tuning\n- Inference: can emit punctuation, language ID, timestamps\n\n**Gemini Native Audio**\n- Skip STT: send audio directly to LLM; model processes acoustic features + text simultaneously\n- Audio-visual alignment: fuse audio embeddings with video frames via cross-attention\n- Moment retrieval: \"find when speaker says X\" combines audio keyword detection + visual confirmation\n- Efficiency: avoid cascading errors (STT error → LLM error); single model responsible\n\n**Audio Embeddings**\n- Contrastive learning: similar to vision embeddings (CLIP-style). Train pairs of (audio, text description) to share embedding space\n- Speaker identification: embeddings capture voice identity; useful for tracking speakers in video\n- Music embeddings: encode melody, rhythm, genre; enable music retrieval\n- Example: query \"find moments where uplifting music plays\" → audio embedding matches \"uplifting\" text, temporal attention finds frames\n\n**Multimodal Fusion** (Audio + Vision + Text)\n- Early fusion: project all modalities to $d$-dim space, concatenate, process jointly\n- Late fusion: process each modality separately, combine at output layer\n- Cross-modal attention: audio queries, visual values (find visual events triggered by audio)\n\n## Common gotchas / interview framings\n- Cascade vs. end-to-end: STT → LLM risks compounding errors. Native audio reduces cascading but requires larger models\n- Language coverage: Whisper handles 99 languages but skews toward English (more training data). Non-English speech may be lower quality\n- Real-time vs. batch: Whisper is batch-optimized; real-time streaming requires buffering strategies (sliding window)\n- Speaker diarization: identifying \"who said what\" is separate from speech-to-text; often requires post-processing\n- Audio quality: Whisper robust to noise, but extremely noisy audio (crowds, machinery) may degrade. Denoising preprocessing helps\n- Context window: audio is long (1 hour = 3.6M audio samples); downsampling to 16 kHz still yields large sequences. Hierarchical pooling needed",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key advantage of native audio input (e.g., Gemini 3) over Whisper STT + LLM?",
+        "back": "Avoids cascading errors: Whisper mistakes → LLM mistakes. Single unified model can leverage acoustic+linguistic context simultaneously, improving accuracy on ambiguous speech."
+      },
+      {
+        "type": "flip",
+        "front": "Explain Whisper's training approach in one sentence.",
+        "back": "Unsupervised multitask learning on 680k hours of multilingual web audio: simultaneously train speech-to-text, language ID, and timestamp prediction, enabling robust zero-shot recognition across accents/noise."
+      },
+      {
+        "type": "flip",
+        "front": "How do audio-visual models enable moment retrieval in videos?",
+        "back": "Align audio embeddings (speech, music) with visual frame embeddings via contrastive loss. Temporal attention over aligned embeddings predicts when events occur. E.g., query \"applause\" → find audio+visual agreement on timestamp."
+      },
+      {
+        "type": "mcq",
+        "front": "What is a limitation of Whisper on non-English speech?",
+        "back": "Training data skews English; 680k hours are mostly English speeches. Non-English languages may have lower quality STT output. Languages with less internet presence (rare dialects, endangered languages) perform worst.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It doesn't support non-English languages at all",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Training data heavily skewed toward English; non-English and low-resource languages have lower quality",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "It requires manual tuning for each language",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It uses separate models for each language, increasing inference cost",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is speaker diarization a separate problem from speech-to-text?",
+        "back": "STT predicts text from audio; diarization identifies speaker boundaries (\"speaker A: 0-5s, speaker B: 5-10s\"). Requires tracking voice identity, not just recognizing words. Often done via clustering embeddings after STT."
+      }
+    ]
+  },
+  {
+    "slug": "chain-of-thought-with-visual-reasoning",
+    "title": "Chain-of-thought with visual reasoning",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "difficulty": "intermediate",
+    "tags": [
+      "chain-of-thought",
+      "visual-reasoning",
+      "step-by-step",
+      "interpretability",
+      "accuracy-improvement"
+    ],
+    "aliases": [
+      "visual CoT",
+      "step-by-step reasoning",
+      "visual explanation",
+      "reasoning prompts"
+    ],
+    "wikilinks": [
+      "chain-of-thought-prompting",
+      "visual-reasoning",
+      "few-shot-learning",
+      "prompting-techniques",
+      "interpretability",
+      "error-analysis"
+    ],
+    "sources": [
+      {
+        "url": "https://developers.openai.com/cookbook/examples/multimodal/document_and_multimodal_understanding_tips",
+        "label": "Getting the Most out of GPT-5.4 for Vision and Document Understanding"
+      },
+      {
+        "url": "https://medium.com/google-cloud/video-understanding-with-gemini-notes-from-the-field-82dd0cd130ea",
+        "label": "Video Understanding with Gemini: Notes From the Field"
+      },
+      {
+        "url": "https://arxiv.org/html/2604.11177",
+        "label": "Do Thought Streams Matter? Evaluating Reasoning in Gemini Vision-Language Models"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nVision-language models sometimes hallucinate or misinterpret images. **Chain-of-thought (CoT)** prompting—asking the model to \"explain your reasoning step-by-step before answering\"—reduces errors by:\n1. Breaking down complex visual reasoning into interpretable substeps\n2. Forcing the model to ground its reasoning in visible elements\n3. Enabling error correction (if reasoning is wrong, spot it early)\n\nFor documents: \"What is the header? What columns? What is row 3?\" beats \"Extract all data.\" For charts: \"What are axes? Which lines? Calculate trend?\" For video: \"What happens first? What happens next? How long?\" CoT improves accuracy 5-15% on average; on complex tasks (reasoning, localization), gains exceed 30%.\n\n## Detail\n\n**Why CoT works for vision**:\n- Vision tasks are inherently interpretable: describe what you see before answering\n- Intermediate steps reduce hallucination: if the model commits to \"table has 3 columns,\" it's less likely to invent data\n- Alignment with human reasoning: humans describe observations before conclusions\n- Error catching: reviewing intermediate steps reveals mistakes (e.g., \"I said the table has 5 rows, but only counted 4\")\n\n**Prompting strategies**\n\n1. **Descriptive CoT**: \"Describe what you see in the image. Then answer: [question]\"\n   - Works well for open-ended tasks (chart interpretation, scene understanding)\n   - Reduces hallucination\n   - More tokens → slower inference\n\n2. **Structural CoT**: \"What are the main elements? What relationships? What conclusion?\"\n   - Useful for documents, diagrams, complex scenes\n   - Forces decomposition\n   - Example: [header], [sections], [connections], [answer]\n\n3. **Few-shot CoT**: Show examples of reasoning before asking question\n   - Improves consistency\n   - Reduces hallucination further (model mimics examples)\n   - Example: \"Here's how I interpret a similar image: [CoT]. Now interpret this: [new image]\"\n\n4. **Verification CoT** (Claude Opus 4.7, April 2026): Generate answer, then re-read image to verify\n   - Two passes increase accuracy 10-20%\n   - Catches self-contradictions\n   - Slowest but highest accuracy\n\n**Gemini thought streams** (research direction):\n- Model generates intermediate \"thoughts\" (not necessarily text) during inference\n- Thoughts can be reviewed, re-weighted, or used to backtrack\n- Improved complex reasoning on video understanding\n\n## Common gotchas / interview framings\n- CoT trades off speed for accuracy: 2-3x slower inference due to extra reasoning tokens\n- Domain-specific prompts work better: generic \"explain your reasoning\" < tailored steps for domain (\"for a table: identify columns first\")\n- Model size matters: CoT helps small models more than large models (GPT-5.4 strong without CoT, benefits less from CoT than Pixtral 12B)\n- Reasoning transparency != correctness: model can reason correctly but reach wrong conclusion (or vice versa)\n- Data annotation: few-shot CoT requires human-labeled examples (expensive); can use model-generated CoT for distillation\n- Hallucination reduction is uneven: CoT reduces object hallucination (inventing objects), but doesn't eliminate text hallucination",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does chain-of-thought prompting reduce hallucination in vision-language models?",
+        "back": "CoT forces the model to ground reasoning in visible elements before answering. By committing to intermediate observations (\"I see a table with 3 columns\"), it's harder to subsequently invent data."
+      },
+      {
+        "type": "flip",
+        "front": "Compare \"Direct\" vs. \"Chain-of-thought\" prompting for document extraction.",
+        "back": "**Direct** (fast, lower accuracy): \"Extract all values from this form.\" May invent missing fields. **CoT** (slower, higher accuracy): \"What are the form labels? What values are filled? Extract each field.\" Structured steps reduce hallucination."
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between descriptive CoT and few-shot CoT?",
+        "back": "**Descriptive** (1-shot): ask model to describe image, then answer question. **Few-shot**: show examples of correct CoT reasoning, then ask model to apply same style to new image. Few-shot more consistent but requires examples."
+      },
+      {
+        "type": "mcq",
+        "front": "How does Claude Opus 4.7's verification layer (April 2026) implement verification CoT?",
+        "back": "Two-pass process: generate answer → re-read image to verify. If inconsistency detected (e.g., \"I said column A has 5 values but only see 4\"), output flagged or corrected. Improves accuracy 10-20% on complex tasks.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It uses a separate verification model to check answers",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "It regenerates the same answer twice and compares",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Two-pass: generate answer, then re-read image to verify for inconsistencies; flags/corrects errors",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It asks the user to manually verify each answer",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the trade-off of using chain-of-thought prompting?",
+        "back": "Speed vs. accuracy: CoT adds 2-3x inference latency due to extra reasoning tokens. Batch processing benefits more than real-time. Overkill for simple tasks (object detection); critical for complex reasoning (document interpretation, multi-step logic)."
+      }
+    ]
+  },
+  {
+    "slug": "visual-question-answering-vqa",
+    "title": "Visual question answering (VQA)",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "difficulty": "intermediate",
+    "tags": [
+      "VQA-benchmark",
+      "visual-understanding",
+      "question-answering",
+      "reasoning-task",
+      "evaluation-metric"
+    ],
+    "aliases": [
+      "VQA task",
+      "image-QA",
+      "visual-QA",
+      "VQA benchmark"
+    ],
+    "wikilinks": [
+      "vqa-task",
+      "benchmark-datasets",
+      "reasoning-evaluation",
+      "visual-understanding",
+      "question-generation",
+      "vqa-accuracy"
+    ],
+    "sources": [
+      {
+        "url": "https://www.labellerr.com/blog/top-open-source-vision-language-models/",
+        "label": "Best Open-Source Vision Language Models of 2026"
+      },
+      {
+        "url": "https://blog.roboflow.com/local-vision-language-models/",
+        "label": "Best Local Vision-Language Models for Offline AI"
+      },
+      {
+        "url": "https://arxiv.org/html/2604.11177",
+        "label": "Do Thought Streams Matter? Evaluating Reasoning in Gemini Vision-Language Models"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nVisual Question Answering (VQA) is a benchmark task: given an image and a natural language question, predict the answer. For example:\n- **Image**: photo of a dog on a beach\n- **Question**: \"What color is the dog?\"\n- **Answer**: \"brown\"\n\nVQA tests multiple capabilities simultaneously: object detection, reasoning, counting, color recognition, relationships, scene understanding. It's become the primary benchmark for evaluating vision-language models because (a) it's intuitive, (b) it scales to millions of examples, and (c) it correlates with real-world understanding. VQA performance often predicts model quality on downstream tasks (document understanding, visual reasoning).\n\n## Detail\n\n**VQA Datasets & Benchmarks**\n\n1. **VQA v2** (2017, still used 2026):\n   - 1.3M questions on 164k images\n   - Balanced: equal \"yes/no\", \"count\", \"other\" questions\n   - Common question types: object presence, color, count, position, reasoning\n   - Metric: accuracy (strict match) or relaxed accuracy (0.3+ human overlap)\n\n2. **COCO-QA**: 123k questions on 123k images; similar scope\n\n3. **Visual Genome VQA**: 1.7M QA pairs; more diverse scenes and longer questions\n\n4. **A-OKVQA** (2023): 16k images with 5x longer questions, focusing on world knowledge (\"What is the occupation of the person?\") vs. pure visual reasoning\n\n5. **Benchmark platforms** (2025-2026):\n   - MMBench: 1.3k images, 12 multiple-choice questions each; tests reasoning, fine-grained perception, document understanding\n   - MM-Vet: 200 images, diverse tasks (scribbling, math, writing, etc.)\n   - Real-world benchmarks: medical VQA, remote sensing VQA, etc.\n\n**Question Categories**\n\n1. **Counting**: \"How many [objects]?\"\n   - Tests: object detection, enumeration\n   - Hard because: occlusion, small objects, similar instances\n\n2. **Object/Attribute Recognition**: \"What color/shape/size is the [object]?\"\n   - Tests: fine-grained perception, color understanding\n\n3. **Spatial Relationships**: \"Is the [obj1] to the left of [obj2]?\"\n   - Tests: spatial reasoning, localization\n\n4. **Reasoning**: \"What is the [person] likely doing?\", \"Why is the [scene] dangerous?\"\n   - Tests: world knowledge, common sense, multi-step reasoning\n\n5. **Yes/No Questions**: \"Is there a [object]?\", \"Is the person happy?\"\n   - Tests: object presence, emotion recognition\n\n**Model Performance (May 2026)**\n- **GPT-5.4**: ~95% VQA v2, ~92% A-OKVQA (reasoning questions)\n- **Claude 3.5 Sonnet**: ~93% VQA v2, ~88% A-OKVQA\n- **Gemini 2.5**: ~92% VQA v2, ~86% A-OKVQA (video-tuned, slightly lower on static image reasoning)\n- **Pixtral 12B** (open-source): ~78% VQA v2, ~68% A-OKVQA\n- **LLaVA 1.5**: ~70% VQA v2\n\n**Why VQA is imperfect as a benchmark**\n- Bias: datasets contain statistical shortcuts (e.g., \"kitchen\" images → answer \"oven\"), allowing high accuracy without visual understanding\n- Single answer: VQA expects one answer; many questions have ambiguous answers (\"Is the scene happy?\")\n- Out-of-domain generalization: models trained on COCO (natural scenes) may fail on medical, aerial, or synthetic images\n- Correlation != causation: high VQA score doesn't guarantee good performance on real applications (document understanding, medical imaging)\n\n## Common gotchas / interview framings\n- Dataset bias (statistical shortcuts) inflates reported accuracy; real-world performance lower\n- Reasoning questions (A-OKVQA) are harder; model needs world knowledge + visual grounding\n- Counting is consistently challenging; even GPT-5.4 makes errors on dense scenes (>15 objects)\n- VQA is mostly single-image, static; video VQA (temporal reasoning) is much harder and less standardized\n- Hallucination still prevalent: models invent objects not in image, especially with suggestive prompts\n- Benchmarks evolve: new benchmarks (MM-Vet, MMBench) reveal weaknesses old VQA v2 didn't catch",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the VQA (Visual Question Answering) task, and why is it a useful benchmark?",
+        "back": "Given an image and question, predict the answer. Benchmark because: tests multiple capabilities (detection, reasoning, counting, relationships), scales to millions of examples, and correlates with real-world understanding of images."
+      },
+      {
+        "type": "flip",
+        "front": "Name the main question types in VQA v2 and give an example of each.",
+        "back": "**Counting** (\"How many dogs?\"), **Attribute** (\"What color is the car?\"), **Spatial** (\"Is the cat left of the dog?\"), **Reasoning** (\"What is the person doing?\"), **Yes/No** (\"Is there a tree?\")."
+      },
+      {
+        "type": "flip",
+        "front": "What is the key weakness of VQA v2 as a benchmark?",
+        "back": "Dataset bias: statistical shortcuts allow high accuracy without true visual understanding. E.g., images with kitchens are always labeled \"oven\", so models can answer by detecting context, not actually understanding the scene."
+      },
+      {
+        "type": "mcq",
+        "front": "How does A-OKVQA (2023) differ from VQA v2?",
+        "back": "A-OKVQA: longer questions requiring **world knowledge** (\"What is the occupation of the person?\") vs. pure visual reasoning. Tests reasoning + knowledge grounding; harder and more realistic than VQA v2.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "A-OKVQA has 10x more images",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "A-OKVQA uses video instead of images",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "A-OKVQA requires world knowledge + visual grounding; tests longer questions",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "A-OKVQA focuses only on counting",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is counting a consistently hard task in VQA?",
+        "back": "Challenges: occlusion (hidden objects), small objects (hard to detect), similar instances (mistaken identity). Even GPT-5.4 errors on dense scenes (>15 objects). Requires precise detection + enumeration, not just classification."
+      }
+    ]
+  }
+]

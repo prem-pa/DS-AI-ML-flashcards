@@ -1,0 +1,451 @@
+[
+  {
+    "slug": "activation-patching-and-causal-tracing",
+    "title": "Activation patching and causal tracing",
+    "track": "research-leaning",
+    "topic": "mechanistic-interpretability",
+    "difficulty": "advanced",
+    "tags": [
+      "causality",
+      "attribution",
+      "intervention",
+      "counterfactual",
+      "ablation",
+      "circuits"
+    ],
+    "aliases": [
+      "causal intervention",
+      "activation intervention",
+      "patching"
+    ],
+    "wikilinks": [
+      "causal-inference",
+      "mechanistic-interpretability",
+      "attention-patterns",
+      "residual-streams",
+      "mlp-circuits",
+      "counterfactual-reasoning",
+      "ablation-studies"
+    ],
+    "sources": [
+      {
+        "url": "https://www.neelnanda.io/mechanistic-interpretability/attribution-patching",
+        "label": "Attribution Patching: Activation Patching At Industrial Scale — Neel Nanda"
+      },
+      {
+        "url": "https://arxiv.org/abs/2309.16042",
+        "label": "Towards Best Practices of Activation Patching in Language Models: Metrics and Methods"
+      },
+      {
+        "url": "https://www.anthropic.com/research/team/interpretability",
+        "label": "Anthropic Interpretability Research"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nActivation patching answers a crucial question: which model components are *causally responsible* for a given output? It works like a surgical intervention—you take clean activations from one input and patch them into a corrupted input, observing whether the model's behavior flips back to correct. If it does, that component is causally important.\n\nThink of it as replacing one instrument in an orchestra's performance and measuring whether the sound changes. Causal tracing extends this by systematically mapping which attention heads, neurons, and MLPs form causal pathways.\n\n## Detail\n\nActivation patching constructs a counterfactual by:\n1. Running a clean input through the model (e.g., \"What is the capital of France?\") → correct answer\n2. Running a corrupted input (e.g., \"What is the capital of Germany?\") → wrong answer  \n3. In the corrupted run, selectively replacing activations from the clean run at specific layers/components\n4. Observing if output flips toward clean answer; if yes, that component is on the causal pathway\n\nCausal tracing builds attribution graphs showing dependencies: which features in layer N depend on which features in layer M. Modern work (Anthropic 2025) creates \"replacement models\" where sparse features replace polysemantic neurons, revealing which high-level concepts are causally relevant.\n\n## Common gotchas / interview framings\n\n- **Correlation vs. causation**: High activation ≠ causal importance. Only patching reveals causality. An attention head may activate strongly but be redundant—patching will show this.\n- **Information bottlenecks**: Patching a single head may not reveal true causal role if information is preserved through other paths. Must reason about model-wide redundancy.\n- **Granularity tradeoff**: Patching at layer level is coarse (many components); patching at neuron/token level is fine but computationally expensive.\n- **Interview angle**: \"Explain how you'd identify which attention head in a transformer is responsible for pronoun resolution\" → activation patching + systematic layer ablation.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is activation patching and why is it superior to simply analyzing activation magnitudes?",
+        "back": "Activation patching is a causal intervention technique that replaces activations from a clean input into a corrupted input to test whether specific components are causally responsible for outputs.\n\nIt's superior to activation analysis because: high magnitude ≠ causal importance. A neuron can activate strongly but be redundant. Only patching (counterfactual intervention) reveals whether a component is *necessary* for the correct output, establishing true causality rather than correlation."
+      },
+      {
+        "type": "mcq",
+        "front": "In causal tracing, what is the primary goal of constructing a clean vs. corrupted input pair?",
+        "back": "The clean/corrupted pair creates a controlled comparison. By patching components from clean → corrupted and observing if output flips toward correct, we isolate causal responsibility.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "To increase computational efficiency by comparing two forward passes",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "To establish a counterfactual: the clean input produces the correct answer, corrupted produces wrong answer, allowing us to test which components are necessary for correctness",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "To measure the magnitude of attention weights in both conditions",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "To identify neurons with the highest activation variance across inputs",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the concept of an attribution graph in modern circuit tracing (Anthropic 2025). How does it differ from neuron-level activation patching?",
+        "back": "An attribution graph is a computational graph for a specific prompt showing:\n- Nodes: interpretable features (from sparse autoencoders, not neurons)\n- Edges: causal dependencies between features across layers\n\nKey difference: Traditional activation patching works with polysemantic neurons (each neuron represents multiple concepts). Attribution graphs use sparse autoencoders to extract monosemantic features (one feature ≈ one concept), revealing causality at the *concept* level rather than the neuron level. This is more interpretable because features are human-readable."
+      },
+      {
+        "type": "flip",
+        "front": "What does it mean if patching an attention head's output does NOT flip the model's answer back to correct, even though the head shows high activation?",
+        "back": "It means the attention head is *not causally necessary* for the output, despite being active. This indicates:\n1. Information is redundantly encoded through other pathways\n2. The head's output is either not used downstream or is compensated for by other components\n3. The high activation is a correlation, not a cause\n\nThis reveals model redundancy and robustness—the model can produce correct outputs without relying on every active component."
+      }
+    ]
+  },
+  {
+    "slug": "layer-wise-relevance-propagation",
+    "title": "Layer-wise relevance propagation",
+    "track": "research-leaning",
+    "topic": "mechanistic-interpretability",
+    "difficulty": "advanced",
+    "tags": [
+      "attribution",
+      "relevance",
+      "backpropagation",
+      "contribution-decomposition",
+      "interpretability",
+      "mechanistic"
+    ],
+    "aliases": [
+      "LRP",
+      "relevance backpropagation",
+      "layer-wise decomposition"
+    ],
+    "wikilinks": [
+      "activation-patching",
+      "saliency-maps",
+      "attention-visualization",
+      "circuit-analysis",
+      "feature-importance",
+      "gradient-based-interpretation"
+    ],
+    "sources": [
+      {
+        "url": "https://transformer-circuits.pub/",
+        "label": "Transformer Circuits Thread"
+      },
+      {
+        "url": "https://www.anthropic.com/research/team/interpretability",
+        "label": "Anthropic Interpretability Research"
+      },
+      {
+        "url": "https://leonardbereska.github.io/blog/2024/mechinterpreview/",
+        "label": "Mechanistic Interpretability for AI Safety — A Review"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nLayer-wise relevance propagation (LRP) answers: \"How much did this specific neuron/attention head/MLP in layer 3 contribute to the final prediction?\"\n\nImaginea prediction is built bottom-up: embeddings → layer 1 → layer 2 → ... → output. LRP propagates relevance backward from output to input, attributing the model's decision to individual components at each layer. It decomposes \"the model predicted token X\" into \"layer 1 contributed 5%, layer 2 contributed 3%, attention head 2.5 contributed 8%\" etc.\n\n## Detail\n\nLRP uses the chain rule to decompose predictions:\n1. Start with output relevance (e.g., logit for token \"Paris\" = 8.5)\n2. Propagate backward: How much of this relevance came from each neuron in the previous layer?\n3. Continue layer-by-layer to input\n4. Result: attribution score for each component showing its contribution to the final output\n\nKey principle: Conservation. Relevance at layer L sums to relevance at layer L-1, ensuring no contribution is double-counted.\n\nIn mechanistic interpretability context: LRP can be applied to sparse autoencoder features instead of neurons, attributing predictions to interpretable features across layers. Combined with activation patching, it shows both *how much* each feature contributes (LRP) and *whether* it's causally necessary (patching).\n\n## Common gotchas / interview framings\n\n- **Linearity assumption**: Standard LRP assumes components contribute linearly. In transformers with nonlinearities, this is approximate. Better for final softmax than for ReLU interactions.\n- **Feature vs. token attribution**: LRP can attribute to features or tokens. Token-level attribution shows \"which tokens mattered for the prediction\"—useful for rationale extraction but may hide internal feature interactions.\n- **Relative vs. absolute relevance**: A component may have high relevance (8%) but low absolute impact if most predictions don't use it (rare feature). Must consider base rates.\n- **Interview angle**: \"How would you decompose a model's prediction into per-head contributions?\" → LRP backpropagation or attention-weighted feature contributions.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does layer-wise relevance propagation do, and how does it differ from gradient-based saliency methods?",
+        "back": "LRP decomposes a model's prediction into contributions from each component (neurons, heads, features) at each layer by backpropagating relevance from output to input.\n\nDifference from gradients:\n- Gradients show \"how much does the output change if I perturb this input?\" (local sensitivity)\n- LRP shows \"how much of the final prediction is explained by this component?\" (global contribution)\n\nGradients can be noisy; LRP enforces conservation (relevance is preserved, not scattered)."
+      },
+      {
+        "type": "mcq",
+        "front": "In layer-wise relevance propagation, what does the conservation principle mean?",
+        "back": "Conservation ensures that when you propagate relevance backward, what comes out of layer L equals what goes into layer L-1. This prevents double-counting and ensures the decomposition is mathematically sound.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Relevance scores must sum to 1 globally across all components",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Relevance at layer L must sum to the total relevance at layer L-1, ensuring no attribution is double-counted",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Relevance must be positive (no negative contributions)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Relevance propagation must halt at embedding layers",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How would you combine layer-wise relevance propagation with sparse autoencoders to improve interpretability in transformers?",
+        "back": "Standard LRP attributes to polysemantic neurons (each neuron has multiple roles). With sparse autoencoders:\n\n1. Train SAEs to decode neuron activations into monosemantic features (one feature ≈ one concept)\n2. Apply LRP through the SAE layer: \"Which features does the model rely on?\"\n3. Propagate further back: \"Which neurons activate those features?\"\n\nResult: Attributions are to human-readable features (\"neuroscience concept,\" \"pronoun\") rather than opaque neurons. Combines interpretability of features with principled attribution."
+      },
+      {
+        "type": "flip",
+        "front": "What's a key limitation of LRP in highly nonlinear models like transformers?",
+        "back": "LRP assumes contributions are roughly linear: Δoutput ≈ Σ(weight_i × Δfeature_i). In transformers with ReLU/softmax, this breaks down.\n\nExample: Two features (A, B) may have zero individual relevance (both contribute 0%) but high joint relevance when both are present (A ∧ B contributes 50%). LRP can't capture these interactions well.\n\nMitigation: Use LRP for layer-to-layer attribution (more linear) but validate with activation patching (causal ground truth)."
+      }
+    ]
+  },
+  {
+    "slug": "attention-head-interpretability",
+    "title": "Attention head interpretability",
+    "track": "research-leaning",
+    "topic": "mechanistic-interpretability",
+    "difficulty": "advanced",
+    "tags": [
+      "attention",
+      "circuits",
+      "induction-heads",
+      "heads",
+      "QK-circuit",
+      "OV-circuit"
+    ],
+    "aliases": [
+      "attention analysis",
+      "head composition",
+      "attention patterns"
+    ],
+    "wikilinks": [
+      "induction-heads",
+      "qk-circuits",
+      "ov-circuits",
+      "in-context-learning",
+      "transformer-circuits",
+      "attention-mechanisms",
+      "pronoun-resolution"
+    ],
+    "sources": [
+      {
+        "url": "https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html",
+        "label": "In-context Learning and Induction Heads"
+      },
+      {
+        "url": "https://transformer-circuits.pub/2025/attention-qk/index.html",
+        "label": "Tracing Attention Computation Through Feature Interactions"
+      },
+      {
+        "url": "https://transformer-circuits.pub/2021/framework/index.html",
+        "label": "A Mathematical Framework for Transformer Circuits"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nAttention heads are the core computational unit of transformers, yet they're often opaque. Attention head interpretability asks: \"What does this head compute?\"\n\nKey insight: A head isn't a monolithic black box. It splits into two circuits:\n- **QK (query-key) circuit**: \"Which positions do I attend to?\" (produces attention pattern)\n- **OV (output-value) circuit**: \"Given I attend to these positions, what do I output?\" (produces contribution to residual stream)\n\nAnalyzing heads separately reveals which heads do pattern matching, which copy information, which do arithmetic, etc.\n\n## Detail\n\n**Induction heads** are a canonical example of interpretable head behavior:\n- Composed of two heads in different layers working together\n- Head 1 attends to previous occurrences of the current token (\"pattern matching\")\n- Head 2 attends to the next token after those previous occurrences (\"copy mechanism\")\n- Result: Sequence [A][B]...[A] → attend to [B], enabling pattern completion (in-context learning)\n\n**QK circuit decomposition**:\n- Query/key projections are not random; they often encode semantic information\n- Can analyze: Does head attend to (name, type=person)? (grammatical role)? (rare tokens)?\n\n**OV circuit decomposition**:\n- Once attention pattern is fixed, which information does the head output?\n- Analyze: Does head copy input tokens? (OV matrix is identity-like) Or do learned transformations?\n\n**Interview-critical insight**: Probing attention weights for downstream task labels (e.g., \"does attention to pronouns predict pronoun resolution?\") is tempting but *wrong*. Attention is not a saliency map. High attention to a token doesn't mean it's important—OV may ignore that attended token. Use attention + causal patching together.\n\n## Common gotchas / interview framings\n\n- **Attention ≠ saliency**: Attention weights are NOT \"importance.\" Attend to A, ignore. Attend to B, output crucial info. Patching shows truth.\n- **Head-level vs. layer-level**: Each head has its own QK/OV. Analyzing layer-average attention patterns loses individual head interpretability.\n- **Multi-head redundancy**: Similar heads exist in same layer, suggesting redundancy. Patching one may not affect output if another backs it up.\n- **In-context learning correlation**: Induction heads correlate with ICL, but correlation ≠ causation. Must patch to confirm necessity.\n- **Interview angle**: \"Explain what induction heads do and why they matter for in-context learning\" → pattern matching + copy mechanism + causal evidence.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the QK and OV circuit decomposition of attention heads. Why is this decomposition useful?",
+        "back": "Each attention head's computation splits into two circuits:\n\n**QK Circuit (Query-Key)**: Produces the attention pattern—which positions the head attends to. Implemented by query and key projections. \n\n**OV Circuit (Output-Value)**: Given the attention pattern, what does the head output to the residual stream? Implemented by output and value projections.\n\nUseful because: You can analyze each circuit independently. A head may have a sophisticated attention pattern but trivial output (or vice versa). Separating them reveals which heads do pattern matching, which copy information, which perform transformations."
+      },
+      {
+        "type": "mcq",
+        "front": "Induction heads enable in-context learning by recognizing and completing patterns. Which of the following best describes their mechanism?",
+        "back": "Induction heads are a circuit: the composition of two separate heads. Layer N finds pattern matches (token A matched to previous [A]). Layer N+1 reads the token after previous [A] (i.e., [B]) and copies it. Together: [A] → [B].",
+        "choices": [
+          {
+            "key": "a",
+            "text": "A single attention head that attends to all previous tokens and averages them",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "A pair of heads in different layers: one matches the current token to previous occurrences, the second attends to the next token after those occurrences and copies it",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "A learned dictionary that stores and retrieves token sequences",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "A gradient-based optimization over the sequence to find similar patterns",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is it wrong to use attention weight magnitudes as a measure of token importance (saliency) when analyzing transformer models?",
+        "back": "Attention weights show which positions are attended to, NOT which attended tokens affect the output.\n\nCounterexample: Head A attends strongly to token X but its OV (output-value) circuit is nearly zero—the head attends to X but ignores it (outputs nothing). Token X has high attention but zero importance.\n\nConverse: Head B attends weakly to token Y but has high OV weight on Y's value—weak attention but large output contribution.\n\nTruth requires both: high attention weight AND high OV contribution. Better: use activation patching to establish causality."
+      },
+      {
+        "type": "flip",
+        "front": "How would you test whether induction heads are causally responsible for in-context learning, beyond observing their correlation with ICL tasks?",
+        "back": "Use activation patching:\n1. Clean run: Model solves ICL task correctly (e.g., \"A B C A → B\")\n2. Corrupted run: Ablate/corrupt induction head outputs\n3. If output flips to wrong answer, induction heads are causally necessary\n4. Can patch at fine granularity: corrupt only the induction head in layer 12, measure impact\n\nAlternative: Training-time intervention. Train a model without induction heads (e.g., no cross-layer attention) and observe ICL performance drops.\n\nCorrelation (high attention) vs. causation (patching shows necessity) is the key distinction."
+      }
+    ]
+  },
+  {
+    "slug": "neuron-and-circuit-level-analysis",
+    "title": "Neuron and circuit level analysis",
+    "track": "research-leaning",
+    "topic": "mechanistic-interpretability",
+    "difficulty": "advanced",
+    "tags": [
+      "circuits",
+      "neurons",
+      "mechanistic-explanation",
+      "polysemy",
+      "features",
+      "interpretability"
+    ],
+    "aliases": [
+      "circuit analysis",
+      "neuron interpretation",
+      "feature circuits"
+    ],
+    "wikilinks": [
+      "sparse-autoencoders",
+      "monosemanticity",
+      "transformer-circuits",
+      "attention-circuits",
+      "mlps",
+      "superposition",
+      "feature-visualization"
+    ],
+    "sources": [
+      {
+        "url": "https://transformer-circuits.pub/",
+        "label": "Transformer Circuits Thread"
+      },
+      {
+        "url": "https://transformer-circuits.pub/2024/july-update/index.html",
+        "label": "Circuits Updates - July 2024"
+      },
+      {
+        "url": "https://arxiv.org/abs/2510.02917",
+        "label": "MECHANISTIC INTERPRETABILITY (ICLR 2026)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nNeural networks are built from components at different scales:\n- **Neuron level**: Individual units in an MLP or embedding\n- **Attention head level**: Individual heads (analyzed via QK/OV)\n- **Circuit level**: Collections of neurons/heads working together to implement a computation (e.g., \"copy mechanism,\" \"pronoun resolution\")\n\nNeuron-level analysis asks: \"What does this neuron compute?\" Circuits ask: \"How do neurons cooperate to compute X?\"\n\nExample: A pronoun resolution circuit might involve:\n- Attention head: attend to subject\n- MLP neuron: check if attended token is animate\n- Another head: attend to matching gendered noun\n- Result: resolve \"she\" → female protagonist\n\n## Detail\n\n**Neuron analysis**:\n- Neurons are polysemantic: each neuron participates in multiple computations (e.g., \"neuron 42 activates on both 'scientific papers' and 'mathematical proofs'\")\n- Find most activating inputs: brute-force search inputs that maximally activate a neuron\n- Gradient-based interpretation: backprop through neuron to see which input dimensions affect it\n- Limitation: Polysemy makes interpretation hard—neuron 42's behavior is a confused mixture\n\n**Circuit analysis**:\n- Moves beyond individual neurons to *compositions* of components\n- Identify that neurons 42, 105, 230 (across layers) together implement \"concept X\"\n- Use attention patterns to trace data flow: Layer 3 Head 5 → Layer 5 MLP Neuron 12 → Layer 6 Head 2\n- Example: Transformer Circuits Thread discovered \"copy suppression heads\" that prevent premature copying and \"negative attention heads\" that attend to non-matches\n\n**Sparse autoencoders solve polysemy**:\n- Replace neurons with SAE features: each feature activates on ONE semantic concept\n- Circuit analysis becomes cleaner: \"Feature X (Golden Gate Bridge concept) flows through heads A,B,C\"\n- Modern work (Anthropic 2025): Attribution graphs using SAE features instead of neurons\n\n## Common gotchas / interview framings\n\n- **Polysemy is fundamental**: Single neurons can't be understood in isolation. Context matters. Always look at (input, neuron activation) pairs, not neurons alone.\n- **Circuits are not modular**: Circuits can overlap and interact. \"The pronoun resolution circuit\" overlaps with \"grammatical role circuit.\" Boundaries are fuzzy.\n- **Causality vs. correlation**: A neuron activates on X and correlates with task Y, but is it *causing* Y? Use patching.\n- **Generalization**: A circuit discovered in one model may not exist in another. Interpretability findings may not transfer.\n- **Interview angle**: \"How would you identify and characterize the circuit responsible for pronoun resolution in a transformer?\" → Attention analysis + neuron identification + causal patching.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does it mean that neurons are polysemantic, and why does this complicate neuron-level interpretability?",
+        "back": "Polysemanticity: A single neuron participates in multiple, seemingly unrelated computations.\n\nExample: MLP neuron 42 activates on inputs about (scientific papers, mathematical proofs, research conferences). \n\nComplication: You can't say \"neuron 42 computes concept X.\" Instead, it's a mixture. The neuron's activation is entangled with multiple features. Analyzing it in isolation gives incomplete/misleading interpretation.\n\nContext matters: (input=paper on neuroscience, neuron 42 activation) ≠ (input=poetry, neuron 42 activation). Same neuron, different roles."
+      },
+      {
+        "type": "mcq",
+        "front": "In circuit-level analysis, what is the goal of tracing data flow through attention heads and MLPs?",
+        "back": "Circuit analysis reveals composition: neuron A → head B → neuron C → head D implement behavior X. This shows how components cooperate, revealing the mechanism behind a behavior.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "To measure the total number of neurons used in a computation",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "To identify which collections of components (heads, neurons) work together to implement a specific behavior or concept",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "To compute the gradient of the output with respect to each neuron",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "To optimize model weights for better performance on a task",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How do sparse autoencoders enable cleaner circuit analysis compared to analyzing raw neurons?",
+        "back": "Raw neurons are polysemantic (mixed representations). SAEs extract monosemantic features:\n- Train SAE to decode neuron activations → sparse, interpretable features\n- Each feature is **monosemantic**: activates on one semantic concept (\"Golden Gate Bridge,\" \"pronoun resolution,\" \"scientific writing\")\n- Circuit becomes clear: Feature X → Head A → Feature Y → output\n- No more polysemy confusion; each element of the circuit has clear meaning\n\nResult: Circuits using SAE features are 10x more interpretable than circuits using raw neurons."
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between observing that a neuron activates on topic X and claiming that the neuron 'computes' topic X detection?",
+        "back": "**Observation**: Neuron 42 has high activation when input is about topic X. (Correlation)\n\n**Claim to verify**: Neuron 42 is causally necessary for detecting topic X. (Causation)\n\nThe gap: High activation ≠ causal role. Neuron 42 may activate strongly but be redundant—other neurons may compute the same detection. Or neuron 42 may be a side effect (activated by X, but not the detector).\n\nVerification: Use activation patching. Ablate neuron 42 and observe if topic X detection breaks. If yes, it's causal. If no, it's redundant or incidental."
+      }
+    ]
+  },
+  {
+    "slug": "sae-sparse-autoencoders-and-superposition-disentanglement",
+    "title": "SAE (Sparse Autoencoders) and superposition disentanglement",
+    "track": "research-leaning",
+    "topic": "mechanistic-interpretability",
+    "difficulty": "advanced",
+    "tags": [
+      "superposition",
+      "dictionary-learning",
+      "monosemanticity",
+      "features",
+      "autoencoders",
+      "interpretability"
+    ],
+    "aliases": [
+      "sparse autoencoder",
+      "SAE",
+      "feature extraction",
+      "monosemantic features"
+    ],
+    "wikilinks": [
+      "polysemanticity",
+      "mechanistic-interpretability",
+      "feature-visualization",
+      "neural-representation",
+      "transformer-circuits",
+      "scaling-interpretability",
+      "feature-importance"
+    ],
+    "sources": [
+      {
+        "url": "https://transformer-circuits.pub/2024/scaling-monosemanticity/",
+        "label": "Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet"
+      },
+      {
+        "url": "https://arxiv.org/abs/2309.08600",
+        "label": "Sparse Autoencoders Find Highly Interpretable Features in Language Models"
+      },
+      {
+        "url": "https://www.lesswrong.com/posts/8YnHuN55XJTDwGPMr/a-gentle-introduction-to-sparse-autoencoders",
+        "label": "A Gentle Introduction to Sparse Autoencoders"
+      },
+      {
+        "url": "https://transformer-circuits.pub/2023/monosemantic-features",
+        "label": "Towards Monosemanticity: Decomposing Language Models With Dictionary Learning"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nLarge language models represent more features (concepts, patterns) than they have neurons. This is **superposition**: neurons encode multiple features simultaneously.\n\nWhy? Efficiency. A 7B parameter model can represent billions of features if each neuron participates in multiple feature encodings.\n\nProblem: Superposition makes interpretation hard. A neuron's activation is a mixture; you can't say what it \"means.\"\n\nSolution: **Sparse Autoencoders (SAEs)**. Train an autoencoder to extract individual features from neuron activations:\n- Input: neuron activations (superposed, mixed)\n- Encoder: learns projections into a high-dimensional feature space\n- Sparsity constraint: only a few features activate per input (interpretable, not all-at-once)\n- Decoder: reconstructs original activations from sparse features\n- Result: Sparse, monosemantic features representing individual concepts\n\n## Detail\n\n**Superposition mechanics**:\n- Model has N neurons, representing M > N features (e.g., 12B features in 7B params)\n- Features are stored as directions in activation space (not neurons)\n- Polysemy emerges: neuron i = w_1 * feature_A + w_2 * feature_B (mixture)\n- Features may be orthogonal (independent) or interfere (when co-activated)\n\n**SAE training**:\n```\nInput: h = [neuron activations, 1000-dim]\nEncoder: h → z (sparse, e.g., 32-dim, 2 nonzeros)\nDecoder: z → h_hat\nLoss: ||h - h_hat||^2 + λ||z||_0  (reconstruction + sparsity)\n```\n\n**Monosemanticity**:\n- Goal: Each SAE feature activates on one semantic concept\n- Test: Rank inputs by feature activation, show top 10 inputs—do they all describe the same concept?\n- Example: SAE feature \"Golden Gate Bridge\" activates on inputs: \"the Golden Gate Bridge,\" \"SF landmark,\" \"red suspension bridge,\" etc. All the same concept.\n- Contrast: Neuron activates on (Golden Gate Bridge, mathematical proofs, poetry)—polysemantic confusion\n\n**Scaling (Anthropic 2024-2025)**:\n- Trained SAEs on Claude 3 Sonnet (70B params)\n- Extracted ~100k interpretable features per layer\n- Features were 10-100x more interpretable than neurons\n- Enabled circuit analysis with monosemantic features (see Neuron and Circuit Level Analysis)\n\n## Common gotchas / interview framings\n\n- **Sparsity vs. compression**: SAEs are *not* dimensionality reduction (like PCA). They're sparse *expansion* (N → M > N dims) with sparsity constraint to keep activations interpretable.\n- **Monosemanticity trade-off**: Higher sparsity → more monosemantic features but worse reconstruction. Lower sparsity → better reconstruction but features become polysemantic. Balance matters.\n- **Feature definition is task-dependent**: A feature is \"monosemantic\" relative to our test. Different test sets may reveal different concept groupings.\n- **Reconstruction loss ≠ faithfulness**: An SAE can reconstruct activations well but miss rare features (low activation). Patching SAE-reconstructed activations into corrupted forward pass tests if features are actually used.\n- **Scaling challenges**: SAEs for large models are expensive. Anthropic's work on scaling (pruning, regularization) addresses this.\n- **Interview angle**: \"Explain why superposition is a problem for interpretability and how SAEs solve it\" → Polysemy emerges, SAEs extract monosemantic features → enables circuit analysis.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is superposition in neural networks, and why do models represent features in superposition rather than using individual neurons for individual features?",
+        "back": "Superposition: Models encode M features (where M >> N neurons) by representing each feature as a direction in activation space, with neurons being linear combinations of features.\n\nWhy: Efficiency and capacity. A model with N neurons can represent N^2 or more features if features are sparse (only a few active per input). This exceeds the redundancy that would come from one-neuron-per-feature.\n\nTrade-off: Compression gain, but interpretability loss. Neuron activations become polysemantic (mixed)."
+      },
+      {
+        "type": "mcq",
+        "front": "In sparse autoencoders, what role does the sparsity constraint (L0 or L1) play, and why is it crucial for interpretability?",
+        "back": "Sparsity ensures that on any given input, only a few features are \"on.\" This means each feature's role is clear (dedicated to specific concepts). Without sparsity, many features activate simultaneously, and their meanings become entangled (polysemantic).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It reduces the number of neurons in the model to improve computational efficiency",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "It forces only a small subset of SAE features to activate per input, ensuring features are monosemantic rather than polysemantic",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "It prevents the autoencoder from overfitting to the training data",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It ensures the encoder output is normally distributed",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How would you test whether an extracted SAE feature is truly monosemantic or is capturing a polysemantic mixture?",
+        "back": "1. Rank inputs by the feature's activation strength (highest to lowest)\n2. Show the top 10-20 most-activating inputs to humans\n3. Ask: Do these inputs describe the same concept?\n\nMonosemantic: All top inputs are variants of one concept (e.g., \"Golden Gate Bridge,\" \"San Francisco landmark,\" \"red suspension bridge\")\n\nPolysemantic: Top inputs span multiple unrelated concepts (e.g., \"Golden Gate Bridge,\" \"Euler's formula,\" \"poetry about love\")\n\nAlternative: Probe the feature with a task (e.g., \"Does feature X activate on pronouns?\") and measure precision/recall.\n\nCausal test: Patch SAE-reconstructed activations back into the model. If feature X is truly monosemantic, activating it should have predictable, focused effects (related to one concept)."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the trade-off between reconstruction loss and monosemanticity in SAE training. Why is this trade-off unavoidable?",
+        "back": "Trade-off:\n- **Low sparsity (many features active)**: Features activate together, become polysemantic. But reconstruction is accurate (loss is low).\n- **High sparsity (few features active)**: Features are forced to be monosemantic (each covers one concept). But the SAE may fail to reconstruct rare polysemantic activations (loss is high).\n\nWhy it's unavoidable: Superposition exists for a reason—efficiency. Some inputs require activation of multiple concepts simultaneously. If sparsity is too strict, the SAE can't represent these multi-concept states, so reconstruction fails.\n\nMitigation: Choose sparsity via trade-off curve (plot loss vs. monosemanticity). Accept some reconstruction loss for interpretability gain. Validate that features are actually used (patching) despite reconstruction loss."
+      },
+      {
+        "type": "flip",
+        "front": "How did Anthropic scale SAE training to large models like Claude 3 Sonnet, and what did they learn about feature structure at scale?",
+        "back": "Scaling approaches:\n1. **Pruning**: Only train SAEs on token positions with sufficient gradient signal (ignore low-signal positions)\n2. **Regularization**: Add weight decay, batch normalization to stabilize training\n3. **Layer-wise SAEs**: Train separate SAEs for each layer (vs. one global SAE)\n4. **Feature scaling**: Adjust sparsity penalties per layer (early layers need lower sparsity)\n\nKey findings:\n- Claude 3 Sonnet layers contained ~100k interpretable features each\n- Features form hierarchies: early layers capture low-level patterns (text, images), later layers capture high-level concepts (scientific domains, reasoning patterns)\n- Multi-token features: Some features activate across multiple tokens (e.g., \"scientific paper\" spans document region)\n- 10-100x improvement in monosemanticity compared to neurons\n\nResult: First large-scale extraction of interpretable features from production LLMs, enabling circuit analysis at model scale."
+      }
+    ]
+  }
+]

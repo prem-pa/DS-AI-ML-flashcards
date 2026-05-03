@@ -1,0 +1,1434 @@
+[
+  {
+    "slug": "langgraph-graph-based-stateful-agents",
+    "title": "LangGraph (graph-based, stateful agents)",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "orchestration",
+      "checkpointing",
+      "observability",
+      "production-ready",
+      "state-management",
+      "graph-based"
+    ],
+    "aliases": [
+      "LangChain Agent Graph",
+      "StateGraph",
+      "LangSmith integration"
+    ],
+    "wikilinks": [
+      "agent-orchestration",
+      "checkpointing-time-travel",
+      "langsmith-observability",
+      "streaming-agents",
+      "graph-compilation",
+      "message-history",
+      "state-persistence"
+    ],
+    "sources": [
+      {
+        "url": "https://gurusup.com/blog/best-multi-agent-frameworks-2026",
+        "label": "Best Multi-Agent Frameworks in 2026"
+      },
+      {
+        "url": "https://softmaxdata.com/blog/definitive-guide-to-agentic-frameworks-in-2026-langgraph-crewai-ag2-openai-and-more/",
+        "label": "Definitive Guide to Agentic Frameworks in 2026"
+      },
+      {
+        "url": "https://dev.to/emperorakashi20/crewai-vs-langgraph-vs-autogen-which-multi-agent-framework-should-you-use-in-2026-5h2f",
+        "label": "CrewAI vs LangGraph vs AutoGen Comparison"
+      },
+      {
+        "url": "https://happycapyguide.com/blog/ai-agent-frameworks-compared-2026",
+        "label": "AI Agent Frameworks Compared 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nLangGraph treats agents as **directed acyclic graphs (DAGs)** of computation nodes connected by edges. Each node is a function (LLM call, tool, validation), and edges route data based on node outputs. The graph runs in cycles—read state, process, write state—with full checkpointing at each step. This maps cleanly to production requirements: audit trails, rollback, versioning, and replay.\n\n## Detail\n\n**Core Architecture:**\n- State graph where each node is a callable (function, LLM chain, tool) and edges define control flow\n- StateGraph automatically serializes and checkpoints state at each node boundary\n- Supports conditional routing: node output can branch to different next nodes\n- Built-in human-in-the-loop via `interrupt()` primitive\n\n**Key Features:**\n- **Checkpointing**: Snapshots of full graph state (nodes, edges, checkpoint tokens) enable time-travel debugging and long-lived agent sessions\n- **Streaming**: Outputs stream as nodes complete, reducing latency vs. await-all patterns\n- **LangSmith Integration**: Native observability—traces, metrics, A/B testing, feedback loops\n- **Subgraphs**: Nested graphs for hierarchical agents and composition\n- **Async-first**: Nodes and edges run concurrently where possible\n\n**Typical Flow:**\n```\nInput → Agent Node (LLM call) → Tool Node (execute) → Validation Node → Conditional Edge → Output\n```\n\n**Tool Integration**: Tools registered as StructuredTool with Pydantic schemas. Tool calls extracted from LLM output automatically routed to tool node, result fed back to agent context.\n\n## Common gotchas / interview framings\n\n- **Checkpointing overhead**: Disk/DB writes at every step add latency. For low-latency agents (< 100ms per step), consider in-memory checkpointing or sampling.\n- **Graph size complexity**: Deep graphs with many conditional paths are harder to reason about. Keep control flow flat where possible; use subgraphs for modularity.\n- **State bloat**: Checkpointing full context window (up to 1M tokens) per step is expensive. Structure state to store only deltas or summaries.\n- **Streaming token leakage**: When streaming LLM outputs, tool calls may be incomplete mid-stream. Validate extracted JSON before execution.\n- **Interview scenario**: \"Design a 10-step research agent with fallback tools. Where do you checkpoint? How do you handle token limits in state?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is LangGraph's core abstraction for agents?",
+        "back": "LangGraph models agents as directed acyclic graphs (DAGs) of computation nodes (LLM, tool, validation) connected by edges. State flows through nodes, with full checkpointing at each boundary. This enables audit trails, rollback, and replay—native production requirements."
+      },
+      {
+        "type": "flip",
+        "front": "Describe the checkpoint/state flow in LangGraph.",
+        "back": "On each node transition: (1) Read state from checkpoint store, (2) Execute node (LLM/tool/logic), (3) Write updated state + checkpoint token. Snapshots enable time-travel debugging and long-lived agent sessions. Streaming outputs as nodes complete reduces latency vs. sequential await."
+      },
+      {
+        "type": "mcq",
+        "front": "You're building a code generation agent with 10 tool categories. At what point does checkpointing create overhead?",
+        "back": "Checkpointing at every step ensures auditability but writes to disk/DB. For agents with sub-100ms latency targets, sample checkpoints (every Nth step) or use in-memory stores with async persistence.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Every node transition (default); consider in-memory + periodic disk flush for low-latency loops",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Only on tool boundaries",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Only on LLM calls",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Never; checkpointing is free",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "How does LangGraph handle tool call extraction and execution?",
+        "back": "Tools registered as StructuredTool with Pydantic schemas. LLM output parsed for tool_calls (JSON). Tool node receives call, executes, returns result. Result fed back to agent context for next reasoning step. Streaming may deliver incomplete JSON—validate before execution."
+      }
+    ]
+  },
+  {
+    "slug": "crewai-role-based-crews",
+    "title": "CrewAI (role-based crews)",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "role-based",
+      "DSL",
+      "crew-orchestration",
+      "low-learning-curve",
+      "multi-agent",
+      "task-based"
+    ],
+    "aliases": [
+      "Crew orchestration",
+      "Role assignments",
+      "Task-driven agents"
+    ],
+    "wikilinks": [
+      "agent-roles",
+      "crew-orchestration",
+      "task-based-architecture",
+      "agent-memory-in-crewai",
+      "crew-process-types",
+      "tool-assignment-by-role"
+    ],
+    "sources": [
+      {
+        "url": "https://gurusup.com/blog/best-multi-agent-frameworks-2026",
+        "label": "Best Multi-Agent Frameworks in 2026"
+      },
+      {
+        "url": "https://dev.to/emperorakashi20/crewai-vs-langgraph-vs-autogen-which-multi-agent-framework-should-you-use-in-2026-5h2f",
+        "label": "CrewAI vs LangGraph vs AutoGen Comparison"
+      },
+      {
+        "url": "https://openagents.org/blog/posts/2026-02-23-open-source-ai-agent-frameworks-compared",
+        "label": "Open-Source AI Agent Frameworks Compared 2026"
+      },
+      {
+        "url": "https://fungies.io/ai-agent-frameworks-comparison-2026-langchain-crewai-autogen/",
+        "label": "AI Agent Frameworks Comparison 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nCrewAI abstracts multi-agent systems as **crews of role-based agents**. Each agent has a role (e.g., \"Research Lead\"), backstory, goal, and assigned tools. A task describes what to accomplish. The crew processes tasks via a chosen process (sequential, hierarchical, or custom). This is a simpler mental model than state graphs: assign roles, define tasks, agents collaborate to solve them.\n\n## Detail\n\n**Core Components:**\n- **Agent**: Role, backstory, goal, tools, LLM model, memory\n- **Task**: Description, expected output, assigned agent(s), tools\n- **Crew**: Collection of agents, process type, shared context\n- **Process**: Sequential (Agent 1 → Agent 2 → ...), Hierarchical (manager agent), Custom callback\n\n**Typical Setup (20 LoC example):**\n```python\nresearcher = Agent(role=\"Research Lead\", goal=\"Uncover facts\", tools=[search_tool, scrape_tool])\nwriter = Agent(role=\"Content Writer\", goal=\"Craft narrative\", tools=[write_tool])\n\ntask1 = Task(description=\"Research AI trends\", agent=researcher)\ntask2 = Task(description=\"Write blog post\", agent=writer)\n\ncrew = Crew(agents=[researcher, writer], tasks=[task1, task2], process=\"sequential\")\nresult = crew.kickoff()\n```\n\n**Process Types:**\n- **Sequential**: Tasks execute in order; output of one feeds input to next\n- **Hierarchical**: Manager agent reads all tasks, decides order, delegates\n- **Custom**: User-defined callback orchestrates execution\n\n**Memory Management**: Agents store short-term (conversation) and long-term (learned patterns) memory. Memory persists across crew runs.\n\n## Common gotchas / interview framings\n\n- **No explicit control flow**: Unlike LangGraph, no explicit state graph. Control flow is implicit in process choice. Hard to trace why Agent B didn't run as expected.\n- **Memory bloat**: Long-term memory can grow without bounds. No native pruning—manually manage.\n- **Tool assignment ambiguity**: If two agents have the same tool, which one calls it? Depends on task assignment and model behavior—non-deterministic.\n- **Handoff latency**: Sequential process waits for full task completion before next agent starts. Parallel execution not native.\n- **Interview scenario**: \"Design a 5-agent crew for research + writing + review. How do you enforce approval gates? Where do you cache search results between agents?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is CrewAI's core mental model?",
+        "back": "Crews are teams of role-based agents. Each agent has a role, backstory, goal, and assigned tools. Tasks describe what to accomplish and assign agents. The crew processes tasks via a chosen process (sequential, hierarchical, custom). Simpler mental model than state graphs."
+      },
+      {
+        "type": "flip",
+        "front": "Compare CrewAI's sequential vs. hierarchical process.",
+        "back": "Sequential: Task 1 (Agent A) → Task 2 (Agent B) → ... Output of one feeds next. Hierarchical: Manager agent receives all tasks, decides order, prioritizes, delegates. Sequential is predictable; hierarchical is flexible but adds LLM overhead for decision-making."
+      },
+      {
+        "type": "mcq",
+        "front": "In a 3-agent CrewAI crew, all agents have the search_tool. Which agent calls it?",
+        "back": "Tool assignment is implicit. If multiple agents have search_tool and neither task nor model output specifies which agent calls it, behavior is non-deterministic. Design tasks to be agent-specific.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The agent whose task explicitly uses search_tool",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The first agent in the crew definition",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Depends on model behavior and task assignment—non-deterministic",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "CrewAI forbids duplicate tools",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "What is a key limitation of CrewAI's memory?",
+        "back": "Long-term memory grows unbounded with no native pruning. Agents store learned patterns but there's no automated cleanup or summarization. Interview question: How do you manage memory across 100s of crew runs without bloat?"
+      }
+    ]
+  },
+  {
+    "slug": "openai-agents-sdk-handoff-pattern",
+    "title": "OpenAI Agents SDK (handoff pattern)",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "OpenAI-native",
+      "handoff-pattern",
+      "agent-routing",
+      "stateless",
+      "model-locked",
+      "explicit-delegation"
+    ],
+    "aliases": [
+      "Agent handoff",
+      "OpenAI agent transfers",
+      "Explicit routing protocol"
+    ],
+    "wikilinks": [
+      "agent-to-agent-handoff",
+      "openai-api-tool-use",
+      "agent-routing-patterns",
+      "stateless-agent-design",
+      "model-specific-apis",
+      "conversation-threading"
+    ],
+    "sources": [
+      {
+        "url": "https://medium.com/@atnoforgenai/10-ai-agent-frameworks-you-should-know-in-2026-langgraph-crewai-autogen-more-2e0be4055556",
+        "label": "10 AI Agent Frameworks You Should Know in 2026"
+      },
+      {
+        "url": "https://softmaxdata.com/blog/definitive-guide-to-agentic-frameworks-in-2026-langgraph-crewai-ag2-openai-and-more/",
+        "label": "Definitive Guide to Agentic Frameworks in 2026"
+      },
+      {
+        "url": "https://qubittool.com/blog/ai-agent-framework-comparison-2026",
+        "label": "AI Agent Framework Comparison 2026"
+      },
+      {
+        "url": "https://happycapyguide.com/blog/ai-agent-frameworks-compared-2026",
+        "label": "AI Agent Frameworks Compared 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nOpenAI's Agents SDK models agents as **stateless functions that can hand off to other agents**. Each agent is a thin wrapper around gpt-4o or gpt-4-turbo that receives a context (messages), calls tools, and either completes or explicitly hands off to another agent by name. No graph orchestration—just explicit delegation. Model-locked to OpenAI; low learning curve.\n\n## Detail\n\n**Core Concept: Handoff Pattern**\n- Agent A processes request, recognizes it needs Agent B's expertise\n- Calls `transfer_to_agent(agent_name=\"agent_b\", context=messages)`\n- OpenAI SDK routes messages to Agent B; Agent B resumes with full context\n- No state machine; no checkpointing—purely message-based\n\n**Agent Definition (minimal):**\n```python\nagent_a = Agent(model=\"gpt-4o\", tools=[tool_1, tool_2])\nagent_b = Agent(model=\"gpt-4o\", tools=[tool_3, tool_4])\n# Agent A can call transfer_to_agent(\"agent_b\", context)\n```\n\n**Message Threading**: Full conversation history passed with each handoff. Agents inherit prior context but make independent decisions. No shared memory—each agent is stateless w.r.t. prior agents.\n\n**Tool Calling**: Standard OpenAI format (tool_calls in response). Agent calls tools, receives results, reasons, decides to (1) continue, (2) handoff, or (3) return final response.\n\n## Common gotchas / interview framings\n\n- **Model lockdown**: OpenAI models only (gpt-4o, gpt-4-turbo). No flexibility for Claude, Gemini, or custom models.\n- **Handoff verbosity**: Context (full message history) sent with each handoff. For long conversations, this inflates token usage and latency.\n- **No checkpointing**: No snapshots or rollback. If Agent B fails mid-task, restarting from handoff point requires replaying Agent A's entire work.\n- **Implicit routing**: Handoff is a function call—framework doesn't enforce who is allowed to hand off to whom. Risk of cycles (A→B→A).\n- **Low observability**: SDK provides minimal tracing. Hard to debug why Agent B didn't do what Agent A requested.\n- **Interview scenario**: \"Design a 3-agent team (researcher, coder, reviewer) using OpenAI SDK. How do you prevent handoff loops? Where do you cache intermediate results?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "How does OpenAI Agents SDK implement agent-to-agent communication?",
+        "back": "Via explicit handoff function: Agent A calls `transfer_to_agent(agent_name, messages)`. Full conversation history passed to Agent B. Agents are stateless; routing is responsibility of caller. No built-in graph or orchestration."
+      },
+      {
+        "type": "flip",
+        "front": "What is a key difference between OpenAI SDK's handoff and LangGraph's edge routing?",
+        "back": "OpenAI: Explicit function call (handoff) within agent logic; message-based; stateless. LangGraph: Declarative edge routing at graph definition time; state-based; checkpointed. OpenAI is imperative and flexible; LangGraph is declarative and reproducible."
+      },
+      {
+        "type": "mcq",
+        "front": "You have a 3-agent OpenAI SDK team: Researcher → Coder → Reviewer. How do you prevent Reviewer from handing back to Researcher (cycle)?",
+        "back": "Handoff is a function call in agent logic. OpenAI SDK provides no built-in cycle detection. You must code guards (e.g., 'if previous_agent == \"researcher\", don't handoff to researcher') or use external orchestrator.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "OpenAI SDK enforces acyclic handoffs automatically",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Manually code guards in each agent's handoff logic (e.g., Reviewer never calls transfer_to_agent)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Use a central orchestrator to track handoff history",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Impossible with OpenAI SDK design",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Why is OpenAI Agents SDK called 'model-locked'?",
+        "back": "Only supports OpenAI models (gpt-4o, gpt-4-turbo). No flexibility for Claude, Gemini, or open-source models. If OpenAI pricing changes or outages occur, no fallback. LangGraph, CrewAI are model-agnostic."
+      }
+    ]
+  },
+  {
+    "slug": "anthropic-agent-sdk",
+    "title": "Anthropic Agent SDK",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "Claude-native",
+      "MCP-integration",
+      "safety-first",
+      "extended-thinking",
+      "lightweight-orchestration",
+      "reliability-focused"
+    ],
+    "aliases": [
+      "Claude Agent SDK",
+      "Anthropic agents",
+      "MCP tooling"
+    ],
+    "wikilinks": [
+      "claude-extended-thinking",
+      "model-context-protocol-integration",
+      "claude-computer-use",
+      "safety-in-agents",
+      "tool-use-best-practices",
+      "multi-turn-agent-loops",
+      "token-budget-management"
+    ],
+    "sources": [
+      {
+        "url": "https://blog.modelcontextprotocol.io/posts/2026-mcp-roadmap/",
+        "label": "The 2026 MCP Roadmap"
+      },
+      {
+        "url": "https://qubittool.com/blog/ai-agent-framework-comparison-2026",
+        "label": "AI Agent Framework Comparison 2026"
+      },
+      {
+        "url": "https://happycapyguide.com/blog/ai-agent-frameworks-compared-2026",
+        "label": "AI Agent Frameworks Compared 2026"
+      },
+      {
+        "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool",
+        "label": "Claude Computer Use Tool Documentation"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nAnthropicAgent SDK is a lightweight agent framework deeply integrated with Claude. Instead of building complex state graphs or explicit handoffs, it focuses on **reliable tool-use loops**: Claude reasons, calls tools, receives results, repeats. Built-in [[Extended Thinking]] for complex reasoning. Native [[Model Context Protocol (MCP)]] support. No learning curve—start with few lines of Python.\n\n## Detail\n\n**Core Loop (3 steps):**\n1. Send messages + tools to Claude\n2. Claude responds with tool_calls (JSON)\n3. Execute tools, append results as assistant messages, repeat until stop_reason=\"end_turn\"\n\n**Key Features:**\n- **Extended Thinking**: Claude can use up to 10K tokens for internal reasoning before responding. Improves plan quality and error recovery.\n- **MCP Server Integration**: Tools auto-discovered from MCP servers (e.g., GitHub, file systems, APIs). No manual schema definition.\n- **Computer Use**: Claude can see and control desktop (screenshots, clicks, keyboard). Enables web automation, spreadsheet work, etc.\n- **Token Budget**: Explicit budget management—set max_tokens for reasoning + completion. Prevents runaway loops.\n- **Safety Defaults**: Claude's constitutional AI mitigates prompt injection, tool misuse. Safer for unsupervised agents.\n\n**Example Loop:**\n```python\nfrom anthropic import Anthropic\n\nclient = Anthropic()\ntools = client.beta.tools.list()  # Discover MCP tools\nmessages = [{\"role\": \"user\", \"content\": \"Research and summarize...\"}]\n\nwhile True:\n    response = client.messages.create(model=\"claude-3-5-sonnet-20241022\", \n        max_tokens=4096, tools=tools, messages=messages)\n    if response.stop_reason == \"end_turn\": break\n    # Handle tool calls, append to messages\n```\n\n## Common gotchas / interview framings\n\n- **No checkpointing**: Unlike LangGraph, no built-in snapshots. Agent failure loses intermediate work. Must implement own persistence.\n- **MCP server reliability**: Discovering tools from MCP servers adds latency and failure modes. Network issues crash agent loop.\n- **Computer use cost**: Screenshots are high-token (1500+ tokens/image). Long automation tasks balloon token usage.\n- **Reasoning budget trade-off**: Extended thinking improves quality but doubles or triples token cost per step. Balance planning vs. speed.\n- **Interview scenario**: \"Build a code review agent. Design error recovery: if tool fails, retry? skip? escalate? How do you bound token costs for 1000s of PRs/day?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the Anthropic Agent SDK's core loop?",
+        "back": "Send messages + tools to Claude. Claude responds with tool_calls (JSON). Execute tools, append results as assistant messages, repeat until stop_reason='end_turn'. Simple, reliable, no orchestration overhead. Integrated with MCP for auto-discovered tools."
+      },
+      {
+        "type": "flip",
+        "front": "How does Anthropic Agent SDK's Extended Thinking improve agent reliability?",
+        "back": "Claude allocates up to 10K tokens for internal reasoning before generating response. Enables better planning, error recovery, multi-step problem decomposition. Cost: 2-3x token usage. Tradeoff: better quality vs. faster execution."
+      },
+      {
+        "type": "mcq",
+        "front": "You're designing a code-review agent using Anthropic SDK. An agent loop fails mid-execution. What does the SDK provide to recover?",
+        "back": "Anthropic Agent SDK is lightweight—no native checkpointing. You must store messages and tool results yourself (DB, file, memory). LangGraph handles this automatically.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Built-in checkpointing like LangGraph",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Nothing; you must implement own message log/persistence",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Automatic retry with exponential backoff",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Rollback to last successful tool call",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "What is an advantage of Anthropic Agent SDK over OpenAI Agents SDK?",
+        "back": "Native MCP integration auto-discovers tools from MCP servers (no manual schema). Computer use for desktop automation. Extended thinking for better reasoning. Safety-first design. Tradeoff: lighter orchestration than LangGraph; less control flow flexibility."
+      }
+    ]
+  },
+  {
+    "slug": "autogenag2-in-maintenance-mode",
+    "title": "AutoGen/AG2 in maintenance mode",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "beginner",
+    "tags": [
+      "legacy",
+      "maintenance-mode",
+      "historical-context",
+      "limited-development",
+      "event-driven",
+      "async-first"
+    ],
+    "aliases": [
+      "AutoGen 0.4",
+      "AG2 rewrite",
+      "Event-driven orchestration"
+    ],
+    "wikilinks": [
+      "autogen-history",
+      "async-agent-frameworks",
+      "event-driven-architecture",
+      "multi-agent-conversation-protocol",
+      "groupchat-patterns"
+    ],
+    "sources": [
+      {
+        "url": "https://softmaxdata.com/blog/definitive-guide-to-agentic-frameworks-in-2026-langgraph-crewai-ag2-openai-and-more/",
+        "label": "Definitive Guide to Agentic Frameworks in 2026"
+      },
+      {
+        "url": "https://dev.to/emperorakashi20/crewai-vs-langgraph-vs-autogen-which-multi-agent-framework-should-you-use-in-2026-5h2f",
+        "label": "CrewAI vs LangGraph vs AutoGen Comparison"
+      },
+      {
+        "url": "https://medium.com/@atnoforgenai/10-ai-agent-frameworks-you-should-know-in-2026-langgraph-crewai-autogen-more-2e0be4055556",
+        "label": "10 AI Agent Frameworks You Should Know in 2026"
+      },
+      {
+        "url": "https://blog.equinix.com/blog/2025/08/06/what-is-the-model-context-protocol-mcp-how-will-it-enable-the-future-of-agentic-ai/",
+        "label": "MCP and Future of Agentic AI"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nAutoGen (v0.3) pioneered multi-agent conversation patterns but was hindered by synchronous, blocking execution and tight coupling. AG2 (AutoGen v0.4) rearchitected with **event-driven, async-first core and pluggable orchestration**. However, as of 2026, both versions are in **maintenance mode**: no major features planned, limited community engagement. Historical importance (influenced LangGraph, CrewAI) but not recommended for new projects.\n\n## Detail\n\n**AutoGen History:**\n- **v0.2-v0.3**: Groupchat pattern, two-agent conversations. Pioneering but synchronous.\n- **v0.4 (AG2)**: Event-driven pub-sub, async execution, pluggable orchestration strategies. More scalable.\n\n**AG2 Architecture:**\n- Agents emit events (tool calls, messages, handoffs)\n- Event loop processes and routes events asynchronously\n- Orchestration strategy (sequential, parallel, custom callback) determines agent order\n- Pluggable storage for message history and agent state\n\n**Why Maintenance Mode:**\n- Complexity: Event-driven design harder to debug than declarative graphs (LangGraph) or role-based DSL (CrewAI)\n- Community fragmentation: v0.3 users reluctant to migrate to v0.4 async rewrite\n- Competing frameworks: LangGraph + CrewAI + OpenAI SDK capture mindshare\n- Limited innovation: Team focused on stability, not new features\n\n## Common gotchas / interview framings\n\n- **Legacy code**: Existing AutoGen v0.3 projects need migration path. No clear upgrade route to AG2.\n- **Documentation gap**: AG2 docs lag behind implementation. Community examples scarce.\n- **Async learning curve**: Event-driven loops are harder to reason about than sequential graphs. Debugging tricky.\n- **Tool ecosystem shrinking**: Fewer integrations and MCP servers for AG2 vs. LangGraph/CrewAI.\n- **Interview scenario**: \"Why would you NOT recommend AutoGen/AG2 for a new project in 2026? What are the maintenance risks?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the current status of AutoGen/AG2 in 2026?",
+        "back": "Maintenance mode. No major features planned. v0.3 users reluctant to migrate to AG2's async rewrite. LangGraph, CrewAI, OpenAI SDK have captured mindshare. Historical importance (pioneered multi-agent patterns) but not recommended for new projects."
+      },
+      {
+        "type": "flip",
+        "front": "What was AutoGen v0.4 (AG2)'s key rearchitecture?",
+        "back": "Event-driven pub-sub core replacing synchronous blocking. Async-first execution. Pluggable orchestration strategies (sequential, parallel, custom). More scalable but harder to debug. Community adoption slow due to complexity."
+      },
+      {
+        "type": "mcq",
+        "front": "In an interview, when would you mention AutoGen/AG2?",
+        "back": "AutoGen is mentioned for historical context (pioneered groupchat, two-agent patterns) or when supporting legacy code. For new projects, recommend LangGraph (enterprise), CrewAI (simplicity), or Anthropic SDK (Claude integration).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Always recommend it for new agent projects",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Only for historical context or migrating legacy codebases",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "When discussing event-driven patterns in agents",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Suggest it as the simplest agent framework",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why did AutoGen's community fragment between v0.3 and v0.4?",
+        "back": "AG2's async rewrite introduced breaking changes and higher learning curve. v0.3 users saw no compelling reason to migrate. Meanwhile, LangGraph (state graphs) and CrewAI (role DSL) offered simpler models. Community consensus: AG2 complexity without proportional benefits."
+      }
+    ]
+  },
+  {
+    "slug": "function-calling-tool-use-patterns",
+    "title": "Function calling / tool use patterns",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "function-calling",
+      "tool-use",
+      "JSON-schemas",
+      "parallel-calls",
+      "response-format",
+      "tool-execution-loop"
+    ],
+    "aliases": [
+      "Tool calling",
+      "Function definitions",
+      "Tool response loop"
+    ],
+    "wikilinks": [
+      "tool-definition-schemas",
+      "parallel-tool-execution",
+      "tool-response-parsing",
+      "error-handling-in-tool-calls",
+      "streaming-tool-calls"
+    ],
+    "sources": [
+      {
+        "url": "https://medium.com/@atnoforgenai/10-ai-agent-frameworks-you-should-know-in-2026-langgraph-crewai-autogen-more-2e0be4055556",
+        "label": "10 AI Agent Frameworks You Should Know in 2026"
+      },
+      {
+        "url": "https://softmaxdata.com/blog/definitive-guide-to-agentic-frameworks-in-2026-langgraph-crewai-ag2-openai-and-more/",
+        "label": "Definitive Guide to Agentic Frameworks in 2026"
+      },
+      {
+        "url": "https://happycapyguide.com/blog/ai-agent-frameworks-compared-2026",
+        "label": "AI Agent Frameworks Compared 2026"
+      },
+      {
+        "url": "https://sureprompts.com/blog/react-prompting-guide",
+        "label": "ReAct Prompting Guide 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Function calling** is the mechanism by which LLMs invoke external tools. Agent sends a message to the model, model responds with a **tool_call** (name + JSON-encoded parameters). Agent executes the tool, receives result, appends result to conversation, repeats. This is the atomic building block of agentic AI.\n\n## Detail\n\n**Call-Result Cycle:**\n1. Agent: \"Fetch weather for Seattle\"\n2. Model: `tool_call(name=\"get_weather\", args={\"city\": \"Seattle\"})`\n3. Agent: Execute tool, receive `{\"temp\": 62, \"condition\": \"cloudy\"}`\n4. Model: \"The weather in Seattle is 62°F and cloudy.\"\n\n**Tool Definition (JSON Schema):**\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"city\": {\"type\": \"string\", \"description\": \"City name\"},\n    \"units\": {\"type\": \"string\", \"enum\": [\"C\", \"F\"]}\n  },\n  \"required\": [\"city\"]\n}\n```\n\nAll major models (Claude, GPT-4, Gemini) use JSON schemas to define tools. Schema quality directly impacts call accuracy.\n\n**Parallel Tool Calls:** Modern models can issue multiple tool calls in a single response:\n```json\n[{\"name\": \"get_weather\", \"args\": {\"city\": \"Seattle\"}},\n {\"name\": \"get_weather\", \"args\": {\"city\": \"Portland\"}}]\n```\nAgent executes both in parallel, batches results, feeds back to model.\n\n**Tool Response Format:** Different models expect different response formats. Claude: `tool_result` role with `content`. GPT: `function` role. Frameworks abstract this.\n\n## Common gotchas / interview framings\n\n- **Schema ambiguity**: Vague descriptions lead to incorrect parameter bindings. Example: `\"name\"` vs `\"full_name\"` confuses model. Use clear, specific descriptions.\n- **Parameter hallucination**: Model may invent parameters not in schema. Validate before execution.\n- **Error recovery**: If tool fails (e.g., API timeout), how does agent retry? Most frameworks re-append error as tool_result.\n- **Streaming tool calls**: Models stream tool calls token-by-token. Incomplete JSON arrives mid-stream—need buffering before parsing.\n- **Interview scenario**: \"Design a tool for `create_database(name, schema, backup_enabled)`. How do you prevent the model from inventing `backup_retention_days` not in your schema? How do you handle validation errors?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Describe the function calling loop in an agent.",
+        "back": "Agent sends message + tool definitions (JSON schema) to model. Model responds with tool_call (name + parameters). Agent executes tool, receives result. Agent appends result to conversation. Model reasons on result and either calls another tool, hands off, or responds with answer. Loop repeats."
+      },
+      {
+        "type": "flip",
+        "front": "Why is tool definition schema quality critical?",
+        "back": "Vague or ambiguous schemas lead to incorrect parameter bindings. Model may hallucinate parameters not in schema. Clear descriptions (e.g., 'city name as ISO 3166 code' vs 'city') reduce errors. Test schemas with adversarial queries."
+      },
+      {
+        "type": "mcq",
+        "front": "Your tool schema has parameters: {\"name\", \"email\", \"phone\"}. Model invents \"fax_number\" not in schema and calls the tool. What went wrong?",
+        "back": "Models can hallucinate parameters, especially if schema is loose. Use `additionalProperties: false` in JSON schema and validate inputs before execution. Both schema strictness and execution-time validation prevent surprises.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The model is malfunctioning",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Schema was not strict (missing additionalProperties=false or validation)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Tool execution should have rejected invalid parameters",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Both B and C",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Can a model call multiple tools in a single response?",
+        "back": "Yes, most modern models (Claude, GPT-4, Gemini) support parallel tool calls. Response contains array of tool_calls. Agent executes all in parallel (if independent), batches results, appends to conversation. Improves efficiency for multi-step tasks."
+      }
+    ]
+  },
+  {
+    "slug": "tool-definition-and-validation",
+    "title": "Tool definition and validation",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "JSON-schema",
+      "pydantic",
+      "parameter-validation",
+      "error-handling",
+      "type-safety",
+      "tool-registry"
+    ],
+    "aliases": [
+      "Schema validation",
+      "Parameter checking",
+      "Tool registration"
+    ],
+    "wikilinks": [
+      "json-schema-design",
+      "pydantic-for-tool-definition",
+      "input-validation",
+      "type-safety-in-tools",
+      "tool-error-messages",
+      "tool-documentation"
+    ],
+    "sources": [
+      {
+        "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool",
+        "label": "Claude Computer Use Documentation"
+      },
+      {
+        "url": "https://gurusup.com/blog/best-multi-agent-frameworks-2026",
+        "label": "Best Multi-Agent Frameworks in 2026"
+      },
+      {
+        "url": "https://softmaxdata.com/blog/definitive-guide-to-agentic-frameworks-in-2026-langgraph-crewai-ag2-openai-and-more/",
+        "label": "Definitive Guide to Agentic Frameworks 2026"
+      },
+      {
+        "url": "https://sureprompts.com/blog/react-prompting-guide",
+        "label": "ReAct Prompting Guide 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Tool definition** is the contract between agent and executor. **Validation** ensures inputs match contract before execution. Poor definitions lead to model confusion; poor validation leads to runtime errors and agent crashes. Together, they form the foundation of reliable agent systems.\n\n## Detail\n\n**Tool Definition Components:**\n1. **Name**: Unique, descriptive (e.g., `search_web`, not `q1`)\n2. **Description**: 1-2 sentences explaining what it does\n3. **Parameters**: JSON Schema defining inputs (types, constraints, examples)\n4. **Returns**: Expected output format (optional but recommended)\n\n**Pydantic Example:**\n```python\nfrom pydantic import BaseModel, Field\n\nclass SearchQuery(BaseModel):\n    query: str = Field(..., description=\"Search terms\")\n    max_results: int = Field(10, ge=1, le=100, description=\"Max results\")\n    language: str = Field(\"en\", pattern=\"^[a-z]{2}$\", description=\"ISO 639-1 code\")\n\n# Auto-converts to JSON Schema with constraints\n```\n\n**Validation Layers:**\n1. **Schema validation**: JSON Schema enforces types, required fields, patterns, ranges\n2. **Pydantic validation**: Python dataclass validation before tool execution\n3. **Runtime validation**: Application-level checks (e.g., user permissions, API rate limits)\n4. **Error handling**: Return structured errors to agent for retry/recovery\n\n**Tool Error Messages:** Agents learn from error patterns. Clear errors (e.g., \"Max results must be 1-100\") enable recovery. Vague errors (e.g., \"Invalid input\") cause agent confusion.\n\n## Common gotchas / interview framings\n\n- **Over-constrained schemas**: If schema is too strict (min_length=20, pattern=/^[A-Z]/), model rarely hits all constraints. Leads to excessive errors.\n- **Under-constrained schemas**: No constraints → model invents values. Example: `query: string` with no length limit → 10KB query strings.\n- **Missing examples**: Adding `examples` field to schema improves model's parameter binding by 20-30%.\n- **Error message loop**: If tool returns repeated errors, agent may loop forever. Set max retries.\n- **Interview scenario**: \"Design a tool for `reserve_flight(origin, destination, date, passengers, seat_class)`. What constraints prevent invalid bookings? How do you handle out-of-bounds inputs?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are the 4 components of a well-defined tool?",
+        "back": "1. Name (unique, descriptive). 2. Description (1-2 sentences). 3. Parameters (JSON Schema with types, constraints, examples). 4. Returns (expected output format). Together, they form the contract between agent and executor."
+      },
+      {
+        "type": "flip",
+        "front": "Compare schema-level vs runtime validation in tool execution.",
+        "back": "Schema validation (JSON Schema): Type checking, range constraints, pattern matching. Happens before tool runs. Runtime validation: Application logic (permissions, DB lookups, state checks). Happens inside tool. Both needed: schema prevents silly errors; runtime prevents domain errors."
+      },
+      {
+        "type": "mcq",
+        "front": "You define a tool with `max_results: int` (no constraints). Model calls it with `max_results: 50000`. What happens?",
+        "back": "No schema constraints = no validation. Tool executes with 50K results, times out, agent gets timeout error. Add schema constraints: `max_results: int(ge=1, le=100)` to prevent this. Schema validation is first line of defense.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "JSON Schema rejects it",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Tool executes, likely times out or OOMs",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Model learns to respect constraints next time",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Agent automatically retries with smaller value",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Why do examples in schema improve model accuracy?",
+        "back": "Examples (in `examples` field) show model concrete valid inputs. Instead of guessing, model copies pattern from example. Studies show 20-30% improvement in parameter binding with examples. Cost: verbose schema but better reliability."
+      }
+    ]
+  },
+  {
+    "slug": "parallel-tool-execution",
+    "title": "Parallel tool execution",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "concurrency",
+      "batching",
+      "tool-independence",
+      "async-execution",
+      "latency-optimization",
+      "dependency-tracking"
+    ],
+    "aliases": [
+      "Concurrent tool calls",
+      "Batch tool execution",
+      "Multi-tool parallelism"
+    ],
+    "wikilinks": [
+      "async-tool-execution",
+      "dependency-graphs-for-tools",
+      "tool-latency-optimization",
+      "concurrent-api-calls",
+      "batching-strategies"
+    ],
+    "sources": [
+      {
+        "url": "https://medium.com/@atnoforgenai/10-ai-agent-frameworks-you-should-know-in-2026-langgraph-crewai-autogen-more-2e0be4055556",
+        "label": "10 AI Agent Frameworks You Should Know in 2026"
+      },
+      {
+        "url": "https://sureprompts.com/blog/react-prompting-guide",
+        "label": "ReAct Prompting Guide 2026"
+      },
+      {
+        "url": "https://servicesground.com/blog/agentic-reasoning-patterns/",
+        "label": "Agentic Reasoning Patterns 2026"
+      },
+      {
+        "url": "https://towardsdatascience.com/recap-of-all-types-of-llm-agents/",
+        "label": "Recap of All Types of LLM Agents"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Parallel tool execution** reduces latency in multi-step agent loops. Instead of waiting for tool 1 to complete before calling tool 2, if tools are independent (e.g., fetching data from 3 APIs), issue all calls simultaneously. Trade-off: complexity (error handling, resource management) vs speed.\n\n## Detail\n\n**Dependency vs Independence:**\n- **Independent**: `search_api(\"weather\")` + `search_api(\"traffic\")` can run in parallel\n- **Dependent**: `get_user_id(email)` → `get_user_profile(user_id)` must run sequentially\n\n**Model-Level Parallelism:** Modern models (Claude 3.5+, GPT-4o) can emit multiple tool_calls in one response:\n```json\n{\n  \"tool_calls\": [\n    {\"name\": \"get_weather\", \"args\": {\"city\": \"Seattle\"}},\n    {\"name\": \"get_traffic\", \"args\": {\"location\": \"Seattle\"}},\n    {\"name\": \"get_news\", \"args\": {\"query\": \"Seattle tech\"}}\n  ]\n}\n```\n\n**Framework Implementation:**\n```python\nasync def execute_tools_parallel(tool_calls):\n    tasks = [execute_tool(tc) for tc in tool_calls]\n    results = await asyncio.gather(*tasks, return_exceptions=True)\n    return results\n```\n\n**Handling Partial Failures:**\n- If 2/3 tools succeed, append successful results + error for failed one\n- Model sees both success and failure, decides whether to retry or proceed\n- Graceful degradation better than aborting entire step\n\n## Common gotchas / interview framings\n\n- **Resource limits**: Parallel calls to same API may hit rate limits. Need circuit breakers, backoff logic.\n- **Timeout handling**: One slow tool blocks the batch (gather with timeout). Use `asyncio.wait(timeout=X)` to enforce deadline.\n- **Error correlation**: If parallel call 2 fails, which retry strategy? Retry only failed, retry all, or propagate error?\n- **Model expectation**: Not all models reliably emit parallel calls. May need prompt coaching or in-context examples.\n- **Interview scenario**: \"You have 10 independent tool calls. Design execution with 5s global timeout, 1s per-call timeout, and max 3 retries. Handle partial failures.\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "When can tool calls be executed in parallel?",
+        "back": "When tools are independent—output of one doesn't feed input to another. Examples: fetch from 3 APIs, search 2 databases, check 2 conditions. Cannot parallelize: tool 1 → tool 2 (sequential) or tool 1 & tool 2 share mutable state."
+      },
+      {
+        "type": "flip",
+        "front": "How do modern LLMs enable parallel tool execution?",
+        "back": "In one response, model emits array of tool_calls (not nested/sequential). Framework receives all calls, executes in parallel via async/await or thread pool, collects results, appends all to conversation. Model sees batched results in next turn."
+      },
+      {
+        "type": "mcq",
+        "front": "You have 10 parallel API calls, each with 1s timeout. Global timeout is 5s. One call hangs. How do you handle it?",
+        "back": "Use `asyncio.wait(timeout=global_timeout)` to collect all completed results within deadline. Return partial successes + timeouts as results. Model adapts and reruns only failed calls if needed. Graceful degradation.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Wait 10s for all to complete (ignore global timeout)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Use asyncio.wait(timeout=5s) to enforce global deadline; return partial results",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Retry the hanging call individually",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Cancel all and return error",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "What is a risk of parallel execution with shared state?",
+        "back": "Race conditions. If two tools modify same resource (e.g., database row), order matters. Parallel execution removes ordering guarantee. Solution: ensure tools are truly independent (no shared mutable state) or use locks/transactions."
+      }
+    ]
+  },
+  {
+    "slug": "tool-composition-and-chaining",
+    "title": "Tool composition and chaining",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "tool-chaining",
+      "composition-patterns",
+      "multi-step-workflows",
+      "data-piping",
+      "dependency-management",
+      "subgoals"
+    ],
+    "aliases": [
+      "Tool pipelines",
+      "Workflow composition",
+      "Sequential tool use"
+    ],
+    "wikilinks": [
+      "data-piping-between-tools",
+      "workflow-orchestration",
+      "tool-dependency-graphs",
+      "multi-step-task-design",
+      "tool-output-parsing"
+    ],
+    "sources": [
+      {
+        "url": "https://medium.com/@atnoforgenai/10-ai-agent-frameworks-you-should-know-in-2026-langgraph-crewai-autogen-more-2e0be4055556",
+        "label": "10 AI Agent Frameworks You Should Know in 2026"
+      },
+      {
+        "url": "https://sureprompts.com/blog/react-prompting-guide",
+        "label": "ReAct Prompting Guide 2026"
+      },
+      {
+        "url": "https://servicesground.com/blog/agentic-reasoning-patterns/",
+        "label": "Agentic Reasoning Patterns 2026"
+      },
+      {
+        "url": "https://towardsdatascience.com/recap-of-all-types-of-llm-agents/",
+        "label": "Recap of All Types of LLM Agents"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Tool chaining** is sequential execution where output of one tool becomes input to the next. Instead of agent making isolated tool calls, it strings them together to solve multi-step problems. Example: `search(\"founders\")` → `extract_names()` → `fetch_profiles()` → `summarize()`.\n\n## Detail\n\n**Two Approaches:**\n\n1. **Model-Driven Chaining** (agentic loop):\n   - Agent calls tool 1, receives result\n   - Agent reasons on result, decides to call tool 2\n   - Model is responsible for chaining logic\n   - Pro: Flexible, adaptive (model changes plans based on intermediate results)\n   - Con: Token cost per step, latency multiplies\n\n2. **Framework-Driven Chaining** (explicit pipeline):\n   - Define sequence: `tool1 | tool2 | tool3`\n   - Framework handles piping automatically\n   - Pro: Deterministic, efficient, clear intent\n   - Con: Rigid; cannot adapt if tool 1 fails in unexpected way\n\n**Output Parsing & Piping:**\nTool 1 returns JSON: `{\"names\": [\"Alice\", \"Bob\"]}`\nFramework extracts `names` field, passes as input to Tool 2: `fetch_profiles(names=[...])`\nIf Tool 1 returns unstructured text, model must parse before chaining.\n\n**Example Workflow:**\n```python\n# Model-driven\nresult1 = search(\"AI startups 2026\")\n# Model: \"Found 50 results. Let me extract names.\"\nresult2 = extract_names(result1)\n# Model: \"Got names. Let me fetch profiles.\"\nresult3 = fetch_profiles(result2)\n\n# Framework-driven (pseudocode)\npipeline = search | extract_names | fetch_profiles\nresult = pipeline(\"AI startups 2026\")\n```\n\n## Common gotchas / interview framings\n\n- **Output format mismatch**: Tool 1 outputs XML, Tool 2 expects JSON. Need intermediate parsing/transformation step.\n- **Error propagation**: If Tool 2 fails, does chain stop or retry? Framework must handle gracefully.\n- **Token bloat**: Model-driven chaining appends every intermediate result to conversation. Context grows quadratically with chain length.\n- **Ambiguous branching**: If Tool 1 returns 10 possible paths, does chain explore all? Must be explicit about branching strategy.\n- **Interview scenario**: \"Design a tool chain: search → filter → rank → summarize. If filter returns 0 results, what do you do? How do you handle timeout in any step?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Compare model-driven vs framework-driven tool chaining.",
+        "back": "Model-driven: Agent decides chaining. Flexible, adaptive to intermediate results, but higher token cost + latency. Framework-driven: Explicit pipeline (tool1 | tool2 | ...). Deterministic, efficient, but rigid—cannot adapt if tool fails unexpectedly."
+      },
+      {
+        "type": "flip",
+        "front": "How do you handle output format mismatch in a tool chain?",
+        "back": "Tool 1 outputs XML, Tool 2 expects JSON: Insert transformation step (parse/convert). Either model-driven (model does conversion) or framework-driven (explicit conversion function). Validate output format before piping to next tool."
+      },
+      {
+        "type": "mcq",
+        "front": "In a 5-step model-driven chain, each tool output is appended to conversation. What is the risk?",
+        "back": "Each step appends result to conversation. After 5 steps, context may balloon from 2K to 10K+ tokens. Model spends reasoning tokens on prior steps instead of current problem. Solution: summarize or compress intermediate results.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "No risk; helps model reason",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Context window grows 5x + model spends tokens on irrelevant history",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Tools run slower",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Framework crashes",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Why is structured output from tools critical for chaining?",
+        "back": "Chaining depends on parsing and transforming outputs. If Tool 1 returns unstructured text, Tool 2 cannot consume it. Structured output (JSON, XML) with clear schemas enables reliable parsing and piping between tools."
+      }
+    ]
+  },
+  {
+    "slug": "react-reasoning-acting",
+    "title": "ReAct (Reasoning + Acting)",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "reasoning-pattern",
+      "thought-action-observation",
+      "interpretability",
+      "agentic-loop",
+      "planning",
+      "explainability"
+    ],
+    "aliases": [
+      "Thought-Action-Observation",
+      "TAO loop",
+      "Reasoning traces"
+    ],
+    "wikilinks": [
+      "extended-thinking-vs-react",
+      "agent-interpretability",
+      "planning-patterns",
+      "observation-grounding",
+      "chain-of-thought",
+      "reflexion-extensions"
+    ],
+    "sources": [
+      {
+        "url": "https://www.promptingguide.ai/techniques/react",
+        "label": "ReAct Prompting Guide"
+      },
+      {
+        "url": "https://sureprompts.com/blog/react-prompting-guide",
+        "label": "ReAct Prompting Guide 2026"
+      },
+      {
+        "url": "https://www.salesforce.com/agentforce/ai-agents/react-agents/",
+        "label": "What Are ReAct Agents? - Salesforce"
+      },
+      {
+        "url": "https://www.ibm.com/think/topics/react-agent",
+        "label": "What is a ReAct Agent? - IBM"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**ReAct** (Reasoning + Acting) decomposes agent behavior into three alternating steps:\n1. **Thought**: LLM reasons about current state and next action\n2. **Action**: LLM issues a tool call or decision\n3. **Observation**: Environment (tool result) is fed back\n\nThe cycle repeats, creating an interpretable trace of the agent's reasoning. This is the dominant pattern in agentic AI (2026), implemented in LangGraph, CrewAI, Claude SDK, and most coding agents (Claude Code, Cursor, Aider).\n\n## Detail\n\n**Explicit ReAct Trace (in-context example):**\n```\nThought: The user asked for latest AI benchmarks. I should search for 2026 benchmarks.\nAction: search(\"AI benchmarks 2026\")\nObservation: Found SWE-bench (87.6% for Claude Opus), GAIA (74.6%), WebArena (68.7%).\nThought: Good data. Now let me format this clearly for the user.\nAction: format_and_return(benchmarks_data)\nObservation: (no tool; user returns formatted response)\n```\n\n**Implicit ReAct Loop (modern frameworks):**\nFrameworks internalize ReAct without explicit \"Thought\"/\"Action\"/\"Observation\" tokens:\n- **Thought** → Model's reasoning (encoded in activations or via Extended Thinking)\n- **Action** → tool_call in response\n- **Observation** → tool_result appended to conversation\n\nBenefit: cleaner API without verbose prompting. Tradeoff: less interpretable.\n\n**ReAct + Extended Thinking:**\nClaude's Extended Thinking allows 10K tokens of internal reasoning (Thought) before responding. Improves decision quality but increases cost.\n\n## Common gotchas / interview framings\n\n- **Thought verbosity**: Forcing explicit \"Thought\" tokens adds latency and cost. Most modern frameworks omit them (implicit reasoning).\n- **Observation quality**: If tool result is noisy or incomplete, agent's next thought may be confused. Quality of observations shapes quality of reasoning.\n- **Hallucinated actions**: Agent may invent actions not in tool list. Prompt or schema validation should prevent, but errors happen.\n- **Infinite loops**: Agent thinks, acts, observes, repeats. Without stopping condition, loops forever. Set max_iterations or detect when no progress is made.\n- **Interview scenario**: \"Design ReAct loop for code debugging. What are thoughts, actions, observations? How do you prevent infinite reasoning loops?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are the three stages of the ReAct loop?",
+        "back": "Thought: LLM reasons about state and next step. Action: LLM calls a tool or makes a decision. Observation: Environment returns tool result. Loop repeats until task complete. Creates interpretable trace of agent reasoning."
+      },
+      {
+        "type": "flip",
+        "front": "How do modern frameworks implement ReAct implicitly vs explicitly?",
+        "back": "Explicit: Prompt includes 'Thought:', 'Action:', 'Observation:' tokens. Verbose but interpretable. Implicit: Framework handles reasoning internally (activations or Extended Thinking), tool calls are automatic. Cleaner API, less interpretable."
+      },
+      {
+        "type": "mcq",
+        "front": "In a ReAct loop, how do you prevent infinite reasoning?",
+        "back": "Without stopping conditions, agent loops indefinitely (think, act, observe, repeat). Solutions: max_iterations (stop after N steps), detect plateau (same action repeated), time budget (stop after T seconds), or explicit termination signal.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Impossible; ReAct always loops forever",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Set max_iterations, detect no progress, or enforce time budget",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Remove all tool calls (becomes pure reasoning)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use Extended Thinking instead of ReAct",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "How does observation quality affect ReAct reasoning?",
+        "back": "High-quality observations (clear, structured, complete) enable better reasoning. Noisy observations confuse the agent—it may loop or give up. Tool results should be formatted clearly: errors should be specific (not 'Invalid input'), successes should be concrete."
+      }
+    ]
+  },
+  {
+    "slug": "hierarchical-agents-and-delegation",
+    "title": "Hierarchical agents and delegation",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "advanced",
+    "tags": [
+      "agent-hierarchy",
+      "delegation-patterns",
+      "multi-level-abstraction",
+      "management-agents",
+      "subgoal-decomposition",
+      "scalability"
+    ],
+    "aliases": [
+      "Manager-worker pattern",
+      "Hierarchical decomposition",
+      "Multi-level agents"
+    ],
+    "wikilinks": [
+      "agent-to-agent-delegation",
+      "manager-agent-pattern",
+      "task-decomposition",
+      "subgoal-hierarchies",
+      "agent-communication-protocols",
+      "scalable-multi-agent-systems"
+    ],
+    "sources": [
+      {
+        "url": "https://servicesground.com/blog/agentic-reasoning-patterns/",
+        "label": "Agentic Reasoning Patterns 2026"
+      },
+      {
+        "url": "https://towardsdatascience.com/recap-of-all-types-of-llm-agents/",
+        "label": "Recap of All Types of LLM Agents"
+      },
+      {
+        "url": "https://softmaxdata.com/blog/definitive-guide-to-agentic-frameworks-in-2026-langgraph-crewai-ag2-openai-and-more/",
+        "label": "Definitive Guide to Agentic Frameworks 2026"
+      },
+      {
+        "url": "https://qubittool.com/blog/ai-agent-framework-comparison-2026",
+        "label": "AI Agent Framework Comparison 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Hierarchical agents** decompose complex tasks into subtasks and assign them to specialized sub-agents. A **manager agent** receives the goal, breaks it into subtasks, assigns each to a worker agent, monitors progress, and escalates blockers. This pattern scales to large teams and complex workflows.\n\n## Detail\n\n**Manager-Worker Pattern:**\n```\nManager: \"Plan a trip to Japan for 10 days, budget $5K.\"\nManager breaks down:\n  - Worker A: \"Book flights (search, compare, reserve)\"\n  - Worker B: \"Find hotels (search by city, check reviews, reserve)\"\n  - Worker C: \"Create itinerary (research attractions, plan days)\"\nManager: \"Worker A: done (flights $800). Worker B: need reviews API. Worker C: in progress.\"\nManager escalates: \"Worker B, we need better hotel data. Try this API endpoint.\"\nManager synthesizes: \"Trip planned! $4.2K total.\"\n```\n\n**Implementation Patterns:**\n1. **Sequential Delegation**: Manager assigns tasks in order (Task 1, then Task 2 based on Task 1 results)\n2. **Parallel Delegation**: Manager assigns multiple tasks simultaneously (fetch flights + hotels in parallel)\n3. **Adaptive Delegation**: Manager monitors progress, adjusts task assignments if workers fail\n\n**Challenges & Solutions:**\n- **Context passing**: Each subtask needs full context + prior results. Manager summarizes or passes relevant excerpts.\n- **Failure handling**: If Worker B fails, does Manager retry, reassign, or escalate? Design policy upfront.\n- **Prompt tuning**: Manager and worker prompts must be tuned separately. Manager focuses on decomposition; worker on execution.\n- **Cost tracking**: Hierarchical systems incur overhead (manager reasoning, inter-agent messages). Track token usage per level.\n\n## Common gotchas / interview framings\n\n- **Over-delegation**: Breaking into too many subtasks adds latency (each worker cycles multiple times). Sweet spot: 3-5 workers per manager.\n- **Context loss**: Manager summarizes for workers; workers may miss nuance. Risk: Worker misunderstands subtask, fails silently.\n- **Manager bottleneck**: If manager is LLM-based, its reasoning time scales with team size. Large teams may need multiple managers (tree of managers).\n- **Coordination overhead**: Workers may need to coordinate (Worker A's output feeds Worker B). Manager must enforce ordering or buffering.\n- **Interview scenario**: \"Design a 10-person agent team for a complex research project. How do you structure the hierarchy? Where do you place checkpoints? How do you handle cascading failures?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the manager-worker pattern in hierarchical agents?",
+        "back": "Manager receives goal, decomposes into subtasks, assigns each to a specialized worker agent. Manager monitors progress, aggregates results, escalates blockers. Workers execute independently but report back. Scales to large teams."
+      },
+      {
+        "type": "flip",
+        "front": "Compare sequential vs parallel delegation in hierarchical agents.",
+        "back": "Sequential: Manager assigns Task 1 → Worker A completes → Task 2 → Worker B. Each task depends on prior. Latency: sum of all task times. Parallel: Manager assigns Tasks 1, 2, 3 simultaneously to Workers A, B, C. Latency: max task time. Trade-off: complexity (handling partial failures)."
+      },
+      {
+        "type": "mcq",
+        "front": "You have 15 subtasks and 5 workers. How do you assign tasks to minimize latency while avoiding Manager bottleneck?",
+        "back": "Parallel assignment with batching (3 per worker) minimizes Manager reasoning overhead. If subtasks have dependencies, use 2-level hierarchy to avoid single Manager bottleneck. Larger teams benefit from tree-structured management.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Manager assigns all 15 sequentially (1 per worker, then next batch)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Manager assigns all 15 in parallel (3 per worker), workers report back",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Use 2-level hierarchy: top manager splits tasks among sub-managers, each manages 2-3 workers",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Assign tasks randomly",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "What is the main cost of hierarchical agents vs flat teams?",
+        "back": "Overhead: Manager reasoning (decomposition, monitoring, aggregation), inter-agent messages (context passing), coordination (enforce ordering). Benefit: scalability (teams > 5 agents become unwieldy without hierarchy). Trade-off: small tasks (< 3 agents) don't need hierarchy."
+      }
+    ]
+  },
+  {
+    "slug": "self-correction-and-error-handling",
+    "title": "Self-correction and error handling",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "error-recovery",
+      "retry-logic",
+      "validation-loops",
+      "fallback-strategies",
+      "exception-handling",
+      "agent-resilience"
+    ],
+    "aliases": [
+      "Error recovery",
+      "Self-refinement",
+      "Correction mechanisms"
+    ],
+    "wikilinks": [
+      "retry-strategies",
+      "fallback-patterns",
+      "error-detection",
+      "graceful-degradation",
+      "timeout-handling",
+      "reflexion-pattern"
+    ],
+    "sources": [
+      {
+        "url": "https://www.promptingguide.ai/techniques/reflexion",
+        "label": "Reflexion Prompting Guide"
+      },
+      {
+        "url": "https://sureprompts.com/blog/react-prompting-guide",
+        "label": "ReAct Prompting Guide 2026"
+      },
+      {
+        "url": "https://servicesground.com/blog/agentic-reasoning-patterns/",
+        "label": "Agentic Reasoning Patterns 2026"
+      },
+      {
+        "url": "https://www.ibm.com/think/topics/react-agent",
+        "label": "What is a ReAct Agent? - IBM"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Self-correction** is the agent's ability to detect failures and adapt. Types: (1) **tool errors** (API timeout → retry), (2) **reasoning errors** (wrong plan → replan), (3) **output validation** (result doesn't match schema → regenerate). Combined with [[Reflexion Pattern]], agents learn from mistakes across episodes.\n\n## Detail\n\n**Error Detection & Recovery Layers:**\n\n1. **Tool-Level**:\n   - Tool fails (timeout, permission denied, invalid input)\n   - Error returned to agent as tool_result\n   - Agent sees error, decides: retry, fallback, escalate\n\n2. **Output Validation**:\n   - Tool returns JSON that doesn't match schema\n   - Framework detects and returns validation error\n   - Agent is prompted to fix or try different approach\n\n3. **Semantic Validation**:\n   - Output is valid JSON but semantically wrong (e.g., \"temperature = -500K\")\n   - Framework detects (domain-specific checks) and returns error\n   - Agent rationalizes and retries\n\n**Retry Strategies:**\n```python\nmax_retries = 3\nfor attempt in range(max_retries):\n    try:\n        result = execute_tool(tool_call)\n        return result\n    except ToolError as e:\n        if attempt < max_retries - 1:\n            # Exponential backoff\n            wait(2^attempt)\n            # Optionally: prompt agent to reformulate\n        else:\n            return error(e)  # Escalate\n```\n\n**Fallback Patterns:**\n- **Cascading fallbacks**: Primary tool → Backup tool 1 → Backup tool 2\n- **Graceful degradation**: If tool X fails, proceed with partial data from other tools\n- **User escalation**: If agent exhausts retries, ask human for guidance\n\n**Reflexion (Self-Critique):**\nAfter task completion, agent evaluates output (e.g., \"Did my answer address the user's query?\"). If not, it generates correction plan for next episode. Enables learning across runs.\n\n## Common gotchas / interview framings\n\n- **Retry loop limits**: If tool keeps failing and agent keeps retrying, burns tokens. Set hard max_retries (e.g., 3) before escalating.\n- **Backoff strategy**: Linear backoff (wait 1s, 2s, 3s) is predictable but may flood API. Exponential backoff (wait 1s, 2s, 4s, 8s) is safer.\n- **Error message clarity**: If error is vague (\"Invalid input\"), agent struggles to correct. Errors must be specific and actionable.\n- **False positives**: Agent misinterprets a valid but unusual output as error. Need careful validation rules.\n- **Interview scenario**: \"Design error recovery for an agent with 20 tools and 5s global timeout. If a tool fails, do you retry? try fallback? how long to spend on recovery before giving up?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are 3 levels of error detection in agents?",
+        "back": "1. Tool-level: Tool execution fails (timeout, API error). 2. Output validation: Result doesn't match schema (invalid JSON). 3. Semantic validation: Result is valid but meaningless (temperature=-500K). Each layer returns error to agent for recovery."
+      },
+      {
+        "type": "flip",
+        "front": "Compare exponential vs linear backoff in retry logic.",
+        "back": "Linear (wait 1s, 2s, 3s, ...): predictable, may flood API if many retries. Exponential (wait 1s, 2s, 4s, 8s, ...): safer, prevents cascade failures, but longer total wait. Exponential preferred for API-heavy agents."
+      },
+      {
+        "type": "mcq",
+        "front": "Tool fails on attempt 1 (timeout). On attempt 2 (fails again). How many total retries before escalating?",
+        "back": "Distinguish transient (retry) vs permanent errors (fail fast). Set max_retries (3-5) to prevent runaway. Exponential backoff between attempts. If all retries exhausted, escalate (ask human, use fallback tool, or proceed with partial data).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Retry infinitely until success",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Set max_retries=3; after 3 failures, escalate or return error",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Retry only if error is transient (timeout); fail fast on permanent errors (permission denied)",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Always retry at least 10 times",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "What is Reflexion self-correction?",
+        "back": "After task complete, agent self-critiques output (\"Did I answer the user's question?\"). If critique is negative, agent generates improvement plan for next attempt. Enables learning across episodes (episode 1 fails, episode 2 succeeds with corrections)."
+      }
+    ]
+  },
+  {
+    "slug": "agent-evaluation-and-reliability",
+    "title": "Agent evaluation and reliability",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "advanced",
+    "tags": [
+      "benchmarking",
+      "metrics",
+      "cost-tracking",
+      "reliability-engineering",
+      "production-readiness",
+      "user-satisfaction"
+    ],
+    "aliases": [
+      "Agent metrics",
+      "Benchmarks",
+      "Reliability SLOs"
+    ],
+    "wikilinks": [
+      "swe-bench",
+      "gaia-benchmark",
+      "webarena",
+      "agent-cost-analysis",
+      "latency-slos",
+      "success-rate-measurement"
+    ],
+    "sources": [
+      {
+        "url": "https://www.swebench.com/",
+        "label": "SWE-bench Leaderboards"
+      },
+      {
+        "url": "https://rapidclaw.dev/blog/ai-agent-benchmarks-2026",
+        "label": "AI Agent Benchmarks 2026"
+      },
+      {
+        "url": "https://galileo.ai/blog/agent-evaluation-framework-metrics-rubrics-benchmarks/",
+        "label": "Agent Evaluation Framework 2026"
+      },
+      {
+        "url": "https://arxiv.org/html/2601.01743v1",
+        "label": "AI Agent Systems: Architectures and Evaluation"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nLike any system, agents must be evaluated for **reliability** (do they work?), **cost** (are they efficient?), and **quality** (how good are results?). No single metric captures all dimensions. 2026 industry consensus: use multiple specialized benchmarks (SWE-bench for coding, GAIA for reasoning, WebArena for web autonomy) but never collapse them into one ranking.\n\n## Detail\n\n**Key Metrics:**\n\n1. **Success Rate**: % of tasks completed correctly. Example: SWE-bench = \"% of GitHub issues resolved\"\n2. **Cost per Task**: Tokens, API calls, time. Example: Claude Opus 4.7 vs Sonnet 4.5 on SWE-bench—Opus higher cost but higher success rate\n3. **Latency**: Wall-clock time to complete. SLO: 95th percentile < 30s\n4. **Reliability**: Consistency across runs. Same query should give similar results (variance < 10%)\n\n**Major 2026 Benchmarks:**\n- **SWE-bench Verified**: 500 real GitHub issues. Tests software engineering competence. Claude Opus 4.7 leads at 87.6%\n- **GAIA (Princeton HAL)**: 466 open-ended questions requiring multi-step reasoning, tool use. Claude Sonnet 4.5 leads at 74.6%\n- **WebArena**: 812 long-horizon web automation tasks (form filling, e-commerce, etc.). Claude Mythos Preview leads at 68.7%\n- **TAU-bench, AgentBench, OSWorld**: Measure different things (code agents, general reasoning, operating systems)\n\n**Gotcha: Benchmark Gaming (2026 Crisis)**\nUC Berkeley (April 2026) showed all 8 major benchmarks can be reward-hacked to ~100%. Implies benchmark results may not reflect real-world performance. Solutions: continuous live evaluation, holdout test sets, human evaluation.\n\n**Cost Ignored**: Leading benchmarks ignore cost. Agent A: 90% success, 500 tokens/task. Agent B: 85% success, 50 tokens/task. Benchmarks favor A, but B is better for most use cases.\n\n## Common gotchas / interview framings\n\n- **Single-metric fallacy**: Optimizing for success rate alone ignores cost and latency. Design Pareto frontiers (cost vs quality tradeoff).\n- **Benchmark overfitting**: Agents tuned for SWE-bench don't generalize to GAIA. Multi-benchmark evaluation is essential.\n- **User satisfaction vs benchmarks**: An agent that scores 70% on SWE-bench but is cheap and fast may be better than 85% expensive agent. A/B test with real users.\n- **Reproducibility**: Agents have stochasticity (sampling, tool behavior). Run multiple seeds, report confidence intervals.\n- **Interview scenario**: \"Design evaluation for a production agent. How do you measure success? cost? latency? reliability? What SLOs do you set? How do you catch regressions?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are the top 3 metrics for evaluating an agent?",
+        "back": "1. Success rate (% tasks completed correctly). 2. Cost per task (tokens, API calls). 3. Latency (wall-clock time). Trade-offs: higher success often costs more. Design Pareto frontier (cost vs quality) and choose based on use case."
+      },
+      {
+        "type": "flip",
+        "front": "Name 3 major 2026 agent benchmarks and their focus areas.",
+        "back": "SWE-bench: software engineering (GitHub issues). GAIA: multi-step reasoning with tool use. WebArena: web automation (forms, e-commerce). Each measures different capability. Never collapse into one ranking."
+      },
+      {
+        "type": "mcq",
+        "front": "Agent A: 90% SWE-bench, 1000 tokens/issue. Agent B: 80% SWE-bench, 100 tokens/issue. Which to ship?",
+        "back": "No universal answer. If cost is constraint (millions of issues/day), Agent B wins. If quality is critical (mission-critical systems), Agent A wins. Design Pareto frontier and choose based on business requirements. Benchmark results inform but don't dictate.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Agent A (higher success)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Agent B (lower cost)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Depends on use case: cost vs quality trade-off",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Benchmark results are unreliable; flip a coin",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Why is the 2026 benchmark gaming crisis important for agent evaluation?",
+        "back": "UC Berkeley showed all 8 major benchmarks can be reward-hacked to ~100%. Implies benchmark results may not reflect real-world performance. Solution: use multiple benchmarks, continuous live evaluation, holdout test sets, human evaluation with real users."
+      }
+    ]
+  },
+  {
+    "slug": "model-context-protocol-mcp",
+    "title": "Model Context Protocol (MCP)",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "standardization",
+      "tool-discovery",
+      "MCP-servers",
+      "interoperability",
+      "ecosystem-adoption",
+      "Linux-Foundation"
+    ],
+    "aliases": [
+      "MCP servers",
+      "Tool protocol",
+      "Context protocol"
+    ],
+    "wikilinks": [
+      "mcp-server-registry",
+      "tool-auto-discovery",
+      "mcp-vs-custom-tools",
+      "mcp-adoption-by-frameworks",
+      "mcp-transport-layers"
+    ],
+    "sources": [
+      {
+        "url": "https://blog.modelcontextprotocol.io/posts/2026-mcp-roadmap/",
+        "label": "The 2026 MCP Roadmap"
+      },
+      {
+        "url": "https://blog.equinix.com/blog/2025/08/06/what-is-the-model-context-protocol-mcp-how-will-it-enable-the-future-of-agentic-ai/",
+        "label": "What Is MCP? How Will it Enable Agentic AI?"
+      },
+      {
+        "url": "https://sureprompts.com/blog/model-context-protocol-mcp-complete-guide-2026",
+        "label": "Model Context Protocol (MCP): The Complete 2026 Guide"
+      },
+      {
+        "url": "https://a2a-mcp.org/blog/mcp-full-form",
+        "label": "MCP Full Form: Model Context Protocol Explained for AI Agents in 2026"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Model Context Protocol (MCP)** is a standardized protocol (introduced by Anthropic in Nov 2024, backed by Linux Foundation) for agents to **discover and use tools**. Instead of hardcoding tool definitions (JSON schema + function), agents connect to MCP servers that advertise available tools. Enables dynamic tool discovery, interoperability, and ecosystem scale.\n\n## Detail\n\n**Problem MCP Solves:**\nPre-MCP: Each agent framework hardcoded tool integrations (LangGraph has Tool Registry, CrewAI has Tool Catalog, etc.). Tool definitions duplicated across frameworks. Scaling to 100s of tools per agent is manual and brittle.\n\n**MCP Architecture:**\n- **MCP Server**: Exposes tools (resources, functions) via standardized API\n- **MCP Client**: Agent framework that connects to servers\n- **Transport**: JSON-RPC over stdio, HTTP, or WebSocket\n\n**Example MCP Server (GitHub):**\nServer exposes: `search_issues(repo, query)`, `create_pr(repo, title, body)`, etc.\nAgent connects, auto-discovers tools, can call without hardcoding.\n\n**2026 Adoption Stats:**\n- 78% of enterprise AI teams report MCP-backed agents in production (April 2026)\n- 9,400+ public MCP servers registered (up from 1,200 in Q1 2025)\n- 92% of new agent frameworks ship with MCP support by default\n- OpenAI, Microsoft, Google all added MCP support to their platforms\n\n**MCP vs Custom Tools:**\n| Aspect | MCP | Custom |\n|--------|-----|--------|\n| Discovery | Auto (server advertises) | Manual |\n| Interop | Works across frameworks | Framework-specific |\n| Scaling | 100s of tools easy | Manual per-framework |\n| Maintenance | Server owner maintains | Agent owner maintains |\n\n## Common gotchas / interview framings\n\n- **Server reliability**: MCP server outage → tools unavailable. Need fallback or caching.\n- **Network latency**: Discovering tools from MCP server adds latency (~100ms per discovery). Cache aggressively.\n- **Permission model**: MCP servers may require auth (GitHub token, API key). Agent must handle securely. Risk: leaking credentials.\n- **Protocol versioning**: MCP evolving (2026 roadmap includes transport scalability, agent-to-agent communication). Compatibility testing needed.\n- **Interview scenario**: \"Design agent with 50 MCP servers. How do you discover tools at startup? cache? Handle server failures? Manage auth tokens?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What problem does MCP solve in agentic AI?",
+        "back": "Pre-MCP: Tool integrations hardcoded per framework (LangGraph, CrewAI, etc.). Scaling to 100s of tools is manual, duplicated, brittle. MCP: Standardized protocol for servers to advertise tools. Agents auto-discover. 92% of frameworks support it by 2026."
+      },
+      {
+        "type": "flip",
+        "front": "How does MCP tool discovery work?",
+        "back": "Agent connects to MCP server (via stdio, HTTP, WebSocket). Server advertises available tools (JSON-RPC). Agent reads tool definitions, adds to its tool registry. Can now call any tool from that server without hardcoding."
+      },
+      {
+        "type": "mcq",
+        "front": "You have 50 MCP servers. Discovering all tools at agent startup takes 5s. How do you optimize?",
+        "back": "Cache discovered tools locally (file or Redis). On agent startup, load cache (< 100ms). Periodically refresh (async background job). If tool not found in cache, discover on-demand. Balances freshness vs speed.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Accept 5s startup latency",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Cache tool definitions locally; only rediscover on demand or periodic refresh",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Remove servers to reduce latency",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use only 5 most popular servers",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Why is MCP important for multi-agent ecosystems?",
+        "back": "Enables agent-to-agent discovery: Agent A exposes tools via MCP server → Agent B discovers and uses Agent A's tools. 2026 roadmap includes agent-to-agent communication protocols. MCP is foundation for composable agent networks."
+      }
+    ]
+  },
+  {
+    "slug": "agent-to-agent-protocol-a2a",
+    "title": "Agent-to-Agent Protocol (A2A)",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "difficulty": "intermediate",
+    "tags": [
+      "agent-communication",
+      "agent-discovery",
+      "inter-agent-handoff",
+      "decentralized-agents",
+      "swarms",
+      "emerging-standard"
+    ],
+    "aliases": [
+      "A2A protocol",
+      "Inter-agent communication",
+      "Agent-agent handoff"
+    ],
+    "wikilinks": [
+      "mcp-agent-extensions",
+      "agent-swarms",
+      "decentralized-agents",
+      "agent-service-discovery",
+      "agent-agent-messaging",
+      "protocol-specification"
+    ],
+    "sources": [
+      {
+        "url": "https://a2a-mcp.org/blog/mcp-full-form",
+        "label": "MCP Full Form: Model Context Protocol Explained for AI Agents in 2026"
+      },
+      {
+        "url": "https://blog.modelcontextprotocol.io/posts/2026-mcp-roadmap/",
+        "label": "The 2026 MCP Roadmap"
+      },
+      {
+        "url": "https://qubittool.com/blog/ai-agent-framework-comparison-2026",
+        "label": "AI Agent Framework Comparison 2026"
+      },
+      {
+        "url": "https://blog.equinix.com/blog/2025/08/06/what-is-the-model-context-protocol-mcp-how-will-it-enable-the-future-of-agentic-ai/",
+        "label": "What Is MCP? How Will it Enable Agentic AI?"
+      }
+    ],
+    "explainer_md": "## Intuition\n\n**Agent-to-Agent Protocol (A2A)** extends [[Model Context Protocol (MCP)]] to enable agents to **discover and communicate with other agents** as first-class entities. Instead of agents only calling tools (functions), they can invoke other agents as services. Enables **agent swarms** and **mesh architectures** where agents are nodes in a network.\n\n## Detail\n\n**A2A extends MCP:**\n- MCP servers expose tools (functions). A2A extends to expose agents (callable with goals/tasks, return results)\n- Agent A discovers Agent B via A2A registry\n- Agent A invokes Agent B with a task: `invoke_agent(agent_id=\"B\", goal=\"Summarize this document\")`\n- Agent B executes, returns result to Agent A\n- No explicit handoff code needed; agents coordinate autonomously\n\n**Architecture:**\n```\nAgent A (Researcher) --discovers--> A2A Registry\n   |                                     |\n   |--discovers Agent B (Writer)---------|  \n   |--discovers Agent C (Reviewer)-------|\n   |--invokes B with research data------>\nAgent B executes, returns summary\n   |--passes summary to C for review----->\nAgent C completes, returns feedback\n   |--synthesizes final report---------->\n```\n\n**2026 Status:**\n- Emerging standard (part of MCP 2026 roadmap)\n- Not yet widely adopted (unlike MCP servers which are at 78% enterprise adoption)\n- Early implementations in LangGraph, AG2\n- Use cases: multi-agent research teams, decentralized task networks, swarms\n\n**A2A Benefits:**\n- **Decoupling**: Agents don't know each other's implementation; call via A2A interface\n- **Dynamic composition**: New agents join network; existing agents auto-discover\n- **Scalability**: 100s of agents without central orchestrator\n- **Fault tolerance**: If Agent B fails, caller can retry or escalate\n\n## Common gotchas / interview framings\n\n- **Protocol immaturity**: A2A is emerging; spec still evolving. Implementations vary (no standard yet).\n- **Latency**: Agent-to-agent communication adds overhead (discovery, serialization, network). Each handoff ~500ms.\n- **Ordering & synchronization**: If Agent A invokes B and C in parallel, order of results not guaranteed. Caller must handle async coordination.\n- **Circular dependencies**: Agent A → Agent B → Agent A (cycle). Frameworks must detect and prevent.\n- **Security**: Agent A invokes Agent B; what permissions does B have? What data does A trust B with? Needs explicit trust model.\n- **Interview scenario**: \"Design 10-agent team using A2A. How do you prevent cycles? ensure fault tolerance? set SLOs for inter-agent latency?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "How does A2A extend MCP?",
+        "back": "MCP: Agents discover and call tools (functions). A2A: Agents discover and invoke other agents (as services). Agent B is callable with goals/tasks, returns results. Enables agent-to-agent coordination without central orchestrator."
+      },
+      {
+        "type": "flip",
+        "front": "What is the difference between A2A and explicit handoff (e.g., OpenAI SDK)?",
+        "back": "Explicit handoff: Agent A code explicitly calls transfer_to_agent(\"B\"). A2A: Agent A invokes Agent B via A2A interface (no hardcoding). A2A is declarative, dynamic; explicit is imperative, static."
+      },
+      {
+        "type": "mcq",
+        "front": "Agent A invokes Agent B (via A2A). Agent B fails. What should Agent A do?",
+        "back": "A2A is a protocol; frameworks implement resilience. Agent A should have retry logic + fallback options. If max retries exhausted, escalate (user, parent agent, or return partial result).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Crash immediately",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Retry Agent B with backoff, then try fallback Agent B', or escalate to user",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Continue with incomplete data",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "A2A handles this automatically",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "",
+        "back": ""
+      },
+      {
+        "type": "flip",
+        "front": "Why is A2A still emerging (2026) unlike MCP servers?",
+        "back": "MCP servers are tools (simple, stateless). A2A agents are complex (state, long-running, coordination). Protocol needs consensus on: agent discovery, messaging format, failure semantics, security model. Still evolving; no single standard yet."
+      }
+    ]
+  }
+]

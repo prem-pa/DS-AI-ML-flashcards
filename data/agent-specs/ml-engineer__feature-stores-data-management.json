@@ -1,0 +1,58 @@
+{
+  "track": "ml-engineer",
+  "track_label": "ML ENGINEER",
+  "topic": "feature-stores-data-management",
+  "topic_label": "Feature Stores & Data Management",
+  "concept_count": 7,
+  "concepts": [
+    {
+      "slug": "feature-definitions-and-computation",
+      "title": "Feature definitions and computation",
+      "difficulty": "advanced",
+      "hook": "Centralized feature library; compute once, reuse everywhere.",
+      "subtopic": "Feature Store Design"
+    },
+    {
+      "slug": "online-vs-offline-feature-stores",
+      "title": "Online vs offline feature stores",
+      "difficulty": "advanced",
+      "hook": "Offline for training; online for low-latency serving.",
+      "subtopic": "Feature Store Design"
+    },
+    {
+      "slug": "feature-freshness-and-staleness-slos",
+      "title": "Feature freshness and staleness SLOs",
+      "difficulty": "advanced",
+      "hook": "How up-to-date features must be; varies by use case.",
+      "subtopic": "Feature Store Design"
+    },
+    {
+      "slug": "point-in-time-correctness-and-data-leakage-prevention",
+      "title": "Point-in-time correctness and data leakage prevention",
+      "difficulty": "advanced",
+      "hook": "Training features must use only data available at prediction time.",
+      "subtopic": "Feature Store Design"
+    },
+    {
+      "slug": "data-warehouse-architecture-star-schema-factdimension-tables",
+      "title": "Data warehouse architecture (star schema, fact/dimension tables)",
+      "difficulty": "intermediate",
+      "hook": "Organized storage for analytics and training data.",
+      "subtopic": "Data Warehousing & ETL"
+    },
+    {
+      "slug": "etl-vs-elt",
+      "title": "ETL vs ELT",
+      "difficulty": "intermediate",
+      "hook": "Transform before or after loading; ELT more flexible with cloud databases.",
+      "subtopic": "Data Warehousing & ETL"
+    },
+    {
+      "slug": "incremental-and-full-refresh-logic",
+      "title": "Incremental and full refresh logic",
+      "difficulty": "intermediate",
+      "hook": "Full refresh: simple, expensive; incremental: efficient, complex.",
+      "subtopic": "Data Warehousing & ETL"
+    }
+  ]
+}

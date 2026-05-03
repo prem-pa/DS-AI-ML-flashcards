@@ -1,0 +1,970 @@
+[
+  {
+    "slug": "mamba-3-and-state-space-models-ssms",
+    "title": "Mamba-3 and state-space models (SSMs)",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "advanced",
+    "tags": [
+      "sequence-modeling",
+      "efficient-inference",
+      "linear-time",
+      "architecture",
+      "selective-state-spaces"
+    ],
+    "aliases": [
+      "SSM architectures",
+      "linear transformers",
+      "Mamba progression"
+    ],
+    "wikilinks": [
+      "state-space-models",
+      "selective-state-spaces",
+      "linear-time-sequence-modeling",
+      "mimo-formulation",
+      "recurrent-neural-networks",
+      "attention-alternatives",
+      "mamba-2-comparison"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2603.15569",
+        "label": "Mamba-3 arXiv Paper"
+      },
+      {
+        "url": "https://openreview.net/forum?id=HwCvaJOiCj",
+        "label": "Mamba-3 ICLR 2026"
+      },
+      {
+        "url": "https://github.com/state-spaces/mamba",
+        "label": "State Spaces Mamba GitHub"
+      },
+      {
+        "url": "https://arxiv.org/abs/2312.00752",
+        "label": "Original Mamba Paper"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMamba-3 is a major evolution of state-space models (SSMs) for sequence modeling that achieves linear-time complexity while maintaining competitive or superior performance versus transformers. Unlike transformer attention which scales quadratically with sequence length (O(N²)), SSMs process sequences with O(N) complexity by maintaining a fixed-size hidden state and applying matrix recurrence relations. Mamba-3 specifically introduces three key improvements: (1) more expressive recurrence derived from SSM discretization principles, (2) complex-valued state updates enabling richer state tracking, and (3) multi-input, multi-output (MIMO) formulation that improves performance without increasing decode latency.\n\n## Detail\n\nMamba-3 achieves 64K-128K token context windows with drastically reduced memory and compute costs compared to transformer-based models. The architectural innovations address fundamental SSM limitations:\n\n**Improved Recurrence**: Rather than simple linear state transitions, Mamba-3 derives a more expressive recurrence structure from SSM discretization theory, enabling the model to learn more complex state dynamics while maintaining computational efficiency.\n\n**Complex-Valued State**: Traditional SSMs use real-valued states. Mamba-3 introduces complex-valued state updates, allowing the model to track phase and magnitude information independently, improving reasoning and state-tracking abilities on benchmarks like passkey retrieval and language modeling.\n\n**MIMO Variant**: The multi-input, multi-output formulation processes multiple feature channels through separate state spaces, with rank-4 MIMO achieving 1.2-percentage-point accuracy gains over single-input variants without increasing inference latency.\n\n**Performance Evidence**: At the 1.5B parameter scale, Mamba-3 improves downstream task accuracy by 0.6pp over Gated DeltaNet, with MIMO adding another 1.2pp. Across all scales, it matches or exceeds Mamba-2 while using approximately 50% of the predecessor's state size. Published as conference paper at ICLR 2026.\n\n## Common gotchas / interview framings\n\n- **Context vs. throughput tradeoff**: SSMs excel at long context but may underperform transformers on latency-sensitive applications requiring token-by-token generation; interview: \"How would you choose between Mamba-3 and transformers for a streaming chat interface?\"\n- **Limited adoption narrative**: While Mamba improves, attention-based transformers still dominate production. Mamba-3's advantage is clearest for document-heavy, batch-inference workloads, not interactive applications.\n- **Selectivity mechanisms**: Mamba's data-dependent selectivity (which positions to \"remember\") is less understood than transformer attention patterns; this can complicate debugging and interpretability—know the implications for production systems.\n- **Benchmark gaming**: Benchmark improvements sometimes don't translate to real-world tasks; test on your actual use case before switching architectures.\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the fundamental complexity advantage of Mamba-3 over transformer self-attention?",
+        "back": "Mamba-3 achieves O(N) linear-time complexity for sequence modeling, compared to O(N²) for transformer attention. This is achieved through a recurrent state-space formulation where sequence elements update a fixed hidden state rather than computing all pairwise attention scores."
+      },
+      {
+        "type": "flip",
+        "front": "Name three architectural innovations in Mamba-3 over earlier SSMs.",
+        "back": "1. More expressive recurrence derived from SSM discretization theory\n2. Complex-valued state updates (tracking phase and magnitude independently)\n3. Multi-input, multi-output (MIMO) formulation for parallel feature channel processing"
+      },
+      {
+        "type": "mcq",
+        "front": "Mamba-3 MIMO variant with rank R=4 improves accuracy by approximately how much over the SISO baseline?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "0.3 percentage points",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "1.2 percentage points",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "2.5 percentage points",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "4.1 percentage points",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What context window length does Mamba-3 support, and how does this compare to training memory costs?",
+        "back": "Mamba-3 supports 64K-128K token contexts with drastically reduced memory requirements compared to transformers. The linear complexity means memory scales with context length rather than quadratically, enabling longer sequences on the same hardware."
+      },
+      {
+        "type": "flip",
+        "front": "In what production scenarios would Mamba-3 be preferable to transformer models, and in what scenarios would transformers still be better?",
+        "back": "Mamba-3 advantage: long-context document processing, batch inference, cost-sensitive long-sequence tasks, inference throughput\nTransformer advantage: token-by-token streaming, interactive applications, tasks requiring strong reasoning where transformers still lead, established production tooling"
+      }
+    ]
+  },
+  {
+    "slug": "hybrid-architectures-jamba-zamba2",
+    "title": "Hybrid architectures (Jamba, Zamba2)",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "advanced",
+    "tags": [
+      "hybrid-models",
+      "attention-ssm",
+      "mixture-of-experts",
+      "architecture-design",
+      "best-of-both"
+    ],
+    "aliases": [
+      "Transformer-Mamba fusion",
+      "Attention-SSM hybrids",
+      "Jamba architecture"
+    ],
+    "wikilinks": [
+      "transformer-architecture",
+      "state-space-models",
+      "mixture-of-experts",
+      "long-context",
+      "selective-mechanisms",
+      "attention-layers",
+      "jamba-model-family"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2403.19887",
+        "label": "Jamba Paper arXiv"
+      },
+      {
+        "url": "https://openreview.net/forum?id=JFPaD7lpBD",
+        "label": "Jamba OpenReview ICLR 2025"
+      },
+      {
+        "url": "https://www.ai21.com/blog/announcing-jamba/",
+        "label": "AI21 Jamba Announcement"
+      },
+      {
+        "url": "https://www.ai21.com/blog/rise-of-hybrid-llms/",
+        "label": "AI21 Hybrid LLMs Blog"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nHybrid architectures like Jamba and Zamba2 combine the strengths of transformer attention and state-space models (SSMs) in a single architecture. The core insight is that different components of language understanding benefit from different mechanisms: attention excels at direct reasoning and reference resolution, while SSMs are efficient for long-range dependencies. By interleaving both mechanisms, these models achieve superior efficiency and longer effective context windows compared to pure transformer or SSM architectures.\n\n## Detail\n\n**Jamba Architecture**: Jamba interleaves transformer attention and Mamba (SSM) layers at a 1:7 attention-to-Mamba ratio across 72 layers, with mixture-of-experts (MoE) layers inserted every two blocks. This design leverages transformer attention's reasoning capabilities while using SSM's linear complexity for efficient long-context processing. Jamba 1.5 supports 256K-token context windows using grouped-query attention, low-rank adaptation, and 16 MoE experts.\n\n**Interleaving Ratio Insights**: The 1:7 ratio reflects empirical findings that most sequential dependencies benefit from SSM efficiency, while critical reasoning steps need direct attention. Counterintuitively, Mamba-1 works better in hybrid architectures than the faster Mamba-2, suggesting the interaction dynamics between mechanisms matter more than individual component speed.\n\n**Zamba2 Design**: Zamba2 leverages Mamba-2 and pursues extreme efficiency by minimizing attention layers—the philosophy is \"one attention layer is all you need.\" Available in 2.7B and 1.2B mini variants, Zamba2 pushes the boundary of how little attention is truly necessary for competitive performance.\n\n**2025-2026 Market Position**: By late 2025, hybrid architectures (Jamba, Bamba) achieved up to 3x higher inference throughput while handling 256K token windows. However, pure transformers still dominate complex reasoning tasks. The practical outcome: hybrids excel for efficiency-constrained, long-context applications, while transformers remain superior for intricate multi-step reasoning and interactive latency-sensitive workloads.\n\n## Common gotchas / interview framings\n\n- **Ratio tuning complexity**: The 1:7 attention-to-SSM ratio is not universal across model sizes or domains. Interview: \"How would you approach tuning this ratio for a domain-specific application?\"\n- **Component interaction subtlety**: Mamba-1 outperforming Mamba-2 in hybrids reveals that architectural interactions are non-obvious; you cannot simply plug in the \"best\" version of each component.\n- **Throughput vs. quality**: Hybrids win on tokens/sec but may sacrifice reasoning quality compared to attention-dense models on hard reasoning tasks.\n- **Mixing mechanisms complexity**: Implementation requires careful attention to gradient flow, initialization, and layer normalization between heterogeneous components; production deployment adds engineering overhead.\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the attention-to-SSM interleaving ratio in Jamba architecture, and why might this ratio have been chosen?",
+        "back": "Jamba uses a 1:7 attention-to-Mamba ratio (1 attention layer per 7 Mamba layers). This reflects that most sequential dependencies can be handled efficiently by SSMs, while critical reasoning steps and reference resolution benefit from direct attention mechanisms. The ratio is empirically derived, not theoretically justified."
+      },
+      {
+        "type": "flip",
+        "front": "Why does Mamba-1 outperform Mamba-2 in hybrid architectures despite Mamba-2 being faster in isolation?",
+        "back": "The architectural interaction between components matters more than individual component speed. Mamba-1's characteristics interact more favorably with interleaved attention layers than Mamba-2's optimizations, suggesting that optimizing components in isolation does not guarantee optimal hybrid performance."
+      },
+      {
+        "type": "mcq",
+        "front": "Jamba 1.5 achieves what context window length?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "64K tokens",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "128K tokens",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "256K tokens",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "512K tokens",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What does Zamba2's design philosophy of 'one attention layer is all you need' suggest about the role of attention in language modeling?",
+        "back": "Zamba2 challenges the assumption that dense attention is necessary for strong performance. By minimizing attention to a single layer, Zamba2 demonstrates that highly efficient SSM-dominant architectures can achieve competitive results, suggesting attention may be more important for specific reasoning tasks than previously thought, rather than universally necessary."
+      },
+      {
+        "type": "flip",
+        "front": "Compare the production suitability of hybrid architectures (Jamba) versus pure transformers for three scenarios: (1) streaming chat, (2) document summarization, (3) complex multi-step reasoning.",
+        "back": "(1) Streaming chat: Transformers likely better (latency, streaming-friendly)\n(2) Document summarization: Hybrids excellent (long context, batch processing)\n(3) Multi-step reasoning: Transformers better (attention excels at complex reasoning)\nHybrids optimize for throughput and long-context over latency and reasoning depth."
+      }
+    ]
+  },
+  {
+    "slug": "context-length-extrapolation-techniques",
+    "title": "Context length extrapolation techniques",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "advanced",
+    "tags": [
+      "context-extension",
+      "rope-interpolation",
+      "pretraining",
+      "position-embeddings",
+      "long-context"
+    ],
+    "aliases": [
+      "RoPE extrapolation",
+      "Position interpolation",
+      "Context window extension",
+      "YaRN technique"
+    ],
+    "wikilinks": [
+      "rope-embeddings",
+      "position-interpolation",
+      "yarn",
+      "continued-pretraining",
+      "long-context",
+      "attention-mechanisms",
+      "scaling-laws"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2309.00071",
+        "label": "YaRN: Efficient Context Extension"
+      },
+      {
+        "url": "https://arxiv.org/abs/2306.15595",
+        "label": "Position Interpolation Paper"
+      },
+      {
+        "url": "https://arxiv.org/html/2501.18795v2",
+        "label": "RNope: Hybrid Attention Strategy"
+      },
+      {
+        "url": "https://amaarora.github.io/posts/2025-09-21-rope-context-extension.html",
+        "label": "LLMs Context Scaling Deep Dive"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nContextual length extrapolation allows models trained on shorter sequences (e.g., 4K tokens) to handle much longer sequences at inference time (e.g., 128K tokens) without retraining from scratch. The key insight is that position embeddings (how a model encodes token positions) determine the maximum context length the model \"understands.\" By manipulating or extending position embeddings through techniques like interpolation or continued pretraining, we trick the model into generalizing to longer sequences. This is critical for cost-effective long-context deployment—retraining on massive context lengths is prohibitively expensive.\n\n## Detail\n\n**Position Interpolation Mechanism**: Classic position interpolation (PI) down-scales position indices during training so the maximum position index stays within the training range. At inference, longer sequences map to higher indices, effectively \"stretching\" the position embedding space. This simple technique enables significant context extension (4K → 32K) with minimal fine-tuning.\n\n**YaRN (Yet Another RoPE Extension)**: YaRN improves upon basic PI by introducing selective interpolation and temperature scaling. Instead of uniformly stretching all position dimensions, YaRN identifies which RoPE frequency components benefit most from extrapolation. It also applies temperature scaling to control the smoothness of the extension. YaRN achieves 10x fewer tokens needed and 2.5x fewer training steps than prior methods, making it a practical industry standard by 2025.\n\n**2025-2026 Breakthroughs**: \n- RNope (Rope-to-Nope hybrid): Analyzed three attention mechanisms (RoPE, NoPE, QK-Norm), then proposed a hybrid pretrained to 5 trillion tokens, surpassing pure RoPE models.\n- Continued Pretraining with Extended Sequences: Research shows that longer continual pretraining lengths reduce attention uncertainty and significantly enhance extrapolation. Models with extended pretraining can handle even longer contexts at inference.\n- Practical Scaling: Models like Grok-4-fast (2M context), Gemini (1M context), and various open models now routinely support 128K-1M contexts via these techniques.\n\n**Trade-offs and Limitations**: \n- Interpolation works well for retrieval and shallow reasoning but may lose performance on complex multi-step reasoning at extreme context lengths.\n- Extrapolation quality degrades as the ratio of inference context to training context grows beyond 8-10x.\n\n## Common gotchas / interview framings\n\n- **Attention uncertainty paradox**: Longer contexts increase \"attention entropy\"—the model becomes less certain where to look. Extended pretraining and hybrid mechanisms help but don't eliminate this; interview: \"How would you diagnose attention degradation in a 1M-context model?\"\n- **Reasoning at long contexts**: Extrapolation excels for retrieval (\"find the needle\") but struggles with reasoning over entire long sequences. Interview: \"Would you use extrapolation-extended context for a multi-step mathematical proof in a 256K token document?\"\n- **Position bias artifacts**: Extrapolation can introduce subtle position-dependent biases (e.g., models attending more to earlier or later positions). Production systems must benchmark thoroughly.\n- **Not a free lunch**: Extrapolation techniques improve context length but don't improve fundamental reasoning capabilities or eliminate the cost of processing longer sequences—just reduce retraining costs.\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the core mechanism of position interpolation for extending context length.",
+        "back": "Position interpolation down-scales position indices during training so the maximum position index remains within the original training range. At inference, longer sequences map to higher (scaled) indices, effectively stretching the position embedding space to accommodate longer contexts without retraining."
+      },
+      {
+        "type": "flip",
+        "front": "What are the key improvements YaRN introduces over basic position interpolation?",
+        "back": "YaRN introduces: (1) Selective interpolation—intelligently choosing which RoPE frequency components to extrapolate; (2) Temperature scaling—controlling the smoothness of the extension curve; (3) Practical efficiency—achieves 10x fewer tokens and 2.5x fewer training steps compared to prior methods."
+      },
+      {
+        "type": "mcq",
+        "front": "What ratio of inference context to training context typically begins to show meaningful degradation in extrapolation quality?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "2-3x",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "4-5x",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "8-10x and beyond",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "20x+",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does continued pretraining with extended sequences improve extrapolation performance?",
+        "back": "Continued pretraining at longer sequence lengths reduces attention uncertainty—the model becomes better calibrated on which positions to attend to across longer spans. This improved attention certainty translates to better reasoning and coherence when extrapolating beyond the training context."
+      },
+      {
+        "type": "flip",
+        "front": "Describe one scenario where position extrapolation would work well and one where it would likely fail or underperform.",
+        "back": "Works well: Needle-in-haystack retrieval tasks, where the model must locate a specific fact in a long document.\nLikely fails: Multi-step mathematical proofs spanning the entire long context, where the model must reason about and integrate information from multiple distant sections—extrapolation excels at retrieval but not reasoning over entire contexts."
+      }
+    ]
+  },
+  {
+    "slug": "ring-attention-and-distributed-long-context",
+    "title": "Ring attention and distributed long-context",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "advanced",
+    "tags": [
+      "ring-attention",
+      "distributed-training",
+      "long-context",
+      "communication-overlap",
+      "sparse-attention"
+    ],
+    "aliases": [
+      "Ring attention",
+      "Distributed attention",
+      "Blockwise transformers",
+      "Context parallelism"
+    ],
+    "wikilinks": [
+      "distributed-training",
+      "attention-mechanisms",
+      "communication-patterns",
+      "sparse-attention",
+      "long-context-training",
+      "multi-gpu-training",
+      "ring-topology"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2310.01889",
+        "label": "Ring Attention with Blockwise Transformers"
+      },
+      {
+        "url": "https://proceedings.iclr.cc/paper_files/paper/2024/file/1119587863e78451f080da2a768c4935-Paper-Conference.pdf",
+        "label": "Ring Attention ICLR 2024"
+      },
+      {
+        "url": "https://arxiv.org/abs/2510.18830",
+        "label": "MTraining: Distributed Dynamic Sparse Attention"
+      },
+      {
+        "url": "https://arxiv.org/html/2510.10620v1",
+        "label": "DCP: Dynamic Context Parallelism"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nRing attention is a distributed training technique that enables models to handle extremely long contexts by splitting sequences across multiple GPUs/TPUs. Instead of computing self-attention over the full sequence on a single device (memory bottleneck), ring attention divides the sequence into blocks and distributes them across a ring of devices. Each device computes its attention block while simultaneously receiving key-value blocks from neighboring devices in a ring topology. The communication pattern overlaps with computation, hiding latency and enabling near-infinite context lengths on limited-memory hardware.\n\n## Detail\n\n**Core Ring Attention Mechanism**: \nTraditional self-attention requires all tokens to attend to all other tokens, requiring O(N²) memory. Ring attention partitions a sequence of N tokens into B blocks, each residing on a device in a ring. Each device:\n1. Computes attention for its query block against all key-value blocks (local + received blocks)\n2. Sends its KV block to the next device in the ring\n3. Receives KV blocks from the previous device\nAfter B steps, all-to-all attention is computed with communication overlapped by computation.\n\n**2025-2026 Advances**: \n\n**MTraining (October 2025)**: Extends ring attention with dynamic sparse attention patterns. Instead of full attention, MTraining selectively attends to relevant blocks based on learned importance. Successfully trained Qwen2.5-3B from 32K to 512K context (16x extension) on 32 A100 GPUs with 6x higher training throughput while maintaining accuracy.\n\n**DCP (Dynamic Context Parallelism, 2025)**: Addresses fixed communication scheduling in ring attention. Existing ring patterns assume static device topology and input sizes. DCP dynamically adapts communication schedules and computation placement based on runtime characteristics, improving efficiency when sequences have variable length or heterogeneous attention patterns.\n\n**RingX (2024-2025)**: Demonstrated scalability on HPC clusters, showing ring attention scales to 1000+ GPU configurations for truly long-context training.\n\n**Practical Impact**: Ring attention makes previously infeasible long-context training (256K-1M tokens) possible on standard GPU clusters. The cost is increased training time and complexity, but memory per-GPU remains bounded regardless of sequence length.\n\n## Common gotchas / interview framings\n\n- **Communication bottleneck underestimation**: While ring attention overlaps communication with computation, the communication cost is still substantial, especially on slower interconnects (non-NVLink setups). Interview: \"Would you recommend ring attention on a cloud cluster with standard Ethernet networking?\"\n- **Not applicable to all models**: Ring attention works best for pure transformer models. Hybrid models (Jamba) and models with complex routing (MoE) complicate ring patterns significantly.\n- **Training ≠ Inference**: Ring attention enables training at long contexts but doesn't directly reduce inference latency or memory. Inference still requires full context in model weights, solved by other techniques (KV cache quantization, speculative decoding).\n- **Ring topology assumption**: Ring attention assumes a fixed ring topology of devices. Fault tolerance and dynamic cluster membership require careful engineering.\n- **Sparse attention trade-off**: MTraining's sparse variants improve training throughput but may hurt final model quality if sparsity is too aggressive—requires careful tuning per dataset.\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain how ring attention distributes attention computation across multiple devices while managing the all-to-all attention requirement.",
+        "back": "Ring attention partitions sequences into blocks distributed across devices in a ring topology. Each device computes attention between its query block and all key-value blocks by receiving KV blocks from neighbors in a circular pattern. Communication (receiving KV blocks) overlaps with computation, enabling full all-to-all attention without centralizing data on one device."
+      },
+      {
+        "type": "flip",
+        "front": "What is the key innovation of MTraining (October 2025) over standard ring attention?",
+        "back": "MTraining adds dynamic sparse attention patterns. Instead of computing full attention between all blocks, it selectively attends to important blocks based on learned or heuristic importance scores. This reduces communication and computation while maintaining quality, achieving 6x higher training throughput when extending Qwen2.5-3B from 32K to 512K context."
+      },
+      {
+        "type": "mcq",
+        "front": "What is the primary memory advantage of ring attention for long-context training?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Memory usage is constant regardless of sequence length (bounded by block size per device)",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Memory usage is O(N) instead of O(N²)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Ring attention eliminates attention computation entirely",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Memory is compressed by 50% across all devices",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Ring attention enables training on extremely long contexts, but what inference-time challenge remains unsolved?",
+        "back": "Ring attention solves training-time context length limits but does not directly address inference latency or memory. At inference, the full context must still fit in GPU memory (or be loaded incrementally), and serving long contexts remains expensive. Separate techniques (KV cache optimization, speculative decoding) are needed for inference efficiency."
+      },
+      {
+        "type": "flip",
+        "front": "List three scenarios where ring attention is well-suited and one scenario where it may not be practical.",
+        "back": "Well-suited: (1) Pre-training on multi-GPU clusters with stable topology, (2) Document-heavy domains (legal, biomedical) requiring 256K+ context, (3) Research environments with ample compute.\nNot practical: (1) Inference serving on commodity hardware without high-bandwidth GPU interconnects; (2) Training with frequent node failures or dynamic cluster membership; (3) Models with complex non-uniform attention patterns (e.g., heavy MoE routing)."
+      }
+    ]
+  },
+  {
+    "slug": "openai-o3-and-o-series-reasoning-models",
+    "title": "OpenAI o3 and o-series reasoning models",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "advanced",
+    "tags": [
+      "reasoning-models",
+      "test-time-compute",
+      "inference-scaling",
+      "o-series",
+      "reinforcement-learning"
+    ],
+    "aliases": [
+      "o3 model",
+      "o-series family",
+      "reasoning scaling",
+      "inference-time thinking"
+    ],
+    "wikilinks": [
+      "test-time-compute",
+      "inference-scaling-laws",
+      "reinforcement-learning",
+      "chain-of-thought",
+      "extended-thinking",
+      "reasoning-benchmarks",
+      "o1-predecessor"
+    ],
+    "sources": [
+      {
+        "url": "https://openai.com/index/introducing-o3-and-o4-mini/",
+        "label": "OpenAI o3 and o4-mini Announcement"
+      },
+      {
+        "url": "https://developers.openai.com/blog/openai-for-developers-2025",
+        "label": "OpenAI Developers Blog 2025"
+      },
+      {
+        "url": "https://www.interconnects.ai/p/openais-o3-over-optimization-is-back",
+        "label": "o3 Analysis: Over-optimization"
+      },
+      {
+        "url": "https://lifearchitect.ai/o3/",
+        "label": "o3 Stratospheric Reasoning Analysis"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nOpenAI's o3 and o-series reasoning models represent a fundamental shift in LLM scaling: instead of only increasing model size and training data (pre-training scaling), these models allocate more compute at inference time through extended reasoning. By allowing the model more \"thinking\" tokens before generating a response, o3 solves substantially harder problems than its predecessor o1, much like how a human given more time to think before answering can solve harder problems. The scaling laws for test-time compute mirror those observed in pre-training scaling—more compute leads to consistent, predictable performance improvements.\n\n## Detail\n\n**Test-Time Compute Scaling Philosophy**: \nTraditionally, model capability was determined by pre-training compute and parameters. o3 proves that inference-time compute (the number of reasoning tokens) is equally powerful. OpenAI observed that reinforcement learning (RL) on reasoning tasks exhibits the same \"more compute = better performance\" trend as GPT pre-training, enabling a new scaling frontier.\n\n**Architecture and Training**: \no3 is built via large-scale reinforcement learning applied to reasoning, allocating vastly more compute than o1 in both RL training compute and inference-time reasoning tokens. The model learns to decompose hard problems, verify solutions, backtrack when wrong, and apply different strategies dynamically.\n\n**Effort Levels**: \no3-mini features three configurable reasoning effort levels (low, medium, high) allowing users to trade latency and cost against accuracy. Lower effort uses fewer reasoning tokens (faster, cheaper, less accurate); higher effort generates extensive reasoning traces (slower, costlier, more accurate).\n\n**Performance and Economics**:\n- o3 at equal latency/cost with o1 delivers higher performance in practical use\n- Performance continues to improve with longer thinking time—\"if it lets the model think longer, its performance keeps climbing\"\n- Cost per problem remains high (~$1 million equivalent for frontier problems as of May 2026)\n\n**2026 Roadmap**: OpenAI's stated goal is \"efficiency scaling\"—solving the same frontier problems for $1 instead of $1 million. This requires breakthroughs in model efficiency (fewer reasoning tokens needed for same capability) and architectural innovations enabling internal monologue without requiring hundreds of tokens per logical step.\n\n## Common gotchas / interview framings\n\n- **Cost opacity**: o3 costs are not always published for high-effort reasoning. Interview: \"How would you estimate o3 inference cost for a complex coding task, and would you use o3 or o1 for production systems?\"\n- **Not always necessary**: Simple tasks (fact retrieval, classification) don't benefit from extensive reasoning and may be wasteful on o3. Interview: \"Design a system that routes simple vs. complex queries appropriately between o1 and o3.\"\n- **Reasoning token exposure**: OpenAI does not always expose the reasoning trace to end users, limiting transparency. Interview: \"How would you implement a reasoning transparency feature for o3 in your application?\"\n- **Token prediction**: The number of reasoning tokens needed for a given problem is unpredictable. Interview: \"How would you manage token budgets and cost when reasoning token counts vary wildly by problem?\"\n- **Benchmarking bias**: Some reasoning benchmarks (ARC-AGI, AIME) may be saturating with o3's capability, making improvements harder to measure and raising questions about whether scaling will continue on new benchmarks.\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the fundamental innovation of o3 compared to o1 in terms of scaling strategy?",
+        "back": "o3 applies test-time compute scaling via massive reinforcement learning and extended reasoning tokens. Instead of only increasing pre-training compute (like o1), o3 allocates substantially more compute at inference time, allowing the model more \"thinking\" before answering. This mirrors pre-training scaling laws but at inference time."
+      },
+      {
+        "type": "flip",
+        "front": "Describe the relationship between reasoning effort levels in o3-mini and the performance-cost tradeoff.",
+        "back": "o3-mini offers three effort levels: low (few reasoning tokens, fast, cheap, less accurate), medium, and high (extensive reasoning, slow, costly, most accurate). Users can dynamically choose effort based on the problem's importance and latency/cost constraints."
+      },
+      {
+        "type": "mcq",
+        "front": "According to OpenAI, what is the stated goal for 2026 regarding o3 efficiency?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Cut inference latency by 50%",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Reduce cost per problem from ~$1 million to ~$1 (efficiency scaling)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Improve accuracy on AIME by 10 percentage points",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Extend context length to 10 million tokens",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is o3 not always the optimal choice for every inference task, and how would you decide when to use o3 vs. o1 or other models?",
+        "back": "o3's high cost and latency are only justified for genuinely hard problems requiring extensive reasoning. Simple tasks (fact retrieval, classification, straightforward code generation) waste resources on o3. Decision framework: Is the task demonstrably hard for smaller models? Does accuracy improvement justify the cost? Can the problem be solved with deterministic code instead?"
+      },
+      {
+        "type": "flip",
+        "front": "What is the key challenge to achieving OpenAI's 2026 efficiency scaling goal, and what architectural or algorithmic breakthrough would be required?",
+        "back": "Current o3 requires hundreds of reasoning tokens for substantial logical steps. To achieve 1000x cost reduction, models must learn to 'think' more efficiently—deriving solutions with fewer reasoning tokens. This requires breakthroughs in (1) efficient reasoning architectures, (2) algorithm selection (choosing the right approach without extensive searching), or (3) training techniques that compress reasoning into fewer tokens."
+      }
+    ]
+  },
+  {
+    "slug": "extended-thinking-and-chain-of-thought-variants",
+    "title": "Extended thinking and chain-of-thought variants",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "intermediate",
+    "tags": [
+      "extended-thinking",
+      "chain-of-thought",
+      "reasoning",
+      "test-time-compute",
+      "adaptive-thinking"
+    ],
+    "aliases": [
+      "Adaptive thinking",
+      "CoT reasoning",
+      "Thinking tokens",
+      "Visible reasoning"
+    ],
+    "wikilinks": [
+      "chain-of-thought-prompting",
+      "test-time-compute",
+      "claude-models",
+      "reasoning-tokens",
+      "prompt-engineering",
+      "token-budget",
+      "internal-monologue"
+    ],
+    "sources": [
+      {
+        "url": "https://platform.claude.com/docs/en/build-with-claude/extended-thinking",
+        "label": "Claude Extended Thinking API Docs"
+      },
+      {
+        "url": "https://www.anthropic.com/news/visible-extended-thinking",
+        "label": "Anthropic Visible Extended Thinking"
+      },
+      {
+        "url": "https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking",
+        "label": "Claude Adaptive Thinking Docs"
+      },
+      {
+        "url": "https://sureprompts.com/blog/extended-thinking-prompts-claude",
+        "label": "Extended Thinking Prompts Guide (2026)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nExtended thinking and chain-of-thought variants are techniques that improve reasoning accuracy by giving models more tokens to \"think\" before committing to an answer. Claude's extended thinking (and its evolution, adaptive thinking) employs serial test-time compute—the model generates a hidden reasoning trace followed by a final response. Unlike simple prompting that asks the model to \"think step by step\" in its output, extended thinking gives the model a separate, unobserved scratchpad for reasoning, freeing it from performance pressure to be concise and allowing exploratory, iterative thinking.\n\n## Detail\n\n**Extended Thinking (Claude 3.7 Sonnet, 2025)**:\nIntroduced with Claude 3.7 Sonnet in early 2025, extended thinking is Anthropic's implementation of test-time compute as an API primitive. When enabled:\n1. Claude generates thinking tokens on a hidden reasoning scratchpad (not sent to the user)\n2. Thinking budget is a separate token allocation from output tokens\n3. The final response is generated after thinking is complete\nInternal evaluations show extended thinking drives meaningful improvements on math, complex coding, and nuanced analysis tasks.\n\n**Adaptive Thinking (Claude Opus/Sonnet 4.6, 2026)**:\nClimate evolved extended thinking into adaptive thinking, which dynamically determines when and how much thinking is needed:\n- Simple queries (e.g., \"What's 2+2?\") trigger brief or no thinking\n- Complex queries automatically trigger extensive reasoning\n- Users can specify effort levels (low/medium/high) to override the default\n- Claude dynamically calibrates based on input complexity, not just effort parameter\n\nInternal benchmarks show adaptive thinking reliably outperforms extended thinking on both simple and complex tasks.\n\n**Comparison to Chain-of-Thought Prompting**:\n- **Prompting (visible)**: \"Think step by step...\" instructions cause the model to output reasoning, consuming output tokens and reducing response conciseness\n- **Extended/Adaptive thinking (hidden)**: Reasoning is hidden, separate token budget, reasoning can be verbose and exploratory without impact on user-facing response\n\n**Performance Gains**: Extended/adaptive thinking provides measurable improvements on:\n- Multi-step math (probability, calculus)\n- Complex coding (algorithm design, debugging intricate logic)\n- Nuanced analysis (balancing competing viewpoints, edge case reasoning)\n\n**Cost Implications**: Thinking tokens are billed at the same rate as output tokens. Deep reasoning on hard problems can double or triple total token usage, making cost estimation important for production systems.\n\n## Common gotchas / interview framings\n\n- **No free lunch on simple tasks**: Extended thinking adds latency and cost for simple queries without commensurate accuracy improvement. Interview: \"How would you decide whether to enable extended thinking by default vs. per-query?\"\n- **Thinking exposure and trust**: When thinking is hidden, users may distrust the reasoning or want to see how the model arrived at an answer. Interview: \"Design a feature to selectively expose thinking traces to build user trust while maintaining conciseness.\"\n- **Token budget unpredictability**: Different problems require vastly different thinking tokens. Interview: \"How would you implement a \"thinking token\" budget system to prevent runaway costs?\"\n- **Interaction with prompt engineering**: Extended thinking works best with clear, well-structured prompts. Ambiguous or poorly formatted inputs don't benefit as much. Interview: \"How would you combine extended thinking with RAG to improve long-document reasoning?\"\n- **Model-specific behavior**: Adaptive thinking behavior is specific to Claude 4.6; other models (o3, DeepSeek) use different reasoning mechanisms. Interview: \"How would you evaluate whether to use Claude adaptive thinking vs. o3 for a given reasoning task?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "How does extended thinking differ from chain-of-thought prompting in terms of token usage and reasoning visibility?",
+        "back": "Extended thinking: Reasoning occurs on a hidden scratchpad (not sent to user), has separate token budget from output, reasoning can be verbose. Chain-of-thought prompting: Reasoning is visible in the output, consumes output tokens, incentivizes conciseness. Extended thinking better for hard reasoning; prompting better for transparent reasoning explanation."
+      },
+      {
+        "type": "flip",
+        "front": "What is the key innovation of adaptive thinking (Claude 4.6) over extended thinking (Claude 3.7)?",
+        "back": "Adaptive thinking dynamically determines when and how much thinking is needed based on input complexity, not just user-specified effort. Simple queries get brief thinking automatically; complex queries trigger extensive reasoning. Internal benchmarks show adaptive thinking outperforms extended thinking on both simple and complex tasks by avoiding unnecessary overhead on easy problems."
+      },
+      {
+        "type": "mcq",
+        "front": "In what type of task does extended thinking provide the most meaningful improvement?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Fact retrieval and knowledge lookup",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Simple classification and labeling",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Multi-step math, complex coding, and nuanced analysis",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Basic summarization and paraphrasing",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is a significant cost consideration when deploying extended thinking in production?",
+        "back": "Thinking tokens are billed at the same rate as output tokens. Deep reasoning on hard problems can double or triple token usage and cost compared to standard inference. Cost estimation and token budget management are critical to avoid unexpected bills, especially on variable-difficulty workloads."
+      },
+      {
+        "type": "flip",
+        "front": "Design a decision framework for when to enable extended/adaptive thinking by default vs. on-demand in a production system.",
+        "back": "Default (always on): High-value reasoning tasks (legal analysis, medical diagnosis, financial planning) where accuracy is critical and cost is secondary.\nOn-demand (user selects): General Q&A, customer support, content generation—enable for hard questions, skip simple ones.\nNever enable: Real-time streaming, token-sensitive applications (e.g., high-volume chat), tasks where reasoning doesn't improve output (e.g., code formatting)."
+      }
+    ]
+  },
+  {
+    "slug": "inference-time-scaling-laws",
+    "title": "Inference-time scaling laws",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "advanced",
+    "tags": [
+      "scaling-laws",
+      "test-time-compute",
+      "inference-optimization",
+      "compute-optimal",
+      "reasoning-efficiency"
+    ],
+    "aliases": [
+      "Test-time scaling",
+      "Inference compute scaling",
+      "Compute-optimal inference",
+      "Performance prediction"
+    ],
+    "wikilinks": [
+      "scaling-laws",
+      "test-time-compute",
+      "inference-strategies",
+      "best-of-n-sampling",
+      "tree-search",
+      "majority-voting",
+      "compute-optimal-training"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2512.02008",
+        "label": "Art of Scaling Test-Time Compute (Dec 2025)"
+      },
+      {
+        "url": "https://arxiv.org/abs/2408.00724",
+        "label": "Inference Scaling Laws Empirical Analysis"
+      },
+      {
+        "url": "https://arxiv.org/abs/2408.03314",
+        "label": "Scaling Test-Time Compute Optimally"
+      },
+      {
+        "url": "https://testtimescaling.github.io/",
+        "label": "Survey: Test-Time Scaling in LLMs"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nInference-time (test-time) scaling laws describe how model performance improves as a function of compute allocated during inference—generating more tokens (via reasoning, sampling, or search) before producing a final answer. Unlike pre-training scaling laws (performance vs. model size/training tokens), inference-time scaling laws show that a fixed-size model can achieve dramatically better performance by allocating more computation at inference. This creates a new dimension for performance optimization: smaller models with advanced inference strategies can match or exceed larger models' performance on hard reasoning tasks.\n\n## Detail\n\n**Empirical Scaling Laws (2025-2026)**:\n\n**\"The Art of Scaling Test-Time Compute\" (December 2025)**: \nSpanned 30+ billion inference tokens across 8 open-source models (7B–235B parameters) and 4 reasoning datasets. Key findings:\n- No single test-time compute strategy universally dominates (best-of-n, tree search, majority voting each win on different tasks)\n- Scaling relationships are non-trivial and problem-dependent\n- Smaller models with advanced inference strategies can match larger models' performance on reasoning benchmarks\n\n**\"Inference Scaling Laws: An Empirical Analysis\" (March 2025)**:\n- Scaling inference compute via inference strategies (best-of-n, weighted voting, tree search) can be more computationally efficient than scaling model parameters\n- Cost-performance Pareto frontier favors smaller models + advanced inference over massive dense models\n- Example: 7B model + tree search may outperform 70B model at lower total compute\n\n**Inference Strategy Taxonomy**:\n- **Parallel**: Generate N independent completions, select best (best-of-n, majority voting)\n- **Sequential**: Iteratively refine or extend completions (chain-of-thought, beam search)\n- **Hybrid**: Mix parallel generation with sequential refinement (tree search, branching search)\n- **Internal**: Extended thinking, verification, self-critique without external steps\n\n**2025-2026 Breakthroughs**:\n- **Adaptive Branching Tree Search**: Dynamically choose between wider (more parallel samples) vs. deeper (more sequential steps) search based on problem structure\n- **Test-Time Compute for Coding (2025)**: Scaling test-time compute on SWE-Bench coding tasks improved Claude 4.5-Opus from 70.9% to 77.6%, demonstrating practical improvements on production-relevant tasks\n- **Reasoning Benchmark Saturation**: Some benchmarks (AIME, ARC-AGI) are saturating as test-time compute scales, raising questions about whether further scaling will transfer to new problems\n\n**Practical Scaling Curves**: The relationship between inference compute and performance follows power-law trends similar to pre-training scaling, with diminishing returns. Doubling test-time compute typically yields 2-5% accuracy improvements depending on the task and strategy.\n\n## Common gotchas / interview framings\n\n- **Strategy-dependent returns**: Unlike pre-training scaling where more always helps, inference-time scaling benefits depend heavily on strategy choice. Interview: \"How would you select the right inference strategy (best-of-n vs. tree search) for a new task without extensive benchmarking?\"\n- **Latency vs. throughput**: More inference compute increases latency (bad for interactive apps) even if it improves accuracy. Interview: \"Design a system that serves both low-latency and high-accuracy queries efficiently.\"\n- **Not a universal solution**: Inference scaling helps with reasoning but doesn't fix knowledge gaps or improve tasks that don't benefit from more thinking (e.g., fact retrieval). Interview: \"On what types of problems would you NOT invest in inference-time scaling?\"\n- **Benchmark gaming**: Improvements on standard benchmarks (AIME, GSM8K) may not transfer to real-world reasoning. Interview: \"How would you validate that inference scaling improvements transfer to your domain-specific tasks?\"\n- **Comparative analysis difficulty**: Claiming \"smaller model + inference compute beats larger model\" requires careful apples-to-apples comparison on total compute, not just parameter count. Interview: \"How would you fairly compare a 7B model with $1000 inference compute vs. a 70B model with $100 inference compute?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define inference-time (test-time) scaling laws and explain how they differ from pre-training scaling laws.",
+        "back": "Inference-time scaling laws describe performance improvement as a function of compute allocated during inference (reasoning tokens, sampling, search). Pre-training scaling depends on model size and training data. Test-time scaling shows that fixed-size models can achieve better performance with more inference compute, creating a new optimization dimension independent of model size."
+      },
+      {
+        "type": "flip",
+        "front": "According to the December 2025 'Art of Scaling Test-Time Compute' paper, why does no single inference strategy universally dominate?",
+        "back": "Different inference strategies (best-of-n, tree search, majority voting, sequential refinement) excel on different task types. Some problems benefit from broader sampling (parallel best-of-n), others from deeper sequential reasoning. The optimal strategy depends on task structure, model size, and the types of errors the model makes."
+      },
+      {
+        "type": "mcq",
+        "front": "Which statement best describes the Pareto frontier of inference-time scaling?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Larger models always dominate smaller models regardless of inference compute",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Smaller models with advanced inference strategies can match or exceed larger models' performance at lower total compute",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Inference scaling provides diminishing returns and is less effective than pre-training scaling",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All models scale linearly with inference compute, regardless of architecture",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Describe the tradeoff between latency and accuracy when scaling inference-time compute, and how would you resolve this in a production system?",
+        "back": "More inference compute (reasoning tokens, multiple samples, tree search) improves accuracy but increases latency. Resolution strategies: (1) Route high-priority/low-latency queries to simpler strategies; (2) Use adaptive compute allocation based on query difficulty; (3) Implement separate high-latency and low-latency inference pipelines; (4) Cache reasoning for similar queries."
+      },
+      {
+        "type": "flip",
+        "front": "On what types of tasks would inference-time scaling provide minimal benefits, and why?",
+        "back": "Minimal benefits on: (1) Knowledge retrieval (thinking doesn't help if knowledge is missing), (2) Simple classification (decision boundary is clear), (3) Fact lookup (reasoning can't improve factuality), (4) Real-time latency-critical applications where any added thinking breaks SLAs. Inference scaling is most effective on reasoning, planning, and multi-step problem-solving tasks."
+      }
+    ]
+  },
+  {
+    "slug": "deepseek-r1-and-open-reasoning-models",
+    "title": "DeepSeek-R1 and open reasoning models",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "advanced",
+    "tags": [
+      "deepseek",
+      "open-source",
+      "reasoning-models",
+      "reinforcement-learning",
+      "moe-architecture"
+    ],
+    "aliases": [
+      "DeepSeek-R1",
+      "R1-Zero",
+      "Open reasoning",
+      "Distilled reasoning models"
+    ],
+    "wikilinks": [
+      "deepseek-models",
+      "reasoning-models",
+      "open-source-llms",
+      "mixture-of-experts",
+      "reinforcement-learning",
+      "scaling-laws",
+      "model-distillation"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/2501.12948",
+        "label": "DeepSeek-R1 arXiv Paper"
+      },
+      {
+        "url": "https://huggingface.co/deepseek-ai/DeepSeek-R1",
+        "label": "DeepSeek-R1 on Hugging Face"
+      },
+      {
+        "url": "https://github.com/deepseek-ai/DeepSeek-R1",
+        "label": "DeepSeek-R1 GitHub"
+      },
+      {
+        "url": "https://www.bentoml.com/blog/the-complete-guide-to-deepseek-models-from-v3-to-r1-and-beyond",
+        "label": "Complete DeepSeek Models Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDeepSeek-R1 is an open-source reasoning model that demonstrates that reasoning capabilities can be developed via pure reinforcement learning without supervised chain-of-thought fine-tuning. Unlike closed-source models (o1, o3) controlled by major labs, DeepSeek-R1 is publicly available and commercially usable, democratizing access to reasoning-capable models. DeepSeek-R1 achieves performance comparable to OpenAI o1 on math, code, and reasoning tasks while operating at a fraction of the cost, with~37B active parameters despite 671B total (mixture-of-experts architecture).\n\n## Detail\n\n**Architecture and Scale**: \nDeepSeek-R1 is built on DeepSeek-V3 base, a 671B-parameter mixture-of-experts model with sparse activation—only ~37B parameters active per token. This enables the computational benefits of a 37B model while retaining the reasoning capacity of a much larger system. The MoE design balances computation, memory, and performance.\n\n**Training Methodology**: \nDeepSeek-R1 uses large-scale reinforcement learning applied directly to reasoning tasks (math, code, logic puzzles) without initial supervised fine-tuning on human-written chain-of-thought traces. The RL framework discovers reasoning patterns emergently:\n- Self-reflection: Model learns to question and verify its own reasoning\n- Dynamic strategy adaptation: Switching between proof strategies, verification approaches\n- Backtracking: Recognizing dead ends and trying alternative paths\n\n**Model Variants and Evolution**: \n- **DeepSeek-R1-Zero** (January 2025): First-generation, trained purely via RL\n- **DeepSeek-R1** (January 2025): Improved via post-training and supervised refinement\n- **DeepSeek-R1-0528** (May 2025): Upgraded variant with enhanced reasoning via more RL compute\n- **DeepSeek-V4** (April 2026): Latest iteration, 1M-token context, trained on 32T+ tokens\n\n**Distilled Models (2025-2026)**: \nDeepSeek open-sourced six distilled reasoning models based on Llama and Qwen, enabling reasoning at smaller scales (7B–34B parameters). This democratization makes reasoning capabilities accessible to organizations without massive compute infrastructure.\n\n**Performance and Cost**: \n- Comparable to o1 on AIME, GPQA, code benchmarks\n- ~10x cheaper inference than commercial reasoning models\n- Slower inference than standard models (extensive reasoning tokens)\n- Fully open-source weights enable fine-tuning and customization\n\n**2026 Outlook**: \nDeepSeek-V4 and subsequent releases push the ceiling further with 1M native context, improved reasoning, and aggressive cost optimization. The open-source ecosystem around DeepSeek-R1 accelerates development of domain-specific reasoning models.\n\n## Common gotchas / interview framings\n\n- **RL brittleness**: Reasoning trained via pure RL (no supervised examples) can be unpredictable and may fail on distribution shifts. Interview: \"How would you test whether DeepSeek-R1 generalizes to your domain-specific reasoning tasks?\"\n- **Cost-quality tradeoff not always obvious**: DeepSeek-R1 is cheap but still slow (many reasoning tokens). Interview: \"When would you choose DeepSeek-R1 over o1 vs. a smaller open model with specialized fine-tuning?\"\n- **Chinese development concerns**: DeepSeek is Chinese-owned; some organizations have governance/data residency requirements. Interview: \"How would you evaluate open vs. closed reasoning models given regulatory constraints?\"\n- **Comparison fairness**: DeepSeek uses MoE (sparse activation); comparing to dense models (o1, Claude) can be misleading on true parameter count and compute. Interview: \"How would you fairly compare DeepSeek-R1 and o1 on total compute (not just parameters)?\"\n- **Reasoning transparency**: Like o1 and o3, DeepSeek-R1's reasoning traces are not always visible to users. Interview: \"How would you implement a debugging or audit mechanism for reasoning models when transparency is limited?\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "How does DeepSeek-R1's training approach (pure RL without supervised CoT fine-tuning) differ from typical supervised reasoning model training?",
+        "back": "DeepSeek-R1 uses large-scale RL directly on reasoning tasks without pre-training on human-written chain-of-thought examples. The RL process discovers reasoning patterns emergently (self-reflection, strategy adaptation, backtracking). Traditional approaches rely on supervised examples first, then RL refinement. DeepSeek demonstrates that pure RL can develop sophisticated reasoning without explicit supervision."
+      },
+      {
+        "type": "flip",
+        "front": "Why is DeepSeek-R1's mixture-of-experts architecture significant in terms of computation and deployment?",
+        "back": "DeepSeek-R1 has 671B total parameters but only ~37B active per token (sparse activation via MoE). This enables reasoning capability of a 671B model at computational cost of ~37B, making it dramatically cheaper to deploy than dense reasoning models of similar quality. MoE allows scaling parameter count without proportional compute scaling."
+      },
+      {
+        "type": "mcq",
+        "front": "On which benchmark categories does DeepSeek-R1 achieve performance comparable to OpenAI o1?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Only on knowledge benchmarks (MMLU, TriviaQA)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Math, code, and reasoning tasks (AIME, GPQA, code competitions)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Only on language understanding, not reasoning",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Across all benchmarks, outperforming o1 significantly",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the significance of DeepSeek open-sourcing distilled reasoning models based on Llama and Qwen?",
+        "back": "Distilled models (7B–34B parameters) make reasoning capabilities accessible to organizations without massive compute infrastructure. This democratizes reasoning—small companies and researchers can now fine-tune, deploy, and customize reasoning models on commodity hardware, previously impossible with closed o1/o3."
+      },
+      {
+        "type": "flip",
+        "front": "List three advantages and two disadvantages of DeepSeek-R1 compared to closed reasoning models (o1, o3).",
+        "back": "Advantages: (1) 10x cheaper inference, (2) Full open-source weights enable fine-tuning and customization, (3) Distilled variants available at multiple scales.\nDisadvantages: (1) RL training without supervised examples may be less predictable on domain shifts, (2) Reasoning traces not exposed, limiting interpretability and debugging compared to some alternatives."
+      }
+    ]
+  },
+  {
+    "slug": "qwen-35-omni-and-other-state-of-the-art",
+    "title": "Qwen 3.5 Omni and other state-of-the-art",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "intermediate",
+    "tags": [
+      "multimodal",
+      "state-of-the-art",
+      "audio-video",
+      "native-multimodal",
+      "unified-architecture"
+    ],
+    "aliases": [
+      "Qwen 3.5",
+      "Omni models",
+      "Multimodal frontier",
+      "Audio-visual understanding"
+    ],
+    "wikilinks": [
+      "multimodal-models",
+      "qwen-family",
+      "audio-understanding",
+      "video-understanding",
+      "vision-language-models",
+      "unified-architectures",
+      "frontier-models"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/html/2604.15804v1",
+        "label": "Qwen3.5-Omni Technical Report"
+      },
+      {
+        "url": "https://arxiv.org/pdf/2604.15804",
+        "label": "Qwen3.5-Omni arxiv PDF"
+      },
+      {
+        "url": "https://www.marktechpost.com/2026/03/30/alibaba-qwen-team-releases-qwen3-5-omni-a-native-multimodal-model-for-text-audio-video-and-realtime-interaction/",
+        "label": "Qwen3.5-Omni Release Announcement"
+      },
+      {
+        "url": "https://codersera.com/blog/qwen-3-5-complete-guide-2026/",
+        "label": "Qwen 3.5 Complete Guide (2026)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nQwen 3.5 Omni represents the frontier of multimodal AI as of May 2026, natively processing text, images, audio, and video through a unified architecture. Unlike earlier models that stacked separate encoders (Whisper for audio, CLIP for vision), Qwen 3.5-Omni uses a single integrated pipeline where all modalities are processed jointly with early fusion of tokens. The model's most distinctive feature is audio-visual vibe coding—the ability to generate code from video+voice instructions—demonstrating deep multimodal understanding beyond separate uni-modal capabilities.\n\n## Detail\n\n**Unified Multimodal Architecture**: \nPrevious iterations (Qwen 3) split text and vision models into separate trees. Qwen 3.5 unifies them: a single backbone trained with early token fusion of text and multimodal inputs. This architectural simplification improves data efficiency and reasoning across modalities.\n\n**Native Multimodal Processing**:\n- **Text**: Standard tokenization\n- **Images**: Integrated vision processing (no external CLIP-style encoders)\n- **Audio**: Native Audio Transformer (AuT) encoder, trained internally rather than relying on external Whisper\n- **Video**: Unified video understanding at up to 720p and 1 FPS\n\n**Key Capabilities and Benchmarks**: \n- **215 SOTA results** across audio, audio-video understanding, reasoning, and interaction benchmarks\n- Outperforms Google Gemini-3.1 Pro on general audio understanding, reasoning, and translation tasks\n- Supports **256K context**, **10+ hours of audio**, **400+ seconds of 720p video**\n- Speech recognition in 113+ languages/dialects; speech generation in 36 languages\n\n**Audio-Visual Vibe Coding** (Most Novel Capability): \nUnlike traditional code generation (text-only prompts), Qwen 3.5-Omni enables:\n- Recording a video demonstrating a software UI\n- Verbally describing a bug while pointing at elements\n- Direct code generation fixing the issue\n\nThis demonstrates that the model understands visual, spatial, and linguistic context simultaneously—reasoning about intent from video+voice rather than just text.\n\n**Architecture Innovation**: \n- **Thinker + Talker design**: Separates reasoning (Thinker) from response generation (Talker)\n- **Early fusion**: Tokens from all modalities fused early, enabling cross-modal reasoning\n- **Efficient scaling**: Unified architecture scales better than separate models per modality\n\n**2026 Release Timeline**: \nQwen 3.5 released in waves (Feb 16 - March 2, 2026). Qwen 3.5-Omni Plus (March 30) is the flagship multimodal variant, directly competing with Gemini 3.1 Pro and Claude-4.6.\n\n## Common gotchas / interview framings\n\n- **Benchmark saturation**: Qwen 3.5's 215 SOTA results on diverse benchmarks are impressive, but sustained improvement is slowing—frontier improvements are becoming incremental. Interview: \"How would you evaluate whether Qwen 3.5 is a meaningful upgrade for your use case given benchmark saturation?\"\n- **Multimodal alignment complexity**: Unifying text, audio, and video in a single architecture is technically impressive but introduces alignment challenges. Interview: \"How would you debug failures in audio-visual understanding (e.g., audio and video misaligned)?\"\n- **Real-time interaction claims**: \"Real-time interaction\" is advertised, but true real-time multimodal streaming (live audio+video processing) remains computationally expensive. Interview: \"What is the actual latency for real-time audio-visual interaction, and how does it scale with context length?\"\n- **Domain-specific vs. general**: Qwen 3.5 excels on benchmarks but generalization to niche domains (medical imaging, specialized audio) requires evaluation. Interview: \"How would you fine-tune or adapt Qwen 3.5 for domain-specific multimodal understanding?\"\n- **Comparison framework**: Comparing Qwen 3.5 to Gemini, Claude, and GPT-4 Omni is difficult due to different architectures, training approaches, and undisclosed design choices. Interview: \"Design a fair evaluation framework comparing multimodal frontier models.\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key architectural difference between Qwen 3.5 and earlier Qwen models in terms of multimodal processing?",
+        "back": "Qwen 3 split text and vision models into separate trees. Qwen 3.5 unifies them into a single backbone trained with early fusion of text and multimodal tokens, enabling better cross-modal reasoning and data efficiency."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the concept of 'audio-visual vibe coding' and why it is significant for demonstrating multimodal understanding.",
+        "back": "Audio-visual vibe coding is the ability to generate code from video (UI demonstration) + voice (verbal bug description). Unlike text-only code generation, this requires simultaneous understanding of visual (UI layout), spatial (pointing), and linguistic context (spoken intent), demonstrating deep cross-modal reasoning beyond separate modality processing."
+      },
+      {
+        "type": "mcq",
+        "front": "On which benchmarks does Qwen 3.5-Omni claim to achieve SOTA results?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Only on text reasoning tasks (MMLU, MATH)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Only on vision benchmarks (ImageNet, COCO)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "215 SOTA across audio, audio-video, reasoning, and interaction benchmarks",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Only on official Alibaba benchmarks, not third-party evaluations",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What does Qwen 3.5-Omni support in terms of context length and multimodal capacity?",
+        "back": "256K token context, 10+ hours of audio input, 400+ seconds of 720p video at 1 FPS, speech recognition in 113+ languages/dialects, speech generation in 36 languages."
+      },
+      {
+        "type": "flip",
+        "front": "List three advantages of Qwen 3.5-Omni's unified architecture over models that stack separate encoders (Whisper, CLIP, etc.).",
+        "back": "(1) Better cross-modal reasoning through early token fusion, (2) Improved data efficiency by training jointly rather than separately, (3) Simpler deployment—single inference path vs. multiple encoder chains, reducing latency and memory."
+      }
+    ]
+  },
+  {
+    "slug": "open-vs-closed-model-tradeoffs-control-privacy-cost-perf",
+    "title": "Open vs closed model tradeoffs (control, privacy, cost, perf)",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "difficulty": "beginner",
+    "tags": [
+      "model-selection",
+      "open-source",
+      "closed-source",
+      "business-tradeoffs",
+      "cost-analysis"
+    ],
+    "aliases": [
+      "Open vs closed tradeoffs",
+      "Model governance",
+      "Vendor lock-in",
+      "Cost-performance analysis"
+    ],
+    "wikilinks": [
+      "open-source-llms",
+      "closed-source-models",
+      "fine-tuning",
+      "lora",
+      "privacy",
+      "data-governance",
+      "cost-optimization"
+    ],
+    "sources": [
+      {
+        "url": "https://letsdatascience.com/blog/open-source-vs-closed-llms-choosing-the-right-model-in-2026",
+        "label": "Open Source vs Closed LLMs 2026 Framework"
+      },
+      {
+        "url": "https://medium.com/data-science-collective/open-vs-closed-llms-in-2025-strategic-tradeoffs-for-enterprise-ai-668af30bffa0",
+        "label": "Enterprise AI Tradeoffs 2025"
+      },
+      {
+        "url": "https://www.bentoml.com/blog/navigating-the-world-of-open-source-large-language-models",
+        "label": "Best Open-Source LLMs 2026"
+      },
+      {
+        "url": "https://arxiv.org/html/2412.12004v3",
+        "label": "Open-Source Advantage in LLMs"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nBy May 2026, the choice between open-source and closed-source LLMs is no longer \"which is better overall\" but rather \"which is better for this specific use case.\" Performance gaps have largely closed—open models match closed on knowledge benchmarks and most reasoning tasks. The decision hinges on five factors: control (customization and inference infrastructure), privacy (data residency and governance), cost (per-token pricing and total compute), performance (accuracy on your specific tasks), and maintenance burden (engineering effort to self-host vs. outsource).\n\n## Detail\n\n**Performance Parity (2026)**:\n- Knowledge benchmarks (MMLU): Open matches closed\n- Math (MATH-500, AIME): Open matches or exceeds closed\n- Science (GPQA Diamond): Open matches closed\n- Coding (SWE-Bench): Closed models (o3, Claude) maintain edge\n- Reasoning (complex multi-step): Closed models slightly ahead\n- Human preference (Arena): Closed models lead (partly due to engineering investment and optimization)\n\n**Control and Customization**:\n- **Closed models**: Limited fine-tuning via parameter-efficient methods (LoRA via API). Full weight access impossible.\n- **Open models**: Full weight access enables aggressive fine-tuning. LoRA recovers 90-95% of full fine-tuning quality while training only 0.1-1% of parameters. QLoRA enables fine-tuning 70B models on single A100 GPU.\n- **Winner for control**: Open models by large margin. Ability to fine-tune, merge models (mergekit), and run specialized inference strategies (quantization, pruning) is unavailable with closed APIs.\n\n**Privacy and Data Governance**:\n- **Closed**: API-based inference means queries sent to third-party servers. Enterprise privacy agreements are improving but vary by provider.\n- **Open**: Models run on-premises or private cloud. No data leaves organization. Critical for regulated industries (healthcare, finance, legal).\n- **Winner for privacy**: Open models, especially for sensitive data. Hybrid approaches (using open for sensitive, closed for general) are practical in 2026.\n\n**Cost Analysis (May 2026)**:\n- **Closed API**: GPT-4 input ~$10/M tokens, output ~$30/M; Claude 3.5 ~$3/$15; DeepSeek via API ~$0.27/$1.10\n- **Open self-hosted**: Llama-3-70B inference ~$0.50-1.00/M tokens (on own hardware or managed providers like Lambda, Together)\n- **Total cost of ownership**: Must include infrastructure, engineers, maintenance. Small-scale deployments favor closed APIs; large-scale favor open models.\n\n**Enterprise Reality (2025-2026)**:\n- Closed models represent ~87% of deployed workloads (via APIs)\n- Open models growing rapidly but concentrated in tech companies, research, and cost-sensitive enterprises\n- Hybrid approach most sophisticated: closed for general capability, open for sensitive/domain-specific tasks, with orchestration layers\n\n**Specific Trade-offs by Dimension**:\n\n| Dimension | Open Advantage | Closed Advantage |\n|-----------|---|---|\n| **Performance** | Knowledge/math parity | Reasoning, coding, production optimization |\n| **Cost** | Large scale ($0.5/M tokens) | Small scale, pay-as-you-go |\n| **Control** | Full customization, fine-tuning | Not available |\n| **Privacy** | On-premises, zero data exposure | Depends on agreements, cloud-based |\n| **Latency** | Tunable (your infra) | API-dependent, often slower |\n| **Maintenance** | High (ops burden) | Low (outsourced) |\n| **Vendor lock-in** | Low (open weights) | High (proprietary APIs, fine-tuning) |\n\n## Common gotchas / interview framings\n\n- **Strawman comparisons**: \"Open LLaMA beats closed ChatGPT\" claims ignore task specificity and cherry-picking. Interview: \"How would you fairly benchmark open vs. closed models for YOUR use case, not benchmarks published by vendors?\"\n- **TCO hidden complexity**: Open-source TCO includes engineering salaries, infrastructure, maintenance. Small teams often underestimate. Interview: \"Calculate the true cost of self-hosting a 70B open model vs. closed API for your traffic patterns.\"\n- **Fine-tuning hype**: LoRA can recover 90% of full fine-tuning quality, but the remaining 10% matters for some applications. Interview: \"When would you invest in full fine-tuning vs. LoRA+prompting for an open model?\"\n- **Benchmark extrapolation failure**: Better MMLU doesn't guarantee better on your domain (legal reasoning, medical coding). Interview: \"How would you evaluate an open model on domain-specific tasks before switching from closed?\"\n- **Hybrid complexity underestimated**: Running both open and closed models in production with orchestration adds engineering overhead. Interview: \"Design a system routing queries between open and closed models based on sensitivity and complexity.\"\n",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "On what benchmark categories have open-source models achieved parity with closed models as of 2026?",
+        "back": "Knowledge (MMLU), math (MATH-500, AIME), and science (GPQA Diamond). Open models match or exceed closed on these. Closed models maintain edges on coding (SWE-Bench), complex multi-step reasoning, and human preference (Arena)."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the LoRA advantage for open models compared to closed-model fine-tuning options.",
+        "back": "LoRA (Low-Rank Adaptation) recovers 90-95% of full fine-tuning quality while training only 0.1-1% of parameters, making fine-tuning cheap. Closed models offer limited parameter-efficient fine-tuning via API; open models enable aggressive customization via LoRA, full fine-tuning, or model merging."
+      },
+      {
+        "type": "mcq",
+        "front": "What percentage of enterprise AI deployments in 2025-2026 still use closed-source models?",
+        "back": "",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Approximately 40%",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Approximately 60%",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Approximately 87%",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Approximately 95%",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Compare inference costs (per million tokens) for closed API (GPT-4, Claude) vs. self-hosted Llama-3-70B and discuss at what scale self-hosting becomes economical.",
+        "back": "Closed: GPT-4 ~$10-30/M tokens. Claude 3.5 ~$3-15/M tokens. Llama-3-70B self-hosted: ~$0.50-1.00/M tokens. Self-hosting economical at scale (>1B tokens/month). At small scale, closed APIs are cheaper after accounting for infrastructure and engineering."
+      },
+      {
+        "type": "flip",
+        "front": "Design a decision framework for when to use open vs. closed models in a production system, covering at least four decision criteria.",
+        "back": "Use CLOSED if: (1) Small-scale deployment, (2) High-accuracy reasoning required, (3) Interactive latency <1sec required, (4) Minimal ops/ML team.\nUse OPEN if: (1) Sensitive/regulated data, (2) Custom fine-tuning needed, (3) Large scale (>1B tokens/mo), (4) Domain-specific optimization worth engineering effort.\nUse HYBRID if: (1) Sensitive tasks → open, (2) General tasks → closed, (3) Cost-critical → open, (4) Availability-critical → closed with fallback."
+      }
+    ]
+  }
+]

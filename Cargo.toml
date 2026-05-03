@@ -1,0 +1,56 @@
+[package]
+name = "flashcards"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+description = "TUI flashcard app + Obsidian KB for AI/ML/DS interview prep"
+license = "MIT"
+
+[[bin]]
+name = "flashcards"
+path = "src/main.rs"
+
+[dependencies]
+# CLI + errors
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1"
+thiserror = "1"
+
+# TUI
+ratatui = "0.30"
+crossterm = "0.29"
+
+# Storage
+rusqlite = { version = "0.39", features = ["bundled"] }
+
+# Spaced repetition
+rs-fsrs = "1"
+
+# Markdown / frontmatter
+gray_matter = "0.2"
+serde_yml = "0.0.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+pulldown-cmark = "0.12"
+
+# File scan + content hash
+walkdir = "2"
+blake3 = "1"
+
+# Search + syntax (used in later phases — keep here so deps tree is stable)
+nucleo-matcher = "0.3"
+syntect = { version = "5.3", default-features = false, features = ["default-fancy"] }
+
+# Misc
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+regex = "1"
+directories = "5"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

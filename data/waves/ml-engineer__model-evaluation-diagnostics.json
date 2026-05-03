@@ -1,0 +1,1078 @@
+[
+  {
+    "slug": "classification-metrics-accuracy-precision-recall-f1-auc-roc-auc-pr",
+    "title": "Classification metrics (accuracy, precision, recall, F1, AUC-ROC, AUC-PR)",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "intermediate",
+    "tags": [
+      "classification",
+      "metrics",
+      "threshold",
+      "imbalance",
+      "ROC",
+      "AUC-PR"
+    ],
+    "aliases": [
+      "precision-recall tradeoff",
+      "ROC curve",
+      "threshold selection"
+    ],
+    "wikilinks": [
+      "receiver-operating-characteristic",
+      "precision-recall-curve",
+      "class-imbalance",
+      "threshold-tuning",
+      "binary-classification"
+    ],
+    "sources": [
+      {
+        "url": "https://www.deepchecks.com/f1-score-accuracy-roc-auc-and-pr-auc-metrics-for-models/",
+        "label": "DeepChecks: F1, Accuracy, ROC-AUC & PR-AUC Metrics"
+      },
+      {
+        "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall",
+        "label": "Google ML Crash Course: Classification Metrics"
+      },
+      {
+        "url": "https://www.aiclouddatapulse.com/auc-vs-f1-score/",
+        "label": "AUC vs F1 Score: Which Metric to Use"
+      },
+      {
+        "url": "https://www.evidentlyai.com/classification-metrics",
+        "label": "Evidently AI: Classification Metrics Guide"
+      }
+    ],
+    "explainer_md": "## Intuition\nClassification metrics quantify prediction quality across different dimensions. Accuracy counts correct predictions but misleads on imbalanced data. Precision/Recall isolate false positives vs false negatives, enabling cost-aware threshold tuning. AUC-ROC measures ranking ability across thresholds; AUC-PR focuses on the positive class when rare.\n\n## Detail\nFor confusion matrix $[TP, FP, FN, TN]$:\n- **Accuracy** = $(TP+TN)/(TP+FP+FN+TN)$ → fails when classes imbalanced\n- **Precision** = $TP/(TP+FP)$ → minimize false alarms\n- **Recall** = $TP/(TP+FN)$ → minimize missed positives\n- **F1** = $2 \\cdot (Precision \\cdot Recall)/(Precision + Recall)$ → harmonic mean, single-threshold summary\n- **F-beta** = $(1+\\beta^2) \\cdot (Precision \\cdot Recall)/(\\beta^2 \\cdot Precision + Recall)$ → weight recall ($\\beta>1$) or precision ($\\beta<1$)\n- **AUC-ROC** = area under curve plotting TPR vs FPR across thresholds; good for balanced data, can be insensitive under severe imbalance\n- **AUC-PR** = area under Precision-Recall curve; clearer signal for rare positive class\n\nROC-AUC misleads when: (1) extreme class imbalance (positive class <1%), (2) cost asymmetry (FN cost >> FP cost), (3) need interpretability at a single threshold.\n\n## Common gotchas / interview framings\n- Accuracy trap: 95% accuracy on 99%-negative data = always predict negative\n- ROC AUC false confidence: AUC=0.9 doesn't mean precision=0.9; depends on threshold\n- Threshold selection: moving threshold trades precision↔recall; F1 is point estimate, AUC is curve\n- F-beta weighted: F2 emphasizes recall (finding anomalies), F0.5 emphasizes precision (avoiding false alarms)\n- AUC-PR vs AUC-ROC: prefer PR-AUC when positive class is rare; ROC AUC is inflated by easy-to-classify negatives",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "When should you use AUC-PR instead of AUC-ROC?",
+        "back": "AUC-PR is preferred when the positive class is rare (severe class imbalance <5%). ROC-AUC can be misleading because it's dominated by the majority class and doesn't reflect precision-recall tradeoff that matters for rare events. In fraud detection, disease screening, or anomaly detection, AUC-PR gives clearer performance signal."
+      },
+      {
+        "type": "flip",
+        "front": "What's the relationship between F1 and F-beta? Give an example where F2 > F1.",
+        "back": "F-beta = $(1+\\beta^2) \\cdot \\frac{P \\cdot R}{\\beta^2 \\cdot P + R}$. F1 ($\\beta=1$) weights precision and recall equally. F2 ($\\beta=2$) weights recall 2x higher. Use F2 in medical diagnosis (missed positives costly), F0.5 in spam filtering (false positives costly). Example: Recall=0.95, Precision=0.6 → F1≈0.74, F2≈0.86."
+      },
+      {
+        "type": "mcq",
+        "front": "Your model predicts 98% negative class. Accuracy is 98%. What's likely true?",
+        "back": "High accuracy with imbalanced data is meaningless. If positive class is 2%, predicting 'negative' always gives 98% accuracy. Recall (TP/actual positives) is likely near zero because the model rarely flags positives.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Model is excellent",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Model always predicts negative (98% base rate)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Recall is probably very low",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Both B and C",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the precision-recall tradeoff. Which metric changes as you move the threshold?",
+        "back": "As you lower classification threshold (more lenient), more samples become positive: TP and FP both increase. Recall (TP/(TP+FN)) increases, Precision (TP/(TP+FP)) decreases. AUC-PR/AUC-ROC curves capture this tradeoff. Single threshold optimization (e.g., F1) picks one point; AUC is threshold-agnostic."
+      },
+      {
+        "type": "mcq",
+        "front": "In imbalanced binary classification, which metric is most vulnerable to misleading conclusions?",
+        "back": "AUC-ROC can remain high (0.85+) even when model performs poorly on the rare class, because it averages across all FPR values. Majority-class negatives dominate the curve. AUC-PR is more honest about positive-class performance.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Precision",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Recall",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "AUC-ROC",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "AUC-PR",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "regression-metrics-mae-mse-rmse-r-squared-quantile-loss",
+    "title": "Regression metrics (MAE, MSE, RMSE, R-squared, quantile loss)",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "intermediate",
+    "tags": [
+      "regression",
+      "loss",
+      "outliers",
+      "asymmetric",
+      "R-squared",
+      "quantile"
+    ],
+    "aliases": [
+      "mean absolute error",
+      "mean squared error",
+      "heteroscedasticity"
+    ],
+    "wikilinks": [
+      "mean-absolute-error",
+      "mean-squared-error",
+      "outlier-robustness",
+      "asymmetric-loss",
+      "coefficient-of-determination"
+    ],
+    "sources": [
+      {
+        "url": "https://www.ml4devs.com/what-is/model-evaluation-metrics/",
+        "label": "ML4Devs: Model Evaluation Metrics"
+      },
+      {
+        "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall",
+        "label": "Google ML Crash Course"
+      }
+    ],
+    "explainer_md": "## Intuition\nRegression metrics measure prediction magnitude and direction of error. Mean-based metrics (MSE, RMSE) penalize outliers heavily; median-based (MAE) ignore them. R² measures fit quality relative to baseline. Quantile loss enables asymmetric costs (e.g., predicting low demand costs more than predicting high).\n\n## Detail\nFor residuals $r_i = y_i - \\hat{y}_i$:\n- **MAE** = $\\frac{1}{n}\\sum|r_i|$ → robust to outliers, scale-independent interpretation\n- **MSE** = $\\frac{1}{n}\\sum r_i^2$ → penalizes large errors quadratically\n- **RMSE** = $\\sqrt{\\text{MSE}}$ → same units as $y$, emphasizes outliers harder than MAE\n- **R²** = $1 - \\frac{\\sum r_i^2}{\\sum(y_i - \\bar{y})^2}$ → fraction of variance explained (0 to 1); R²=0.5 means model explains 50% of variance\n- **Quantile loss (τ)** = $\\sum \\mathbb{1}[r_i \\geq 0] \\cdot \\tau |r_i| + \\mathbb{1}[r_i < 0] \\cdot (1-\\tau)|r_i|$ → asymmetric: overestimate costly if τ>0.5\n\nRMSE vs MAE: RMSE increases nonlinearly with outlier magnitude; MAE linear. On clean data, RMSE and MAE rank models similarly. With outliers, MAE ranks differently—prefer MAE if outliers are real noise, RMSE if they're signals to minimize.\n\n## Common gotchas / interview framings\n- R² pitfall: R²<0 possible if model worse than horizontal baseline; unbounded above 1 with extrapolation\n- Scale sensitivity: MSE and RMSE not comparable across different target scales; use normalized metrics (NRMSE, MAPE)\n- Quantile loss asymmetry: τ=0.5 is MAE; τ=0.9 penalizes underestimation 9x more, overestimation 1x more\n- Outlier bias: single outlier can dominate MSE/RMSE; invisible in MAE; use robust metrics (MAPE, Huber loss) or preprocess\n- Learning curves: RMSE typically decreases with training size; if plateau, data quality or model capacity is bottleneck",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is RMSE more sensitive to outliers than MAE? Give a numerical example.",
+        "back": "Errors squared: a single error of 10 contributes 100 to MSE but only 10 to MAE sum. If most errors are 1 but one is 10: MAE = (99·1 + 1·10)/100 = 1.09, RMSE = √(99·1 + 1·100)/100 = √1.99 ≈ 1.41. Outliers dominate squared loss. Use MAE for noisy measurement, RMSE to penalize rare large mistakes."
+      },
+      {
+        "type": "flip",
+        "front": "What does R² = 0.7 mean? What about R² = -0.2?",
+        "back": "R² = 0.7: model explains 70% of variance; 30% unexplained (residual). R² = -0.2: model performs *worse than predicting the mean*—it's adding noise. Negative R² signals model misspecification or overfitting to noise. Always check train/test R² split."
+      },
+      {
+        "type": "mcq",
+        "front": "For demand forecasting, predicting too high (excess inventory) costs 2x more than predicting too low (stockout). Which metric?",
+        "back": "Quantile τ=0.33 penalizes overestimation (positive residual) 1x and underestimation 2x, matching costs. τ ∈ [0,1] where τ > 0.5 penalizes underestimation more (conservative). MSE/MAE symmetric; quantile is flexible for asymmetric loss.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "MSE",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "MAE",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Quantile loss with τ=0.33",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Quantile loss with τ=0.67",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "When would you prefer RMSE over MAE in regression evaluation?",
+        "back": "RMSE when: (1) large errors are especially costly (e.g., system failures, safety-critical), (2) outliers represent real signals, not noise, (3) residuals ~normal (RMSE has MLE interpretation). Prefer MAE when: (1) outliers are measurement errors, (2) interpretability matters (units of y), (3) data has heavy tails."
+      },
+      {
+        "type": "flip",
+        "front": "Your model has R² = 0.85 on train, R² = 0.4 on test. Diagnose the issue.",
+        "back": "Large train-test gap signals overfitting. Model memorized noise in training data. Diagnoses: (1) model complexity too high (reduce features, regularization), (2) insufficient training data (increase samples), (3) data leakage (temporal, information). Check residual plot for systematic patterns (nonlinearity, heteroscedasticity)."
+      }
+    ]
+  },
+  {
+    "slug": "ranking-metrics-ndcg-map-mrr",
+    "title": "Ranking metrics (NDCG, MAP, MRR)",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "intermediate",
+    "tags": [
+      "ranking",
+      "information retrieval",
+      "position-aware",
+      "recommendation",
+      "search"
+    ],
+    "aliases": [
+      "normalized discounted cumulative gain",
+      "mean average precision",
+      "mean reciprocal rank"
+    ],
+    "wikilinks": [
+      "discounted-cumulative-gain",
+      "average-precision",
+      "reciprocal-rank",
+      "search-ranking",
+      "recommendation-systems"
+    ],
+    "sources": [
+      {
+        "url": "https://www.ml4devs.com/what-is/model-evaluation-metrics/",
+        "label": "ML4Devs: Model Evaluation Metrics"
+      },
+      {
+        "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall",
+        "label": "Google ML Crash Course"
+      }
+    ],
+    "explainer_md": "## Intuition\nRanking metrics penalize placing relevant items lower in the list. Unlike classification metrics, order matters: returning 1 relevant item at rank 1 is better than at rank 100. These metrics are essential for search engines, recommendation systems, and information retrieval pipelines.\n\n## Detail\nFor ranked list of $k$ items with relevance $rel_i \\in \\{0,1\\}$ or $\\{0,1,2,\\ldots\\}$ (graded):\n\n- **DCG@k** = $\\sum_{i=1}^{k} \\frac{rel_i}{\\log_2(i+1)}$ → discounts by position; log denominator flattens steep falloff\n- **IDCG@k** = optimal DCG (perfect ranking); NDCG@k = $\\text{DCG@k} / \\text{IDCG@k}$ → normalized to [0,1]\n- **AP@k** = $\\frac{1}{\\text{# relevant}(k)} \\sum_{i=1}^{k} P(i) \\cdot rel_i$ → precision@i averaged over relevant items\n- **MAP** = mean of AP across queries\n- **MRR** = $\\frac{1}{|Q|} \\sum \\frac{1}{\\text{rank of first relevant}}$ → average reciprocal of first hit rank\n\nNDCG example: Perfect rank [1,1,1] → DCG = 1/log2(2) + 1/log2(3) + 1/log2(4) ≈ 2.63. Shuffled [1,0,1] → DCG ≈ 1.63. NDCG = 1.63/2.63 ≈ 0.62.\n\n## Common gotchas / interview framings\n- NDCG plateau: Top-5 differences minor; k-choice important (NDCG@5 vs @100)\n- Binary vs graded: binary (0/1) vs multi-level (0-5) relevance; formulas identical, interpretation changes\n- AP ambiguity: macro (average per query) vs micro (global count); typically report mean\n- MRR sensitivity: zero-shot QA uses MRR@5 (first correct answer rank); fails if multiple correct answers\n- Position bias: metrics assume equal exposure; in practice, users click position 1 more (selection bias in labeling)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why does DCG divide by log₂(i+1) instead of just using position i?",
+        "back": "Logarithmic discount reduces penalty for low-rank items. Using position i directly makes position 2 twice as bad as position 1, which is too harsh. Log₂(i+1) makes: position 2 is 1/log₂(3)≈0.63x discount, position 10 is 1/log₂(11)≈0.29x discount. This reflects that user attention drops but not as sharply as linear."
+      },
+      {
+        "type": "flip",
+        "front": "Compute NDCG@3 for a query ranking [relevant, not, relevant] vs [not, relevant, relevant].",
+        "back": "Ranking 1: DCG = 1/log₂(2) + 0/log₂(3) + 1/log₂(4) = 1 + 0 + 0.5 = 1.5\nRanking 2: DCG = 0/log₂(2) + 1/log₂(3) + 1/log₂(4) = 0 + 0.63 + 0.5 = 1.13\nIDCG = [1,1,0] (ideal) = 1 + 0.63 + 0 = 1.63\nNDCG₁ = 1.5/1.63 ≈ 0.92, NDCG₂ = 1.13/1.63 ≈ 0.69. Position matters."
+      },
+      {
+        "type": "mcq",
+        "front": "Which metric best evaluates a search engine where users care mostly about finding *any* correct answer?",
+        "back": "MRR focuses on rank of *first* relevant result; perfect for 'first correct answer' scenarios (QA, fact lookup). NDCG rewards having many relevant items; MAP averages precision of all relevant. MRR is interpretable: MRR=0.5 means 'on average, first correct answer at rank 2'.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "NDCG@10",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "MRR@5",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "MAP@10",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All equally valid",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What's the relationship between MAP and NDCG? When would NDCG be preferable?",
+        "back": "MAP sums precision@k for each relevant item (unordered by position). NDCG explicitly weights position with logarithmic decay. NDCG preferred when position matters (e.g., users scan top-10), MAP preferred for evaluating retrieval across many relevant items. NDCG more interpretable (0-1, normalized); MAP requires relevance count."
+      },
+      {
+        "type": "flip",
+        "front": "A search system has MRR@5 = 0.2. Interpret this metric.",
+        "back": "MRR = 0.2 = 1/(average first-hit rank) → average first hit at rank 5. One of every five queries has first correct result at rank 5 (or scattered distribution). Performance is poor; ideal MRR > 0.8. System likely needs ranking model retraining or relevance data improvement."
+      }
+    ]
+  },
+  {
+    "slug": "calibration-and-brier-score",
+    "title": "Calibration and Brier score",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "intermediate",
+    "tags": [
+      "calibration",
+      "confidence",
+      "probability",
+      "Brier score",
+      "Platt",
+      "isotonic"
+    ],
+    "aliases": [
+      "well-calibrated",
+      "probability calibration",
+      "ECE",
+      "confidence quality"
+    ],
+    "wikilinks": [
+      "platt-scaling",
+      "isotonic-regression",
+      "expected-calibration-error",
+      "model-confidence",
+      "probability-estimation"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/calibration.html",
+        "label": "scikit-learn: Probability Calibration"
+      },
+      {
+        "url": "https://www.blog.trainindata.com/probability-calibration-in-machine-learning/",
+        "label": "Train in Data: Probability Calibration"
+      },
+      {
+        "url": "https://www.blog.trainindata.com/complete-guide-to-platt-scaling/",
+        "label": "Train in Data: Complete Guide to Platt Scaling"
+      },
+      {
+        "url": "https://www.rohan-paul.com/p/ml-interview-q-series-probability-95f",
+        "label": "Rohan Paul: Probability Calibration Q&A"
+      }
+    ],
+    "explainer_md": "## Intuition\nModel calibration measures whether predicted probabilities match empirical frequencies. A well-calibrated 80%-confidence prediction should be correct ~80% of the time. Calibration is orthogonal to accuracy: accurate models can be poorly calibrated (overconfident/underconfident). Brier score quantifies calibration quality.\n\n## Detail\nFor binary predictions with confidence $p_i$ and true labels $y_i \\in \\{0,1\\}$:\n\n- **Brier Score** = $\\frac{1}{n}\\sum (p_i - y_i)^2$ → squared difference between predicted probability and actual outcome. Range [0,1]; lower is better. BS=0: perfect calibration.\n- **Expected Calibration Error (ECE)** = $\\sum_m |\\text{accuracy}_m - \\text{confidence}_m|$ → bins predictions by confidence level, measures gap; M bins typical\n- **Platt Scaling**: fit logistic regression to model scores: $p = \\sigma(A \\cdot \\text{score} + B)$. Parametric, assumes sigmoid-shaped distortion, low data requirement (~100 samples)\n- **Isotonic Regression**: fit monotonic, piecewise-linear function. Non-parametric, flexible, can overfit on <100 samples. Superior to Platt on large datasets\n\nCalibraiton curve: x-axis = predicted probability, y-axis = true positive rate within bin. Diagonal = perfect; above diagonal = underconfident (model too timid), below = overconfident (overestimate correctness).\n\n## Common gotchas / interview framings\n- Calibration ≠ accuracy: model can be 95% accurate but predict 0.5 for all; Brier = 0.25 (terrible), accuracy = 0.95\n- Post-hoc calibration: fit on holdout data to avoid train-test contamination; never calibrate on same data as optimization\n- Overfitting in isotonic: use cross-validation; on <100 samples, Platt more stable\n- Temperature scaling: simple softmax calibration in neural nets; T>1 smooths confidence (less overconfident)\n- Brier score dominated by prevalence: on 95%-negative data, always predicting 0.05 gives Brier ≈ 0.05 (looks good but useless)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What's the difference between model accuracy and calibration? Can a model be accurate but poorly calibrated?",
+        "back": "Accuracy measures correctness; calibration measures whether confidence matches truth frequency. Yes—a classifier that predicts 0.51 for all samples is 51% accurate but Brier score ≈ 0.25 (terrible calibration). Conversely, one predicting 0.99 for 51% of samples and 0.01 for rest can be accurate AND well-calibrated. Both matter for decision-making under uncertainty."
+      },
+      {
+        "type": "flip",
+        "front": "Explain Platt Scaling. When is it preferable to isotonic regression?",
+        "back": "Platt Scaling: fit logistic regression $p = \\sigma(A \\cdot score + B)$ on validation set. Assumes sigmoid distortion (common in SVM, logistic regression). Data-efficient (~100 samples needed). Isotonic: fit monotonic piecewise function; flexible, handles any shape. Overfits on small data. Prefer Platt if <100 calibration samples, isotonic if >1000."
+      },
+      {
+        "type": "mcq",
+        "front": "A model predicts p=0.8 on 100 samples; 85 are actually positive. Brier score?",
+        "back": "Brier = avg((0.8-1)² × 85 + (0.8-0)² × 15) / 100 = (0.04×85 + 0.64×15) / 100 = (3.4 + 9.6) / 100 = 0.13 (closest 0.1225). Well-calibrated: BS should be ≈0.02 (match 80% base rate).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "0.04",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "0.15",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "0.0225",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "0.1225",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why must calibration be fit on a separate holdout set, not the training set?",
+        "back": "Fitting calibration on training data causes overfitting: the calibration function learns noise specific to train set. At test time, confidence miscalibration increases (especially with isotonic regression). Best practice: split into train/calibration/test; use calibration set only for post-hoc fitting."
+      },
+      {
+        "type": "flip",
+        "front": "A neural network model is overconfident (predicted probabilities too high). How would temperature scaling help?",
+        "back": "Temperature scaling: divide logits by T > 1 before softmax. T=2 doubles logit magnitudes, resulting in flatter softmax (confidence closer to 0.5). Converts overconfident predictions (e.g., 0.99) to more calibrated (e.g., 0.80). Fit T on validation set to minimize ECE, then apply to test predictions."
+      }
+    ]
+  },
+  {
+    "slug": "confusion-matrix-and-per-class-performance",
+    "title": "Confusion matrix and per-class performance",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "intermediate",
+    "tags": [
+      "confusion matrix",
+      "multiclass",
+      "per-class metrics",
+      "F1",
+      "macro",
+      "weighted"
+    ],
+    "aliases": [
+      "error matrix",
+      "TP/FP/TN/FN",
+      "class imbalance"
+    ],
+    "wikilinks": [
+      "confusion-matrix",
+      "multiclass-classification",
+      "macro-averaging",
+      "weighted-averaging",
+      "class-specific-error"
+    ],
+    "sources": [
+      {
+        "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall",
+        "label": "Google ML Crash Course: Classification Metrics"
+      },
+      {
+        "url": "https://www.evidentlyai.com/classification-metrics",
+        "label": "Evidently AI: Classification Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nConfusion matrix breaks down predictions by true and predicted class. For multiclass (K>2), it's a K×K matrix: rows = true, columns = predicted. Per-class metrics reveal imbalances: e.g., model may excel on majority class but fail on minority. Macro/weighted averaging aggregates per-class metrics with different strategies.\n\n## Detail\nBinary confusion matrix:\n```\n           Predicted Pos  Predicted Neg\nActual Pos       TP              FN\nActual Neg       FP              TN\n```\n\nMulticlass K×K matrix: entry (i,j) = # samples true class i predicted as j. Diagonal = correct predictions.\n\nPer-class metrics for class k (one-vs-rest):\n- **TP_k**: true class k predicted as k\n- **FP_k**: class ≠k predicted as k\n- **FN_k**: class k predicted as ≠k\n- **Precision_k** = TP_k/(TP_k + FP_k)\n- **Recall_k** = TP_k/(TP_k + FN_k)\n- **F1_k** = 2·Precision_k·Recall_k/(Precision_k + Recall_k)\n\n**Macro averaging**: unweighted mean of per-class metrics (treats rare classes equally). **Weighted averaging**: average weighted by class support (class frequency).\n\nExample 3-class: classes A(100), B(100), C(10). Macro F1 weights all equal; weighted F1 weights A,B 10x more than C. Macro highlights minority problems; weighted reflects overall accuracy.\n\n## Common gotchas / interview framings\n- Imbalanced multiclass: macro-F1 sensitive to minority class errors, weighted-F1 can hide minority problems\n- Diagonal obsession: high accuracy without checking confusion matrix; off-diagonal reveals specific confusions\n- Per-class variance: class k may have precision 0.95 but recall 0.30 (confident but misses many)\n- Averaging choice: report both macro and weighted; clarify which for stakeholder context\n- Minority class collapse: class with 1% support can collapse to near-zero support in predictions; confusion matrix exposes this",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "For a 3-class problem, what does a confusion matrix entry C[i,j] represent?",
+        "back": "C[i,j] = number of samples with true class i that were predicted as class j. Diagonal C[i,i] = correct predictions for class i. Off-diagonal entries show which classes are confused. Example: C[1,2]=15 means 15 class-1 samples mispredicted as class-2."
+      },
+      {
+        "type": "flip",
+        "front": "Your model achieves 93% accuracy on multiclass data. Per-class F1: {Class A: 0.95, Class B: 0.92, Class C: 0.10}. Diagnose.",
+        "back": "Class C (minority) is failing. Likely causes: (1) severe imbalance (C rare), (2) overlapping feature space with other classes, (3) insufficient training data for C. Check confusion matrix to see if C samples are always mispredicted as A or B. Solution: class-weighted loss, oversampling minority, or stratified cross-validation."
+      },
+      {
+        "type": "mcq",
+        "front": "When should you report macro-F1 vs weighted-F1 for imbalanced multiclass?",
+        "back": "Report both. Macro treats all classes equally—highlights minority performance. Weighted averages by support—reflects real-world distribution. For medical diagnosis (rare disease), use macro. For product classification (imbalanced labels), use weighted to match business impact.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Always weighted",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Always macro",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Report both; macro if minority matters, weighted if overall accuracy matters",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Neither; use accuracy only",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "A confusion matrix shows class A is confused with class B frequently. What does this signal?",
+        "back": "Class A and B likely share similar feature distributions. Options: (1) collect more discriminative features, (2) inspect mislabeled training samples (label noise), (3) increase model capacity to learn decision boundary, (4) merge classes if they're truly similar. Confusion matrix directs data collection and feature engineering."
+      },
+      {
+        "type": "flip",
+        "front": "Compute macro-F1 and weighted-F1 given: Class A (support=90): F1=0.90, Class B (support=10): F1=0.50.",
+        "back": "Macro-F1 = (0.90 + 0.50)/2 = 0.70. Weighted-F1 = (0.90×90 + 0.50×10) / (90+10) = (81 + 5) / 100 = 0.86. Macro penalizes class B failure more; weighted emphasizes A's dominance. Choose macro to highlight minority problems in rare-class scenarios."
+      }
+    ]
+  },
+  {
+    "slug": "residual-analysis-in-regression",
+    "title": "Residual analysis in regression",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "intermediate",
+    "tags": [
+      "residuals",
+      "heteroscedasticity",
+      "nonlinearity",
+      "outliers",
+      "diagnostic plots"
+    ],
+    "aliases": [
+      "error distribution",
+      "residual plots",
+      "assumption checking"
+    ],
+    "wikilinks": [
+      "heteroscedasticity",
+      "residual-plot",
+      "q-q-plot",
+      "model-assumptions",
+      "outlier-detection"
+    ],
+    "sources": [
+      {
+        "url": "https://www.ml4devs.com/what-is/model-evaluation-metrics/",
+        "label": "ML4Devs: Model Evaluation Metrics"
+      },
+      {
+        "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall",
+        "label": "Google ML Crash Course"
+      }
+    ],
+    "explainer_md": "## Intuition\nResiduals $r_i = y_i - \\hat{y}_i$ reveal whether linear regression assumptions hold: normality, homoscedasticity, independence, no leverage. Plots expose model misspecification (nonlinearity), outliers, and data quality issues. Residual analysis is cheap diagnostics before complex troubleshooting.\n\n## Detail\nKey residual plots:\n1. **Residuals vs Fitted**: y-axis = residuals, x-axis = predicted values. Ideally horizontal scatter (constant variance). Patterns indicate:\n   - Funnel shape → heteroscedasticity (variance increases with $\\hat{y}$; e.g., percent errors proportional to magnitude)\n   - U-shape → nonlinearity; model underfits curvature\n   - Horizontal band → good fit\n\n2. **Q-Q Plot (Normal Probability)**: y-axis = sample quantiles, x-axis = theoretical normal. Linear → residuals normal. Heavy tails (S-shape) → outliers. Skew → asymmetry. Deviation ≠ disqualification; regression robust to non-normality if $n$ large.\n\n3. **Scale-Location**: y-axis = $\\sqrt{|\\text{standardized residuals}|}$, x-axis = fitted. Tests homoscedasticity; same as Residuals-Fitted but standardized.\n\n4. **Residuals vs Leverage**: identifies high-leverage outliers. Leverage = distance from feature space center. High leverage + large residual = influential point (can pivot fit).\n\n5. **ACF plot** (time-series): autocorrelation of residuals. Significant lags → dependence (violates independence assumption).\n\n## Common gotchas / interview framings\n- Non-normal residuals acceptable if $n > 30$ (CLT); flag extreme violations (multimodal, heavy tails)\n- Heteroscedasticity → standard errors biased → confidence intervals wrong (but coefficient estimates unbiased). Solution: robust SE, weighted regression, or log-transform y\n- Outlier removal: never remove outliers without investigation; may be real signals. Robustness checks: fit with/without, report both\n- Autocorrelation: critical for time series; invalidates standard errors. Use ARMA/GARCH or include lags\n- Nonlinearity fix: polynomial features, splines, GAM, or transformation (log y, √y)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does a funnel-shaped Residuals-vs-Fitted plot indicate? How would you fix it?",
+        "back": "Funnel indicates heteroscedasticity: variance increases with predicted value. Common in proportional/percentage data. Fixes: (1) log-transform y (if y > 0), (2) weighted least squares (inverse variance weights), (3) robust standard errors (HC3/HC4), (4) quantile regression. Diagnosis: Breusch-Pagan test p<0.05 confirms."
+      },
+      {
+        "type": "flip",
+        "front": "Your Q-Q plot shows heavy tails (S-shape). Does this invalidate linear regression?",
+        "back": "Not necessarily. By CLT, if n > 30, regression coefficients approximately normal even if residuals non-normal. Heavy tails matter for: (1) confidence intervals/hypothesis tests (unreliable), (2) prediction intervals (too narrow), (3) outlier sensitivity. Solution: robust regression (Huber loss, M-estimation) or investigate tail causes (outliers, data entry errors)."
+      },
+      {
+        "type": "mcq",
+        "front": "A U-shaped Residuals-vs-Fitted plot suggests:",
+        "back": "U-shape is classic nonlinearity signal: model underfits a curved relationship. Errors positive at low/high fitted values, negative in middle. Solution: add polynomial terms, splines, or GAM. Funnel shape (A) indicates variance heteroscedasticity.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Heteroscedasticity",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Nonlinearity (underfitting curvature)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Independence violation",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Both A and B",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You identify a high-leverage, large-residual point in Residuals-vs-Leverage plot. Should you remove it?",
+        "back": "Not automatically. Investigate first: (1) data entry error? (2) real but extreme observation? (3) measurement outlier? Fit model with/without; if coefficient estimates/predictions change dramatically, it's influential. Report robustness analysis. Removal justified only if data quality issue confirmed."
+      },
+      {
+        "type": "flip",
+        "front": "Your time-series residuals show significant ACF at lag-1 (ρ=0.6). What's the issue?",
+        "back": "Residuals are autocorrelated → violates independence assumption. Standard errors are downward-biased (confidence intervals too narrow, p-values too small). Solution: (1) add lagged y or AR term, (2) ARIMA/GARCH model, (3) Newey-West robust SE for inference, (4) use differencing to remove trend. ACF p<0.05 at lag-k confirms."
+      }
+    ]
+  },
+  {
+    "slug": "learning-curves-and-bias-variance-decomposition",
+    "title": "Learning curves and bias-variance decomposition",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "intermediate",
+    "tags": [
+      "learning curves",
+      "bias-variance",
+      "sample size",
+      "overfitting",
+      "underfitting",
+      "data scaling"
+    ],
+    "aliases": [
+      "training curves",
+      "convergence diagnosis",
+      "model capacity"
+    ],
+    "wikilinks": [
+      "bias-variance-tradeoff",
+      "learning-curve",
+      "overfitting",
+      "underfitting",
+      "sample-complexity"
+    ],
+    "sources": [
+      {
+        "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall",
+        "label": "Google ML Crash Course"
+      },
+      {
+        "url": "https://www.ml4devs.com/what-is/model-evaluation-metrics/",
+        "label": "ML4Devs: Model Evaluation Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nLearning curves plot train/test error vs training set size (or iterations). Patterns diagnose whether model needs more data, regularization, or architecture changes. Bias-variance decomposition decomposes test error into reducible bias (underfitting), variance (overfitting), and irreducible noise.\n\n## Detail\n**Learning curve patterns**:\n1. Both curves plateau at high error → high bias (underfitting). Gap is small. Solution: increase model complexity, add features, reduce regularization.\n2. Training error low, test high, large gap → high variance (overfitting). Solution: more data, regularization (L1/L2, dropout), simpler model.\n3. Both curves decrease, gap shrinking as n increases → ideal; model improving with more data.\n4. Test error increases with n → data quality issue, distribution shift, or label noise.\n\n**Bias-Variance Decomposition** (for squared loss):\n$$E[(y - \\hat{y})^2] = \\text{Bias}^2[\\hat{y}] + \\text{Var}[\\hat{y}] + \\sigma^2$$\n- Bias²: systematic error from model assumptions (e.g., linear model on nonlinear data)\n- Var: sensitivity to training data fluctuations (small-sample overfitting)\n- σ²: irreducible noise in y (cannot be reduced)\n\n**Bias-Variance tradeoff**: increasing complexity reduces bias but increases variance. U-shaped total error; minimum at sweet spot.\n\n**Early stopping**: monitor test error during training; stop when test error stops decreasing. Prevents variance accumulation without regularization parameter tuning.\n\n## Common gotchas / interview framings\n- Learning curve convergence: if plateau far from test performance, fix data quality/distribution shift first\n- Sample size scaling: increasing n helps high-variance models more than high-bias. Rule of thumb: 10:1 ratio features:samples minimum\n- Cross-validation learning curves: use CV folds to smooth noise in learning curves\n- Plateau interpretation: high train/test plateau → underfitting; gap → overfitting. Both plateau = accept performance or add signal\n- Training data size vs computational cost: diminishing returns; doubling data for 1% improvement rarely worth it",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "You observe that both training and validation error plateau at 20% error with a small gap. Diagnose.",
+        "back": "High bias (underfitting). Model is too simple; it cannot fit the training data well, so it generalizes poorly. Small gap means minimal overfitting. Solutions: (1) increase model complexity (more layers, features), (2) reduce regularization strength, (3) try different architecture, (4) add polynomial features or interactions. More data won't help much here."
+      },
+      {
+        "type": "flip",
+        "front": "Your learning curve shows: training error 2%, validation error 25%, large gap. Diagnose and recommend fixes.",
+        "back": "High variance (overfitting). Model memorizes training data but doesn't generalize. Solutions ranked by cost-effectiveness: (1) collect more training data (if possible), (2) increase regularization (L1/L2, dropout), (3) reduce model complexity (fewer features, shallower network), (4) cross-validation with more folds, (5) ensemble to reduce variance. Prioritize data."
+      },
+      {
+        "type": "mcq",
+        "front": "Bias-variance decomposition: MSE = Bias² + Var + σ². Which term cannot be reduced?",
+        "back": "σ² is inherent label noise; cannot be removed. Bias² reduced by increasing model complexity. Variance reduced by regularization/more data. Trade-off: complex model = low bias, high variance; simple = high bias, low variance.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Bias²",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Variance",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "σ² (irreducible noise)",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "All can be reduced",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your validation error increases as you add more training samples. What's wrong?",
+        "back": "Likely data quality/distribution shift issue: (1) label noise in new data, (2) different source distribution than validation, (3) data entry errors in batch addition. Check: plot feature distributions (new vs old), inspect label agreement (inter-annotator agreement), check for outliers. Learning curves should be monotonically decreasing or flat; increasing suggests external problem."
+      },
+      {
+        "type": "flip",
+        "front": "For a decision tree, how does learning curve change as you reduce max_depth from 20 to 5?",
+        "back": "Reducing depth increases bias (underfitting): training error increases, but gap between train/test shrinks (less overfitting). Combined effect depends on bias-variance tradeoff. If current depth=20 overfits, depth=5 improves test error despite higher training error. Optimal depth found via learning curves or cross-validation."
+      }
+    ]
+  },
+  {
+    "slug": "out-of-distribution-ood-detection",
+    "title": "Out-of-distribution (OOD) detection",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "advanced",
+    "tags": [
+      "OOD detection",
+      "distribution shift",
+      "uncertainty",
+      "anomaly detection",
+      "domain adaptation"
+    ],
+    "aliases": [
+      "anomaly detection",
+      "novelty detection",
+      "drift detection"
+    ],
+    "wikilinks": [
+      "distribution-shift",
+      "anomaly-detection",
+      "uncertainty-quantification",
+      "mahalanobis-distance",
+      "auroc-ood"
+    ],
+    "sources": [
+      {
+        "url": "https://www.evidentlyai.com/classification-metrics",
+        "label": "Evidently AI: Classification Metrics"
+      },
+      {
+        "url": "https://www.ml4devs.com/what-is/model-evaluation-metrics/",
+        "label": "ML4Devs: Model Evaluation Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nOOD detection identifies inputs that differ from training distribution. Critical for production: model confidence is unreliable on OOD data. Methods range from simple (max softmax score) to complex (generative models, density estimation). Calibration helps: well-calibrated models are less overconfident on OOD.\n\n## Detail\n**Simple OOD scores**:\n- **Max softmax**: predict OOD if max(softmax) < threshold τ. Weak; overconfident DNNs often fail.\n- **Energy score**: $$\\text{score} = \\log \\sum_i e^{z_i}$$ (before softmax). Separates ID/OOD better than max softmax\n- **Temperature scaling** (before threshold): divides logits by T; flattens confidence, makes OOD detection easier\n\n**Advanced methods**:\n- **Mahalanobis distance**: compute class-wise mean and covariance on ID data. OOD score = distance to nearest class center. Sensitive to feature space geometry.\n- **Deep ensemble diversity**: multiple models disagree on OOD; use disagreement (variance of predictions) as OOD signal\n- **Density estimation**: fit Gaussian mixture or VAE on ID features. OOD = low likelihood. Assumes feature distribution unimodal.\n- **Generative models**: train on ID data, score OOD via likelihood ratio or discriminator confidence\n- **Test-time adaptation**: fine-tune on test batch to detect shift (performance degradation on unlabeled test = drift indicator)\n\n**Metrics**: OOD detection evaluated as binary classification (ID vs OOD). Use AUROC, AUPR. Example: ID=0 (in-distribution), OOD=1 (out-of-distribution); higher score = more OOD.\n\n## Common gotchas / interview framings\n- OOD ≠ hard to classify: OOD may be easy for human but unlike training; hard examples are ID but near decision boundary\n- Softmax overconfidence: neural nets assign high confidence even to random noise; don't rely on raw softmax\n- Threshold tuning: OOD threshold chosen on test set = overfitting; use separate OOD validation set\n- Multi-modal ID distribution: Gaussian assumptions fail; need mixture models or nonparametric density\n- Closed-world vs open-world: closed = OOD is defined set of classes; open = any new class. Methods differ",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is max softmax score alone insufficient for OOD detection?",
+        "back": "Neural networks are overconfident: they assign high softmax score to random/OOD inputs. Example: vision model confidently predicts 'dog' (98%) on noise. Max softmax doesn't capture whether model has *seen similar data before*. Better: use energy score, ensemble disagreement, or Mahalanobis distance that explicitly model training data distribution."
+      },
+      {
+        "type": "flip",
+        "front": "Explain Mahalanobis distance for OOD detection. When does it fail?",
+        "back": "Compute class-wise mean μ_k and covariance Σ_k on training data. OOD score = distance from sample to nearest class: $\\sqrt{(x - \\mu_k)^T Σ_k^{-1}(x - \\mu_k)}$. High distance = OOD. Fails when: (1) features high-dimensional (curse of dimensionality), (2) ID data multimodal (single Gaussian insufficient), (3) feature whitening masks class structure. Requires careful feature engineering/dimensionality reduction."
+      },
+      {
+        "type": "mcq",
+        "front": "A model confidently predicts class A (softmax=0.95) on an OOD image. What score better detects this OOD?",
+        "back": "Energy score = log(sum of exp logits). High for ID (many high logits), low for OOD (diffuse logits). Separates ID/OOD better than softmax which can be high in both. Temperature scaling can help but energy is more robust.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Max softmax",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Energy score (logsum before softmax)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Confidence × accuracy correlation",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Test error",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You deploy a model for fraud detection. How would you set OOD threshold for flagging transactions as anomalies?",
+        "back": "Never use test set OOD data to set threshold (overfitting risk). Use separate validation OOD set: (1) collect fraud/novel samples, (2) compute ROC curve (ID=0, fraud=1), (3) choose threshold at desired false positive rate (FPR), e.g., FPR=5% for 95% precision. Monitor production drift; threshold degrades over time—retune quarterly."
+      },
+      {
+        "type": "flip",
+        "front": "Compare max-softmax vs ensemble disagreement for OOD detection. When is ensemble better?",
+        "back": "Max-softmax: single model score; fast but overconfident. Ensemble disagreement: variance across 5-10 models; slower but robust. Ensemble better when: (1) OOD diverse (need multiple perspectives), (2) budget allows inference cost. Max-softmax okay if model well-calibrated (post-hoc calibration). In practice, ensemble disagreement + Mahalanobis + temperature scaling is best."
+      }
+    ]
+  },
+  {
+    "slug": "adversarial-examples-and-adversarial-robustness",
+    "title": "Adversarial examples and adversarial robustness",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "advanced",
+    "tags": [
+      "adversarial examples",
+      "robustness",
+      "perturbations",
+      "certified defense",
+      "adversarial training"
+    ],
+    "aliases": [
+      "adversarial attacks",
+      "perturbation attacks",
+      "robust ML"
+    ],
+    "wikilinks": [
+      "fgsm-attack",
+      "pgd-attack",
+      "adversarial-training",
+      "certified-robustness",
+      "perturbation-budget"
+    ],
+    "sources": [
+      {
+        "url": "https://www.ml4devs.com/what-is/model-evaluation-metrics/",
+        "label": "ML4Devs: Model Evaluation Metrics"
+      },
+      {
+        "url": "https://www.evidentlyai.com/classification-metrics",
+        "label": "Evidently AI: Classification Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nAdversarial examples are inputs slightly perturbed from originals to fool models, yet imperceptible to humans. Robustness measures model performance under such attacks. Evaluation requires adversarial test sets; standard metrics (accuracy) may be misleading if untested against attacks. Two defense paradigms: certified (provable bounds) vs empirical (best-effort).\n\n## Detail\n**Attack formulation** (adversarial perturbation δ):\n$$\\max_δ L(\\text{model}(x + δ), y_{\\text{target}}) \\text{ s.t. } \\|δ\\|_p \\leq ε$$\nε = perturbation budget (L2: pixel value change; L∞: max per-pixel change). Typical ε: 8/255 (ImageNet), 0.3 (MNIST).\n\n**Common attacks**:\n- **FGSM** (Fast Gradient Sign Method): δ = ε·sign(∇_x L). One-shot, fast, weak.\n- **PGD** (Projected Gradient Descent): iterative attack; ε-ball constrained. Stronger; gold standard.\n- **C&W** (Carlini-Wagner): unconstrained optimization; finds minimal perturbation. Very strong.\n\n**Defenses**:\n- **Adversarial training**: train on adversarial examples (e.g., PGD) + original data. Empirical; no guarantees. ε-robust training hardens model to perturbations ≤ε.\n- **Certified defense** (randomized smoothing): add Gaussian noise at inference; proves robustness to L2 perturbations. Trade-off: accuracy for provable guarantees.\n- **Input preprocessing**: JPEG compression, bit depth reduction, feature squeezing. Weak; easily bypassed.\n\n**Evaluation**:\n- **Standard accuracy**: accuracy on clean (original) test set.\n- **Adversarial accuracy**: accuracy on adversarially perturbed test. Much lower; metric matters (ε budget, attack type).\n- **Robustness curve**: adversarial accuracy vs ε. Typically decreases as ε increases.\n\n## Common gotchas / interview framings\n- White-box vs black-box: white-box = attacker knows model weights (harder defense). Black-box = model API only (easier defense). Don't confuse threat models.\n- Adaptive attacks: attacker aware of defense; defeat many simple defenses. Always evaluate against adaptive attacks.\n- Accuracy-robustness tradeoff: robust models (adversarial training) ~5-10% less accurate on clean data. Engineering tradeoff.\n- Transferability: adversarial examples trained on Model A often fool Model B (cross-model transfer). Use this for black-box attacks.\n- Certified bounds loose: provable robustness guarantees often large ε (loose); practical robustness often much tighter",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain FGSM attack. Why is it weaker than PGD?",
+        "back": "FGSM: δ = ε·sign(∇_x L) (one-shot). Moves in steepest gradient direction. Simple, fast but suboptimal. PGD: iterative; moves multiple steps within ε-ball, projecting back after each step. PGD explores ε-ball better, finding adversarial examples that FGSM misses. PGD usually 10-30% stronger attack."
+      },
+      {
+        "type": "flip",
+        "front": "A model achieves 95% clean accuracy and 40% adversarial accuracy (ε=8/255). Is this acceptable?",
+        "back": "Context-dependent. For non-critical tasks (content recommendation), 40% robust accuracy may be acceptable. For security-critical (malware detection, fraud), 40% is unacceptable—attacker can bypass. Acceptable robustness varies: autonomous vehicles require ~90%, spam filters ~70%. Always specify threat model (ε, attack type) and application requirements."
+      },
+      {
+        "type": "mcq",
+        "front": "Certified robustness via randomized smoothing: add Gaussian noise during inference to bound perturbations. Main tradeoff?",
+        "back": "All correct. Randomized smoothing requires: (1) inference on noisy samples (M≈100), averaging predictions = slower, (2) provable bounds on L2 robustness, (3) clean accuracy drops ~5-10%, (4) model may need retraining. Trade-off: verifiable security for performance.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Slower inference (multiple samples needed)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Provable robustness vs empirical accuracy",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Requires model retraining",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of above",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your model is adversarially trained (ε=8/255). Is it robust to ε=16/255 attacks?",
+        "back": "No. Adversarial training to ε is robust only to perturbations ≤ε (approximately). Training on ε=8/255 gives ~0% accuracy at ε=16/255. Robustness is threshold-based, not general. To handle multiple ε values, use graduated adversarial training (vary ε during training) or certified methods (randomized smoothing scales with Gaussian σ)."
+      },
+      {
+        "type": "flip",
+        "front": "Adversarial examples fool models but not humans. Why? What does this imply for robustness evaluation?",
+        "back": "Models rely on brittle features (texture, spatial patterns) not robust to small perturbations. Humans rely on semantic features (parts, objects) robust to pixel noise. Implication: standard metrics (accuracy) misleading under adversarial conditions. Must evaluate against threat model (ε, attack type); clean accuracy ≠ adversarial robustness. Use adaptive attacks to avoid overfitting defenses."
+      }
+    ]
+  },
+  {
+    "slug": "data-poisoning-and-model-backdoors",
+    "title": "Data poisoning and model backdoors",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "advanced",
+    "tags": [
+      "data poisoning",
+      "backdoor attacks",
+      "trojan",
+      "training data",
+      "anomaly detection"
+    ],
+    "aliases": [
+      "label flipping",
+      "feature injection",
+      "trigger patterns"
+    ],
+    "wikilinks": [
+      "poisoning-attack",
+      "backdoor-attack",
+      "trojan-network",
+      "trigger-pattern",
+      "data-validation"
+    ],
+    "sources": [
+      {
+        "url": "https://www.ml4devs.com/what-is/model-evaluation-metrics/",
+        "label": "ML4Devs: Model Evaluation Metrics"
+      },
+      {
+        "url": "https://www.evidentlyai.com/classification-metrics",
+        "label": "Evidently AI: Classification Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nData poisoning attacks corrupt training data to degrade model or embed backdoors. Poisoning is stealthy: model maintains high accuracy on clean data but fails on adversary-chosen inputs (triggers). Detection requires data validation, anomaly detection, and test-time monitoring. Critical in crowdsourced or third-party data scenarios.\n\n## Detail\n**Attack types**:\n1. **Label flipping**: flip fraction p of labels (0→1, 1→0). Simple but detectable via data audit. Effect: ~10% flip = ~10% accuracy drop.\n2. **Feature injection** (backdoor): add small pattern/noise to subset of samples, mislabel them. Clean data accuracy maintained; triggered inputs misclassify. Example: add 3×3 pixel pattern (trojan trigger) to images; train model to predict 'target_class' when trigger present.\n3. **Availability attack**: poison to maximize error on all inputs. Stealthy harder; noticeable if widespread.\n\n**Backdoor formulation**:\n- Attacker controls trigger pattern τ and target class $y^*$\n- Poison: add τ to ~5% of training samples, relabel to $y^*$\n- Result: model high accuracy (clean data unchanged), but x + τ → $y^*$ with ~100% success\n- Trigger imperceptible to human labeler if subtle (e.g., specific hue shift, watermark)\n\n**Defenses**:\n- **Data validation**: random audits of labels (inter-annotator agreement), outlier detection on features\n- **Anomaly detection**: identify mislabeled samples via confidence-based scores or clustering\n- **Robust training**: train with noisy labels or mixup to reduce sensitivity to label corruption\n- **Model inspection**: test-time trigger detection via model behavior on synthetic inputs, saliency maps\n- **Activation clustering**: group activation patterns; backdoored samples cluster separately (DeepInspect method)\n\n## Common gotchas / interview framings\n- Backdoor stealthiness: model still 95%+ accurate on clean data; backdoor is targeted misclassification on trigger\n- Trigger invisibility: triggers can be imperceptible (1-2% pixel change, color shift); hard to detect manually\n- Supply-chain risk: third-party datasets, pretrained models, or crowd-sourced labels all vulnerable\n- Detection cost: inspecting 1M training samples expensive; focus on high-risk subsets (labels from unknown annotators)\n- Robustness vs accuracy: defenses (robust training) trade accuracy for poisoning resistance; quantify cost",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain the difference between data poisoning (label flipping) and backdoor attacks.",
+        "back": "Label flipping: corrupt 10% of labels (random). Effect: model accuracy drops uniformly (~10% degradation). Simple, obvious. Backdoor: inject trigger pattern into ~5% of samples, mislabel to target class. Effect: clean data accuracy maintained, but triggered inputs misclassify. Backdoor is targeted and stealthy; label flipping is broad and detectable."
+      },
+      {
+        "type": "flip",
+        "front": "A model achieves 98% accuracy on test set, but fails (predicts 'SPAM') on emails with specific keyword 'INVOICE'. Diagnose.",
+        "back": "Likely backdoor attack. Attacker poisoned training data: emails with 'INVOICE' mislabeled as SPAM during training. Model learned trigger→SPAM mapping. Detection: (1) test for trigger sensitivity (vary 'INVOICE' → 'DOCUMENT', see if misclassification persists), (2) activation clustering to find abnormal patterns, (3) inspect training labels for suspicious correlation. Mitigation: relabel data, retrain on clean subset."
+      },
+      {
+        "type": "mcq",
+        "front": "To defend against backdoor attacks, which approach is most practical at scale?",
+        "back": "Manual audit infeasible for millions of samples. Robust training (mixup, noisy label loss) reduces backdoor effectiveness without perfect label detection. Sampling + agreement checks (option C) is secondary: catch gross errors but miss subtle backdoors. Combination is best practice.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Manually audit all training labels",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Train model on data with label noise (robust training)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Random sampling + inter-annotator agreement checks",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "All equally effective",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Your image classifier is backdoored: every image with a small 3×3 watermark is mispredicted. How would you detect this?",
+        "back": "Methods: (1) activate saliency maps (backprop gradients) to visualize decision regions; backdoored samples highlight trigger pattern, (2) activation clustering: compute internal representations on test set; backdoored samples cluster away from clean class centroid, (3) test-time scanning: add synthetic watermarks to test images, measure misclassification spike. If watermark + misclassification correlate → backdoor confirmed."
+      },
+      {
+        "type": "flip",
+        "front": "A crowdsourced dataset has 0.5% mislabeled samples (detected via re-annotation). What's the impact on model performance?",
+        "back": "~0.5% accuracy drop (linear to label flip rate if random noise). If mislabeling is adversarial (concentrated on certain classes or features), impact can be higher. Worse: if mislabels form backdoor pattern (all 'class A' samples mislabeled as 'class B'), accuracy drop concentrated in one class-pair. Always audit label quality; prioritize high-risk sources (first-time annotators, low-agreement samples)."
+      }
+    ]
+  },
+  {
+    "slug": "model-stealing-and-intellectual-property",
+    "title": "Model stealing and intellectual property",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "advanced",
+    "tags": [
+      "model extraction",
+      "IP protection",
+      "API security",
+      "query throttling",
+      "surrogate model"
+    ],
+    "aliases": [
+      "model extraction attacks",
+      "knowledge distillation attack",
+      "model piracy"
+    ],
+    "wikilinks": [
+      "model-extraction",
+      "knowledge-distillation",
+      "api-security",
+      "output-quantization",
+      "prediction-watermarking"
+    ],
+    "sources": [
+      {
+        "url": "https://www.ml4devs.com/what-is/model-evaluation-metrics/",
+        "label": "ML4Devs: Model Evaluation Metrics"
+      },
+      {
+        "url": "https://www.evidentlyai.com/classification-metrics",
+        "label": "Evidently AI: Classification Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nModel stealing exploits API access to extract intellectual property. Attacker queries model API (black-box), collects input-output pairs, trains surrogate model mimicking original. Similar to knowledge distillation but adversarial. Mitigations: query throttling, output quantization, prediction watermarking, or input perturbation.\n\n## Detail\n**Extraction attack**:\n1. Attacker queries API with inputs X, collects predictions Ŷ\n2. Trains surrogate model on (X, Ŷ) pairs\n3. Surrogate approximates original model's decision boundary\n4. Cost: queries × price per query; can be thousands to millions\n\n**Attack query complexity**:\n- Decision boundary region: requires O(d) to O(2^d) queries (d = feature dimensions) to approximate locally\n- Global extraction: millions of queries for high-fidelity copy\n- Example: text classifier extracted with ~500K queries (Carlini et al., 2020)\n\n**Mitigations**:\n- **Query throttling**: limit queries/user/time (e.g., 100 queries/day/IP). Slows extraction but doesn't prevent if budget large.\n- **Output quantization**: round predictions (e.g., confidence 0.876 → 0.88). Reduces information leaked per query.\n- **Confidence masking**: return only top-k classes, not full softmax. Query attacker learns less per query.\n- **Prediction watermarking**: embed imperceptible signal in predictions; owns extracted models. Backdoor-like trigger.\n- **Input perturbation**: add noise to inputs before processing; disrupts extraction. Risks accuracy degradation.\n- **Model ensemble + disagreement**: use multiple models, return majority vote. Harder to extract individual models.\n\n**Detection**:\n- Monitor query patterns: adversarial attacker shows systematic exploration (grid search, boundary crossing)\n- Sudden surge in failed predictions: attacker testing edge cases\n- Unusual input distribution: attacker may not follow natural distribution\n\n## Common gotchas / interview framings\n- Trade-off accuracy vs security: strong throttling/quantization degrades user experience\n- Query budget visible: if API charges per query, cost is signal; expensive extraction deters amateur but not well-funded attacker\n- Surrogate accuracy: surrogate rarely matches original exactly (~5-10% gap typical); but sufficient for piracy in many domains\n- Watermarking effectiveness: if attacker retrains, watermark may be lost; combine multiple defenses\n- Regulatory gap: no international IP protection for ML models (unlike software); legal remedies limited",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain model extraction attack. How many queries does an attacker need to steal a binary classifier?",
+        "back": "Attacker queries model API with inputs, collects predictions, trains surrogate model. Query complexity ~O(d) to O(2^d) where d = input dimensions (features). For binary classifier with d=100 features, ~1000-10000 queries suffice to approximate decision boundary locally. Global extraction ~100K+ queries. Cost: if $0.01/query, extraction costs $1000+. Feasible for valuable models."
+      },
+      {
+        "type": "flip",
+        "front": "Propose three mitigations for model stealing. Which is most practical?",
+        "back": "1. Query throttling (100/day/IP): slows extraction but doesn't prevent if budget large. 2. Output quantization (round confidence): leaks less info/query. 3. Prediction watermarking (embed signal): ownership proof but detection requires model access. Most practical: combine (1) + (2). Throttling is cheapest; quantization acceptable user-experience tradeoff. Watermarking adds detection but doesn't prevent extraction."
+      },
+      {
+        "type": "mcq",
+        "front": "Your API returns only top-3 predictions instead of full softmax. How does this mitigate model stealing?",
+        "back": "Reduces information leaked per query. Attacker gets top-3 class probabilities, not full softmax (~10 classes). Knowledge distillation (core of extraction) relies on soft labels; fewer outputs = harder to train surrogate. Combined with throttling, effective defense.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Prevents extraction entirely",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Reduces info per query (less soft-label information)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Increases query cost proportionally",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No effect",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "An attacker extracted your text classifier via API queries. How would you detect this?",
+        "back": "Monitor for: (1) unusual query patterns (systematic exploration of input space, boundary-crossing inputs), (2) high volume from single IP (e.g., 10K queries in 1 hour), (3) low human-like diversity (attacker often reuses features), (4) sudden surge in failed predictions (attacker testing edge cases). Implement query logging + anomaly detection (clustering of query patterns)."
+      },
+      {
+        "type": "flip",
+        "front": "Model A is embedded in web app (no API). Model B is available via API. Which is more vulnerable to stealing?",
+        "back": "Model B (API) much more vulnerable. Attacker can query freely, collect predictions, train surrogate. Model A is client-side (black-box but no query interface); extraction requires reverse-engineering or local probing. In practice, web app models still extractable (via repeated interactions) but require more work. API = easy access = high risk. For sensitive IP, keep model server-side, limit query exposure."
+      }
+    ]
+  },
+  {
+    "slug": "fairness-metrics-demographic-parity-equalized-odds-calibration",
+    "title": "Fairness metrics (demographic parity, equalized odds, calibration)",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "difficulty": "intermediate",
+    "tags": [
+      "fairness",
+      "bias",
+      "demographic parity",
+      "equalized odds",
+      "disparate impact"
+    ],
+    "aliases": [
+      "algorithmic fairness",
+      "group fairness",
+      "individual fairness"
+    ],
+    "wikilinks": [
+      "demographic-parity",
+      "equalized-odds",
+      "disparate-impact",
+      "fairness-accuracy-tradeoff",
+      "bias-mitigation"
+    ],
+    "sources": [
+      {
+        "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall",
+        "label": "Google ML Crash Course"
+      },
+      {
+        "url": "https://www.evidentlyai.com/classification-metrics",
+        "label": "Evidently AI: Classification Metrics"
+      }
+    ],
+    "explainer_md": "## Intuition\nFairness metrics quantify algorithmic bias across demographic groups (race, gender, age). Three main notions: demographic parity (equal outcomes), equalized odds (equal error rates), and calibration (equal confidence). No single definition fits all; choice depends on legal/ethical context. Fairness-accuracy tradeoff: enforcing fairness often reduces overall accuracy.\n\n## Detail\n**Demographic Parity (DP)**:\n$$P(\\hat{Y}=1|G=0) = P(\\hat{Y}=1|G=1)$$\nEqual positive prediction rate across groups. Fairness notion: equal outcomes regardless of group. Problem: ignores base rates. If Group 0 is 90% qualified, DP forces same 90% positive rate for Group 1 even if 50% qualified → false positives for Group 1.\n\n**Equalized Odds (EO)**:\n$$P(\\hat{Y}=1|Y=1,G=0) = P(\\hat{Y}=1|Y=1,G=1)$$ AND $$P(\\hat{Y}=0|Y=0,G=0) = P(\\hat{Y}=0|Y=0,G=1)$$\nEqual TPR and FPR across groups. Fairness notion: equal opportunity (same treatment of positives, same treatment of negatives). Harder to achieve; often requires trade-off.\n\n**Predictive Parity**:\n$$P(Y=1|\\hat{Y}=1,G=0) = P(Y=1|\\hat{Y}=1,G=1)$$\nEqual precision (reliability of positive predictions) across groups. If model predicts 'approve loan' for Group 0 with 90% approval rate and Group 1 with 80%, precision differs.\n\n**Calibration**:\n$$P(Y=1|\\hat{Y}=p,G=0) ≈ p ≈ P(Y=1|\\hat{Y}=p,G=1)$$\nEqual calibration across groups. A 80%-confidence prediction should be ~80% accurate for both groups. Most relaxed definition; compatible with some disparity.\n\n**Fairness-Accuracy Tradeoff**:\n- Enforcing demographic parity reduces accuracy (especially minority group)\n- Threshold tuning per group: lower threshold for disadvantaged group → more positives, lower precision\n- Example: 5-10% accuracy drop to achieve demographic parity\n\n## Common gotchas / interview framings\n- Impossibility theorem: DP + EO incompatible unless base rates equal or classifier perfect; choose one\n- Proxy discrimination: if using proxies for protected attribute (zipcode ≈ race), DP violated indirectly\n- Measurement issues: fairness metrics sensitive to data quality (mislabeled minority), representation bias\n- Context-dependent: hiring (EO preferred: equal TPR), lending (calibration: equal default risk), hiring (DP: equal success rate)\n- Fairness washing: report best-looking metric; always report multiple (DP, EO, calibration) with context",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define demographic parity and explain when it's appropriate. What's a pitfall?",
+        "back": "Demographic parity: equal positive prediction rate across groups: P(ŷ=1|G=0) = P(ŷ=1|G=1). Appropriate when: past discrimination exists, legal mandate (e.g., hiring lawsuits), or outcomes should be equal. Pitfall: ignores base rates. If Group 1 is 90% qualified and Group 0 is 50%, DP forces same positive rate despite qualification gap, leading to false positives for Group 0 and false negatives for Group 1."
+      },
+      {
+        "type": "flip",
+        "front": "Explain equalized odds. How does it differ from demographic parity?",
+        "back": "Equalized odds (EO): equal TPR and FPR across groups. Condition on true label: P(ŷ=1|Y=1,G=g) and P(ŷ=0|Y=0,G=g) same for all g. Differs from DP: DP conditions only on prediction, ignoring true label. EO respects base rates. Example: if Group 0 and 1 both have 80% qualified rate, EO ensures 80% of qualified in both groups are approved. Harder to achieve; requires group-specific thresholds."
+      },
+      {
+        "type": "mcq",
+        "front": "Hiring model: 80% TPR for male candidates, 70% for female. Fair under which metric?",
+        "back": "TPR differs (80% vs 70%) → fails equalized odds. DP not satisfied if prediction rates differ. Predictive parity requires equal precision (P(hired | qualified)), not equal TPR. None satisfied. Fix: threshold tuning or reweighting to equalize TPR across groups.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Demographic parity",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Equalized odds",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Predictive parity (precision)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "None of these",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "You're building a loan approval system. Would you optimize for DP, EO, or calibration? Why?",
+        "back": "Calibration is most appropriate. Reason: loan default risk must be equal across groups (P(default|approved,male) ≈ P(default|approved,female)). Bank's risk exposure same regardless of gender. Calibration aligns with business logic (fair pricing). DP/EO might enforce approval rate parity despite underlying qualification disparity. Note: recidivism (COMPAS) case shows this: optimizing for equal TPR (EO) → worse calibration for minorities."
+      },
+      {
+        "type": "flip",
+        "front": "Describe the fairness-accuracy tradeoff. Give a numerical example.",
+        "back": "Enforcing fairness (e.g., group-specific thresholds) reduces overall accuracy. Example: original model 90% accurate, demographic-parity enforced → 85% accurate. Group A: 91% → 88% (3% drop), Group B: 88% → 82% (6% drop). Trade-off worse for minority group (larger threshold shift needed). Acceptable? Context: hiring (1-2% accuracy loss acceptable), fraud (unacceptable). Communicate trade-off to stakeholders."
+      }
+    ]
+  }
+]

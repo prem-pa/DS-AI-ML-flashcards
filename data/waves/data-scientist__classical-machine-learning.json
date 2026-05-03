@@ -1,0 +1,1909 @@
+[
+  {
+    "slug": "linear-regression-ols",
+    "title": "Linear regression (OLS)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "beginner",
+    "tags": [
+      "regression",
+      "supervised-learning",
+      "statistical-inference",
+      "baseline"
+    ],
+    "aliases": [
+      "ordinary-least-squares",
+      "linear-model",
+      "OLS"
+    ],
+    "wikilinks": [
+      "bias-variance-tradeoff",
+      "mse-loss",
+      "normal-distribution",
+      "residuals"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/linear_model.html",
+        "label": "scikit-learn Linear Models"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      },
+      {
+        "url": "https://www.deeplearning.ai/courses/machine-learning-specialization/",
+        "label": "DeepLearning.AI ML"
+      }
+    ],
+    "explainer_md": "## Intuition\nLinear regression finds the best-fit line through data by minimizing the sum of squared residuals. It's the workhorse baseline for supervised learning.\n\n## Detail\nClosed-form solution: $\\hat{\\beta} = (X^T X)^{-1} X^T y$\n$$\\text{minimize } ||y - X\\beta||_2^2$$\nUnbiased estimator under classical assumptions. Cost: $O(nd^2)$.\n\n**Mean Squared Error as MLE:** If $\\epsilon \\sim N(0, \\sigma^2)$:\n$$\\mathcal{L}(\\beta) \\propto \\exp\\left(-\\frac{1}{2\\sigma^2}||y - X\\beta||_2^2\\right)$$\n\n## Common gotchas\n- **Singularity:** Multicollinearity → $(X^T X)^{-1}$ undefined. Ridge regression adds $\\lambda I$.\n- **Extrapolation:** Unreliable outside training data range.\n- **Assumption violations:** Use diagnostics to detect.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Derive the closed-form OLS solution from the loss function.",
+        "back": "Minimize $||y - X\\beta||_2^2$. Gradient: $\\frac{\\partial}{\\partial\\beta}(y - X\\beta)^T(y - X\\beta) = -2X^T(y - X\\beta) = 0$. Solve: $\\hat{\\beta} = (X^T X)^{-1} X^T y$. Requires $X^T X$ invertible."
+      },
+      {
+        "type": "flip",
+        "front": "Why is OLS equivalent to MLE under Gaussian noise?",
+        "back": "If $y = X\\beta + \\epsilon$ with $\\epsilon \\sim N(0, \\sigma^2)$, then $\\log p(y|X,\\beta) = -\\frac{1}{2\\sigma^2}||y - X\\beta||_2^2 + \\text{const}$. Maximizing likelihood ≡ minimizing MSE. Justifies OLS from probabilistic perspective."
+      },
+      {
+        "type": "mcq",
+        "front": "When $X$ has multicollinearity, what happens to $(X^T X)^{-1}$?",
+        "back": "Multicollinearity makes $X^T X$ poorly conditioned, leading to unstable $\\hat{\\beta}$ with inflated variances. Ridge regression (adding $\\lambda I$) regularizes.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Stable.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Singular or near-singular, causing large coefficient variance.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Auto-adjusts.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Intercept absorbs it.",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "mcq",
+        "front": "Is OLS high bias or high variance in bias-variance tradeoff?",
+        "back": "OLS: few features → high bias; many features → high variance. Best understood via learning curves.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "High bias.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "High variance (small $n$).",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Low both (ideal).",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Depends entirely on number of features.",
+            "correct": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "assumptions-of-linear-regression-linearity-homoscedasticity-normality-independen",
+    "title": "Assumptions of linear regression (linearity, homoscedasticity, normality, independence)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "regression",
+      "diagnostics",
+      "statistical-assumptions",
+      "inference"
+    ],
+    "aliases": [
+      "Gauss-Markov assumptions",
+      "LINO",
+      "OLS assumptions"
+    ],
+    "wikilinks": [
+      "residual-plots",
+      "q-q-plots",
+      "heteroscedasticity",
+      "autocorrelation"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/linear_model.html",
+        "label": "scikit-learn Linear Models"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nOLS has nice properties (unbiased, minimum variance) only under four LINO assumptions. Violations invalidate inference even if prediction works.\n\n## Detail\n**LINO:** Linearity, Independence, Normality, homOscedasticity.\n1. **Linearity:** $E[y|X] = X\\beta$.\n2. **Independence:** $\\text{Cov}(\\epsilon_i, \\epsilon_j) = 0$ for $i \\neq j$.\n3. **Normality:** $\\epsilon \\sim N(0, \\sigma^2)$.\n4. **Homoscedasticity:** $\\text{Var}(\\epsilon|X) = \\sigma^2$ (constant).\n\n**Gauss-Markov:** Under linearity, independence, homoscedasticity (no normality), OLS is BLUE.\n\n**Diagnostics:** Residual plot, Q-Q plot, Durbin-Watson test, scale-location plot.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are LINO assumptions and which ones are needed for inference vs prediction?",
+        "back": "LINO: Linearity, Independence, Normality, homOscedasticity. For prediction: linearity + independence. For p-values/CIs: all four. Non-normality forgivable for large $n$ (CLT)."
+      },
+      {
+        "type": "flip",
+        "front": "State Gauss-Markov Theorem. What does it guarantee?",
+        "back": "Under linearity, independence, homoscedasticity, OLS is BLUE (Best Linear Unbiased Estimator—lowest variance among linear unbiased). Normality not required. Ridge adds bias but can reduce total error."
+      },
+      {
+        "type": "flip",
+        "front": "Residual plot shows funnel shape. What violation? How to fix?",
+        "back": "Heteroscedasticity: variance grows with fitted values. Fixes: (1) transform $y$ (log), (2) weighted least squares, (3) White's standard errors, (4) regularization."
+      },
+      {
+        "type": "mcq",
+        "front": "Time-series violates independence. Consequence?",
+        "back": "Serial correlation leaves $\\hat{\\beta}$ unbiased but inflates $\\text{Var}(\\hat{\\beta})$. SEs too small. Use Newey-West or ARIMA.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Coefficients biased.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Coefficients unbiased, SEs wrong (underestimated).",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Model unusable.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Intercept only affected.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "regularization-ridge-lasso-elastic-net",
+    "title": "Regularization (Ridge, Lasso, Elastic Net)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "regression",
+      "regularization",
+      "overfitting",
+      "hyperparameter-tuning"
+    ],
+    "aliases": [
+      "L1/L2 penalty",
+      "weight decay",
+      "shrinkage methods"
+    ],
+    "wikilinks": [
+      "ridge-regression",
+      "lasso-regression",
+      "elastic-net",
+      "feature-selection"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/linear_model.html",
+        "label": "scikit-learn Linear Models"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nRegularization penalizes large coefficients to reduce overfitting. Ridge (L2) shrinks; Lasso (L1) zeros out; Elastic Net blends both.\n\n## Detail\n**Ridge:** $||y - X\\beta||_2^2 + \\lambda||\\beta||_2^2$ → $\\hat{\\beta} = (X^T X + \\lambda I)^{-1} X^T y$\n**Lasso:** $||y - X\\beta||_2^2 + \\lambda||\\beta||_1$ → sparse (zeros coefficients)\n**Elastic Net:** $||y - X\\beta||_2^2 + \\lambda_1||\\beta||_1 + \\lambda_2||\\beta||_2^2$ → balances both",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Write Ridge, Lasso, Elastic Net penalties. Conceptual differences?",
+        "back": "Ridge: $\\lambda||\\beta||_2^2$ (shrinks smoothly). Lasso: $\\lambda||\\beta||_1$ (zeros out). Elastic: both. Ridge never zeros; Lasso sparse; Elastic balances."
+      },
+      {
+        "type": "flip",
+        "front": "Derive Ridge closed-form solution. How handles multicollinearity?",
+        "back": "$\\hat{\\beta}_{ridge} = (X^T X + \\lambda I)^{-1} X^T y$. Adding $\\lambda I$ ensures invertibility even if $X^T X$ singular. Stabilizes, reduces variance at cost of bias."
+      },
+      {
+        "type": "flip",
+        "front": "Why Lasso sparse, Ridge not?",
+        "back": "$L_1$ has corner at zero (subgradient condition), reachable exactly. $L_2$ smooth (gradient never zero), only approaches zero asymptotically."
+      },
+      {
+        "type": "flip",
+        "front": "When use Elastic Net over Ridge/Lasso?",
+        "back": "When: (1) features highly correlated, (2) want sparsity + stability, (3) Lasso unstable across CV. Default $\\alpha=0.5$ (50-50 L1/L2)."
+      }
+    ]
+  },
+  {
+    "slug": "logistic-regression",
+    "title": "Logistic regression",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "classification",
+      "supervised-learning",
+      "probabilistic-model",
+      "log-odds"
+    ],
+    "aliases": [
+      "logit model",
+      "sigmoid regression",
+      "binary classification"
+    ],
+    "wikilinks": [
+      "sigmoid-function",
+      "log-odds",
+      "cross-entropy-loss",
+      "odds-ratio"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html",
+        "label": "scikit-learn LogisticRegression"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nLogistic regression models binary classification using sigmoid to map predictions into probabilities $P(y=1|X) = \\sigma(X\\beta) = \\frac{1}{1+e^{-X\\beta}}$.\n\n## Detail\n**Log-odds:** $\\log(\\text{odds}) = X\\beta$. Unit increase in $X_j$ multiplies odds by $e^{\\beta_j}$.\n**Loss:** Cross-entropy $= -\\sum_i [y_i \\log\\sigma(X_i\\beta) + (1-y_i)\\log(1-\\sigma(X_i\\beta))]$\nNo closed form; iterative solvers (Newton, L-BFGS, SGD).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Derive logistic regression loss from Bernoulli likelihood.",
+        "back": "$\\prod_i \\sigma^{y_i}(1-\\sigma)^{1-y_i}$ → log: $\\sum_i[y_i\\log\\sigma + (1-y_i)\\log(1-\\sigma)]$. Negate for loss."
+      },
+      {
+        "type": "flip",
+        "front": "Log-odds interpretation of logistic regression coefficients?",
+        "back": "$\\log(\\text{odds}) = X\\beta$. If $\\beta_j=0.3$, unit increase in $X_j$ multiplies odds by $e^{0.3} \\approx 1.35$ (35% increase). Relative risk for stakeholders."
+      },
+      {
+        "type": "flip",
+        "front": "How tune classification threshold? When not 0.5?",
+        "back": "Use ROC/PR curve. High FP cost → raise threshold > 0.5. High FN cost → lower < 0.5. Default 0.5 assumes equal costs, balanced classes."
+      },
+      {
+        "type": "mcq",
+        "front": "Logistic gradient vs linear regression gradient?",
+        "back": "Logistic gradient nonlinear (sigmoid inside), requires iterative solvers.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "$X^T(X\\beta-y)$ vs $X^T(\\sigma(X\\beta)-y)$.",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Same.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Logistic linear.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Neither.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "polynomial-and-spline-regression",
+    "title": "Polynomial and spline regression",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "regression",
+      "nonlinear-models",
+      "basis-expansion",
+      "overfitting"
+    ],
+    "aliases": [
+      "basis functions",
+      "polynomial features",
+      "cubic splines"
+    ],
+    "wikilinks": [
+      "basis-expansion",
+      "degrees-of-freedom",
+      "smoothing-splines"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/linear_model.html",
+        "label": "scikit-learn Linear Models"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nPolynomial regression adds polynomial features ($x^2, x^3, ...$) for nonlinearity while staying in linear framework. Splines fit piecewise polynomials locally, avoiding Runge's phenomenon.\n\n## Detail\n**Polynomial:** $y = \\beta_0 + \\beta_1 x + \\beta_2 x^2 + ... + \\beta_d x^d + \\epsilon$. Degree $d$ controls flexibility; high $d$ risks oscillations.\n**Splines:** Divide range into knots, fit cubic polynomials in each interval, enforce continuity/smoothness.\n**Smoothing splines:** Minimize $\\sum(y-f)^2 + \\lambda\\int[f'']^2$ (penalize curvature).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is Runge's phenomenon? How splines avoid it?",
+        "back": "High-degree polynomials oscillate wildly at boundaries. Splines: (1) low-degree (cubic), (2) local intervals (knots), (3) continuity/smoothness constraints."
+      },
+      {
+        "type": "flip",
+        "front": "DOF for cubic spline with $K$ knots?",
+        "back": "$K$ interior knots → $K+1$ pieces, 4 coefficients each ($4K+4$). Constraints: $3K$ (continuity + 1st/2nd derivatives). DOF = $4K+4-3K = K+4$."
+      },
+      {
+        "type": "flip",
+        "front": "Smoothing spline penalty $\\lambda\\int[f'']^2$ achieves?",
+        "back": "Penalizes curvature. Low $\\lambda$: fits closely (overfitting). High $\\lambda$: smooth (underfitting). Cross-validate to select $\\lambda$."
+      },
+      {
+        "type": "mcq",
+        "front": "Prefer splines over polynomials when?",
+        "back": "Splines capture local variation without global oscillations. Polynomials simpler but high degrees cause Runge.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Small data.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Locally complex but globally smooth, avoid Runge.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Need global coefficients.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Independent features.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "generalized-linear-models-glm",
+    "title": "Generalized Linear Models (GLM)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "regression",
+      "classification",
+      "probabilistic-models",
+      "link-functions"
+    ],
+    "aliases": [
+      "exponential family",
+      "link function",
+      "GLM framework"
+    ],
+    "wikilinks": [
+      "logistic-regression",
+      "poisson-regression",
+      "link-function",
+      "deviance"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/linear_model.html",
+        "label": "scikit-learn Linear Models"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nGLMs extend linear regression from Gaussian to any exponential family (Poisson, binomial, gamma). Link function transforms linear predictor to expected response.\n\n## Detail\n**Components:** Random component ($y \\sim$ distribution), systematic ($\\eta = X\\beta$), link function ($g(E[y]) = \\eta$).\n**Examples:** Linear (Gaussian, identity), logistic (binomial, logit), Poisson (log link), Gamma (inverse).\n**Fitting:** MLE via IRLS or Newton-Raphson.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Three components of GLM? Example: logistic.",
+        "back": "1. Binomial dist. 2. $\\eta = X\\beta$. 3. Logit link: $g(\\mu) = \\log(\\mu/(1-\\mu))$, so $E[y] = 1/(1+e^{-X\\beta})$."
+      },
+      {
+        "type": "flip",
+        "front": "Poisson regression link function? Why natural?",
+        "back": "Log link: $g(\\mu) = \\log(\\mu)$, so $\\mu = e^{X\\beta}$. Natural: (1) ensures $\\mu>0$ (counts), (2) $e^{\\beta_j}$ is rate ratio, (3) aligns with Poisson."
+      },
+      {
+        "type": "flip",
+        "front": "Overdispersion in Poisson regression?",
+        "back": "Poisson assumes $\\text{Var}=\\mu$. Overdispersion: observed $>$ model. Indicates misspecification. Fix: quasi-Poisson or negative binomial."
+      },
+      {
+        "type": "mcq",
+        "front": "Why 'generalized'?",
+        "back": "GLMs generalize by allowing exponential family distributions + link functions.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Faster.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Extends regression to non-Gaussian responses via link functions.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Deep learning.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No assumptions.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "classification-metrics-precision-recall-f1-auc-specificity",
+    "title": "Classification metrics (precision, recall, F1, AUC, specificity)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "classification",
+      "evaluation",
+      "imbalanced-data",
+      "business-metrics"
+    ],
+    "aliases": [
+      "confusion matrix metrics",
+      "sensitivity",
+      "PPV",
+      "ROC-AUC"
+    ],
+    "wikilinks": [
+      "confusion-matrix",
+      "roc-curve",
+      "precision-recall-curve",
+      "threshold-tuning"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/model_evaluation.html",
+        "label": "scikit-learn Metrics"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nAccuracy misleading on imbalance. Precision (avoid FP), recall (avoid FN) capture different costs. AUC ranks; F1 balances both.\n\n## Detail\n**Precision:** $TP/(TP+FP)$. **Recall:** $TP/(TP+FN)$. **Specificity:** $TN/(TN+FP)$. **F1:** $2 \\cdot P \\cdot R / (P+R)$. **AUC-ROC:** Area under TPR vs FPR. **PR-AUC:** Better on imbalance.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Define precision, recall. Tradeoff? When each critical?",
+        "back": "Precision=TP/(TP+FP). Recall=TP/(TP+FN). High precision: few FP (fraud). High recall: few FN (disease). F1 balances."
+      },
+      {
+        "type": "flip",
+        "front": "What AUC measure? Differ from accuracy?",
+        "back": "AUC: rank ability (positives > negatives), threshold-agnostic. 0.5=random, 1=perfect. Accuracy: single threshold fraction correct. AUC robust to threshold."
+      },
+      {
+        "type": "flip",
+        "front": "Why PR-AUC > ROC-AUC on imbalance?",
+        "back": "ROC includes FPR=FP/(TN+FP). Imbalanced: TN huge, FPR small, easy TNR. PR focuses on minority class (TP, FP, FN)."
+      },
+      {
+        "type": "mcq",
+        "front": "98% accuracy, 99% negative class. Good?",
+        "back": "Dummy classifier (always negative) = 99% accuracy. Use precision/recall/F1 on minority.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Excellent.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No; likely predicts all negatives. Use P/R/F1.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Depends on features.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Accuracy always best.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "confusion-matrix-and-threshold-selection",
+    "title": "Confusion matrix and threshold selection",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "classification",
+      "evaluation",
+      "threshold-tuning",
+      "ROC-curve"
+    ],
+    "aliases": [
+      "decision threshold",
+      "ROC curve",
+      "cost-sensitive classification"
+    ],
+    "wikilinks": [
+      "precision-recall-tradeoff",
+      "roc-curve",
+      "business-metrics"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/model_evaluation.html",
+        "label": "scikit-learn Metrics"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nConfusion matrix shows all four outcomes. ROC curve visualizes FP/FN tradeoff across thresholds. Default 0.5 is arbitrary.\n\n## Detail\n**Confusion matrix:** TN, FP, FN, TP. **ROC:** TPR vs FPR. **Threshold tuning:** High FP cost → raise; high FN cost → lower.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Confusion matrix cells. TPR vs specificity relation?",
+        "back": "Matrix: [[TN,FP],[FN,TP]]. TPR=TP/(TP+FN). Specificity=TN/(TN+FP)=1-FPR. ROC: TPR vs (1-Specificity)."
+      },
+      {
+        "type": "flip",
+        "front": "ROC curve as threshold varies?",
+        "back": "threshold=1: TPR=0,FPR=0 (bottom-left). Decreases: both TPR,FPR increase. threshold=0: TPR=1,FPR=1 (top-right). AUC = integral."
+      },
+      {
+        "type": "flip",
+        "front": "FN cost 10× FP. Raise or lower threshold?",
+        "back": "Lower. More positive predictions → higher TPR (catch positives, reduce FN) → higher FPR. Cost=$10·FN+FP$ favors low FN."
+      },
+      {
+        "type": "flip",
+        "front": "Why PR curve > ROC on imbalance?",
+        "back": "ROC: FPR=FP/(FP+TN). Imbalanced: TN huge, FPR small. PR focuses on TP,FP,FN (minority)."
+      }
+    ]
+  },
+  {
+    "slug": "imbalanced-classification",
+    "title": "Imbalanced classification",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "classification",
+      "class-imbalance",
+      "resampling",
+      "evaluation-metrics"
+    ],
+    "aliases": [
+      "minority class",
+      "oversampling",
+      "undersampling",
+      "SMOTE"
+    ],
+    "wikilinks": [
+      "stratified-sampling",
+      "smote",
+      "class-weights"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/model_evaluation.html",
+        "label": "scikit-learn Metrics"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nImbalanced data (99% negative) makes accuracy useless. Fix: appropriate metrics, reweight classes, or resample.\n\n## Detail\n**Reweighting:** `class_weight='balanced'` (auto: $w_c \\propto 1/n_c$). **Resampling:** Oversample minority (risk: overfit), undersample majority (risk: info loss), SMOTE (synthesize). **Metrics:** Precision, recall, F1, PR-AUC. **Stratified splits:** Preserve distribution.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why accuracy poor on imbalance? Use instead?",
+        "back": "Accuracy=(TP+TN)/total. 99% negative → predict all negative = 99%. Use precision/recall/F1/PR-AUC."
+      },
+      {
+        "type": "flip",
+        "front": "Class weighting `balanced` mechanism?",
+        "back": "$w_c = n_{total}/(n_{classes}·n_c)$. Minority higher weight; misclassification penalized more. Shifts boundary."
+      },
+      {
+        "type": "flip",
+        "front": "SMOTE vs oversampling?",
+        "back": "SMOTE: $x_{new} = x_i + \\alpha(x_j - x_i)$ (k-NN neighbor). Avoids duplication, reduces overfit. Oversample: duplicate (risk: overfit). Apply SMOTE only to training set."
+      },
+      {
+        "type": "flip",
+        "front": "Correct procedure: resampling + CV?",
+        "back": "StratifiedKFold. Each fold: (1) SMOTE only on train, (2) train, (3) eval on validation. Never resample before splitting (data leakage)."
+      }
+    ]
+  },
+  {
+    "slug": "naive-bayes",
+    "title": "Naive Bayes",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "classification",
+      "probabilistic-model",
+      "text-classification",
+      "feature-independence"
+    ],
+    "aliases": [
+      "conditional independence",
+      "Bayes classifier",
+      "MultinomialNB"
+    ],
+    "wikilinks": [
+      "bayes-theorem",
+      "conditional-independence",
+      "text-classification"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/naive_bayes.html",
+        "label": "scikit-learn Naive Bayes"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nNaive Bayes assumes feature independence given class. Despite strong assumption, surprisingly effective for text and high-dim data.\n\n## Detail\n**Bayes:** $P(y|X) = P(X|y)P(y)/P(X)$. **Naive:** $P(X|y) = \\prod_j P(X_j|y)$. **Classifier:** $\\hat{y}=\\arg\\max_c \\log P(y=c) + \\sum_j \\log P(X_j|y=c)$. **Laplace smoothing:** Add $\\alpha$ to avoid zero.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Bayes' theorem + naive assumption. Why 'naive'?",
+        "back": "$P(y|X)\\propto P(X|y)P(y)$. Naive: $P(X|y)=\\prod P(X_j|y)$. Naive despite feature correlation violates assumption, robust in high-dim (correlations dilute)."
+      },
+      {
+        "type": "flip",
+        "front": "Naive Bayes decision rule. Avoid underflow?",
+        "back": "$\\hat{y}=\\arg\\max P(y=c)\\prod P(X_j|y=c)$. Underflow: take logs: $\\hat{y}=\\arg\\max[\\log P(y=c) + \\sum\\log P(X_j|y=c)]$."
+      },
+      {
+        "type": "flip",
+        "front": "Laplace smoothing. When necessary?",
+        "back": "Adds $\\alpha$ to counts. Necessary for sparse data; without it, $P=0$ zeros posterior. Common in NLP."
+      },
+      {
+        "type": "mcq",
+        "front": "Word counts in docs: Gaussian/Bernoulli/Multinomial NB?",
+        "back": "Multinomial models word frequency distribution. For counts, not binary.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Gaussian.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Bernoulli.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Multinomial.",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Any.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "decision-trees",
+    "title": "Decision trees",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "classification",
+      "regression",
+      "interpretable",
+      "tree-algorithms"
+    ],
+    "aliases": [
+      "CART",
+      "recursive partitioning",
+      "information gain",
+      "tree pruning"
+    ],
+    "wikilinks": [
+      "information-gain",
+      "gini-impurity",
+      "entropy",
+      "pruning"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/tree.html",
+        "label": "scikit-learn Decision Trees"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nTrees recursively split to maximize purity. Interpretable but prone to overfitting without constraints.\n\n## Detail\n**Information gain:** $IG = H(parent) - \\sum (|c|/|parent|)H(c)$ where $H = -\\sum p_c \\log p_c$.\n**Gini:** $\\text{Gini}(S) = 1-\\sum p_c^2$. **Pruning:** Remove subtrees not improving validation.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Information gain + entropy. IG=0.8 vs 0.2?",
+        "back": "Entropy: disorder. IG=H(parent)-weighted H(children). Higher better. IG=0.8 better; reduces parent entropy more."
+      },
+      {
+        "type": "flip",
+        "front": "Gini impurity. Pure node desirable?",
+        "back": "$\\text{Gini}=1-\\sum p_c^2$. Pure (1 class)=0 (best). 50-50=0.5 (worst). Trees minimize weighted child Gini."
+      },
+      {
+        "type": "flip",
+        "front": "Why tree pruning necessary? Cost-complexity?",
+        "back": "Grown trees overfit. Pruning minimizes loss+$\\alpha$·leaves, balancing fit vs complexity. $\\alpha$ tuned via CV."
+      },
+      {
+        "type": "flip",
+        "front": "Feature importance in trees?",
+        "back": "Normalized total impurity reduction across nodes. Auto in sklearn. Biased toward high-cardinality features."
+      }
+    ]
+  },
+  {
+    "slug": "random-forests",
+    "title": "Random forests",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "ensemble-methods",
+      "classification",
+      "regression",
+      "bagging"
+    ],
+    "aliases": [
+      "bootstrap aggregating",
+      "tree ensemble",
+      "out-of-bag error"
+    ],
+    "wikilinks": [
+      "bagging",
+      "decision-trees",
+      "variance-reduction"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/ensemble.html#forests",
+        "label": "scikit-learn Random Forests"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nRandom Forests reduce overfitting via bagging + random features. Bootstrap deep trees, random $\\sqrt{d}$ features per split. Predictions average across trees.\n\n## Detail\n**Algorithm:** For each bootstrap sample, grow tree with random features. Aggregate: majority vote (classification), average (regression). **OOB error:** ~37% excluded per sample, use as free validation.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Bagging + random features mechanism?",
+        "back": "Bootstrap: deep trees (low bias, high variance). Random $\\sqrt{d}$ features: decorrelate trees. Averaging reduces variance."
+      },
+      {
+        "type": "flip",
+        "front": "Out-of-bag (OOB) error utility?",
+        "back": "~37% excluded per bootstrap. Use as free validation ≈ CV error. Auto in sklearn."
+      },
+      {
+        "type": "flip",
+        "front": "Random features at node help?",
+        "back": "All $d$ → correlated trees. $\\sqrt{d}$ → diverse trees, lower correlation, better variance reduction."
+      },
+      {
+        "type": "mcq",
+        "front": "Forests > single tree?",
+        "back": "Reduce variance via ensemble; deep trees already low bias.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Always.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Reduce variance via bagging+features.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Reduce bias.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No tuning.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "gradient-boosting-xgboost-lightgbm",
+    "title": "Gradient Boosting (XGBoost, LightGBM)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "ensemble-methods",
+      "boosting",
+      "gradient-descent",
+      "tabular-data"
+    ],
+    "aliases": [
+      "sequential ensemble",
+      "additive model",
+      "boosted trees"
+    ],
+    "wikilinks": [
+      "boosting",
+      "gradient-descent",
+      "loss-function",
+      "residuals"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/ensemble.html#gradient-boosting",
+        "label": "scikit-learn Gradient Boosting"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nSequential: each tree corrects previous errors. Fit tree to residuals, add to ensemble with learning rate $\\eta$.\n\n## Detail\n$F_m = F_{m-1} + \\eta h_m$. **For squared loss:** Fit to residuals. **General loss:** Fit to negative gradient. **Hyperparameters:** learning_rate (0.01-0.3), n_estimators (100-1000), max_depth (3-5), subsample.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Gradient boosting sequential idea?",
+        "back": "$F_0=\\bar{y}$. Step $m$: fit $h_m$ to negative gradient. $F_m=F_{m-1}+\\eta h_m$. Repeat until convergence."
+      },
+      {
+        "type": "flip",
+        "front": "Squared loss: what tree fit?",
+        "back": "Gradient=$-2(y-\\hat{y})$. Fit to residuals $y-F_{m-1}(x)$."
+      },
+      {
+        "type": "flip",
+        "front": "Early stopping in boosting?",
+        "back": "Monitor validation loss; stop if no improvement $N$ rounds. Prevents overfitting."
+      },
+      {
+        "type": "mcq",
+        "front": "Boosting vs forests?",
+        "back": "Forests: parallel bagging (variance). Boosting: sequential fitting (bias).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Boosting variance, forests bias.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Boosting bias (sequential), forests variance (parallel).",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Equivalent.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Boosting faster.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "support-vector-machines-svm",
+    "title": "Support Vector Machines (SVM)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "classification",
+      "max-margin",
+      "kernel-trick",
+      "nonlinear-boundaries"
+    ],
+    "aliases": [
+      "kernel SVM",
+      "max-margin classifier",
+      "support vectors"
+    ],
+    "wikilinks": [
+      "kernel-trick",
+      "max-margin",
+      "hinge-loss",
+      "dual-formulation"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/svm.html",
+        "label": "scikit-learn SVM"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nSVM maximizes margin (distance to nearest points). Kernel trick enables nonlinearity without high-dim mapping.\n\n## Detail\n**Soft margin:** $\\min \\frac{1}{2}||w||^2 + C\\sum\\xi_i$ s.t. $y_i(w^Tx_i+b) \\geq 1-\\xi_i$. **Kernel:** $K(x,x')=\\phi(x)^T\\phi(x')$. **Decision:** $\\hat{y}=\\text{sign}(\\sum\\alpha_i y_i K(x_i,x)+b)$.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Margin definition. Why maximize?",
+        "back": "Margin=2/||w||. Max margin: buffer zone robust to perturbations, simpler boundary, better generalization."
+      },
+      {
+        "type": "flip",
+        "front": "Soft margin $C$ control?",
+        "back": "High $C$: strict margin (overfit). Low $C$: soft (underfit). Tradeoff."
+      },
+      {
+        "type": "flip",
+        "front": "Kernel trick. Why nonlinearity without explicit mapping?",
+        "back": "$K(x,x')=\\phi(x)^T\\phi(x')$ computes inner product in high-dim without forming $\\phi$. RBF: infinite-dim, cheap $K$."
+      },
+      {
+        "type": "flip",
+        "front": "Three kernels. When each?",
+        "back": "Linear: high-dim or separable (fast). Polynomial: moderate nonlinearity. RBF: low-dim nonlinear (flexible)."
+      }
+    ]
+  },
+  {
+    "slug": "k-nearest-neighbors-knn",
+    "title": "K-Nearest Neighbors (KNN)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "beginner",
+    "tags": [
+      "classification",
+      "regression",
+      "instance-based-learning",
+      "lazy-learning"
+    ],
+    "aliases": [
+      "instance-based",
+      "memory-based",
+      "distance-weighted KNN"
+    ],
+    "wikilinks": [
+      "curse-of-dimensionality",
+      "distance-metrics",
+      "feature-scaling"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/neighbors.html",
+        "label": "scikit-learn Nearest Neighbors"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nSimplest: store data, predict via majority vote / average of $k$ nearest. No training; slow prediction. Sensitive to scaling and curse of dimensionality.\n\n## Detail\n**Algorithm:** Store training data. Query: compute distance to all points, find $k$ nearest, vote/average. **$k$ effect:** Low=high variance, high=high bias. **Curse:** High-dim: all equidistant.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "KNN algorithm. Why 'lazy'?",
+        "back": "Stores data, defers computation to prediction. No model fitting during training."
+      },
+      {
+        "type": "flip",
+        "front": "$k$ affects bias-variance?",
+        "back": "Low $k$: memorization (low bias, high variance). High $k$: smooth boundary (high bias, low variance)."
+      },
+      {
+        "type": "flip",
+        "front": "Curse of dimensionality in KNN?",
+        "back": "High-dim: points nearly equidistant, distance meaningless. Volume scales as $r^d$; neighborhood tiny. Solution: PCA first."
+      },
+      {
+        "type": "flip",
+        "front": "Why scale features before KNN?",
+        "back": "Distance-based. Unscaled: large-range features dominate. Standardize."
+      }
+    ]
+  },
+  {
+    "slug": "k-means-and-initialization",
+    "title": "K-means and initialization",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "clustering",
+      "unsupervised-learning",
+      "centroid-based",
+      "local-optima"
+    ],
+    "aliases": [
+      "k-means++",
+      "Lloyd's algorithm",
+      "within-cluster variance"
+    ],
+    "wikilinks": [
+      "clustering",
+      "expectation-maximization",
+      "silhouette-score"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/clustering.html#k-means",
+        "label": "scikit-learn K-means"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nPartition $k$ clusters by minimizing within-cluster variance. Iterate: assign to nearest centroid, update centroid as mean. Sensitive to init; k-means++ spreads seeds apart.\n\n## Detail\n**Objective:** $J=\\sum||x_i-\\mu_{c(i)}||^2$. **Lloyd:** (1) assign, (2) update. **k-means++:** Choose first random, then subsequent with probability $\\propto D^2$ (distance to nearest).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "K-means objective. Why 'distortion'?",
+        "back": "$J=\\sum||x_i-\\mu_{c(i)}||^2$. Spread of clusters. Lower=tighter."
+      },
+      {
+        "type": "flip",
+        "front": "Lloyd's algorithm. Global optimum guaranteed?",
+        "back": "Iterate: assign, update. $J$ non-increasing; convergence to local (not global) minimum. Good init via k-means++ improves."
+      },
+      {
+        "type": "flip",
+        "front": "k-means++ init. Why better?",
+        "back": "Pick first random. Then probability $\\propto D^2$ (distance squared to nearest). Spreads seeds. Avoids bad clustering."
+      },
+      {
+        "type": "flip",
+        "front": "Choose $k$. Elbow limitations?",
+        "back": "Elbow method: plot distortion vs $k$, look for kink. Subjective. Silhouette score: objective. Domain knowledge."
+      }
+    ]
+  },
+  {
+    "slug": "hierarchical-clustering",
+    "title": "Hierarchical clustering",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "clustering",
+      "unsupervised-learning",
+      "dendrogram",
+      "agglomerative"
+    ],
+    "aliases": [
+      "agglomerative clustering",
+      "dendrogram",
+      "linkage methods"
+    ],
+    "wikilinks": [
+      "dendrograms",
+      "linkage-criteria",
+      "distance-matrix"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/clustering.html#hierarchical-clustering",
+        "label": "scikit-learn Hierarchical Clustering"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nBottom-up: each point starts as cluster, iteratively merge nearest pairs. Dendrogram visualizes merges; cut at height for $k$ clusters.\n\n## Detail\n**Algorithm:** (1) Compute distances. (2) Merge closest pair (by linkage). (3) Update distances. Repeat. **Linkage:** Single (min), complete (max), average (mean), Ward (variance).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Agglomerative clustering. Dendrogram?",
+        "back": "Bottom-up: start each point, merge closest. Dendrogram: tree (leaves=points, nodes=merges, height=distance). Cut at height for $k$."
+      },
+      {
+        "type": "flip",
+        "front": "Four linkage criteria. Which 'chaining'?",
+        "back": "Single (min): chaining. Complete (max): compact. Average (mean): balanced. Ward (variance): k-means-like."
+      },
+      {
+        "type": "flip",
+        "front": "Hierarchical computational cost?",
+        "back": "Naive: $O(n^3)$ (distances $O(n^2)$, updates). Space: $O(n^2)$ (distance matrix). Impractical for large $n$."
+      },
+      {
+        "type": "flip",
+        "front": "Choose $k$ from dendrogram?",
+        "back": "Cut at desired height. Look for gap (elbow). Or use silhouette."
+      }
+    ]
+  },
+  {
+    "slug": "dbscan",
+    "title": "DBSCAN",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "clustering",
+      "density-based",
+      "non-convex-clusters",
+      "outlier-detection"
+    ],
+    "aliases": [
+      "density-based spatial clustering",
+      "eps-neighborhood",
+      "core points"
+    ],
+    "wikilinks": [
+      "density-based-clustering",
+      "outliers",
+      "eps-parameter"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/clustering.html#dbscan",
+        "label": "scikit-learn DBSCAN"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nDensity-based. Identifies dense regions, marks isolated as noise. Non-convex clusters, auto $k$. Two params: eps (radius), min_samples (neighbors).\n\n## Detail\n**Core point:** $|N_\\epsilon(x)| \\geq$ min_samples. **Border point:** near core but not core. **Noise:** neither. **Algorithm:** For each core, grow cluster via density-reachability.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Core, border, noise points?",
+        "back": "Core: enough neighbors. Border: near core, not core. Noise: isolated. Clusters: connected core points."
+      },
+      {
+        "type": "flip",
+        "front": "Density-reachability? Non-convex clusters?",
+        "back": "Reachable: chain of core points. Forms arbitrary shapes via density chains, not spherical."
+      },
+      {
+        "type": "flip",
+        "front": "Choose eps, min_samples?",
+        "back": "eps: k-distance graph, plot sorted distances, elbow = threshold. min_samples: typically $d+1$ or $2d$, default 5."
+      },
+      {
+        "type": "flip",
+        "front": "Varying density limitation?",
+        "back": "Single eps doesn't capture different densities. One cluster sparse (labeled noise), another dense (split). Use HDBSCAN."
+      }
+    ]
+  },
+  {
+    "slug": "gaussian-mixture-models-gmm",
+    "title": "Gaussian Mixture Models (GMM)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "clustering",
+      "probabilistic-model",
+      "expectation-maximization",
+      "soft-assignment"
+    ],
+    "aliases": [
+      "EM algorithm",
+      "soft clustering",
+      "mixture model"
+    ],
+    "wikilinks": [
+      "em-algorithm",
+      "soft-clustering",
+      "bic",
+      "model-selection"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/mixture.html",
+        "label": "scikit-learn Gaussian Mixture"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\n$k$ Gaussian distributions mixture. Soft assignment (probabilistic membership). EM fits: E-step=responsibility, M-step=update params.\n\n## Detail\n$$p(x)=\\sum_c \\pi_c N(x|\\mu_c,\\Sigma_c)$$\n**EM:** E: $\\gamma_{ic}=\\pi_c N(x_i|\\mu_c,\\Sigma_c)/\\sum \\pi_{c'}N(x_i|\\mu_{c'},\\Sigma_{c'})$. M: update $\\pi_c,\\mu_c,\\Sigma_c$ from responsibilities.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "GMM model. Role of $\\pi_c$?",
+        "back": "$p(x)=\\sum \\pi_c N(x|\\mu_c,\\Sigma_c)$. $\\pi_c$: prior weight (proportion from cluster $c$). $\\sum\\pi_c=1$."
+      },
+      {
+        "type": "flip",
+        "front": "EM E-step, M-step GMM?",
+        "back": "E: responsibility $\\gamma_{ic}$ (soft assignment). M: update $\\pi_c$=mean $\\gamma$, $\\mu_c$=weighted mean, $\\Sigma_c$=weighted cov. Repeat."
+      },
+      {
+        "type": "flip",
+        "front": "GMM vs k-means?",
+        "back": "K-means: hard assign, minimize variance. GMM: soft assign, maximize likelihood. GMM models covariance (shape). GMM flexible but slower."
+      },
+      {
+        "type": "flip",
+        "front": "BIC in GMM model selection?",
+        "back": "$BIC=-2\\log L + k\\log n$. Penalizes complexity by $\\log n$. Lower BIC better. Stricter than AIC."
+      }
+    ]
+  },
+  {
+    "slug": "dimensionality-reduction-for-clustering",
+    "title": "Dimensionality reduction for clustering",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "clustering",
+      "unsupervised-learning",
+      "curse-of-dimensionality",
+      "preprocessing"
+    ],
+    "aliases": [
+      "curse of dimensionality",
+      "high-dimensional clustering",
+      "feature reduction"
+    ],
+    "wikilinks": [
+      "curse-of-dimensionality",
+      "pca",
+      "feature-selection"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/clustering.html",
+        "label": "scikit-learn Clustering"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nHigh-dim: all equidistant, density meaningless. Reduce via PCA/feature selection to restore local structure.\n\n## Detail\n**Curse:** Volume $\\propto r^d$; in 100D, data sparse. **Solutions:** PCA (fast, variance), feature selection (interpretable), nonlinear (t-SNE: viz only).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Curse dimensionality in clustering?",
+        "back": "High-dim: all nearly equidistant, density meaningless. Reduce via PCA/selection to restore structure."
+      },
+      {
+        "type": "flip",
+        "front": "Apply dimensionality reduction? When skip?",
+        "back": "Always if $d$ large (>100) or quality poor. Skip if $d$ small, features all relevant, or interpretability critical."
+      },
+      {
+        "type": "flip",
+        "front": "PCA vs feature selection pre-clustering?",
+        "back": "PCA: fast, retains variance, uninterpretable. Selection: interpretable, slower. For clustering: PCA often sufficient."
+      },
+      {
+        "type": "flip",
+        "front": "Why NOT use t-SNE for clustering input?",
+        "back": "t-SNE distorts distances (prioritizes visualization). Use for viz post-clustering only, not input."
+      }
+    ]
+  },
+  {
+    "slug": "principal-component-analysis-pca",
+    "title": "Principal Component Analysis (PCA)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "dimensionality-reduction",
+      "unsupervised-learning",
+      "variance-maximization",
+      "orthogonal"
+    ],
+    "aliases": [
+      "principal components",
+      "eigendecomposition",
+      "variance-preserving reduction"
+    ],
+    "wikilinks": [
+      "eigenvalues",
+      "covariance-matrix",
+      "scree-plot",
+      "variance-explained"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/decomposition.html#pca",
+        "label": "scikit-learn PCA"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nFind orthogonal directions maximizing variance. 1st component: max variance. 2nd: max remaining (orthogonal to 1st). Useful for visualization, noise reduction, speedup.\n\n## Detail\n**Solution:** Eigendecomposition $\\Sigma w = \\lambda w$ (covariance). Eigenvectors (ordered by $\\lambda$): principal components. **Variance explained:** $\\lambda_i / \\sum_j \\lambda_j$.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "PCA objective. Principal components?",
+        "back": "Find orthogonal directions maximizing variance. Solution: eigenvectors of covariance matrix, ordered by eigenvalues."
+      },
+      {
+        "type": "flip",
+        "front": "Compute PCA. Eigendecomposition steps?",
+        "back": "Standardize. Covariance $\\Sigma$. Eigendecomposition: $\\Sigma w_i = \\lambda_i w_i$. Project: $X_{proj} = X w_{1:k}$."
+      },
+      {
+        "type": "flip",
+        "front": "Choose $k$ components. Elbow method?",
+        "back": "Plot cumulative variance vs $k$. Elbow = threshold. Alternatively, threshold (e.g., 95%)."
+      },
+      {
+        "type": "flip",
+        "front": "Why standardize before PCA?",
+        "back": "PCA maximizes variance, scale-dependent. Unstandardized: large-range features dominate. Standardize for equal contribution."
+      }
+    ]
+  },
+  {
+    "slug": "t-sne-and-umap",
+    "title": "t-SNE and UMAP",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "dimensionality-reduction",
+      "visualization",
+      "manifold-learning",
+      "nonlinear-reduction"
+    ],
+    "aliases": [
+      "manifold learning",
+      "nonlinear reduction",
+      "t-distributed stochastic neighbor embedding"
+    ],
+    "wikilinks": [
+      "manifold-learning",
+      "local-vs-global-structure",
+      "visualization"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/manifold.html",
+        "label": "scikit-learn Manifold Learning"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nNonlinear reduction for visualization. Preserve local structure (k-NN). t-SNE distorts global; UMAP better global. Both slow, non-deterministic.\n\n## Detail\n**t-SNE:** Convert distances to neighborhood probabilities (Gaussian→Student-t), minimize KL divergence. **UMAP:** Fuzzy topological metric, faster, better global.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "t-SNE mechanism. Preserve local?",
+        "back": "Converts high-dim distances to probabilities (Gaussian), low-dim (Student-t). Minimizes KL divergence. Preserves k-NN (local) but distorts global."
+      },
+      {
+        "type": "flip",
+        "front": "UMAP vs t-SNE?",
+        "back": "UMAP: faster, better global structure (distances more meaningful). Both excellent for visualization. UMAP preferred if speed/global matter."
+      },
+      {
+        "type": "flip",
+        "front": "Why NOT cluster on t-SNE/UMAP output?",
+        "back": "Both distort distances. Clustering detects visualization artifacts, not true clusters. Cluster on original/PCA; viz after."
+      },
+      {
+        "type": "flip",
+        "front": "Hyperparameters: t-SNE, UMAP?",
+        "back": "t-SNE: perplexity (5-50, effective neighbors). UMAP: n_neighbors (k-NN), min_dist (spacing). Tune interactively."
+      }
+    ]
+  },
+  {
+    "slug": "feature-selection-vs-feature-extraction",
+    "title": "Feature selection vs feature extraction",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "dimensionality-reduction",
+      "feature-engineering",
+      "interpretability",
+      "overfitting"
+    ],
+    "aliases": [
+      "filter methods",
+      "wrapper methods",
+      "embedded methods"
+    ],
+    "wikilinks": [
+      "filter-methods",
+      "wrapper-methods",
+      "embedded-methods",
+      "lasso"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/feature_selection.html",
+        "label": "scikit-learn Feature Selection"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nSelection: pick subset original features (interpretable). Extraction: create new features via combinations (flexible). Trade: selection interpretable/sparse, extraction flexible/opaque.\n\n## Detail\n**Filter:** Rank by univariate stats (correlation, MI). Fast, ignores interactions. **Wrapper:** Search subsets (forward/backward selection). Captures interactions, slow. **Embedded:** Feature importance from model ([[LASSO]], trees).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Selection vs extraction trade-off?",
+        "back": "Selection: interpretable, preserves features. Extraction: flexible, hard-to-interpret. Choose selection if interpretability critical."
+      },
+      {
+        "type": "flip",
+        "front": "Three selection methods: filter, wrapper, embedded?",
+        "back": "Filter: univariate stats (fast). Wrapper: model performance search (slow, captures interactions). Embedded: model importance ([[LASSO]], trees, fast)."
+      },
+      {
+        "type": "flip",
+        "front": "Selection WITHIN CV? Data leakage?",
+        "back": "If select before splitting, selection informed by test data. Correct: select on training set per CV fold, eval on validation."
+      },
+      {
+        "type": "flip",
+        "front": "Selection vs extraction examples?",
+        "back": "Selection: medical diagnosis (keep interpretable features). Extraction: image classification (PCA reduces noise, captures variance)."
+      }
+    ]
+  },
+  {
+    "slug": "variance-explained-and-scree-plots",
+    "title": "Variance explained and scree plots",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "beginner",
+    "tags": [
+      "dimensionality-reduction",
+      "pca",
+      "model-selection",
+      "interpretability"
+    ],
+    "aliases": [
+      "cumulative variance",
+      "elbow method",
+      "scree plot"
+    ],
+    "wikilinks": [
+      "pca",
+      "eigenvalues",
+      "dimensionality-reduction"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/decomposition.html#pca",
+        "label": "scikit-learn PCA"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nVariance explained: information retained per component. Scree plot: eigenvalues vs component. Elbow suggests number of components. Heuristic: retain ~95% variance.\n\n## Detail\n**Variance $i$:** $\\lambda_i / \\sum \\lambda_j$. **Cumulative $k$:** $(\\sum_{i=1}^k \\lambda_i) / \\sum \\lambda_j$. **Scree plot:** Look for elbow. **Threshold:** Choose $k$ reaching 95%.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Variance explained per component, cumulative?",
+        "back": "Component $i$: $\\lambda_i / \\sum \\lambda_j$. Cumulative $k$: sum first $k$. Choose $k$ at desired threshold (e.g., 0.95)."
+      },
+      {
+        "type": "flip",
+        "front": "Scree plot utility. Choose $k$?",
+        "back": "Plot $\\lambda_i$ vs $i$. Look for elbow (point where level off). Components before=signal, after=noise."
+      },
+      {
+        "type": "flip",
+        "front": "Cumulative variance threshold method?",
+        "back": "Plot cumulative variance vs $k$. Choose $k$ at threshold (e.g., 95%). Objective vs elbow."
+      },
+      {
+        "type": "mcq",
+        "front": "Last eigenvalues spuriously large (small $n$)?",
+        "back": "Small $n$: sampling variance spuriously inflates tail. Use CV or permutation to validate $k$.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "PCA inflates.",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Random noise in tail.",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Unimportant features.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No issue.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "trainvalidationtest-splits",
+    "title": "Train/validation/test splits",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "beginner",
+    "tags": [
+      "evaluation",
+      "validation",
+      "hyperparameter-tuning",
+      "generalization"
+    ],
+    "aliases": [
+      "hold-out set",
+      "development set",
+      "test set"
+    ],
+    "wikilinks": [
+      "hyperparameter-tuning",
+      "overfitting",
+      "cross-validation"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/model_selection.html",
+        "label": "scikit-learn Model Selection"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nTrain: fit parameters. Validation: tune hyperparameters. Test: final evaluation. Never use test for tuning (data leakage).\n\n## Detail\n**Split:** 60-70% train, 15-20% validation, 15-20% test. **Workflow:** (1) split, (2) tune on train/validation, (3) retrain on train+validation, (4) evaluate test. **Stratified:** Preserve class distribution.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Roles: train, validation, test. Tune on test?",
+        "back": "Train: fit. Validation: tune hyperparameters. Test: estimate generalization. Tuning on test=data leakage; test estimate becomes optimistic."
+      },
+      {
+        "type": "flip",
+        "front": "Stratified splitting utility?",
+        "back": "Preserve class distribution across splits. Use for imbalanced classification. Avoids one split 99% majority, another 50%."
+      },
+      {
+        "type": "flip",
+        "front": "Retrain on train+validation after selection?",
+        "back": "Yes. After selecting hyperparameters, combine train+validation, retrain. Use all available data (except test). Eval on test."
+      },
+      {
+        "type": "flip",
+        "front": "Data leakage examples?",
+        "back": "(1) Scale entire dataset before splitting. (2) Tune on test. (3) Remove outliers detected on test. Result: optimistic estimates."
+      }
+    ]
+  },
+  {
+    "slug": "cross-validation-k-fold-stratified",
+    "title": "Cross-validation (k-fold, stratified)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "evaluation",
+      "validation",
+      "hyperparameter-tuning",
+      "stability"
+    ],
+    "aliases": [
+      "k-fold CV",
+      "stratified k-fold",
+      "leave-one-out CV"
+    ],
+    "wikilinks": [
+      "trainvalidationtest-splits",
+      "model-selection",
+      "variance-reduction"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/model_selection.html",
+        "label": "scikit-learn Model Selection"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nRepeat split: train on $k-1$ folds, validate on 1 fold. Average $k$ errors. More stable than single split. Stratified CV preserves class distribution per fold.\n\n## Detail\n**k-Fold:** Divide into $k$ folds, rotate. **Stratified:** Each fold has same class distribution. **LOOCV:** $k=n$ (expensive). **Time-series:** Respect temporal order.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "k-fold CV. Why more stable than holdout?",
+        "back": "Split into $k$ folds, average $k$ validation errors. All data used for train+val. Error estimate: average of $k$ estimates, lower variance than single holdout."
+      },
+      {
+        "type": "flip",
+        "front": "Stratified k-fold CV. When use?",
+        "back": "Classification with imbalance. Each fold preserves class distribution. Avoids one fold 99% negative, another 50%."
+      },
+      {
+        "type": "flip",
+        "front": "Nested CV hyperparameter tuning?",
+        "back": "Outer: final error estimate (5 folds). Inner: hyperparameter selection (3 folds on training of outer). Prevents data leakage."
+      },
+      {
+        "type": "flip",
+        "front": "Feature selection within CV? Leakage?",
+        "back": "If select before CV, selection informed by all data. Correct: select on training folds only per CV iteration. Independent of test fold."
+      }
+    ]
+  },
+  {
+    "slug": "learning-curves",
+    "title": "Learning curves",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "evaluation",
+      "bias-variance",
+      "diagnostics",
+      "overfitting"
+    ],
+    "aliases": [
+      "training curves",
+      "validation curves",
+      "bias-variance diagnosis"
+    ],
+    "wikilinks": [
+      "bias-variance-tradeoff",
+      "overfitting",
+      "underfitting"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/learning_curve.html",
+        "label": "scikit-learn Learning Curves"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nPlot training + validation error vs training set size. High bias: both high, small gap (complexity too low). High variance: low training, high validation, large gap (overfitting).\n\n## Detail\n**Construction:** For sizes $n=m_1,...,m_{max}$, train (CV), record train + validation error. **Interpretation:** High bias→increase complexity. High variance→more data or reduce complexity.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Learning curve construction. Train vs validation?",
+        "back": "For each $n$: train on $n$ samples (CV), eval training+validation. Training: goodness of fit. Validation: generalization. Gap=overfitting."
+      },
+      {
+        "type": "flip",
+        "front": "High bias signature + diagnosis?",
+        "back": "High training error + high validation error + small gap. Model too weak. Fix: increase complexity (add features, lower $\\lambda$, deeper trees)."
+      },
+      {
+        "type": "flip",
+        "front": "High variance signature + diagnosis?",
+        "back": "Low training error + high validation error + large gap. Memorization. Fix: more data (closes gap), or reduce complexity."
+      },
+      {
+        "type": "flip",
+        "front": "High variance: collect data or reduce complexity?",
+        "back": "Both help. More data closes gap directly. Reducing complexity reduces overfitting but may introduce bias. Choose based on cost/time."
+      }
+    ]
+  },
+  {
+    "slug": "hyperparameter-tuning-grid-search-random-search-bayesian-optimization",
+    "title": "Hyperparameter tuning (grid search, random search, Bayesian optimization)",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "intermediate",
+    "tags": [
+      "hyperparameter-tuning",
+      "model-selection",
+      "optimization",
+      "search-strategy"
+    ],
+    "aliases": [
+      "grid search",
+      "random search",
+      "Bayesian optimization"
+    ],
+    "wikilinks": [
+      "cross-validation",
+      "parameter-vs-hyperparameter",
+      "sample-efficiency"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/model_selection.html",
+        "label": "scikit-learn Model Selection"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nTune hyperparameters by searching. Grid: exhaustive. Random: sample fixed number (often beats grid on high-dim). Bayesian: learn from evaluations, sample-efficient.\n\n## Detail\n**Grid:** Cartesian product of ranges. $O(m_1 \\cdot m_2 \\cdot ... \\cdot k)$ fits. **Random:** Sample fixed configs (e.g., 100). Better on high-dim. **Bayesian:** Surrogate (GP), iteratively select promising configs.",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Grid vs random search. When random preferred?",
+        "back": "Grid: exhaustive, comprehensive. Cost exponential in $d$. Random: sample fixed number, often beats grid on high-dim ($d$ large). Fewer evaluations needed."
+      },
+      {
+        "type": "flip",
+        "front": "Bayesian optimization. Sample efficiency?",
+        "back": "Fit surrogate (Gaussian process) to learn landscape. Iteratively select promising configs (balance exploration/exploitation). Sample-efficient: few evaluations vs grid/random."
+      },
+      {
+        "type": "flip",
+        "front": "Nested CV hyperparameter tuning?",
+        "back": "Outer CV: final error estimate. Inner CV: tune hyperparameters on training of outer. Prevents data leakage. Honest eval."
+      },
+      {
+        "type": "flip",
+        "front": "Log-spaced ranges. Why important?",
+        "back": "For learning_rate, regularization, efficient coverage of magnitudes. E.g., [0.0001, 0.001, 0.01, 0.1, 1] vs linear."
+      }
+    ]
+  },
+  {
+    "slug": "overfitting-underfitting-and-regularization",
+    "title": "Overfitting, underfitting, and regularization",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "difficulty": "beginner",
+    "tags": [
+      "bias-variance",
+      "overfitting",
+      "regularization",
+      "model-complexity"
+    ],
+    "aliases": [
+      "bias-variance tradeoff",
+      "model complexity",
+      "generalization"
+    ],
+    "wikilinks": [
+      "bias-variance-tradeoff",
+      "learning-curves",
+      "regularization"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/learning_curve.html",
+        "label": "scikit-learn Learning Curves"
+      },
+      {
+        "url": "https://www.coursera.org/learn/machine-learning",
+        "label": "Andrew Ng ML Specialization"
+      }
+    ],
+    "explainer_md": "## Intuition\nBias-variance tradeoff: simple models underfit (high bias), complex overfit (high variance). Regularization (L1/L2 penalties, early stopping) reduces overfitting by trading small bias increase for variance reduction.\n\n## Detail\n**Overfitting:** Model memorizes noise; high training accuracy, low test accuracy. **Underfitting:** Model too simple; both accuracies low. **Regularization:** Add penalty to loss function or use constraints (depth, early stopping).",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Bias-variance tradeoff. Simple vs complex models?",
+        "back": "Simple: high bias (underfit), low variance. Complex: low bias, high variance (overfit). Optimal: balance via regularization/constraints."
+      },
+      {
+        "type": "flip",
+        "front": "Overfitting signature. How to detect?",
+        "back": "Large gap between training and test error. Training accurate, test poor. Learning curve: low training error, high validation error."
+      },
+      {
+        "type": "flip",
+        "front": "Regularization mechanisms. Reduce overfitting?",
+        "back": "L1/L2 penalties (shrink/zero coefficients), early stopping (halt before memorization), max depth (limit tree), dropout (neural). Trade bias increase for variance decrease."
+      },
+      {
+        "type": "mcq",
+        "front": "If training error high + test error high, bias or variance?",
+        "back": "Both high + small gap = model too weak. Increase complexity (reduce bias).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "High bias (underfitting).",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "High variance.",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Both equally.",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Neither.",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  }
+]

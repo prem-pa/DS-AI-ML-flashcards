@@ -1,0 +1,771 @@
+[
+  {
+    "slug": "joint-marginal-and-conditional-distributions",
+    "title": "Joint, marginal, and conditional distributions",
+    "track": "data-scientist",
+    "topic": "probability-bayesian-thinking",
+    "difficulty": "intermediate",
+    "tags": [
+      "probabilistic-foundations",
+      "graphical-models",
+      "factorization",
+      "marginalization",
+      "conditional-probability",
+      "inference"
+    ],
+    "aliases": [
+      "joint distribution",
+      "marginal distribution",
+      "conditional probability"
+    ],
+    "wikilinks": [
+      "bayes_theorem",
+      "conditional_probability",
+      "probability_distribution",
+      "graphical_models",
+      "factor_graphs",
+      "belief_propagation"
+    ],
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Bayes_theorem",
+        "label": "Bayes' Theorem - Wikipedia"
+      },
+      {
+        "url": "https://machinelearningmastery.com/bayes-theorem-for-machine-learning/",
+        "label": "Bayes Theorem for Machine Learning - MLM"
+      }
+    ],
+    "explainer_md": "## Intuition\nThink of a joint distribution as the complete description of uncertainty over all variables together. Marginal distributions are obtained by \"summing out\" variables we don't care about. Conditional distributions describe one variable's uncertainty given knowledge of others. These three objects interlock: $P(X,Y) = P(X|Y)P(Y) = P(Y|X)P(X)$.\n\n## Detail\nFor random variables $X$ and $Y$:\n- **Joint distribution** $P(X,Y)$ specifies probability for every combination of values\n- **Marginal distribution** $P(X) = \\sum_y P(X,Y=y)$ obtained by summing/integrating out other variables\n- **Conditional distribution** $P(X|Y) = P(X,Y)/P(Y)$ is the relative likelihood of $X$ given a fixed $Y$\n\nIn practice, inference tasks require moving between these representations. Computing marginals (inference) is NP-hard in general graphs. Conditional independence encoded in factorized distributions enables efficient computation. The chain rule decomposes any joint: $P(X_1,...,X_n) = \\prod_i P(X_i | X_{i+1},...,X_n)$.\n\n## Common gotchas / interview framings\n- Forgetting that $P(X|Y)$ and $P(Y|X)$ are completely different; Bayes' rule relates them\n- Assuming variables are independent when they appear in different factors (they may be marginally independent but conditionally dependent, or vice versa)\n- Attempting exact inference on dense graphical models without recognizing the computational barrier\n- Confusing the order of conditioning: $P(X,Y|Z) \\neq P(X|Y,Z)P(Y|Z)$ in general",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Write out the chain rule decomposition of $P(A,B,C,D)$ and explain how it enables efficient inference in DAGs.",
+        "back": "$P(A,B,C,D) = P(A)P(B|A)P(C|A,B)P(D|A,B,C)$. In a DAG, the chain rule respects causal/temporal ordering. Each factor depends only on its parents, enabling dynamic programming algorithms (belief propagation, variable elimination) to compute marginals in time polynomial in the number of parents per node, not exponential in the total number of nodes."
+      },
+      {
+        "type": "mcq",
+        "front": "If $P(X,Y,Z) = P(X)P(Y|X)P(Z|Y)$, which of these is true?",
+        "back": "Given the factorization, once $Y$ is known, $Z$'s distribution depends only on $Y$, not on $X$. So $P(Z|X,Y)=P(Z|Y)$, confirming conditional independence. Marginally, $X$ influences $Z$ through $Y$, so they are not independent.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "$X$ and $Z$ are marginally independent",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "$X$ and $Z$ are conditionally independent given $Y$",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Both A and B",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Neither; $X$ and $Z$ are always dependent",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In a Gaussian graphical model, explain how to recover the conditional distribution $P(X_1|X_2)$ from the joint $P(X_1,X_2)$ when both are Gaussian.",
+        "back": "If $(X_1,X_2) \\sim \\mathcal{N}(\\mu, \\Sigma)$, the conditional $P(X_1|X_2)$ is also Gaussian with mean $\\mu_1 + \\Sigma_{12}\\Sigma_{22}^{-1}(X_2-\\mu_2)$ and variance $\\Sigma_{11}-\\Sigma_{12}\\Sigma_{22}^{-1}\\Sigma_{21}$. The precision matrix (inverse covariance) encodes conditional structure: zeros in $\\Lambda$ indicate conditional independence."
+      },
+      {
+        "type": "mcq",
+        "front": "Which operation preserves the most information from a joint distribution?",
+        "back": "The joint $P(X,Y)$ contains full information. Given $P(X,Y)$, you can recover both $P(X)$ and any $P(X|Y=y)$. Conversely, $P(X)$ and $P(Y|X)$ uniquely determine $P(X,Y)=P(Y|X)P(X)$. The product $P(X)P(Y)$ loses dependence structure, so it's strictly less informative.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Taking a marginal: $P(X) = \\sum_y P(X,Y=y)$",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Taking a conditional: $P(X|Y=y)$",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Taking a product: $P(X)P(Y)$",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All preserve equal information",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the computational complexity of marginalizing a variable from a general factor graph, and why does the order matter?",
+        "back": "Marginalizing variable $X_i$ from a factor graph requires summing $X_i$ out of all factors touching it, creating a new factor. If $X_i$ has domain size $d$ and appears in $k$ factors each of size $m$, complexity is $O(d \\cdot m^k)$. The order of marginalization matters because eliminating a variable can create large factors (fill-in), degrading future steps. Variable elimination algorithms choose elimination orders to minimize total fill-in."
+      }
+    ]
+  },
+  {
+    "slug": "independence-and-conditional-independence",
+    "title": "Independence and conditional independence",
+    "track": "data-scientist",
+    "topic": "probability-bayesian-thinking",
+    "difficulty": "intermediate",
+    "tags": [
+      "d-separation",
+      "causal-graphing",
+      "factorization",
+      "dimensionality-reduction",
+      "graphical-structure",
+      "inference-complexity"
+    ],
+    "aliases": [
+      "statistical independence",
+      "conditional independence",
+      "CI"
+    ],
+    "wikilinks": [
+      "conditional_independence",
+      "d-separation",
+      "graphical_models",
+      "markov_blanket",
+      "causal_inference",
+      "directed_acyclic_graph"
+    ],
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Conditional_independence",
+        "label": "Conditional Independence - Wikipedia"
+      },
+      {
+        "url": "https://bayesball.github.io/BOOK/bayesian-hierarchical-modeling.html",
+        "label": "Probability and Bayesian Modeling - Chapter on CI"
+      }
+    ],
+    "explainer_md": "## Intuition\nIndependence means one variable's distribution is unaffected by another: $X \\perp Y \\iff P(X,Y) = P(X)P(Y)$. Conditional independence is more subtle and more common in Bayesian networks: $X \\perp Y | Z$ means $X$ and $Y$ become independent once you know $Z$. This is the engine of dimensionality reduction—it allows factorization of complex joint distributions into products of simpler terms.\n\n## Detail\n**Marginal Independence:** $X \\perp Y$ holds iff $P(X|Y)=P(X)$ and $P(Y|X)=P(Y)$. In graphical models, this is rare unless there's no path between them.\n\n**Conditional Independence:** $X \\perp Y | Z$ holds iff $P(X|Y,Z)=P(X|Z)$. Intuitively, once you observe $Z$, information about $Y$ is irrelevant for $X$. In a DAG, this occurs when $Z$ \"blocks\" all paths from $Y$ to $X$ (d-separation). \n\nKey insight: **$X$ and $Y$ can be marginally dependent but conditionally independent given $Z$** (e.g., both caused by $Z$—a collider), or **marginally independent but conditionally dependent** (e.g., $Z$ is a common cause). This asymmetry is why conditioning matters.\n\n## Common gotchas / interview framings\n- Confusing marginal and conditional independence; they are distinct concepts\n- Assuming conditional independence without causal/graphical justification\n- Forgetting that conditioning on a collider (child of two parents in a DAG) induces dependence between its parents\n- Using independence assumptions to drop terms from a likelihood without verifying the graphical structure\n- In MCMC, mistaking \"variables that don't interact in the likelihood\" for independent, when they may be dependent via the prior or posterior",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "In a Naive Bayes classifier $P(Y|X_1,...,X_n) \\propto P(Y)\\prod_i P(X_i|Y)$, what independence assumption is encoded? Why is it called \"naive\"?",
+        "back": "The assumption is that features $X_i$ are conditionally independent given the label $Y$: $X_i \\perp X_j | Y$ for $i \\neq j$. This is \"naive\" because in real data, features are almost always conditionally dependent (e.g., correlations in text or images). Despite this violation, Naive Bayes often works well because conditional independence reduces parameter count from exponential to linear and provides regularization."
+      },
+      {
+        "type": "mcq",
+        "front": "Two students' exam scores $S_1$ and $S_2$ are marginally correlated. A teacher discovers both studied together with a tutor $T$. Now, what is most likely true?",
+        "back": "$T$ is a common cause of both $S_1$ and $S_2$. Once you condition on $T$ (tutor quality), the variation in $S_1$ is explained independently, making them conditionally independent. This is d-separation in a DAG: the path $S_1 \\leftarrow T \\rightarrow S_2$ is blocked by conditioning on $T$.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "$S_1 \\perp S_2 | T$ (conditionally independent given tutor quality)",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "$S_1$ and $S_2$ remain dependent even given $T$",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "$T$ is independent of both $S_1$ and $S_2$",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "The marginal correlation is fake; they're always independent",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the collider paradox: why does conditioning on a collider induce dependence between its parents?",
+        "back": "Suppose $X$ and $Y$ are independent, but both cause $Z$ (a collider: $X \\rightarrow Z \\leftarrow Y$). Marginally, $X \\perp Y$. But if you condition on $Z=1$ (e.g., $Z$ is high), and $X$ is low, then $Y$ must be high to explain $Z$. This backward reasoning induces negative dependence: $P(Y|X,Z) \\neq P(Y|Z)$ when $X$ and $Y$ are parents of $Z$."
+      },
+      {
+        "type": "mcq",
+        "front": "In Gibbs sampling for a Bayesian network, we update $X_i$ by sampling from $P(X_i | X_{\\text{Markov blanket}})$. What independence property makes this efficient?",
+        "back": "The Markov blanket of $X_i$ consists of its parents, children, and co-parents (other parents of its children). By conditional independence in the graphical model, $X_i \\perp (\\text{all other variables}) | \\text{Markov blanket}$. This means you only need the Markov blanket to update $X_i$, enabling local Gibbs sampling.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Each variable is independent of the full posterior given its Markov blanket",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Variables are marginally independent",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "The likelihood factorizes across variables",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All variables are conditionally independent",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Suppose you want to factorize $P(A,B,C,D,E)$ to minimize computational cost. You know that $A \\perp B, D | C$ and $B \\perp E | A$. Write a factorization exploiting these CIs.",
+        "back": "One valid factorization is $P(A,B,C,D,E) = P(C)P(A|C)P(B|C)P(D|C)P(E|A)$ or $P(C)P(D|C)P(B|C)P(A|C)P(E|A)$. The CI $A \\perp B,D|C$ allows us to separate them when $C$ is known, and $B \\perp E|A$ means $E$ depends only on $A$, not $B$. This reduces parameters and enables faster inference via belief propagation."
+      }
+    ]
+  },
+  {
+    "slug": "graphical-models-and-d-separation",
+    "title": "Graphical models and d-separation",
+    "track": "data-scientist",
+    "topic": "probability-bayesian-thinking",
+    "difficulty": "advanced",
+    "tags": [
+      "causal-inference",
+      "DAGs",
+      "conditional-independence",
+      "causal-structure",
+      "backdoor-criterion",
+      "do-calculus"
+    ],
+    "aliases": [
+      "d-separation criterion",
+      "Bayesian networks",
+      "directed graphical models"
+    ],
+    "wikilinks": [
+      "d-separation",
+      "bayesian_network",
+      "causal_graph",
+      "structural_causal_model",
+      "backdoor_adjustment",
+      "confounding"
+    ],
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Bayesian_network",
+        "label": "Bayesian Networks - Wikipedia"
+      },
+      {
+        "url": "https://machinelearningmastery.com/bayes-theorem-for-machine-learning/",
+        "label": "Bayes Theorem in ML Applications"
+      }
+    ],
+    "explainer_md": "## Intuition\nGraphical models encode conditional independencies as a directed acyclic graph (DAG). A variable is conditionally independent of its non-descendants given its parents. D-separation (\"directed separation\") is a criterion to read off conditional independencies directly from the graph without computing probabilities. It answers: which variables become independent when you condition on a set?\n\n## Detail\nIn a DAG, $X$ and $Y$ are d-separated by $Z$ (written $X \\perp_d Y | Z$) if every path from $X$ to $Y$ is blocked by $Z$. A path is blocked if:\n1. It contains a chain $A \\to B \\to C$ with $B \\in Z$, or\n2. It contains a fork $A \\leftarrow B \\rightarrow C$ with $B \\in Z$, or\n3. It contains a collider $A \\rightarrow B \\leftarrow C$ with $B \\notin Z$ and no descendant of $B$ in $Z$\n\nD-separation in a DAG is equivalent to conditional independence in the Markov factorization: $P(X_1,...,X_n) = \\prod_i P(X_i | \\text{Parents}_i)$. This enables reading causal structure from data and identifying confounders, mediators, and colliders without statistical testing.\n\n## Common gotchas / interview framings\n- Forgetting that d-separation is a *sufficient* condition for CI in a DAG, not necessary in general (though it is sufficient for Markov factorizations)\n- Confusing the direction of arrows; $A \\to B$ means $A$ is a parent of $B$, and $P(A,B) = P(B|A)P(A)$, not the reverse\n- Failing to recognize colliders ($A \\to C \\leftarrow B$) as inducers of spurious dependence when conditioned on\n- In causal inference, using observational data without verifying that causal assumptions (no unmeasured confounding) hold in the DAG\n- Confusing association (correlation) with causation; a DAG encodes *assumed* causal structure, not proof",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Draw and explain the three basic d-separation structures: chain, fork, and collider. Which ones are *blocked* by conditioning on the middle node?",
+        "back": "**Chain** ($A \\to B \\to C$): conditioning on $B$ blocks the path; $A \\perp C | B$. **Fork** ($A \\leftarrow B \\to C$): conditioning on $B$ blocks; $A \\perp C | B$. **Collider** ($A \\to B \\leftarrow C$): conditioning on $B$ *unblocks* the path; $A \\not\\perp C | B$ (they become dependent). The fork and chain are intuitive ($B$ is a \"valve\"); the collider is the gotcha: conditioning on a collider opens a spurious path."
+      },
+      {
+        "type": "mcq",
+        "front": "In a DAG $X \\to Z \\to Y$ with a confounder $U \\to X, U \\to Y$, which set $S$ would d-separate $X$ from $Y$?",
+        "back": "Paths from $X$ to $Y$ are: (1) $X \\to Z \\to Y$ and (2) $X \\leftarrow U \\to Y$ (confounding). Conditioning on $Z$ alone blocks path (1) but not (2). Conditioning on $U$ blocks path (2) and also blocks (1) because $U$ is on the path. So $U$ d-separates $X$ and $Y$.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "$S = \\{\\}$ (no conditioning)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "$S = \\{Z\\}$",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "$S = \\{U\\}$",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "$S = \\{Z, U\\}$",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain Simpson's Paradox using d-separation. Why does a confounder reverse the direction of association?",
+        "back": "Simpson's Paradox occurs when a confounder $C$ causes both the treatment $T$ and outcome $Y$, with opposite effects. The marginal association between $T$ and $Y$ can be opposite to the conditional association $P(Y|T,C)$ because the confounder induces a spurious association via the fork $T \\leftarrow C \\to Y$. Conditioning on $C$ blocks this path, revealing the true causal effect. Without conditioning, the data mixes populations with different baseline rates of $C$."
+      },
+      {
+        "type": "mcq",
+        "front": "In the DAG $X \\to Y \\to Z$ with $U \\to Y, U \\to W$, and $W \\to Z$, is $X \\perp_d W | Y$?",
+        "back": "The path $X \\to Y \\leftarrow U \\to W$ is a chain of a collider ($Y$ with parents $X$ and $U$) followed by a fork ($U \\to W$). Conditioning on $Y$ unblocks the collider (since $Y$ is collided on), so the path $X \\to Y \\leftarrow U \\to W$ is open. Thus $X \\not\\perp_d W | Y$.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Yes, $Y$ blocks all paths",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "No, path $X \\to Y \\leftarrow U \\to W$ is unblocked",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "No, path $X \\to Y \\to Z \\leftarrow W$ is unblocked",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Yes, $X$ and $W$ are not neighbors",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the backdoor criterion and how it identifies confounders in a DAG. How does it relate to d-separation?",
+        "back": "The backdoor criterion (Pearl, 2000) identifies valid adjustment sets. For causal effect of $T$ on $Y$, a set $S$ satisfies the backdoor criterion if: (1) no element of $S$ is a descendant of $T$, and (2) $S$ d-separates $T$ and $Y$ after removing all edges from $T$. Removing edges from $T$ leaves only \"backdoor\" (non-causal) paths through confounders. Any set satisfying backdoor can be adjusted for to identify the causal effect, e.g., via stratification or regression."
+      }
+    ]
+  },
+  {
+    "slug": "prior-selection-and-sensitivity-analysis",
+    "title": "Prior selection and sensitivity analysis",
+    "track": "data-scientist",
+    "topic": "probability-bayesian-thinking",
+    "difficulty": "advanced",
+    "tags": [
+      "bayesian-practice",
+      "prior-elicitation",
+      "objective-priors",
+      "robustness",
+      "hyperparameter-tuning"
+    ],
+    "aliases": [
+      "prior specification",
+      "informative prior",
+      "weakly informative prior"
+    ],
+    "wikilinks": [
+      "prior_probability",
+      "bayes_theorem",
+      "conjugate_prior",
+      "dirichlet_distribution",
+      "empirical_bayes",
+      "model_selection"
+    ],
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Prior_probability",
+        "label": "Prior Probability - Wikipedia"
+      },
+      {
+        "url": "https://vioshyvo.github.io/Bayesian_inference/hierarchical-models.html",
+        "label": "Hierarchical Models and Prior Selection - Chapter 6"
+      }
+    ],
+    "explainer_md": "## Intuition\nPriors encode prior beliefs about parameters before seeing data. \"Objective\" (or noninformative) priors aim to let the data dominate, while subjective priors incorporate domain knowledge. Sensitivity analysis checks whether results depend critically on the prior choice—if they do, the prior is influential and conclusions may be fragile. The goal is to balance prior informativeness with data size and context.\n\n## Detail\nCommon prior choices:\n- **Noninformative (flat):** $P(\\theta) \\propto 1$. Not invariant under reparameterization; can lead to improper posteriors.\n- **Weakly informative:** Centered at zero with moderate variance. Provides regularization without imposing strong beliefs. Example: $\\theta \\sim \\mathcal{N}(0, \\sigma^2)$ with $\\sigma$ chosen to cover plausible range.\n- **Conjugate priors:** Posterior has same form as prior. E.g., Beta prior on $p$ in Binomial gives Beta posterior. Enables closed-form posteriors and intuition about hyperparameter updates.\n- **Empirical priors:** Estimated from data (typically hyperpriors). Useful in hierarchical models.\n\nSensitivity analysis varies the prior and reports how posterior inferences change. If posterior is robust to prior perturbations, the data dominates; if not, prior choice is critical and should be justified or explored.\n\n## Common gotchas / interview framings\n- Believing a \"flat\" prior is truly noninformative; flat in one parameterization is not flat under transformation\n- Choosing conjugate priors solely for computational convenience without checking domain relevance\n- Failing to check that priors are proper (integrate to 1) or that posteriors are proper when using noninformative priors\n- In hierarchical models, underestimating the impact of the hyperprior; weak hyperpriors can induce strong shrinkage\n- Assuming prior robustness without sensitivity checks, especially in small-sample or high-dimensional settings",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "For a Binomial likelihood $P(D|p) \\propto p^k(1-p)^{n-k}$, derive the posterior if you use a Beta$(\\alpha, \\beta)$ prior. Why are Beta priors called \"conjugate\"?",
+        "back": "Prior: $P(p) \\propto p^{\\alpha-1}(1-p)^{\\beta-1}$. Posterior: $P(p|D) \\propto p^{k+\\alpha-1}(1-p)^{n-k+\\beta-1}$, which is Beta$(k+\\alpha, n-k+\\beta)$. The posterior has the same functional form as the prior (Beta family); hyperparameters update additively. Beta is conjugate to Binomial because the functional forms match. This enables closed-form inference and intuitive interpretation: $\\alpha$ and $\\beta$ act like pseudo-counts."
+      },
+      {
+        "type": "mcq",
+        "front": "You have 100 observations of a quantity estimated to be 50 ± 10 (std dev). Which prior is more defensible for Bayesian inference?",
+        "back": "With 100 observations, the data is reasonably informative. A weakly informative prior (B) centered on the domain estimate and with width matching prior uncertainty provides gentle regularization without imposing the false confidence of a point mass (D) or the awkwardness of an improper/extremely diffuse prior (A, C).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "$\\theta \\sim \\text{Uniform}(-\\infty, \\infty)$ (flat)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "$\\theta \\sim \\mathcal{N}(50, 10^2)$ (centered on estimate with std matching uncertainty)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "$\\theta \\sim \\mathcal{N}(0, 100^2)$ (very diffuse)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "$\\theta \\sim \\delta(50)$ (point mass at 50)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain why the Jeffreys prior is said to be invariant to reparameterization, and why this matters for prior selection.",
+        "back": "The Jeffreys prior is $P(\\theta) \\propto \\sqrt{|I(\\theta)|}$ where $I(\\theta)$ is the Fisher information. Under a reparameterization $\\phi = g(\\theta)$, the Jeffreys prior on $\\phi$ is derived the same way, and it transforms correctly: $P(\\phi) = P(\\theta(\\phi)) |d\\theta/d\\phi|$, so the prior remains \"non-informative\" under change of variables. This matters because flat priors in one parameterization encode information in another; Jeffreys avoids this arbitrariness."
+      },
+      {
+        "type": "mcq",
+        "front": "In a sensitivity analysis, the posterior mean of a parameter shifts by 30% when you vary the prior from Beta(1,1) to Beta(10,10). What should you conclude?",
+        "back": "A 30% shift indicates the prior meaningfully impacts inference. This suggests: (1) sample size is small relative to prior strength, or (2) the two priors encode very different beliefs. Sensitivity analysis has done its job: flagging that prior choice is critical. You should either: justify the chosen prior on domain grounds, or report a range of posteriors under different priors.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The posterior is insensitive; prior choice doesn't matter",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The prior is highly influential; results depend on prior specification",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The data is weak and should be collected",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Beta priors should not be used for this problem",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In a hierarchical model $Y_i | \\mu_i \\sim \\mathcal{N}(\\mu_i, \\sigma^2)$, $\\mu_i | \\tau \\sim \\mathcal{N}(\\mu, \\tau^2)$, explain what happens if you use a very weak prior on $\\tau$ (hyperprior) vs. a strong one.",
+        "back": "**Weak hyperprior on $\\tau$** (e.g., $\\tau \\sim \\text{Exponential}(0.1)$ with mode near 0): Posterior of $\\tau$ may be estimated as nearly 0, inducing extreme shrinkage—all $\\mu_i$ collapse toward $\\mu$, losing group-level variation. This is the empirical Bayes pitfall: the point estimate of $\\tau$ ignores uncertainty in $\\tau$. **Strong hyperprior** (e.g., $\\tau \\sim \\mathcal{N}(\\mu_{\\tau}, \\sigma_{\\tau}^2)$ with reasonable bounds): Posterior accounts for uncertainty in $\\tau$, yielding moderate shrinkage and better small-sample estimates. Fully Bayesian treatment properly averages over $\\tau$'s posterior."
+      }
+    ]
+  },
+  {
+    "slug": "empirical-bayes",
+    "title": "Empirical Bayes",
+    "track": "data-scientist",
+    "topic": "probability-bayesian-thinking",
+    "difficulty": "advanced",
+    "tags": [
+      "hyperpriors",
+      "shrinkage-estimation",
+      "hierarchical-models",
+      "marginal-likelihood",
+      "empirical-estimation"
+    ],
+    "aliases": [
+      "empirical Bayes estimation",
+      "type II maximum likelihood",
+      "marginal likelihood"
+    ],
+    "wikilinks": [
+      "empirical_bayes_method",
+      "hierarchical_bayes",
+      "hyperparameter",
+      "shrinkage_estimator",
+      "empirical_risk_minimization"
+    ],
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Empirical_Bayes_method",
+        "label": "Empirical Bayes Method - Wikipedia"
+      },
+      {
+        "url": "https://hannig.cloudapps.unc.edu/STOR757Bayes/handouts/PetroneEtAl2014.pdf",
+        "label": "Empirical Bayes Methods in Classical and Bayesian Inference"
+      }
+    ],
+    "explainer_md": "## Intuition\nEmpirical Bayes estimates hyperpriors (priors on priors) from the data, rather than specifying them a priori. The idea: use marginal likelihood $P(D | \\alpha)$ to infer hyperparameters $\\alpha$, then use those point estimates in the posterior. This provides automatic regularization and shrinkage toward a data-driven center, without requiring external domain expertise. It's a middle ground between pure Bayesian (fix hyperpriors) and pure frequentist (ignore priors).\n\n## Detail\nIn a hierarchical model:\n$$P(y_1,...,y_n | \\alpha) = \\int P(y_1,...,y_n | \\theta_1,...,\\theta_n) P(\\theta_1,...,\\theta_n | \\alpha) d\\theta$$\n\nEmpirical Bayes estimates $\\hat{\\alpha} = \\arg\\max_\\alpha P(D|\\alpha)$ (marginal likelihood), then computes $P(\\theta|D, \\hat{\\alpha})$ treating $\\hat{\\alpha}$ as fixed. This shrinks each $\\theta_i$ toward the common mean inferred from the data.\n\n**Pros:** Automatic regularization, interpretable shrinkage, no hyperprior specification.\n**Cons:** Underestimates posterior uncertainty (ignores uncertainty in $\\alpha$), can overfit hyperparameters, may collapse variance estimates when true hyperparameter variance is small.\n\nFully Bayesian approach averages over hyperparameter uncertainty: $P(\\theta|D) = \\int P(\\theta|D,\\alpha)P(\\alpha|D)d\\alpha$, which is often more robust.\n\n## Common gotchas / interview framings\n- Empirical Bayes point estimates of $\\alpha$ bias posteriors toward zero variance (complete pooling) when true hyperparameter variance is small\n- Mistaking empirical Bayes for full Bayes; it ignores hyperparameter uncertainty\n- Using marginal likelihood on the *training* set to select hyperparameters, leading to overfitting (should use cross-validation or held-out data)\n- In high-dimensional settings, empirical Bayes shrinkage can be too aggressive, collapsing coefficients to zero when they should vary\n- Confusing empirical Bayes with parametric bootstrap; they use data differently",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "In James-Stein estimation, why does shrinking toward a common mean improve MSE compared to unrestricted maximum likelihood, even if the true means are different?",
+        "back": "James-Stein estimator shrinks each estimate $\\bar{y}_i$ toward the grand mean $\\bar{y}$ by a factor depending on sample size and dimension. Even if true $\\mu_i$ are distinct, the shrinkage trades bias for lower variance. In high dimensions (dim $\\geq 3$), the variance reduction outweighs the bias, yielding lower MSE than the MLE. This is an empirical Bayes insight: pooling information across groups (implicit in the shrinkage factor) reduces estimation error, especially in high-dim or small-sample regimes."
+      },
+      {
+        "type": "mcq",
+        "front": "In empirical Bayes, $\\hat{\\alpha} = \\arg\\max_\\alpha P(D|\\alpha)$ is estimated from the same data used to compute the posterior. What is the main risk?",
+        "back": "Optimizing $\\alpha$ on the same data used for inference can lead to overfitting: the marginal likelihood may peak at a hyperparameter that fits idiosyncratic noise in the data. A defensive practice is to use cross-validated marginal likelihood or to hold out a validation set for hyperparameter tuning. The empirical Bayes estimate is point-wise, ignoring uncertainty in $\\alpha$, which compounds the issue.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The posterior is doubly stochastic and hard to interpret",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "The hyperparameter $\\alpha$ is overfit; the marginal likelihood is optimized on the training data",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The prior becomes improper",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Shrinkage is always too weak",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the difference between empirical Bayes and fully Bayesian hierarchical inference. When would you prefer fully Bayesian?",
+        "back": "**Empirical Bayes:** $\\hat{\\alpha} = \\arg\\max P(D|\\alpha)$, then $P(\\theta|D,\\hat{\\alpha})$. Fast, automatic shrinkage, but ignores uncertainty in $\\alpha$ and risks overfitting $\\alpha$. **Fully Bayesian:** Place a hyperprior on $\\alpha$, compute $P(\\theta|D) = \\int P(\\theta|D,\\alpha)P(\\alpha|D)d\\alpha$. Slower (requires MCMC or variational inference), but properly propagates uncertainty and is less prone to overfitting. Prefer fully Bayesian when: (1) sample size is small (hyperparameter uncertainty is large), (2) hyperparameter has meaningful prior knowledge, or (3) robustness to prior specification is critical."
+      },
+      {
+        "type": "mcq",
+        "front": "In a problem with $n=30$ groups and 50 observations per group, empirical Bayes estimates a global variance $\\hat{\\tau}^2 \\approx 0$ from the marginal likelihood. What is likely happening?",
+        "back": "With 30 groups, the MLE of between-group variance can be near-zero if groups happen to be similar in the sample, even if true variance is nonzero. Empirical Bayes treats $\\hat{\\tau}^2 \\approx 0$ as fact, inducing complete pooling. A fully Bayesian approach would place a hyperprior on $\\tau$ (e.g., $\\tau \\sim \\text{Half-Normal}(1)$) and average over its posterior, accounting for sampling variability and yielding more stable shrinkage.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "The groups truly have no variance; the model is correct",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Empirical Bayes is collapsing the variance estimate by ignoring uncertainty in $\\tau$, inducing extreme shrinkage",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "The data are too noisy to estimate $\\tau$ reliably",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "A conjugate prior should be used instead",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Derive the empirical Bayes estimator for a Normal model: $y_i | \\theta_i \\sim \\mathcal{N}(\\theta_i, \\sigma^2)$, $\\theta_i | \\mu, \\tau \\sim \\mathcal{N}(\\mu, \\tau^2)$. Assume $\\sigma^2$ is known.",
+        "back": "Marginal likelihood: $P(y_i|\\mu,\\tau) = \\int \\mathcal{N}(y_i|\\theta_i,\\sigma^2)\\mathcal{N}(\\theta_i|\\mu,\\tau^2)d\\theta_i = \\mathcal{N}(y_i|\\mu,\\sigma^2+\\tau^2)$. EB estimates $\\hat{\\mu}=\\bar{y}$ and $\\hat{\\tau}^2$ by MLE of the marginal (via method of moments or numerical optimization). Then $E[\\theta_i|y_i,\\hat{\\mu},\\hat{\\tau}] = \\frac{\\hat{\\tau}^2}{\\sigma^2+\\hat{\\tau}^2}y_i + \\frac{\\sigma^2}{\\sigma^2+\\hat{\\tau}^2}\\hat{\\mu}$—a shrinkage estimator. Weight on $y_i$ depends on relative size of $\\tau$ (between-group variance) to $\\sigma$ (within-group noise)."
+      }
+    ]
+  },
+  {
+    "slug": "hierarchical-models",
+    "title": "Hierarchical models",
+    "track": "data-scientist",
+    "topic": "probability-bayesian-thinking",
+    "difficulty": "advanced",
+    "tags": [
+      "multilevel-models",
+      "shrinkage",
+      "partial-pooling",
+      "group-structure",
+      "variance-components"
+    ],
+    "aliases": [
+      "multilevel models",
+      "mixed-effects models",
+      "random-effects models"
+    ],
+    "wikilinks": [
+      "hierarchical_bayes",
+      "multilevel_model",
+      "random_effects",
+      "variance_components",
+      "empirical_bayes",
+      "shrinkage_estimator"
+    ],
+    "sources": [
+      {
+        "url": "https://vioshyvo.github.io/Bayesian_inference/hierarchical-models.html",
+        "label": "Chapter 6: Hierarchical Models - Bayesian Inference 2019"
+      },
+      {
+        "url": "https://bayesball.github.io/BOOK/bayesian-hierarchical-modeling.html",
+        "label": "Chapter 10: Bayesian Hierarchical Modeling"
+      }
+    ],
+    "explainer_md": "## Intuition\nHierarchical models pool information across groups (e.g., students in schools, patients in hospitals) by assuming each group's parameter comes from a common distribution. This induces partial pooling: estimates are pulled toward the group mean, improving small-sample estimates while allowing group-level variation. Hierarchical structure is natural for many datasets and encodes domain knowledge about similarity across units.\n\n## Detail\nBasic two-level structure:\n$$y_{ij} | \\theta_j \\sim p(y_{ij}|\\theta_j) \\quad \\text{(data model)}$$\n$$\\theta_j | \\mu, \\tau \\sim p(\\theta_j|\\mu, \\tau) \\quad \\text{(group model)}$$\n$$\\mu, \\tau \\sim p(\\mu, \\tau) \\quad \\text{(hyperprior)}$$\n\nPartial pooling weight between group estimate and global mean depends on: group sample size, within-group variance, and between-group variance. Small $\\tau$ (groups similar) → more pooling. Large $\\tau$ (groups different) → less pooling.\n\n**Advantages:** Borrows strength across groups, reduces variance in small-sample regimes, infers uncertainty in group parameters (not just point estimates), natural for repeated measures.\n\n**Extensions:** Multiple levels (students in classes in schools), multiple grouping factors (crossed designs), nonlinear models with hierarchical structure, Bayesian additive regression trees (BART).\n\n## Common gotchas / interview framings\n- Ignoring hierarchical structure and treating groups as independent, losing efficiency gains\n- Setting hyperpriors that are too weak (e.g., very diffuse) and losing shrinkage benefits\n- Forgetting that group-level parameters have posterior uncertainty; point estimates underestimate variability\n- Misinterpreting group effect estimates: a small estimate may reflect strong shrinkage toward zero, not zero effect\n- In unbalanced designs, failing to account for different group sizes in inference (smaller groups shrink more)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "In a hierarchical model for test scores across schools, explain what \"partial pooling\" means and why it improves estimation compared to (1) no pooling (separate models per school) and (2) complete pooling (all schools the same).",
+        "back": "**No pooling:** Each school's mean is estimated from its own data; high variance for small schools, no information sharing. **Complete pooling:** Assume all schools identical; biased if schools truly differ. **Partial pooling (hierarchical):** Estimates are pulled toward a common mean weighted by school size and between-school variance. Small schools shrink more toward the global mean (reducing variance), large schools rely more on own data (small bias). This balances bias-variance tradeoff and leverages the assumption that schools are similar but not identical."
+      },
+      {
+        "type": "mcq",
+        "front": "In a 2-level model where students $i$ are nested in schools $j$, the shrinkage weight for school $j$ is $w_j = \\tau^2/(\\tau^2 + \\sigma^2/n_j)$. What happens if $n_j$ is small?",
+        "back": "If $n_j$ is small, $\\sigma^2/n_j$ is large, so the denominator $\\tau^2 + \\sigma^2/n_j$ is larger, making $w_j$ smaller. This means school $j$'s estimate is shrunk more strongly toward the global mean. This is sensible: small samples are less informative, so we trust the global prior more.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "$w_j$ increases (more weight on school mean)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "$w_j$ decreases (more weight on global mean)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "$w_j$ stays the same regardless of $n_j$",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "$w_j$ becomes negative",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In a hierarchical model with variance components, explain how the between-group variance $\\tau^2$ and within-group variance $\\sigma^2$ control the degree of pooling.",
+        "back": "The shrinkage factor toward the global mean is $w = \\tau^2 / (\\tau^2 + \\sigma^2/n)$. When $\\tau^2 \\gg \\sigma^2$ (groups very different), $w \\approx 1$ (little pooling, trust group data). When $\\tau^2 \\ll \\sigma^2$ (groups similar), $w \\approx 0$ (strong pooling, trust global mean). The Bayesian model learns $\\tau^2$ from the data via the posterior, automatically adjusting pooling. If groups happen to be similar in the data, the posterior pulls $\\tau^2$ toward 0, inducing strong shrinkage; if they diverge, $\\tau^2$ grows and pooling weakens."
+      },
+      {
+        "type": "mcq",
+        "front": "In a hierarchical Poisson regression with group-level intercepts, how would you handle a group with zero observations?",
+        "back": "Hierarchical models handle sparse data gracefully. A group with zero observations has no group-specific likelihood term, so its posterior is the prior: $P(\\theta_j|0\\text{ obs}) = p(\\theta_j|\\mu,\\tau)$. The posterior mean is shrunk fully toward $\\mu$, and the posterior variance is $\\tau^2$ (the between-group variance). This borrows strength from other groups, providing a regularized estimate rather than undefined ML.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Drop the group; no data means no estimate",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Use the hyperprior mean as the estimate, accounting for information from other groups",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Set the intercept to $-\\infty$ to encode no information",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Use maximum likelihood, which gives undefined intercept",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Design a 3-level hierarchical model for patients nested in hospitals nested in health systems. Write the model structure and explain what each level captures.",
+        "back": "$y_{ijk} | \\theta_{jk} \\sim \\text{Likelihood}(\\theta_{jk})$: patient $i$ in hospital $j$ in system $k$, with patient-level variance $\\sigma^2$. $\\theta_{jk} | \\mu_{k}, \\tau_j \\sim \\mathcal{N}(\\mu_k, \\tau_j^2)$: hospital effect $\\theta_{jk}$ drawn from system mean $\\mu_k$ with hospital-level variance $\\tau_j^2$. $\\mu_k | \\mu_0, \\tau_s \\sim \\mathcal{N}(\\mu_0, \\tau_s^2)$: system mean $\\mu_k$ drawn from global mean with system-level variance $\\tau_s^2$. **Levels:** Patient variation (Level 1), hospital effects $\\theta_{jk}$ (Level 2), system effects $\\mu_k$ (Level 3), global mean $\\mu_0$ (Level 4). Patients borrow from hospitals, hospitals borrow from systems, systems borrow from global. Pooling degree depends on variance ratios at each level."
+      }
+    ]
+  },
+  {
+    "slug": "model-comparison-and-cross-validation",
+    "title": "Model comparison and cross-validation",
+    "track": "data-scientist",
+    "topic": "probability-bayesian-thinking",
+    "difficulty": "intermediate",
+    "tags": [
+      "model-selection",
+      "information-criteria",
+      "cross-validation",
+      "predictive-accuracy",
+      "AIC",
+      "BIC",
+      "LOO-CV"
+    ],
+    "aliases": [
+      "AIC",
+      "BIC",
+      "WAIC",
+      "leave-one-out cross-validation",
+      "predictive performance"
+    ],
+    "wikilinks": [
+      "akaike_information_criterion",
+      "bayesian_information_criterion",
+      "cross-validation",
+      "model_selection",
+      "marginal_likelihood",
+      "pareto_smoothed_importance_sampling"
+    ],
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Akaike_information_criterion",
+        "label": "Akaike Information Criterion - Wikipedia"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Bayesian_information_criterion",
+        "label": "Bayesian Information Criterion - Wikipedia"
+      }
+    ],
+    "explainer_md": "## Intuition\nModel comparison answers: which model better predicts new data? Resampling methods like cross-validation directly estimate predictive accuracy by holding out test data. Information criteria (AIC, BIC) approximate cross-validation using in-sample likelihood and parameter count penalties. In Bayesian settings, model comparison via marginal likelihood ($P(D|M)$) weighs likelihood against complexity through Occam's razor. These tools balance fit and parsimony.\n\n## Detail\n**Information Criteria:**\n- **AIC:** $-2\\log\\hat{L} + 2k$ where $k$ = # parameters. Penalizes complexity lightly; asymptotically equivalent to LOO-CV.\n- **BIC:** $-2\\log\\hat{L} + k\\log n$. Stronger complexity penalty; favors simpler models in large samples.\n- **Bayes Factor:** Ratio of marginal likelihoods $P(D|M_1)/P(D|M_2)$. Incorporates prior on models; automatic Occam's razor via marginal likelihood.\n\n**Cross-Validation:**\n- **K-fold CV:** Partition data into $k$ folds, train on $k-1$, test on hold-out. Average test error estimates generalization.\n- **LOO-CV:** Leave-one-out is efficient via Pareto Smoothed Importance Sampling (PSIS-LOO) without refitting.\n- **WAIC:** Bayesian analogue to AIC using posterior predictive distribution.\n\n## Common gotchas / interview framings\n- Comparing models on training accuracy, not generalization accuracy (overfitting)\n- Using BIC without noting it depends strongly on $n$ (penalty grows as $n \\log n$)\n- Ignoring multiple testing: comparing many models on the same data inflates false positives\n- In time series, naively applying K-fold CV (breaks temporal structure); use time-series CV instead\n- Bayes Factors are sensitive to priors; strong priors favor simpler models even if data favor complexity",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Explain why AIC is asymptotically equivalent to leave-one-out cross-validation (LOO-CV), even though one uses in-sample likelihood and the other uses hold-out test sets.",
+        "back": "AIC estimates the Kullback-Leibler divergence (distance from true model) using in-sample log-likelihood plus a $k$ penalty. By a remarkable result (Stone, 1977), AIC is asymptotically equivalent to LOO-CV for large $n$: the penalty $k$ in AIC exactly accounts for the average inflation of in-sample vs. held-out likelihood. However, finite-sample behavior differs: LOO-CV estimates generalization directly (model-free); AIC relies on asymptotic normality and the linear approximation. LOO-CV is more reliable for small-sample or extreme-distribution scenarios."
+      },
+      {
+        "type": "mcq",
+        "front": "You compare two models using BIC: Model A (50 parameters) has $\\text{BIC}=200$, Model B (10 parameters) has $\\text{BIC}=210$. Both were fit to $n=1000$ data. Which is better, and why is BIC's penalty appropriate here?",
+        "back": "Model A has lower BIC by 10 points, suggesting it is slightly preferred. However, BIC's penalty term $k\\log n = k \\times 6.9$ is substantial: Model A pays $50 \\times 6.9 \\approx 345$ penalty, while Model B pays $10 \\times 6.9 \\approx 69$. The fact that A's in-sample likelihood overcomes this massive penalty slightly suggests A may overfit. With large $n=1000$, BIC's stringent penalty is appropriate for controlling false discoveries. Model B is safer; the 10-point BIC difference is small.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Model A; lower BIC always wins",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Model B; it's simpler and BIC heavily penalizes complexity for large $n$",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Model A; the extra 40 parameters are justified by the 10-point BIC gain",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Neither; the difference is too small to decide",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In Bayesian model comparison via Bayes Factors, why is the marginal likelihood $P(D|M)$ said to implement an \"automatic Occam's razor\"?",
+        "back": "Bayes Factor: $\\text{BF}_{12} = P(D|M_1)/P(D|M_2) = \\int P(D|\\theta_1,M_1)P(\\theta_1|M_1)d\\theta_1 / \\int P(D|\\theta_2,M_2)P(\\theta_2|M_2)d\\theta_2$. Model 1 with many parameters has a broader prior $P(\\theta_1|M_1)$, spreading probability mass thinly over the parameter space. Unless the likelihood strongly peaks in the data-generating direction, the marginal likelihood integrates to something small. Conversely, a simpler model with fewer parameters has a concentrated prior and higher marginal likelihood if it fits reasonably well. This automatic down-weighting of complexity is \"Occam's razor\" without explicit penalties."
+      },
+      {
+        "type": "mcq",
+        "front": "For time series data with $n=100$ observations, which cross-validation strategy is most appropriate?",
+        "back": "Time series data have temporal dependencies; random partitioning (A, B, D) breaks the sequence and allows information leakage from future into the past. Forward-chaining (C) respects causality: you train on historical data and test on future data, mimicking the deployment scenario. This is the only valid cross-validation for time series.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "5-fold cross-validation with random partition",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Leave-one-out cross-validation (LOO-CV)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Forward-chaining: train on [1:t], test on [t+1], sliding window",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Random-hold-out 20% test set, fit on 80%",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Explain the relationship between model complexity, marginal likelihood, and overfitting in Bayesian model selection. When would you prefer a complex model despite lower marginal likelihood?",
+        "back": "Complex models can have high marginal likelihood if the extra parameters meaningfully improve fit to the true data-generating process. However, if complexity is spurious (fitting noise), the marginal likelihood is low due to prior averaging. In practice: (1) if your domain knowledge strongly suggests complexity (e.g., physical models with mechanistic layers), use it despite lower marginal likelihood on current data; (2) if complexity is exploratory, trust marginal likelihood or LOO-CV; (3) use sensitivity analysis: vary prior on complexity (hyperprior scale) and check robustness. Marginal likelihood assumes the prior reflects your true uncertainty; misspecified priors can mislead."
+      }
+    ]
+  }
+]

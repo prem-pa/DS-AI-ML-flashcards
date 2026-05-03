@@ -1,0 +1,86 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "large-language-model-architectures",
+  "topic_label": "Large Language Model Architectures",
+  "concept_count": 11,
+  "concepts": [
+    {
+      "slug": "causal-masking-and-autoregressive-generation",
+      "title": "Causal masking and autoregressive generation",
+      "difficulty": "intermediate",
+      "hook": "Mask future tokens; generate left-to-right.",
+      "subtopic": "Decoder-Only Models (Causal)"
+    },
+    {
+      "slug": "decoder-only-vs-encoder-decoder-tradeoff",
+      "title": "Decoder-only vs encoder-decoder tradeoff",
+      "difficulty": "intermediate",
+      "hook": "Decoder-only: simpler, more parameter-efficient for generation; encoder-decoder: enables bidirectional context.",
+      "subtopic": "Decoder-Only Models (Causal)"
+    },
+    {
+      "slug": "gpt-llama-mistral-qwen-architectures",
+      "title": "GPT, Llama, Mistral, Qwen architectures",
+      "difficulty": "intermediate",
+      "hook": "Most modern LLMs are decoder-only; architectural choices vary (normalization, activation, attention type).",
+      "subtopic": "Decoder-Only Models (Causal)"
+    },
+    {
+      "slug": "encoder-decoder-architecture-and-cross-attention",
+      "title": "Encoder-decoder architecture and cross-attention",
+      "difficulty": "intermediate",
+      "hook": "Encoder processes input; decoder generates output conditioned on encoder.",
+      "subtopic": "Encoder-Decoder & Hybrid Models"
+    },
+    {
+      "slug": "t5-and-bart-models",
+      "title": "T5 and BART models",
+      "difficulty": "intermediate",
+      "hook": "Encoder-decoder for seq2seq; effective for translation, summarization.",
+      "subtopic": "Encoder-Decoder & Hybrid Models"
+    },
+    {
+      "slug": "mixture-of-experts-moe",
+      "title": "Mixture of Experts (MoE)",
+      "difficulty": "advanced",
+      "hook": "Conditional computation; route tokens to expert subsets; sparse activation.",
+      "subtopic": "Encoder-Decoder & Hybrid Models"
+    },
+    {
+      "slug": "jamba-and-hybrid-ssm-transformer-models",
+      "title": "Jamba and hybrid SSM-Transformer models",
+      "difficulty": "advanced",
+      "hook": "Combine attention layers with Mamba SSM layers; trade-offs in scaling and inference.",
+      "subtopic": "Encoder-Decoder & Hybrid Models"
+    },
+    {
+      "slug": "scaling-laws-for-loss-and-compute",
+      "title": "Scaling laws for loss and compute",
+      "difficulty": "advanced",
+      "hook": "Loss ~ 1/N^alpha; predictable improvements with more data/compute.",
+      "subtopic": "Model Scaling Laws"
+    },
+    {
+      "slug": "optimal-batch-sizes-and-datacompute-tradeoff",
+      "title": "Optimal batch sizes and data/compute tradeoff",
+      "difficulty": "advanced",
+      "hook": "Chinchilla scaling: equal budget to compute and data.",
+      "subtopic": "Model Scaling Laws"
+    },
+    {
+      "slug": "inference-scaling-and-test-time-compute-o1-reasoning-models",
+      "title": "Inference-scaling and test-time compute (o1, reasoning models)",
+      "difficulty": "advanced",
+      "hook": "More test-time steps improve reasoning; o3 sets benchmarks.",
+      "subtopic": "Model Scaling Laws"
+    },
+    {
+      "slug": "frontier-model-performance-gpt-4-claude-37-gemini-3",
+      "title": "Frontier model performance (GPT-4, Claude 3.7, Gemini 3)",
+      "difficulty": "intermediate",
+      "hook": "Understand where state-of-the-art sits; performance gaps on benchmarks.",
+      "subtopic": "Model Scaling Laws"
+    }
+  ]
+}

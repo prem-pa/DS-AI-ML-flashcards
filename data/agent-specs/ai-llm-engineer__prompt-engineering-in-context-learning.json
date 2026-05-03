@@ -1,0 +1,79 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "prompt-engineering-in-context-learning",
+  "topic_label": "Prompt Engineering & In-Context Learning",
+  "concept_count": 10,
+  "concepts": [
+    {
+      "slug": "few-shot-vs-zero-shot-prompting",
+      "title": "Few-shot vs zero-shot prompting",
+      "difficulty": "beginner",
+      "hook": "Examples improve performance; cost-quality tradeoff.",
+      "subtopic": "Prompt Design"
+    },
+    {
+      "slug": "chain-of-thought-prompting",
+      "title": "Chain-of-thought prompting",
+      "difficulty": "intermediate",
+      "hook": "Ask model to reason step-by-step; improves complex reasoning.",
+      "subtopic": "Prompt Design"
+    },
+    {
+      "slug": "instruction-following-and-task-formatting",
+      "title": "Instruction following and task formatting",
+      "difficulty": "beginner",
+      "hook": "Clear instructions improve responses; format matters.",
+      "subtopic": "Prompt Design"
+    },
+    {
+      "slug": "system-prompts-and-model-steering",
+      "title": "System prompts and model steering",
+      "difficulty": "beginner",
+      "hook": "System role sets behavior; guides model outputs.",
+      "subtopic": "Prompt Design"
+    },
+    {
+      "slug": "tree-of-thoughts-and-graph-of-thoughts",
+      "title": "Tree-of-Thoughts and graph-of-thoughts",
+      "difficulty": "advanced",
+      "hook": "Explore multiple reasoning paths; cost vs accuracy.",
+      "subtopic": "Advanced Prompting Techniques"
+    },
+    {
+      "slug": "self-consistency-and-majority-voting",
+      "title": "Self-consistency and majority voting",
+      "difficulty": "advanced",
+      "hook": "Sample multiple outputs; vote on answer; reduces variance.",
+      "subtopic": "Advanced Prompting Techniques"
+    },
+    {
+      "slug": "prompt-optimization-and-automated-prompt-learning",
+      "title": "Prompt optimization and automated prompt learning",
+      "difficulty": "advanced",
+      "hook": "Gradient-free methods optimize prompts for tasks.",
+      "subtopic": "Advanced Prompting Techniques"
+    },
+    {
+      "slug": "why-icl-works-gradient-descent-interpretation",
+      "title": "Why ICL works (gradient descent interpretation)",
+      "difficulty": "advanced",
+      "hook": "Implicit task understanding; not explicit learning but implicit optimization.",
+      "subtopic": "In-Context Learning Mechanics"
+    },
+    {
+      "slug": "scaling-laws-for-in-context-learning",
+      "title": "Scaling laws for in-context learning",
+      "difficulty": "advanced",
+      "hook": "More examples improve accuracy; plateaus exist.",
+      "subtopic": "In-Context Learning Mechanics"
+    },
+    {
+      "slug": "context-order-and-recency-bias",
+      "title": "Context order and recency bias",
+      "difficulty": "intermediate",
+      "hook": "Order of examples affects performance; recent examples weighted more.",
+      "subtopic": "In-Context Learning Mechanics"
+    }
+  ]
+}

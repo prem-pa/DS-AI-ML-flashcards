@@ -1,0 +1,149 @@
+{
+  "track": "data-scientist",
+  "track_label": "DATA SCIENTIST",
+  "topic": "ab-testing-experimentation",
+  "topic_label": "A/B Testing & Experimentation",
+  "concept_count": 20,
+  "concepts": [
+    {
+      "slug": "randomization-and-control-groups",
+      "title": "Randomization and control groups",
+      "difficulty": "beginner",
+      "hook": "Enables causal inference by balancing confounders.",
+      "subtopic": "Experiment Design & Setup"
+    },
+    {
+      "slug": "treatment-and-control-selection",
+      "title": "Treatment and control selection",
+      "difficulty": "intermediate",
+      "hook": "Control arm must be representative; placebo vs business-as-usual varies by context.",
+      "subtopic": "Experiment Design & Setup"
+    },
+    {
+      "slug": "randomization-units-user-session-account",
+      "title": "Randomization units (user, session, account)",
+      "difficulty": "intermediate",
+      "hook": "Affects power and statistical properties; interference may occur at wrong level.",
+      "subtopic": "Experiment Design & Setup"
+    },
+    {
+      "slug": "pre-registration-and-redd-registered-experiment-design-document",
+      "title": "Pre-registration and REDD (Registered Experiment Design Document)",
+      "difficulty": "intermediate",
+      "hook": "Reduces p-hacking and HARKing; best practice in rigorous organizations.",
+      "subtopic": "Experiment Design & Setup"
+    },
+    {
+      "slug": "velocity-sample-size-per-day",
+      "title": "Velocity (sample size per day)",
+      "difficulty": "intermediate",
+      "hook": "How quickly you accumulate samples determines time-to-decision.",
+      "subtopic": "Online Experiment Mechanics"
+    },
+    {
+      "slug": "duration-and-seasonal-bias",
+      "title": "Duration and seasonal bias",
+      "difficulty": "intermediate",
+      "hook": "Running experiments over full weeks avoids day-of-week effects; seasons matter for retention.",
+      "subtopic": "Online Experiment Mechanics"
+    },
+    {
+      "slug": "holdout-and-holdback-rates",
+      "title": "Holdout and holdback rates",
+      "difficulty": "intermediate",
+      "hook": "Controlling what fraction of traffic enters treatment; necessary for ramp-ups.",
+      "subtopic": "Online Experiment Mechanics"
+    },
+    {
+      "slug": "instrumentation-and-logging",
+      "title": "Instrumentation and logging",
+      "difficulty": "intermediate",
+      "hook": "Garbage in, garbage out; log quality determines metric reliability.",
+      "subtopic": "Online Experiment Mechanics"
+    },
+    {
+      "slug": "primary-vs-secondary-metrics",
+      "title": "Primary vs secondary metrics",
+      "difficulty": "intermediate",
+      "hook": "Primary metric drives decision; secondaries catch side effects.",
+      "subtopic": "Metrics & Guardrails"
+    },
+    {
+      "slug": "guardrail-metrics",
+      "title": "Guardrail metrics",
+      "difficulty": "intermediate",
+      "hook": "Flag if experiment harms critical business outcomes (e.g., latency, revenue).",
+      "subtopic": "Metrics & Guardrails"
+    },
+    {
+      "slug": "metric-construction-ratios-counts-timing",
+      "title": "Metric construction (ratios, counts, timing)",
+      "difficulty": "intermediate",
+      "hook": "Ratio metrics (CTR, conversion rate) have different variance properties than counts.",
+      "subtopic": "Metrics & Guardrails"
+    },
+    {
+      "slug": "variance-reduction-techniques-cuped-stratification",
+      "title": "Variance reduction techniques (CUPED, stratification)",
+      "difficulty": "advanced",
+      "hook": "Reduces variance of metric estimate; accelerates power without more users.",
+      "subtopic": "Metrics & Guardrails"
+    },
+    {
+      "slug": "sequential-testing-and-peek-penalties",
+      "title": "Sequential testing and peek penalties",
+      "difficulty": "advanced",
+      "hook": "Stopping early inflates Type I error; corrections needed or use truly sequential methods.",
+      "subtopic": "Statistical Analysis & Decisions"
+    },
+    {
+      "slug": "confidence-intervals-vs-bayesian-posterior",
+      "title": "Confidence intervals vs Bayesian posterior",
+      "difficulty": "intermediate",
+      "hook": "CI: binary decision at boundary; Bayesian: posterior distribution of effect.",
+      "subtopic": "Statistical Analysis & Decisions"
+    },
+    {
+      "slug": "effect-size-estimation-and-practical-significance",
+      "title": "Effect size estimation and practical significance",
+      "difficulty": "intermediate",
+      "hook": "Statistical significance != business impact; estimate effect size separately.",
+      "subtopic": "Statistical Analysis & Decisions"
+    },
+    {
+      "slug": "multiple-arms-and-multi-armed-bandit-mab",
+      "title": "Multiple arms and multi-armed bandit (MAB)",
+      "difficulty": "advanced",
+      "hook": "Testing many variants; MAB trades exploration-exploitation for faster learning.",
+      "subtopic": "Statistical Analysis & Decisions"
+    },
+    {
+      "slug": "novelty-effects-and-long-term-impact",
+      "title": "Novelty effects and long-term impact",
+      "difficulty": "intermediate",
+      "hook": "Short experiment may not capture habituation or withdrawal effects.",
+      "subtopic": "Common Pitfalls & Validity Threats"
+    },
+    {
+      "slug": "interference-and-network-effects",
+      "title": "Interference and network effects",
+      "difficulty": "intermediate",
+      "hook": "When treatment affects untreated users (e.g., recommendation network); violates independence.",
+      "subtopic": "Common Pitfalls & Validity Threats"
+    },
+    {
+      "slug": "survivorship-bias",
+      "title": "Survivorship bias",
+      "difficulty": "intermediate",
+      "hook": "If treatment causes users to churn, survivor cohorts differ; use ITT (intention-to-treat).",
+      "subtopic": "Common Pitfalls & Validity Threats"
+    },
+    {
+      "slug": "simpsons-paradox",
+      "title": "Simpson's paradox",
+      "difficulty": "intermediate",
+      "hook": "Aggregated effect reverses when stratified; understand confounders.",
+      "subtopic": "Common Pitfalls & Validity Threats"
+    }
+  ]
+}

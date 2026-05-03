@@ -1,0 +1,93 @@
+{
+  "track": "data-scientist",
+  "track_label": "DATA SCIENTIST",
+  "topic": "product-business-sense",
+  "topic_label": "Product & Business Sense",
+  "concept_count": 12,
+  "concepts": [
+    {
+      "slug": "defining-success-metrics-and-north-star",
+      "title": "Defining success metrics and north star",
+      "difficulty": "beginner",
+      "hook": "Align metrics with business goals; avoid unintended consequences.",
+      "subtopic": "Metrics & KPIs"
+    },
+    {
+      "slug": "actionable-metrics-vs-vanity-metrics",
+      "title": "Actionable metrics vs vanity metrics",
+      "difficulty": "beginner",
+      "hook": "Actionable: you can influence it and it correlates to business value.",
+      "subtopic": "Metrics & KPIs"
+    },
+    {
+      "slug": "leading-vs-lagging-indicators",
+      "title": "Leading vs lagging indicators",
+      "difficulty": "intermediate",
+      "hook": "Leading (e.g., engagement) predicts lagging (e.g., retention); use for early signals.",
+      "subtopic": "Metrics & KPIs"
+    },
+    {
+      "slug": "cohort-analysis-and-retention-curves",
+      "title": "Cohort analysis and retention curves",
+      "difficulty": "intermediate",
+      "hook": "Track user cohorts over time; detect user lifecycle patterns.",
+      "subtopic": "Metrics & KPIs"
+    },
+    {
+      "slug": "cost-benefit-analysis-and-roi",
+      "title": "Cost-benefit analysis and ROI",
+      "difficulty": "beginner",
+      "hook": "Tradeoff: cost of running experiment vs value of information.",
+      "subtopic": "Business Context & Decision-Making"
+    },
+    {
+      "slug": "opportunity-sizing",
+      "title": "Opportunity sizing",
+      "difficulty": "intermediate",
+      "hook": "How many users/dollars affected? Prioritize high-impact opportunities.",
+      "subtopic": "Business Context & Decision-Making"
+    },
+    {
+      "slug": "stakeholder-alignment-and-communication",
+      "title": "Stakeholder alignment and communication",
+      "difficulty": "beginner",
+      "hook": "Frame results for product, engineering, and exec audiences differently.",
+      "subtopic": "Business Context & Decision-Making"
+    },
+    {
+      "slug": "data-driven-decision-culture",
+      "title": "Data-driven decision culture",
+      "difficulty": "beginner",
+      "hook": "Testing and experimentation become operational norms.",
+      "subtopic": "Business Context & Decision-Making"
+    },
+    {
+      "slug": "funnel-analysis",
+      "title": "Funnel analysis",
+      "difficulty": "beginner",
+      "hook": "Track user drop-off at each step; identify bottlenecks.",
+      "subtopic": "Product Analytics"
+    },
+    {
+      "slug": "feature-adoption-and-engagement-metrics",
+      "title": "Feature adoption and engagement metrics",
+      "difficulty": "intermediate",
+      "hook": "DAU, MAU, feature-level engagement guide product roadmap.",
+      "subtopic": "Product Analytics"
+    },
+    {
+      "slug": "churn-prediction-and-retention-modeling",
+      "title": "Churn prediction and retention modeling",
+      "difficulty": "intermediate",
+      "hook": "Identify at-risk users; test interventions.",
+      "subtopic": "Product Analytics"
+    },
+    {
+      "slug": "network-effects-and-viral-loops",
+      "title": "Network effects and viral loops",
+      "difficulty": "advanced",
+      "hook": "Measure how users drive adoption of other users.",
+      "subtopic": "Product Analytics"
+    }
+  ]
+}

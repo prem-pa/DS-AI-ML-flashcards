@@ -1,0 +1,44 @@
+{
+  "track": "verticals",
+  "track_label": "Verticals",
+  "topic": "speech-recognition-audio",
+  "topic_label": "Speech Recognition & Audio",
+  "concept_count": 5,
+  "concepts": [
+    {
+      "slug": "mel-spectrogram-and-time-frequency-features",
+      "title": "Mel-spectrogram and time-frequency features",
+      "difficulty": "intermediate",
+      "hook": "Transform audio into visual-like representation.",
+      "subtopic": "Audio Representation"
+    },
+    {
+      "slug": "audio-augmentation-techniques",
+      "title": "Audio augmentation techniques",
+      "difficulty": "intermediate",
+      "hook": "SpecAugment, mix-up.",
+      "subtopic": "Audio Representation"
+    },
+    {
+      "slug": "asr-automatic-speech-recognition",
+      "title": "ASR (Automatic Speech Recognition)",
+      "difficulty": "intermediate",
+      "hook": "Convert speech to text; CTC or attention-based.",
+      "subtopic": "Speech Models"
+    },
+    {
+      "slug": "whisper-and-large-speech-models",
+      "title": "Whisper and large speech models",
+      "difficulty": "intermediate",
+      "hook": "Robust, multilingual speech recognition.",
+      "subtopic": "Speech Models"
+    },
+    {
+      "slug": "speaker-recognition-and-speaker-embeddings",
+      "title": "Speaker recognition and speaker embeddings",
+      "difficulty": "intermediate",
+      "hook": "Identify speakers; similarity-based.",
+      "subtopic": "Speech Models"
+    }
+  ]
+}

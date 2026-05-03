@@ -1,0 +1,487 @@
+[
+  {
+    "slug": "mel-spectrogram-and-time-frequency-features",
+    "title": "Mel-spectrogram and time-frequency features",
+    "track": "verticals",
+    "topic": "speech-recognition-audio",
+    "difficulty": "intermediate",
+    "tags": [
+      "audio-representation",
+      "feature-extraction",
+      "signal-processing",
+      "deep-learning",
+      "spectrogram"
+    ],
+    "aliases": [
+      "log-mel-spectrogram",
+      "mel-frequency-spectrogram",
+      "MFCC-alternative"
+    ],
+    "wikilinks": [
+      "spectrogram",
+      "mel-scale",
+      "fourier-transform",
+      "feature-extraction",
+      "audio-preprocessing",
+      "dft",
+      "psychoacoustics"
+    ],
+    "sources": [
+      {
+        "url": "https://apxml.com/courses/applied-speech-recognition/chapter-2-feature-extraction-for-speech/filter-banks-log-mel-spectrograms",
+        "label": "Filter Banks and Log-Mel Spectrograms - Applied Speech Recognition"
+      },
+      {
+        "url": "https://www.shadecoder.com/topics/mel-spectrogram-a-comprehensive-guide-for-2025",
+        "label": "Mel-spectrogram Guide 2025 - Uses & Best Practices"
+      },
+      {
+        "url": "https://arxiv.org/abs/2502.20040",
+        "label": "CleanMel: Mel-Spectrogram Enhancement for Improving Both Speech Quality and ASR"
+      }
+    ],
+    "explainer_md": "## Intuition\nA mel-spectrogram is a time-frequency representation of audio that mimics how humans perceive sound. Instead of treating all frequencies equally, it \"compresses\" higher frequencies together and stretches lower frequencies apart—just like our ears do. This makes it easier for neural networks to learn speech patterns.\n\n## Detail\nMel-spectrograms are created by:\n1. Converting audio waveform to frequency domain using FFT\n2. Applying mel-scale filter banks (triangular filters spaced on the mel scale, which is logarithmic)\n3. Taking the log of the resulting energies to match human loudness perception\n4. Stacking these log-energies over time to create a 2D representation (frequency × time)\n\nThe mel scale is defined as: mel = 2595 * log10(1 + f/700), where f is frequency in Hz. Log-mel spectrograms are preferred over raw spectrograms because deep neural networks can learn richer patterns from the mel-warped representation without losing critical information. Compared to older MFCC features (which apply DCT), mel-spectrograms retain more detail while still being computationally efficient.\n\nDimensions are typically [freq_bins, time_steps], where freq_bins ≈ 80-128 and time_steps depends on audio length. This compactness makes training ASR models faster than using raw waveforms.\n\n## Common gotchas / interview framings\n- **Frequency warping:** The mel scale approximates human hearing but is not perfect—be ready to justify why it's used over linear frequency spectrograms\n- **Log scaling:** Why take log? Matches human loudness perception (Weber-Fechner law) and compresses dynamic range\n- **Normalization:** Spectrograms vary in range depending on audio amplitude; mean-variance normalization is crucial for stable training\n- **Trade-off clarity:** Mel-spectrograms lose some frequency resolution in high frequencies compared to linear spectrograms—this is intentional but candidates often miss why\n- **Implementation details:** Different frameworks (librosa, torchaudio) may use different filter bank designs; know the formula\n- **Frame length & hop length:** These determine time resolution; typical values are 25ms frames with 10ms hop length",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the primary advantage of using mel-spectrograms instead of raw spectrograms for ASR?",
+        "back": "Mel-spectrograms match human auditory perception by compressing high frequencies and stretching low frequencies (logarithmic mel scale), reducing irrelevant high-frequency noise while preserving speech-critical low-frequency information. This makes neural networks learn more efficiently and requires lower computational resources than raw spectrograms."
+      },
+      {
+        "type": "flip",
+        "front": "Define the mel-scale formula and explain why log scaling is applied to spectrograms.",
+        "back": "Mel scale: mel = 2595 * log10(1 + f/700). Log scaling matches the Weber-Fechner law of human loudness perception (we perceive loudness logarithmically) and compresses the dynamic range of audio energy, making models more stable during training and preventing loud sounds from dominating learning."
+      },
+      {
+        "type": "mcq",
+        "front": "Which of the following best describes the difference between MFCC (Mel-Frequency Cepstral Coefficients) and log-mel spectrograms for modern deep learning ASR?",
+        "back": "Modern deep learning ASR prefers log-mel spectrograms because DNNs can exploit the richer 2D structure without the information loss from MFCC's DCT compression. MFCC was designed for GMM-HMM systems that benefited from decorrelation; neural networks work better with the full spectrogram.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "MFCC applies DCT on top of mel-spectrograms, reducing dimensionality but losing detail that DNNs can leverage",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Log-mel spectrograms are always superior because they use more mel filters",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "MFCC works only with HMMs; log-mel spectrograms work only with neural networks",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "There is no practical difference; they are equivalent representations",
+            "correct": false
+          },
+          {
+            "key": "e",
+            "text": "Log-mel spectrograms retain the full mel-scale representation without DCT compression, allowing deep networks to learn richer features",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Typical mel-spectrogram dimensions and interpretation: what do [80, 500] represent?",
+        "back": "[80, 500] represents 80 mel-frequency bins (spanning roughly 20Hz–8000Hz) and 500 time frames. With typical 25ms frame length and 10ms hop, this covers ~5 seconds of audio. The tensor is [freq_bins, time_steps], often reshaped to [channels=1, freq, time] for CNN-based ASR models."
+      },
+      {
+        "type": "flip",
+        "front": "What is spectral augmentation (SpecAugment) and why is it applied to mel-spectrograms?",
+        "back": "SpecAugment randomly masks contiguous regions in the frequency (SpecAugment-F) and time (SpecAugment-T) dimensions during training to prevent overfitting. It acts as a regularizer, forcing the model to learn robust features from partial, corrupted inputs—similar to dropout but for spectrographic representation."
+      }
+    ]
+  },
+  {
+    "slug": "audio-augmentation-techniques",
+    "title": "Audio augmentation techniques",
+    "track": "verticals",
+    "topic": "speech-recognition-audio",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-augmentation",
+      "training-regularization",
+      "robustness",
+      "feature-engineering",
+      "deep-learning"
+    ],
+    "aliases": [
+      "SpecAugment",
+      "audio-data-augmentation",
+      "speech-augmentation"
+    ],
+    "wikilinks": [
+      "specaugment",
+      "mixup",
+      "time-stretching",
+      "pitch-shift",
+      "audio-preprocessing",
+      "dropout",
+      "regularization"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1904.08779",
+        "label": "SpecAugment: A Simple Data Augmentation Method for Automatic Speech Recognition"
+      },
+      {
+        "url": "https://arxiv.org/abs/1710.09412",
+        "label": "mixup: Beyond Empirical Risk Minimization"
+      },
+      {
+        "url": "https://github.com/openai/whisper",
+        "label": "Whisper GitHub - Audio Augmentation in Training"
+      }
+    ],
+    "explainer_md": "## Intuition\nAudio augmentation is a collection of techniques that artificially expand the training dataset by applying controlled transformations to audio signals and spectrograms. Just as image augmentation (rotation, crops) improves vision models, audio augmentation makes ASR models robust to real-world variations like background noise, speed changes, and pitch shifts.\n\n## Detail\n**Spectrogram-level augmentation (SpecAugment):**\n- Time masking: Mask contiguous frames in time dimension (0–T time steps), forcing model to interpolate missing temporal context\n- Frequency masking: Mask contiguous frequency bins (0–F mel-bins), making model robust to spectral missing data\n- Typical ranges: T_max ≈ 40 frames (~0.4s), F_max ≈ 30 bins (~1/3 of spectrum)\n\n**Waveform-level augmentation:**\n- Time-stretching: Change audio speed without pitch (tempo augmentation)\n- Pitch shifting: Change pitch without speed\n- Background noise injection: Mix with environmental noise at variable SNR\n- Volume normalization: Random gain scaling\n\n**Mixup for audio:**\n- Blend two audio samples: x_aug = λ·x1 + (1−λ)·x2 with random λ ∈ [0,1]\n- Blend labels similarly: y_aug = λ·y1 + (1−λ)·y2\n- Forces model to learn smooth decision boundaries and improves generalization\n\n## Common gotchas / interview framings\n- **SpecAugment vs mixup:** SpecAugment masks (zeroes out) regions; mixup blends. Candidates often confuse them\n- **Magnitude of augmentation:** Too much SpecAugment (T_max=100, F_max=50) degrades performance; values are dataset-dependent\n- **Train-test mismatch:** Augmentation should match expected test distribution; heavy noise augmentation only helps if test data is noisy\n- **Waveform vs spectrogram:** Waveform augmentations (pitch shift, time stretch) change underlying audio; spectrogram augmentations are lossy approximations\n- **Asymmetry:** Different augmentations benefit different languages and domains; multilingual models may need balanced augmentation\n- **Computational cost:** SpecAugment is cheap (applied on-the-fly during training); waveform augmentations may require preprocessing",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What are the two main dimensions of SpecAugment and what do they target?",
+        "back": "Time masking: randomly mask T contiguous time frames (typically 0–40 frames) to make model robust to missing temporal context. Frequency masking: randomly mask F contiguous mel-frequency bins (typically 0–30 bins) to handle spectral missing data. Together they force the model to learn from incomplete spectrograms."
+      },
+      {
+        "type": "flip",
+        "front": "How does mixup differ from SpecAugment in the context of audio augmentation?",
+        "back": "SpecAugment masks (zeroes out) regions of the spectrogram. Mixup blends two samples: x_aug = λ·x1 + (1−λ)·x2 with λ ∈ [0,1], also blending their labels. Mixup creates intermediate examples; SpecAugment creates incomplete ones. Both regularize but use different mechanisms."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is SpecAugment effective for improving ASR model generalization?",
+        "back": "SpecAugment acts as a regularizer and data augmentation simultaneously. By masking regions, it increases data diversity, forces feature robustness, and reduces overfitting—all contributing to better generalization on unseen test data.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It increases the effective dataset size without collecting new data",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "It forces the model to learn features that are robust to missing spectral and temporal information",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "It reduces overfitting by introducing noise-like perturbations during training",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above",
+            "correct": true
+          },
+          {
+            "key": "e",
+            "text": "It only works for multilingual ASR systems",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What are typical hyperparameter ranges for SpecAugment (T_max, F_max) and how are they chosen?",
+        "back": "Common ranges: T_max ≈ 20–80 frames (~0.2–0.8 seconds), F_max ≈ 20–50 mel-bins (~1/4 to 1/2 of spectrum). Chosen empirically via validation; too aggressive augmentation (T_max=150, F_max=70) degrades performance. Dataset and language matter: low-resource languages often benefit from stronger augmentation."
+      },
+      {
+        "type": "flip",
+        "front": "Describe one waveform-level augmentation technique and when it's preferred over spectrogram-level augmentation.",
+        "back": "Time-stretching (tempo change without pitch) or pitch-shifting: applied at the waveform level before mel-spectrogram computation. Preferred when you want to simulate realistic acoustic variation (speed of speech, vocal characteristics). However, spectrogram augmentation is cheaper computationally and applied on-the-fly during training without preprocessing."
+      }
+    ]
+  },
+  {
+    "slug": "asr-automatic-speech-recognition",
+    "title": "ASR (Automatic Speech Recognition)",
+    "track": "verticals",
+    "topic": "speech-recognition-audio",
+    "difficulty": "intermediate",
+    "tags": [
+      "speech-models",
+      "sequence-modeling",
+      "encoder-decoder",
+      "end-to-end",
+      "alignment"
+    ],
+    "aliases": [
+      "speech-to-text",
+      "automatic-speech-recognition",
+      "ASR-systems"
+    ],
+    "wikilinks": [
+      "ctc",
+      "attention-mechanism",
+      "seq2seq",
+      "encoder-decoder",
+      "language-model",
+      "beam-search",
+      "transducer"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/html/2510.12827",
+        "label": "Automatic Speech Recognition in the Modern Era: Architectures, Training, and Evaluation"
+      },
+      {
+        "url": "https://www.merl.com/publications/docs/TR2017-190.pdf",
+        "label": "Hybrid CTC/Attention Architecture for End-to-End Speech Recognition"
+      },
+      {
+        "url": "https://medium.com/intel-student-ambassadors/attention-in-end-to-end-automatic-speech-recognition-9f9e42718d21",
+        "label": "Attention in end-to-end Automatic Speech Recognition"
+      }
+    ],
+    "explainer_md": "## Intuition\nAutomatic Speech Recognition (ASR) converts audio (mel-spectrograms or waveforms) into text. The core challenge: align variable-length audio frames with variable-length text sequences, and learn both acoustic-to-phonetic mappings and linguistic constraints. Modern ASR uses two main paradigms: CTC (Connectionist Temporal Classification) and attention-based encoder-decoder (AED) models, each with distinct trade-offs.\n\n## Detail\n**CTC (Connectionist Temporal Classification):**\n- Maps every audio frame to a token (character, phoneme, subword)\n- Uses a blank token (\"collapse\") to handle repetitions: [a, blank, a] → \"aa\"\n- Learns alignment implicitly through loss; frame-level predictions are conditionally independent\n- Fast inference (parallel decoding); no language model required\n- Weakness: cannot model linguistic constraints; requires strong external LM for competitive performance\n\n**Attention-Based Encoder-Decoder (AED):**\n- Encoder: compresses audio frames to context vectors (CNN/RNN/Transformer)\n- Decoder: autoregressively generates text, using attention to focus on relevant audio frames\n- Learns both acoustic and linguistic patterns (implicit LM from data)\n- Flexible alignment; better performance without external LM\n- Weakness: slower inference (sequential decoding); prone to attention errors (deletion, insertion)\n\n**Hybrid CTC/Attention:**\n- Combines both: CTC branch supervises alignment; attention branch learns linguistic structure\n- Shared encoder; joint loss = CTC_loss + attention_loss\n- Often outperforms pure CTC or pure AED, especially with limited LM\n\n**Modern architectures:**\n- Transducers (RNN-T, Conformer-Transducer): predict output token at each frame, with recurrent state\n- Conformers: stack convolution + self-attention blocks for local and global context\n- Transformer-based: scaled dot-product attention replaces RNNs for parallelization\n\n## Common gotchas / interview framings\n- **Alignment:** CTC assumes monotonic alignment (left-to-right); AED is more flexible but slower\n- **LM dependency:** CTC relies heavily on external LM; AED learns implicit LM. Know why\n- **Error analysis:** CTC makes few deletions (never skips frames) but more substitutions; AED makes more flexible errors\n- **Decoding:** CTC uses greedy or prefix beam search; AED uses beam search with LM rescoring\n- **Latency vs. accuracy:** CTC is faster; AED is more accurate—candidate should understand why\n- **Multilingual ASR:** Different languages have different optimal architectures; not one-size-fits-all",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the blank token in CTC and why is it necessary?",
+        "back": "The blank token (ε) is a special symbol used to collapse repeated predictions. Sequences [a, ε, a] or [a, a, a] both collapse to \"aa\" because CTC removes blanks and consecutive repeats. Without it, CTC couldn't distinguish repeated characters (e.g., \"book\" would be hard to encode if every 'o' frame predicts 'o')."
+      },
+      {
+        "type": "flip",
+        "front": "Compare frame-level independence in CTC vs. the autoregressive nature of attention-based ASR.",
+        "back": "CTC: P(y_t | x) independent of other y predictions given input x; allows parallel frame processing. Attention-based: P(y_t | y_1...y_{t-1}, x); autoregressive decoding depends on previous tokens. CTC is faster; attention learns linguistic patterns better."
+      },
+      {
+        "type": "mcq",
+        "front": "Why do CTC-based ASR systems typically require a strong external language model while attention-based systems do not?",
+        "back": "CTC's strength (parallel, frame-independent predictions) is also its weakness: it cannot model word dependencies, grammatical constraints, or n-gram patterns. AED's decoder generates tokens sequentially conditioned on previous tokens, naturally learning linguistic structure from the training data.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "CTC models have lower training data requirements",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "CTC frame-level predictions are conditionally independent, so it cannot learn linguistic constraints; AED's autoregressive decoder learns P(next_token | previous_tokens), capturing language patterns implicitly",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Attention mechanisms are inherently linguistic",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "External language models cannot be used with attention-based systems",
+            "correct": false
+          },
+          {
+            "key": "e",
+            "text": "CTC is older and predates neural language models",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Describe the architecture and loss function of a hybrid CTC/Attention model.",
+        "back": "Shared encoder processes mel-spectrogram → context vectors. Two decoder heads: (1) CTC head: frame-wise softmax over tokens, CTC loss supervises frame-label alignment; (2) Attention head: queries encoder context, AED loss supervises sequence generation. Total loss = α·L_CTC + (1−α)·L_AED. The CTC branch regularizes alignment; attention learns linguistic patterns."
+      },
+      {
+        "type": "flip",
+        "front": "What is a Conformer architecture in ASR and what are its key components?",
+        "back": "Conformer stacks Convolution and Attention layers: (1) Multi-head self-attention for long-range dependencies, (2) Feed-forward networks, (3) Depthwise convolutions for local context. Position-wise feed-forward before and after. This combination captures both local (conv) and global (attention) context efficiently, achieving state-of-the-art results in speech recognition."
+      }
+    ]
+  },
+  {
+    "slug": "whisper-and-large-speech-models",
+    "title": "Whisper and large speech models",
+    "track": "verticals",
+    "topic": "speech-recognition-audio",
+    "difficulty": "intermediate",
+    "tags": [
+      "large-models",
+      "multilingual-asr",
+      "zero-shot",
+      "whisper",
+      "speech-pretrain"
+    ],
+    "aliases": [
+      "OpenAI-Whisper",
+      "speech-foundation-models",
+      "robust-asr"
+    ],
+    "wikilinks": [
+      "whisper",
+      "large-scale-pretraining",
+      "multilingual-models",
+      "zero-shot-transfer",
+      "weak-supervision",
+      "wav2vec"
+    ],
+    "sources": [
+      {
+        "url": "https://openai.com/index/whisper/",
+        "label": "Introducing Whisper - OpenAI"
+      },
+      {
+        "url": "https://github.com/openai/whisper",
+        "label": "Whisper GitHub Repository"
+      },
+      {
+        "url": "https://huggingface.co/openai/whisper-large-v3",
+        "label": "Whisper Large-v3 on Hugging Face"
+      }
+    ],
+    "explainer_md": "## Intuition\nWhisper is a large-scale, multilingual speech recognition model trained by OpenAI on 680,000 hours of weakly-labeled audio in 99 languages. Unlike typical ASR models fine-tuned on specific languages, Whisper learns to recognize speech across languages and even transcribe code or translate speech to English—all through large-scale unsupervised pretraining (weak supervision from automatic captions).\n\n## Detail\n**Whisper architecture:**\n- Encoder: convolutional feature extractor + Transformer encoder blocks\n- Decoder: Transformer decoder with causal masking, multi-task learning heads\n- Input: mel-spectrograms (80 mel-bins, 3000ms context windows)\n- Output: text tokens (English + 99 languages) + task tokens (transcribe, translate)\n- Task tokens: <|transcribe|>, <|translate|> prefix tokens signal task type\n\n**Training paradigm:**\n- Weak supervision: 680K hours from web audio with auto-generated captions (noisy labels)\n- Multitask learning: transcription, translation, language identification all in one model\n- Encoder-decoder Seq2Seq with cross-entropy loss\n- Data scale overcomes label noise; minimal fine-tuning needed\n\n**Model variants:**\n- Tiny, Base, Small, Medium, Large (largest ~1.5B parameters)\n- Trade-off: larger models slower but significantly more accurate\n- Whisper Large-v3 (2023): 10–20% WER reduction vs. v2 through improved pretraining\n\n**Key capabilities:**\n- Zero-shot: handles multiple languages and accents without task-specific training\n- Robustness: tolerates background noise, accents, technical language better than traditional ASR\n- Multilingual: single model for 99 languages; no per-language models needed\n- Translate to English: non-English audio → English transcription in one model\n\n**Modern alternatives:**\n- wav2vec 2.0: self-supervised on raw waveforms; excellent for low-resource fine-tuning\n- Conformer-based models: lighter-weight, optimized for specific languages\n- GPT-4o speech models (2025): newer OpenAI models with lower error rates than Whisper\n\n## Common gotchas / interview framings\n- **Weak supervision myth:** Whisper doesn't require perfect labels; it learns from noisy web data—explains why fine-tuning is often optional\n- **Hallucination:** Whisper sometimes generates repeated or fictional text, especially in silence—known issue, not present in all use cases\n- **Multilingual cost:** Using one model for 99 languages means each language's performance may be slightly lower than a language-specific model\n- **Task tokens:** Forgetting to prefix with <|transcribe|> or <|translate|> changes behavior; important for reproducibility\n- **Inference latency:** Large model is slow; optimization techniques (quantization, distillation) essential for production\n- **Comparison:** Whisper is not perfect; GPT-4o-based speech models (2025) have lower error rates but require API access",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is 'weak supervision' in the context of Whisper training and why is it effective?",
+        "back": "Whisper was trained on 680,000 hours of web audio with automatically-generated (noisy) captions, not manually-labeled data. Weak supervision works because: (1) sheer scale (680K hours) overwhelms label noise, (2) diverse data covers many accents/languages/domains, (3) modern neural networks learn robust features despite noisy targets. This avoids expensive human annotation."
+      },
+      {
+        "type": "flip",
+        "front": "Describe the role of task tokens in Whisper (e.g., <|transcribe|>, <|translate|>) and their impact on model behavior.",
+        "back": "Task tokens are prefix tokens that signal the decoding task to the Whisper decoder. <|transcribe|> → transcribe audio in its original language. <|translate|> → transcribe audio and translate to English. These tokens are learned during training and direct the shared model to different behaviors; omitting them or using wrong tokens degrades performance."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is Whisper considered 'robust' compared to traditional fine-tuned ASR systems?",
+        "back": "Whisper's robustness comes from massive scale and diversity. Training on 680K hours across 99 languages and diverse acoustic conditions (street noise, music, various accents) naturally improves generalization. Traditional systems fine-tuned on clean, domain-specific data are brittle to distribution shift; Whisper has seen it all.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "It uses larger models with more parameters",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "It was trained on diverse 680K-hour dataset spanning 99 languages, accents, and acoustic conditions; this diversity makes it tolerant of background noise, accents, and domain shifts without task-specific fine-tuning",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "It uses external language models",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It always achieves lower WER than fine-tuned systems",
+            "correct": false
+          },
+          {
+            "key": "e",
+            "text": "It uses CTC instead of attention",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "What is the Whisper model size vs. accuracy trade-off? Mention specific variants.",
+        "back": "Tiny (~39M params): fastest, lowest accuracy. Base (~74M): good speed-accuracy. Small (~244M): moderate latency. Medium (~769M): slower. Large (~1.5B): slowest, highest accuracy (10–20% WER reduction vs. v2). Typical production choice: Medium balances accuracy and latency; Large used for offline/batch processing."
+      },
+      {
+        "type": "flip",
+        "front": "Explain Whisper's hallucination problem and when it occurs.",
+        "back": "Whisper sometimes generates repeated text or fictional output (e.g., transcribing silence as repeated words or lyrics). Occurs in: (1) silent/low-SNR segments where model is uncertain, (2) long pauses in audio, (3) certain languages with training data artifacts. Mitigation: use logit_filters to suppress repetition, or add voice activity detection before transcription."
+      }
+    ]
+  },
+  {
+    "slug": "speaker-recognition-and-speaker-embeddings",
+    "title": "Speaker recognition and speaker embeddings",
+    "track": "verticals",
+    "topic": "speech-recognition-audio",
+    "difficulty": "intermediate",
+    "tags": [
+      "speaker-verification",
+      "metric-learning",
+      "embeddings",
+      "speech-models",
+      "biometric"
+    ],
+    "aliases": [
+      "speaker-identification",
+      "speaker-verification",
+      "speaker-embeddings",
+      "i-vectors",
+      "x-vectors"
+    ],
+    "wikilinks": [
+      "speaker-verification",
+      "speaker-identification",
+      "metric-learning",
+      "cosine-similarity",
+      "triplet-loss",
+      "embedding-space"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1803.10541",
+        "label": "X-vectors: Robust DNN Embeddings for Speaker Recognition"
+      },
+      {
+        "url": "https://arxiv.org/abs/1806.04558",
+        "label": "Generalized End-to-End Loss for Speaker Verification"
+      },
+      {
+        "url": "https://github.com/clovaai/speaker_verification_experiments",
+        "label": "Speaker Verification Experiments - Clova AI"
+      }
+    ],
+    "explainer_md": "## Intuition\nSpeaker recognition and speaker embeddings answer: \"Who is speaking?\" Given two speech samples, we want to know if they're from the same person (speaker verification) or identify a speaker from a closed set (speaker identification). Rather than recognizing the words spoken, we extract speaker-specific features (speaker embeddings) and compare them using similarity metrics.\n\n## Detail\n**Speaker embeddings:**\nFixed-dimensional vectors (typically 256–512 dims) extracted from a speaker's speech, capturing identity but not content. Similar embeddings → same speaker; different → different speaker.\n\n**Extraction methods:**\n1. **I-vectors (ivector, 2010s):** Bag-of-frames GMM supervector; length normalization + PLDA scoring\n2. **X-vectors (2018):** Time-delay neural networks (TDNN) + statistics pooling; learned discriminatively\n3. **Speaker encoder networks:** Deep networks trained with metric learning losses (triplet, angular-margin losses)\n\n**X-vector pipeline:**\n- Input: mel-spectrograms\n- Frame-level embeddings: stack of TDNN layers → hidden embeddings (e.g., 512 dims)\n- Aggregation: mean + standard-deviation pooling (\"statistics pooling\") across time → fixed vector\n- Segment-level embedding: additional layers on pooled vector → final embedding (256–512 dims)\n- Output: speaker embedding independent of utterance length\n\n**Metric learning losses for speaker embeddings:**\n1. **Triplet loss:** L = max(0, d(anchor, positive) − d(anchor, negative) + margin). Minimizes distance to same-speaker, maximizes to different-speaker\n2. **Angular margin losses (ArcFace, CosFace):** Adds angular margin in embedding space; ∠(embedding, class_center) < θ for same-class\n3. **Center loss:** Pulls embeddings toward class centers while pushing apart between classes\n\n**Speaker verification pipeline:**\n- Enrollment: collect K utterances from target speaker → compute K embeddings → average/center pooling → enrollment embedding\n- Test: extract embedding from test utterance → compute cosine-similarity vs. enrollment → threshold decision\n- Scoring: usually cosine-similarity (or PLDA for x-vectors) with tuned threshold\n\n**Speaker identification:**\n- Compare test embedding against M enrolled speakers (M-class classification)\n- Can use either embedding-space scoring (1-NN, kNN) or softmax-based classifier\n\n## Common gotchas / interview framings\n- **Verification vs. identification:** Verification is 1:1 (is this person X?); identification is 1:M (which of M people is this?)\n- **Enrollment vs. test:** Different evaluation conditions; mismatch in acoustic setup/noise degrades performance\n- **Threshold tuning:** Speaker verification requires calibrated thresholds; false accept rate (FAR) vs. false reject rate (FRR) trade-off\n- **Utterance length:** Longer utterances → more reliable embeddings; very short utterances (< 1 sec) are challenging\n- **Aging & style changes:** Speakers' voices change over time; embeddings may degrade after months/years\n- **Multilingual:** Speaker embeddings are largely language-independent, but optimal thresholds may vary\n- **Privacy:** Speaker embeddings leak identity; misuse risk if exposed (unlike ASR tokens)",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is a speaker embedding and how does it differ from ASR phonetic features (mel-spectrograms)?",
+        "back": "A speaker embedding is a fixed-dimensional vector (256–512 dims) capturing speaker identity, agnostic to content/language. Mel-spectrograms capture acoustic content (useful for ASR). Speaker embeddings abstract away *what* is said and focus only on *who* is speaking—they're learned through metric learning, not task-specific ASR loss."
+      },
+      {
+        "type": "flip",
+        "front": "Explain the X-vector extraction pipeline: TDNN → statistics pooling → segment-level embedding.",
+        "back": "1. Input mel-spectrogram → frame-level embeddings via stacked TDNN layers (e.g., 512 dims). 2. Statistics pooling: aggregate across time → mean and std-dev (concatenate) → 1024 dims. 3. Additional layers compress to segment-level embedding (256–512 dims), length-independent. Result: speaker embedding invariant to utterance length but sensitive to speaker identity."
+      },
+      {
+        "type": "mcq",
+        "front": "Which metric learning loss is most commonly used for training speaker embeddings and why?",
+        "back": "Triplet loss (and variants like angular-margin ArcFace/CosFace) directly optimize the verification objective: make same-speaker embeddings similar and different-speaker embeddings dissimilar. Cross-entropy optimization doesn't guarantee good embedding geometry; metric losses explicitly shape the embedding space.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Cross-entropy loss; directly minimizes classification error",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Triplet loss; minimizes intra-speaker distance while maximizing inter-speaker distance, directly optimizing verification similarity",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "MSE loss; L2 distance is all that matters",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Focal loss; handles class imbalance",
+            "correct": false
+          },
+          {
+            "key": "e",
+            "text": "CTC loss; same as ASR",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Describe the speaker verification pipeline: enrollment, test extraction, scoring, and threshold decision.",
+        "back": "Enrollment: collect K utterances → extract K embeddings → average/center-pooling → enrollment embedding. Test: extract embedding from test utterance. Scoring: compute cosine-similarity(test_emb, enrollment_emb). Decision: if similarity > threshold → accept (same speaker); else reject. Threshold tuned on development set to balance FAR (false accepts) and FRR (false rejects)."
+      },
+      {
+        "type": "flip",
+        "front": "What challenges arise when speaker embeddings are extracted from very short utterances (< 1 second)?",
+        "back": "Short utterances have fewer frames for statistics pooling → noisier mean/std estimates → less reliable embeddings. Phonetic content may not be diverse enough to capture speaker-specific variations. Performance degrades significantly; thresholds calibrated on longer utterances may not apply. Solutions: use shorter-duration enrollment/test pairs consistently, or employ utterance-length dependent scoring."
+      }
+    ]
+  }
+]

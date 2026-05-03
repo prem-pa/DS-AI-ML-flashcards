@@ -1,0 +1,149 @@
+{
+  "track": "ml-engineer",
+  "track_label": "ML ENGINEER",
+  "topic": "training-pipelines-infrastructure",
+  "topic_label": "Training Pipelines & Infrastructure",
+  "concept_count": 20,
+  "concepts": [
+    {
+      "slug": "data-loading-and-preprocessing-at-scale",
+      "title": "Data loading and preprocessing at scale",
+      "difficulty": "intermediate",
+      "hook": "Bottleneck for training; parallelization and prefetching matter.",
+      "subtopic": "Data Pipeline"
+    },
+    {
+      "slug": "shuffling-and-batching-strategies",
+      "title": "Shuffling and batching strategies",
+      "difficulty": "intermediate",
+      "hook": "Shuffling for unbiased gradients; batch size affects learning dynamics.",
+      "subtopic": "Data Pipeline"
+    },
+    {
+      "slug": "data-normalization-z-score-min-max",
+      "title": "Data normalization (z-score, min-max)",
+      "difficulty": "beginner",
+      "hook": "Standardize features; impacts learning rate effectiveness.",
+      "subtopic": "Data Pipeline"
+    },
+    {
+      "slug": "imbalanced-data-and-oversamplingundersampling",
+      "title": "Imbalanced data and oversampling/undersampling",
+      "difficulty": "intermediate",
+      "hook": "Class weights vs resampling; weighted loss more efficient.",
+      "subtopic": "Data Pipeline"
+    },
+    {
+      "slug": "image-augmentation-pipelines-torchvision-albumentations",
+      "title": "Image augmentation pipelines (torchvision, albumentations)",
+      "difficulty": "intermediate",
+      "hook": "Online augmentation improves generalization; computational cost.",
+      "subtopic": "Data Pipeline"
+    },
+    {
+      "slug": "loss-curves-and-convergence-diagnostics",
+      "title": "Loss curves and convergence diagnostics",
+      "difficulty": "intermediate",
+      "hook": "Training loss plateau suggests learning rate too low; loss spike suggests too high.",
+      "subtopic": "Training Mechanics"
+    },
+    {
+      "slug": "gradient-accumulation",
+      "title": "Gradient accumulation",
+      "difficulty": "intermediate",
+      "hook": "Simulate larger batches with memory constraints; effective batch size = gradient_steps * batch_size.",
+      "subtopic": "Training Mechanics"
+    },
+    {
+      "slug": "mixed-precision-training-fp16-bfloat16",
+      "title": "Mixed precision training (fp16, bfloat16)",
+      "difficulty": "intermediate",
+      "hook": "Reduce memory; maintain accuracy with loss scaling.",
+      "subtopic": "Training Mechanics"
+    },
+    {
+      "slug": "checkpointing-and-recovery",
+      "title": "Checkpointing and recovery",
+      "difficulty": "beginner",
+      "hook": "Save model state; resume from checkpoints; track best model.",
+      "subtopic": "Training Mechanics"
+    },
+    {
+      "slug": "validation-strategy-and-metric-selection",
+      "title": "Validation strategy and metric selection",
+      "difficulty": "intermediate",
+      "hook": "Validation frequency; which metric to monitor for early stopping.",
+      "subtopic": "Training Mechanics"
+    },
+    {
+      "slug": "data-parallelism-ddp",
+      "title": "Data parallelism (DDP)",
+      "difficulty": "intermediate",
+      "hook": "Replicate model across GPUs; each GPU processes different batch; synchronize gradients.",
+      "subtopic": "Distributed Training"
+    },
+    {
+      "slug": "gradient-synchronization-and-all-reduce",
+      "title": "Gradient synchronization and all-reduce",
+      "difficulty": "intermediate",
+      "hook": "Ring all-reduce reduces communication overhead.",
+      "subtopic": "Distributed Training"
+    },
+    {
+      "slug": "tensor-parallelism-and-model-sharding",
+      "title": "Tensor parallelism and model sharding",
+      "difficulty": "advanced",
+      "hook": "Split model across devices; each device computes different parts of layers.",
+      "subtopic": "Distributed Training"
+    },
+    {
+      "slug": "pipeline-parallelism-and-micro-batching",
+      "title": "Pipeline parallelism and micro-batching",
+      "difficulty": "advanced",
+      "hook": "Temporal pipeline; GPUs at different stages process different mini-batches.",
+      "subtopic": "Distributed Training"
+    },
+    {
+      "slug": "distributed-sampling-and-epoch-synchronization",
+      "title": "Distributed sampling and epoch synchronization",
+      "difficulty": "intermediate",
+      "hook": "Ensure no data duplication across workers; synchronize epoch boundaries.",
+      "subtopic": "Distributed Training"
+    },
+    {
+      "slug": "grid-search-random-search-bayesian-optimization",
+      "title": "Grid search, random search, Bayesian optimization",
+      "difficulty": "intermediate",
+      "hook": "Grid: exhaustive but expensive; Random: baseline; Bayesian: sample-efficient.",
+      "subtopic": "Hyperparameter Tuning"
+    },
+    {
+      "slug": "learning-rate-schedules-constant-step-decay-cosine-annealing-warm-restarts",
+      "title": "Learning rate schedules (constant, step decay, cosine annealing, warm restarts)",
+      "difficulty": "intermediate",
+      "hook": "Cosine annealing and warm restarts outperform constant schedules.",
+      "subtopic": "Hyperparameter Tuning"
+    },
+    {
+      "slug": "momentum-and-weight-decay-interaction",
+      "title": "Momentum and weight decay interaction",
+      "difficulty": "advanced",
+      "hook": "Weight decay != L2 regularization in Adam; AdamW decouples them.",
+      "subtopic": "Hyperparameter Tuning"
+    },
+    {
+      "slug": "batch-size-effects-on-generalization",
+      "title": "Batch size effects on generalization",
+      "difficulty": "intermediate",
+      "hook": "Larger batches: noisier gradients can improve generalization; but convergence plateaus.",
+      "subtopic": "Hyperparameter Tuning"
+    },
+    {
+      "slug": "population-based-training-pbt",
+      "title": "Population-based training (PBT)",
+      "difficulty": "advanced",
+      "hook": "Dynamically adjust hyperparameters during training; parallel population of trials.",
+      "subtopic": "Hyperparameter Tuning"
+    }
+  ]
+}

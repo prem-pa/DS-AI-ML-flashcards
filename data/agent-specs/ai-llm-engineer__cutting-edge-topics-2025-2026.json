@@ -1,0 +1,79 @@
+{
+  "track": "ai-llm-engineer",
+  "track_label": "AI / LLM ENGINEER",
+  "topic": "cutting-edge-topics-2025-2026",
+  "topic_label": "Cutting-Edge Topics (2025-2026)",
+  "concept_count": 10,
+  "concepts": [
+    {
+      "slug": "mamba-3-and-state-space-models-ssms",
+      "title": "Mamba-3 and state-space models (SSMs)",
+      "difficulty": "advanced",
+      "hook": "Linear-time sequence modeling; 64K-128K context with low cost.",
+      "subtopic": "Long Context & Efficient Attention"
+    },
+    {
+      "slug": "hybrid-architectures-jamba-zamba2",
+      "title": "Hybrid architectures (Jamba, Zamba2)",
+      "difficulty": "advanced",
+      "hook": "Combine attention + SSM; best-of-both tradeoff.",
+      "subtopic": "Long Context & Efficient Attention"
+    },
+    {
+      "slug": "context-length-extrapolation-techniques",
+      "title": "Context length extrapolation techniques",
+      "difficulty": "advanced",
+      "hook": "Extend beyond training context (RoPE interpolation, continued pretraining).",
+      "subtopic": "Long Context & Efficient Attention"
+    },
+    {
+      "slug": "ring-attention-and-distributed-long-context",
+      "title": "Ring attention and distributed long-context",
+      "difficulty": "advanced",
+      "hook": "Enable training/serving of extremely long contexts.",
+      "subtopic": "Long Context & Efficient Attention"
+    },
+    {
+      "slug": "openai-o3-and-o-series-reasoning-models",
+      "title": "OpenAI o3 and o-series reasoning models",
+      "difficulty": "advanced",
+      "hook": "Allocate compute at inference time; solve harder problems.",
+      "subtopic": "Test-Time Compute & Reasoning"
+    },
+    {
+      "slug": "extended-thinking-and-chain-of-thought-variants",
+      "title": "Extended thinking and chain-of-thought variants",
+      "difficulty": "intermediate",
+      "hook": "More thinking tokens improve reasoning.",
+      "subtopic": "Test-Time Compute & Reasoning"
+    },
+    {
+      "slug": "inference-time-scaling-laws",
+      "title": "Inference-time scaling laws",
+      "difficulty": "advanced",
+      "hook": "More test-time steps → better performance; economics vary.",
+      "subtopic": "Test-Time Compute & Reasoning"
+    },
+    {
+      "slug": "deepseek-r1-and-open-reasoning-models",
+      "title": "DeepSeek-R1 and open reasoning models",
+      "difficulty": "advanced",
+      "hook": "Open-source reasoning; scaling laws for open models.",
+      "subtopic": "Test-Time Compute & Reasoning"
+    },
+    {
+      "slug": "qwen-35-omni-and-other-state-of-the-art",
+      "title": "Qwen 3.5 Omni and other state-of-the-art",
+      "difficulty": "intermediate",
+      "hook": "Latest frontier models; compare on benchmarks.",
+      "subtopic": "Emerging Model Families"
+    },
+    {
+      "slug": "open-vs-closed-model-tradeoffs-control-privacy-cost-perf",
+      "title": "Open vs closed model tradeoffs (control, privacy, cost, perf)",
+      "difficulty": "beginner",
+      "hook": "Know when each makes sense.",
+      "subtopic": "Emerging Model Families"
+    }
+  ]
+}

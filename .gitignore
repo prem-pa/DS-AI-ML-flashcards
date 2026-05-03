@@ -1,0 +1,28 @@
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# SQLite (DB lives in ~/Library/Application Support/flashcards/, but local dev artifacts may land here)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Obsidian workspace state churns; keep only stable config
+vault/.obsidian/workspace.json
+vault/.obsidian/workspace-mobile.json
+vault/.obsidian/cache
+vault/.trash/
+
+# Mac
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Python (for scripts/)
+__pycache__/
+*.pyc
+.venv/

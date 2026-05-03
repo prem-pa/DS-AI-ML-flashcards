@@ -1,0 +1,93 @@
+{
+  "track": "data-scientist",
+  "track_label": "DATA SCIENTIST",
+  "topic": "causal-inference",
+  "topic_label": "Causal Inference",
+  "concept_count": 12,
+  "concepts": [
+    {
+      "slug": "dags-directed-acyclic-graphs-and-causal-assumptions",
+      "title": "DAGs (Directed Acyclic Graphs) and causal assumptions",
+      "difficulty": "advanced",
+      "hook": "Visually encode causal structure; enables identification of estimands.",
+      "subtopic": "Causal Graphical Models"
+    },
+    {
+      "slug": "confounders-colliders-mediators",
+      "title": "Confounders, colliders, mediators",
+      "difficulty": "advanced",
+      "hook": "Types of nodes with different blocking and conditioning implications.",
+      "subtopic": "Causal Graphical Models"
+    },
+    {
+      "slug": "backdoor-criterion",
+      "title": "Backdoor criterion",
+      "difficulty": "advanced",
+      "hook": "Conditions for valid adjustment sets that block confounding paths.",
+      "subtopic": "Causal Graphical Models"
+    },
+    {
+      "slug": "frontdoor-criterion",
+      "title": "Frontdoor criterion",
+      "difficulty": "advanced",
+      "hook": "Identifies causal effect when confounder unmeasured but mediator observed.",
+      "subtopic": "Causal Graphical Models"
+    },
+    {
+      "slug": "randomized-experiments-as-gold-standard",
+      "title": "Randomized experiments as gold standard",
+      "difficulty": "intermediate",
+      "hook": "RCTs eliminate confounding; but often infeasible.",
+      "subtopic": "Causal Effect Estimation"
+    },
+    {
+      "slug": "matching-and-propensity-scores",
+      "title": "Matching and propensity scores",
+      "difficulty": "advanced",
+      "hook": "Match treated and control units on observed confounders; reduces model dependence.",
+      "subtopic": "Causal Effect Estimation"
+    },
+    {
+      "slug": "difference-in-differences",
+      "title": "Difference-in-differences",
+      "difficulty": "advanced",
+      "hook": "Compares trends; eliminates constant unobserved confounders.",
+      "subtopic": "Causal Effect Estimation"
+    },
+    {
+      "slug": "instrumental-variables-iv",
+      "title": "Instrumental variables (IV)",
+      "difficulty": "advanced",
+      "hook": "Uses exogenous variation to identify causal effects despite endogeneity.",
+      "subtopic": "Causal Effect Estimation"
+    },
+    {
+      "slug": "regression-discontinuity",
+      "title": "Regression discontinuity",
+      "difficulty": "advanced",
+      "hook": "Exploits cutoff in assignment; quasi-experimental design.",
+      "subtopic": "Causal Effect Estimation"
+    },
+    {
+      "slug": "unconfoundedness-and-sutva-assumptions",
+      "title": "Unconfoundedness and SUTVA assumptions",
+      "difficulty": "advanced",
+      "hook": "Strong assumptions; rarely fully hold in practice.",
+      "subtopic": "Causal Inference in Observational Data"
+    },
+    {
+      "slug": "sensitivity-analysis-for-hidden-bias",
+      "title": "Sensitivity analysis for hidden bias",
+      "difficulty": "advanced",
+      "hook": "How robust are conclusions to violations of unconfoundedness?",
+      "subtopic": "Causal Inference in Observational Data"
+    },
+    {
+      "slug": "mediation-analysis",
+      "title": "Mediation analysis",
+      "difficulty": "advanced",
+      "hook": "Decompose total effect into direct and indirect paths.",
+      "subtopic": "Causal Inference in Observational Data"
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "track": "ml-engineer",
+  "track_label": "ML ENGINEER",
+  "topic": "deep-learning-architectures",
+  "topic_label": "Deep Learning Architectures",
+  "concept_count": 23,
+  "concepts": [
+    {
+      "slug": "convolution-operation-and-receptive-fields",
+      "title": "Convolution operation and receptive fields",
+      "difficulty": "intermediate",
+      "hook": "Spatial locality and weight sharing; receptive field determines what context layer sees.",
+      "subtopic": "Convolutional Networks (CNNs)"
+    },
+    {
+      "slug": "pooling-and-spatial-downsampling",
+      "title": "Pooling and spatial downsampling",
+      "difficulty": "intermediate",
+      "hook": "Max pooling vs average pooling; destroys some spatial structure.",
+      "subtopic": "Convolutional Networks (CNNs)"
+    },
+    {
+      "slug": "common-architectures-resnet-vgg-inception",
+      "title": "Common architectures (ResNet, VGG, Inception)",
+      "difficulty": "intermediate",
+      "hook": "ResNets' skip connections enable deep training; understand motivation.",
+      "subtopic": "Convolutional Networks (CNNs)"
+    },
+    {
+      "slug": "transfer-learning-and-fine-tuning",
+      "title": "Transfer learning and fine-tuning",
+      "difficulty": "intermediate",
+      "hook": "Pre-trained weights accelerate learning; layer freezing vs full fine-tune tradeoff.",
+      "subtopic": "Convolutional Networks (CNNs)"
+    },
+    {
+      "slug": "1x1-convolutions-and-depthwise-separable-convolutions",
+      "title": "1x1 convolutions and depthwise separable convolutions",
+      "difficulty": "intermediate",
+      "hook": "Dimensionality reduction and efficient mobile networks.",
+      "subtopic": "Convolutional Networks (CNNs)"
+    },
+    {
+      "slug": "normalization-layers-batchnorm-layernorm-groupnorm-instancenorm",
+      "title": "Normalization layers (BatchNorm, LayerNorm, GroupNorm, InstanceNorm)",
+      "difficulty": "intermediate",
+      "hook": "Different norms suit different scenarios; LayerNorm better for RNNs and transformers.",
+      "subtopic": "Convolutional Networks (CNNs)"
+    },
+    {
+      "slug": "rnn-fundamentals-and-backprop-through-time-bptt",
+      "title": "RNN fundamentals and backprop through time (BPTT)",
+      "difficulty": "intermediate",
+      "hook": "Unroll over time; gradients flow backward through sequences.",
+      "subtopic": "Recurrent Networks (RNNs/LSTMs)"
+    },
+    {
+      "slug": "vanishingexploding-gradient-problem",
+      "title": "Vanishing/exploding gradient problem",
+      "difficulty": "intermediate",
+      "hook": "BPTT gradient magnitude shrinks or explodes with sequence length.",
+      "subtopic": "Recurrent Networks (RNNs/LSTMs)"
+    },
+    {
+      "slug": "lstm-and-gru-gates",
+      "title": "LSTM and GRU gates",
+      "difficulty": "intermediate",
+      "hook": "Gate mechanisms solve gradient flow; forget gate prevents vanishing, input gate selective updates.",
+      "subtopic": "Recurrent Networks (RNNs/LSTMs)"
+    },
+    {
+      "slug": "bidirectional-rnns",
+      "title": "Bidirectional RNNs",
+      "difficulty": "intermediate",
+      "hook": "Condition on future context; why unidirectional for language modeling.",
+      "subtopic": "Recurrent Networks (RNNs/LSTMs)"
+    },
+    {
+      "slug": "sequence-to-sequence-and-attention",
+      "title": "Sequence-to-sequence and attention",
+      "difficulty": "intermediate",
+      "hook": "Encoder-decoder for variable-length outputs; attention learns alignment.",
+      "subtopic": "Recurrent Networks (RNNs/LSTMs)"
+    },
+    {
+      "slug": "scaled-dot-product-attention",
+      "title": "Scaled dot-product attention",
+      "difficulty": "intermediate",
+      "hook": "Why scaling by sqrt(d): stabilizes gradients; prevents softmax saturation.",
+      "subtopic": "Transformers & Attention"
+    },
+    {
+      "slug": "multi-head-attention",
+      "title": "Multi-head attention",
+      "difficulty": "intermediate",
+      "hook": "Different representation subspaces; interpretable as different \"roles\" or query types.",
+      "subtopic": "Transformers & Attention"
+    },
+    {
+      "slug": "positional-encodings-and-rotary-position-embeddings-rope",
+      "title": "Positional encodings and rotary position embeddings (RoPE)",
+      "difficulty": "intermediate",
+      "hook": "Transformers are permutation-invariant; add position info; RoPE scales to longer sequences.",
+      "subtopic": "Transformers & Attention"
+    },
+    {
+      "slug": "self-attention-and-its-computational-complexity",
+      "title": "Self-attention and its computational complexity",
+      "difficulty": "intermediate",
+      "hook": "O(n^2) complexity; critical bottleneck for long sequences.",
+      "subtopic": "Transformers & Attention"
+    },
+    {
+      "slug": "causality-and-causal-masking",
+      "title": "Causality and causal masking",
+      "difficulty": "intermediate",
+      "hook": "Language models mask future tokens; enables autoregressive generation.",
+      "subtopic": "Transformers & Attention"
+    },
+    {
+      "slug": "layer-normalization-placement-and-residual-connections",
+      "title": "Layer normalization placement and residual connections",
+      "difficulty": "intermediate",
+      "hook": "Pre-LN vs post-LN; architectures differ in stability.",
+      "subtopic": "Transformers & Attention"
+    },
+    {
+      "slug": "vision-transformers-vit",
+      "title": "Vision transformers (ViT)",
+      "difficulty": "intermediate",
+      "hook": "Patch embedding + transformer encoder; matches CNNs with more compute.",
+      "subtopic": "Transformers & Attention"
+    },
+    {
+      "slug": "autoencoders-and-vae",
+      "title": "Autoencoders and VAE",
+      "difficulty": "intermediate",
+      "hook": "Unsupervised dimensionality reduction; VAE adds probabilistic interpretation.",
+      "subtopic": "Generative Models"
+    },
+    {
+      "slug": "diffusion-models-forward-and-reverse-process",
+      "title": "Diffusion models (forward and reverse process)",
+      "difficulty": "advanced",
+      "hook": "Iterative denoising; state-of-the-art for image generation.",
+      "subtopic": "Generative Models"
+    },
+    {
+      "slug": "denoising-score-matching",
+      "title": "Denoising score matching",
+      "difficulty": "advanced",
+      "hook": "Learn score function for reverse diffusion; enables stable training.",
+      "subtopic": "Generative Models"
+    },
+    {
+      "slug": "gans-discriminator-generator-adversarial-loss",
+      "title": "GANs (discriminator, generator, adversarial loss)",
+      "difficulty": "intermediate",
+      "hook": "Generator fooling discriminator; notoriously unstable.",
+      "subtopic": "Generative Models"
+    },
+    {
+      "slug": "wasserstein-gan-and-gradient-penalty",
+      "title": "Wasserstein GAN and gradient penalty",
+      "difficulty": "advanced",
+      "hook": "Improves training stability; addresses mode collapse.",
+      "subtopic": "Generative Models"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "track": "ml-engineer",
+  "track_label": "ML ENGINEER",
+  "topic": "model-deployment-serving",
+  "topic_label": "Model Deployment & Serving",
+  "concept_count": 12,
+  "concepts": [
+    {
+      "slug": "model-checkpoints-and-state-dicts",
+      "title": "Model checkpoints and state dicts",
+      "difficulty": "beginner",
+      "hook": "Save weights and architecture; torch.save, pickle, ONNX.",
+      "subtopic": "Model Serialization & Format"
+    },
+    {
+      "slug": "onnx-format-and-cross-framework-compatibility",
+      "title": "ONNX format and cross-framework compatibility",
+      "difficulty": "intermediate",
+      "hook": "Standardized format; enables framework-agnostic serving.",
+      "subtopic": "Model Serialization & Format"
+    },
+    {
+      "slug": "tensorflow-savedmodel-and-pytorch-torchscript",
+      "title": "TensorFlow SavedModel and PyTorch TorchScript",
+      "difficulty": "intermediate",
+      "hook": "Serialized models with computation graphs; enable optimizations.",
+      "subtopic": "Model Serialization & Format"
+    },
+    {
+      "slug": "quantization-for-storage-and-inference-speedup",
+      "title": "Quantization for storage and inference speedup",
+      "difficulty": "intermediate",
+      "hook": "INT8, bfloat16; tradeoff: accuracy vs speed and memory.",
+      "subtopic": "Model Serialization & Format"
+    },
+    {
+      "slug": "batch-inference-vs-online-real-time-inference",
+      "title": "Batch inference vs online (real-time) inference",
+      "difficulty": "intermediate",
+      "hook": "Batch: high throughput, high latency; online: low latency, throughput constraints.",
+      "subtopic": "Model Serving Patterns"
+    },
+    {
+      "slug": "rest-apis-and-grpc-for-model-endpoints",
+      "title": "REST APIs and gRPC for model endpoints",
+      "difficulty": "intermediate",
+      "hook": "REST: JSON; gRPC: binary, streaming; gRPC faster.",
+      "subtopic": "Model Serving Patterns"
+    },
+    {
+      "slug": "model-versioning-and-ab-testing-in-production",
+      "title": "Model versioning and A/B testing in production",
+      "difficulty": "intermediate",
+      "hook": "Shadow traffic, canary rollouts; compare model versions.",
+      "subtopic": "Model Serving Patterns"
+    },
+    {
+      "slug": "caching-and-memoization",
+      "title": "Caching and memoization",
+      "difficulty": "intermediate",
+      "hook": "Cache predictions for repeat queries; TTL tradeoff.",
+      "subtopic": "Model Serving Patterns"
+    },
+    {
+      "slug": "tensorflow-serving-torchserve-seldon-core-bentoml",
+      "title": "TensorFlow Serving, TorchServe, Seldon Core, BentoML",
+      "difficulty": "intermediate",
+      "hook": "Deployment platforms; differ in model formats, scaling, monitoring.",
+      "subtopic": "Serving Frameworks"
+    },
+    {
+      "slug": "container-orchestration-docker-kubernetes",
+      "title": "Container orchestration (Docker, Kubernetes)",
+      "difficulty": "intermediate",
+      "hook": "Package model + dependencies; orchestrate scaling and updates.",
+      "subtopic": "Serving Frameworks"
+    },
+    {
+      "slug": "load-balancing-and-horizontal-scaling",
+      "title": "Load balancing and horizontal scaling",
+      "difficulty": "intermediate",
+      "hook": "Distribute requests across replicas; autoscaling on latency or QPS.",
+      "subtopic": "Serving Frameworks"
+    },
+    {
+      "slug": "cold-start-and-model-loading-time",
+      "title": "Cold start and model loading time",
+      "difficulty": "intermediate",
+      "hook": "Minimize latency when spawning new replicas; preload models or use fast deserialization.",
+      "subtopic": "Serving Frameworks"
+    }
+  ]
+}

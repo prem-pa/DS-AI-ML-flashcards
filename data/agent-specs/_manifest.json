@@ -1,0 +1,254 @@
+[
+  {
+    "spec_file": "data/agent-specs/data-scientist__foundational-statistics-probability.json",
+    "track": "data-scientist",
+    "topic": "foundational-statistics-probability",
+    "topic_label": "Foundational Statistics & Probability",
+    "n": 17
+  },
+  {
+    "spec_file": "data/agent-specs/data-scientist__hypothesis-testing-inference.json",
+    "track": "data-scientist",
+    "topic": "hypothesis-testing-inference",
+    "topic_label": "Hypothesis Testing & Inference",
+    "n": 13
+  },
+  {
+    "spec_file": "data/agent-specs/data-scientist__ab-testing-experimentation.json",
+    "track": "data-scientist",
+    "topic": "ab-testing-experimentation",
+    "topic_label": "A/B Testing & Experimentation",
+    "n": 20
+  },
+  {
+    "spec_file": "data/agent-specs/data-scientist__probability-bayesian-thinking.json",
+    "track": "data-scientist",
+    "topic": "probability-bayesian-thinking",
+    "topic_label": "Probability & Bayesian Thinking",
+    "n": 7
+  },
+  {
+    "spec_file": "data/agent-specs/data-scientist__classical-machine-learning.json",
+    "track": "data-scientist",
+    "topic": "classical-machine-learning",
+    "topic_label": "Classical Machine Learning",
+    "n": 29
+  },
+  {
+    "spec_file": "data/agent-specs/data-scientist__causal-inference.json",
+    "track": "data-scientist",
+    "topic": "causal-inference",
+    "topic_label": "Causal Inference",
+    "n": 12
+  },
+  {
+    "spec_file": "data/agent-specs/data-scientist__product-business-sense.json",
+    "track": "data-scientist",
+    "topic": "product-business-sense",
+    "topic_label": "Product & Business Sense",
+    "n": 12
+  },
+  {
+    "spec_file": "data/agent-specs/data-scientist__sql-data-manipulation.json",
+    "track": "data-scientist",
+    "topic": "sql-data-manipulation",
+    "topic_label": "SQL & Data Manipulation",
+    "n": 12
+  },
+  {
+    "spec_file": "data/agent-specs/data-scientist__statistics-in-production.json",
+    "track": "data-scientist",
+    "topic": "statistics-in-production",
+    "topic_label": "Statistics in Production",
+    "n": 8
+  },
+  {
+    "spec_file": "data/agent-specs/ml-engineer__classical-machine-learning-shared-with-ds-deeper-focus.json",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "topic_label": "Classical Machine Learning (Shared with DS, deeper focus)",
+    "n": 20
+  },
+  {
+    "spec_file": "data/agent-specs/ml-engineer__deep-learning-architectures.json",
+    "track": "ml-engineer",
+    "topic": "deep-learning-architectures",
+    "topic_label": "Deep Learning Architectures",
+    "n": 23
+  },
+  {
+    "spec_file": "data/agent-specs/ml-engineer__training-pipelines-infrastructure.json",
+    "track": "ml-engineer",
+    "topic": "training-pipelines-infrastructure",
+    "topic_label": "Training Pipelines & Infrastructure",
+    "n": 20
+  },
+  {
+    "spec_file": "data/agent-specs/ml-engineer__model-evaluation-diagnostics.json",
+    "track": "ml-engineer",
+    "topic": "model-evaluation-diagnostics",
+    "topic_label": "Model Evaluation & Diagnostics",
+    "n": 12
+  },
+  {
+    "spec_file": "data/agent-specs/ml-engineer__feature-engineering-selection.json",
+    "track": "ml-engineer",
+    "topic": "feature-engineering-selection",
+    "topic_label": "Feature Engineering & Selection",
+    "n": 8
+  },
+  {
+    "spec_file": "data/agent-specs/ml-engineer__model-deployment-serving.json",
+    "track": "ml-engineer",
+    "topic": "model-deployment-serving",
+    "topic_label": "Model Deployment & Serving",
+    "n": 12
+  },
+  {
+    "spec_file": "data/agent-specs/ml-engineer__model-monitoring-mlops.json",
+    "track": "ml-engineer",
+    "topic": "model-monitoring-mlops",
+    "topic_label": "Model Monitoring & MLOps",
+    "n": 12
+  },
+  {
+    "spec_file": "data/agent-specs/ml-engineer__feature-stores-data-management.json",
+    "track": "ml-engineer",
+    "topic": "feature-stores-data-management",
+    "topic_label": "Feature Stores & Data Management",
+    "n": 7
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__transformer-foundations-deep-dive.json",
+    "track": "ai-llm-engineer",
+    "topic": "transformer-foundations-deep-dive",
+    "topic_label": "Transformer Foundations (Deep Dive)",
+    "n": 17
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__large-language-model-architectures.json",
+    "track": "ai-llm-engineer",
+    "topic": "large-language-model-architectures",
+    "topic_label": "Large Language Model Architectures",
+    "n": 11
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__prompt-engineering-in-context-learning.json",
+    "track": "ai-llm-engineer",
+    "topic": "prompt-engineering-in-context-learning",
+    "topic_label": "Prompt Engineering & In-Context Learning",
+    "n": 10
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__fine-tuning-alignment.json",
+    "track": "ai-llm-engineer",
+    "topic": "fine-tuning-alignment",
+    "topic_label": "Fine-Tuning & Alignment",
+    "n": 12
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__serving-infrastructure-inference-optimization.json",
+    "track": "ai-llm-engineer",
+    "topic": "serving-infrastructure-inference-optimization",
+    "topic_label": "Serving Infrastructure & Inference Optimization",
+    "n": 19
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__multi-modal-models-vision-language-models.json",
+    "track": "ai-llm-engineer",
+    "topic": "multi-modal-models-vision-language-models",
+    "topic_label": "Multi-Modal Models & Vision-Language Models",
+    "n": 9
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__agents-tool-use.json",
+    "track": "ai-llm-engineer",
+    "topic": "agents-tool-use",
+    "topic_label": "Agents & Tool Use",
+    "n": 15
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__evaluation-benchmarking.json",
+    "track": "ai-llm-engineer",
+    "topic": "evaluation-benchmarking",
+    "topic_label": "Evaluation & Benchmarking",
+    "n": 12
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__production-systems-mlops-for-llms.json",
+    "track": "ai-llm-engineer",
+    "topic": "production-systems-mlops-for-llms",
+    "topic_label": "Production Systems & MLOps for LLMs",
+    "n": 11
+  },
+  {
+    "spec_file": "data/agent-specs/ai-llm-engineer__cutting-edge-topics-2025-2026.json",
+    "track": "ai-llm-engineer",
+    "topic": "cutting-edge-topics-2025-2026",
+    "topic_label": "Cutting-Edge Topics (2025-2026)",
+    "n": 10
+  },
+  {
+    "spec_file": "data/agent-specs/research-leaning__transformer-theory-internals.json",
+    "track": "research-leaning",
+    "topic": "transformer-theory-internals",
+    "topic_label": "Transformer Theory & Internals",
+    "n": 10
+  },
+  {
+    "spec_file": "data/agent-specs/research-leaning__optimization-learning-theory.json",
+    "track": "research-leaning",
+    "topic": "optimization-learning-theory",
+    "topic_label": "Optimization & Learning Theory",
+    "n": 7
+  },
+  {
+    "spec_file": "data/agent-specs/research-leaning__scaling-laws-emergent-abilities.json",
+    "track": "research-leaning",
+    "topic": "scaling-laws-emergent-abilities",
+    "topic_label": "Scaling Laws & Emergent Abilities",
+    "n": 7
+  },
+  {
+    "spec_file": "data/agent-specs/research-leaning__mechanistic-interpretability.json",
+    "track": "research-leaning",
+    "topic": "mechanistic-interpretability",
+    "topic_label": "Mechanistic Interpretability",
+    "n": 5
+  },
+  {
+    "spec_file": "data/agent-specs/research-leaning__recent-architectures-techniques.json",
+    "track": "research-leaning",
+    "topic": "recent-architectures-techniques",
+    "topic_label": "Recent Architectures & Techniques",
+    "n": 9
+  },
+  {
+    "spec_file": "data/agent-specs/verticals__computer-vision.json",
+    "track": "verticals",
+    "topic": "computer-vision",
+    "topic_label": "Computer Vision",
+    "n": 8
+  },
+  {
+    "spec_file": "data/agent-specs/verticals__recommender-systems.json",
+    "track": "verticals",
+    "topic": "recommender-systems",
+    "topic_label": "Recommender Systems",
+    "n": 7
+  },
+  {
+    "spec_file": "data/agent-specs/verticals__time-series-forecasting.json",
+    "track": "verticals",
+    "topic": "time-series-forecasting",
+    "topic_label": "Time Series & Forecasting",
+    "n": 7
+  },
+  {
+    "spec_file": "data/agent-specs/verticals__speech-recognition-audio.json",
+    "track": "verticals",
+    "topic": "speech-recognition-audio",
+    "topic_label": "Speech Recognition & Audio",
+    "n": 5
+  }
+]

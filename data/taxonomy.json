@@ -1,0 +1,3511 @@
+{
+  "tracks": {
+    "data-scientist": {
+      "label": "DATA SCIENTIST",
+      "topics": {
+        "foundational-statistics-probability": {
+          "label": "Foundational Statistics & Probability",
+          "subtopics": {
+            "descriptive-statistics": {
+              "label": "Descriptive Statistics",
+              "concepts": [
+                {
+                  "slug": "measures-of-central-tendency-mean-median-mode",
+                  "title": "Measures of central tendency (mean, median, mode)",
+                  "difficulty": "beginner",
+                  "hook": "Understand data location; critical for detecting when to use robust statistics."
+                },
+                {
+                  "slug": "measures-of-spread-variance-std-dev-iqr",
+                  "title": "Measures of spread (variance, std-dev, IQR)",
+                  "difficulty": "beginner",
+                  "hook": "Quantify data dispersion; essential for identifying outliers."
+                },
+                {
+                  "slug": "skewness-and-kurtosis",
+                  "title": "Skewness and kurtosis",
+                  "difficulty": "intermediate",
+                  "hook": "Detect non-normal distributions; shapes downstream model assumptions."
+                },
+                {
+                  "slug": "covariance-and-correlation",
+                  "title": "Covariance and correlation",
+                  "difficulty": "intermediate",
+                  "hook": "Measure linear relationships; foundation for feature engineering."
+                }
+              ]
+            },
+            "probability-fundamentals": {
+              "label": "Probability Fundamentals",
+              "concepts": [
+                {
+                  "slug": "bayes-theorem-and-conditional-probability",
+                  "title": "Bayes' theorem and conditional probability",
+                  "difficulty": "intermediate",
+                  "hook": "Core to hypothesis testing and classification interpretability."
+                },
+                {
+                  "slug": "frequentist-vs-bayesian-interpretation",
+                  "title": "Frequentist vs Bayesian interpretation",
+                  "difficulty": "intermediate",
+                  "hook": "Defines how you construct confidence intervals and credible intervals differently."
+                },
+                {
+                  "slug": "law-of-large-numbers-and-central-limit-theorem",
+                  "title": "Law of large numbers and Central Limit Theorem",
+                  "difficulty": "intermediate",
+                  "hook": "Justifies why sample means are normal; critical for hypothesis tests."
+                },
+                {
+                  "slug": "prior-likelihood-posterior-bayesian-framework",
+                  "title": "Prior, likelihood, posterior (Bayesian framework)",
+                  "difficulty": "intermediate",
+                  "hook": "Foundation for Bayesian stats, A/B test interpretation, and generative models."
+                }
+              ]
+            },
+            "distributions": {
+              "label": "Distributions",
+              "concepts": [
+                {
+                  "slug": "normal-distribution-and-its-properties",
+                  "title": "Normal distribution and its properties",
+                  "difficulty": "beginner",
+                  "hook": "Most common assumption in statistics; basis for linear regression inference."
+                },
+                {
+                  "slug": "binomial-and-poisson-distributions",
+                  "title": "Binomial and Poisson distributions",
+                  "difficulty": "intermediate",
+                  "hook": "Model discrete counts; used in conversion modeling."
+                },
+                {
+                  "slug": "beta-distribution",
+                  "title": "Beta distribution",
+                  "difficulty": "intermediate",
+                  "hook": "Prior for proportions; underpins empirical Bayes and online learning."
+                },
+                {
+                  "slug": "exponential-and-weibull-distributions",
+                  "title": "Exponential and Weibull distributions",
+                  "difficulty": "intermediate",
+                  "hook": "Model time-to-event; used in survival analysis and failure rate modeling."
+                },
+                {
+                  "slug": "students-t-distribution",
+                  "title": "Student's t-distribution",
+                  "difficulty": "intermediate",
+                  "hook": "Accounts for small samples; basis for t-tests and regression inference."
+                }
+              ]
+            },
+            "sampling-experimental-design": {
+              "label": "Sampling & Experimental Design",
+              "concepts": [
+                {
+                  "slug": "sampling-bias-and-representative-samples",
+                  "title": "Sampling bias and representative samples",
+                  "difficulty": "beginner",
+                  "hook": "Selection bias contaminates inference; critical to study design."
+                },
+                {
+                  "slug": "power-analysis-and-sample-size-calculation",
+                  "title": "Power analysis and sample size calculation",
+                  "difficulty": "intermediate",
+                  "hook": "Determines how large a sample you need for adequate statistical power."
+                },
+                {
+                  "slug": "stratified-sampling-and-blocking",
+                  "title": "Stratified sampling and blocking",
+                  "difficulty": "intermediate",
+                  "hook": "Reduces variance in RCTs; improves experiment efficiency."
+                },
+                {
+                  "slug": "observational-vs-experimental-data",
+                  "title": "Observational vs experimental data",
+                  "difficulty": "intermediate",
+                  "hook": "Only RCTs enable causal inference without strong assumptions."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "hypothesis-testing-inference": {
+          "label": "Hypothesis Testing & Inference",
+          "subtopics": {
+            "classical-hypothesis-testing": {
+              "label": "Classical Hypothesis Testing",
+              "concepts": [
+                {
+                  "slug": "null-and-alternative-hypotheses-p-values",
+                  "title": "Null and alternative hypotheses, p-values",
+                  "difficulty": "beginner",
+                  "hook": "Core framework; p < 0.05 convention often misunderstood."
+                },
+                {
+                  "slug": "type-i-and-type-ii-errors-power",
+                  "title": "Type I and Type II errors, power",
+                  "difficulty": "intermediate",
+                  "hook": "Tradeoff in test design; business cost of false positives vs false negatives varies."
+                },
+                {
+                  "slug": "parametric-tests-t-test-anova-chi-squared",
+                  "title": "Parametric tests (t-test, ANOVA, chi-squared)",
+                  "difficulty": "intermediate",
+                  "hook": "Assumes specific distributions; when assumptions hold, most powerful."
+                },
+                {
+                  "slug": "nonparametric-tests-mann-whitney-kruskal-wallis-permutation-tests",
+                  "title": "Nonparametric tests (Mann-Whitney, Kruskal-Wallis, permutation tests)",
+                  "difficulty": "intermediate",
+                  "hook": "Distribution-free; robust when assumptions fail."
+                },
+                {
+                  "slug": "multiple-comparison-correction-bonferroni-fdr",
+                  "title": "Multiple comparison correction (Bonferroni, FDR)",
+                  "difficulty": "intermediate",
+                  "hook": "Adjusting for multiple tests; critical in genomics and high-dimensional screening."
+                }
+              ]
+            },
+            "confidence-intervals-estimation": {
+              "label": "Confidence Intervals & Estimation",
+              "concepts": [
+                {
+                  "slug": "confidence-intervals-and-their-interpretation",
+                  "title": "Confidence intervals and their interpretation",
+                  "difficulty": "intermediate",
+                  "hook": "NOT \"95% chance parameter is in interval\"; rather, 95% of similarly-constructed intervals contain the true value."
+                },
+                {
+                  "slug": "bootstrap-methods",
+                  "title": "Bootstrap methods",
+                  "difficulty": "intermediate",
+                  "hook": "Distribution-free confidence intervals; works for any estimator."
+                },
+                {
+                  "slug": "maximum-likelihood-estimation-mle",
+                  "title": "Maximum likelihood estimation (MLE)",
+                  "difficulty": "intermediate",
+                  "hook": "Principled parameter estimation; asympotically efficient."
+                },
+                {
+                  "slug": "method-of-moments",
+                  "title": "Method of moments",
+                  "difficulty": "intermediate",
+                  "hook": "Simple parameter estimation; sometimes more robust than MLE."
+                }
+              ]
+            },
+            "bayesian-inference": {
+              "label": "Bayesian Inference",
+              "concepts": [
+                {
+                  "slug": "posterior-estimation-and-credible-intervals",
+                  "title": "Posterior estimation and credible intervals",
+                  "difficulty": "intermediate",
+                  "hook": "Bayesian analog of confidence intervals; direct probability interpretation."
+                },
+                {
+                  "slug": "conjugate-priors",
+                  "title": "Conjugate priors",
+                  "difficulty": "intermediate",
+                  "hook": "Closed-form posteriors; simplify computation."
+                },
+                {
+                  "slug": "bayesian-hypothesis-testing-and-bayes-factors",
+                  "title": "Bayesian hypothesis testing and Bayes factors",
+                  "difficulty": "intermediate",
+                  "hook": "Alternative to p-values; directly compares model support."
+                },
+                {
+                  "slug": "markov-chain-monte-carlo-mcmc",
+                  "title": "Markov Chain Monte Carlo (MCMC)",
+                  "difficulty": "advanced",
+                  "hook": "Sample from intractable posteriors; enables Bayesian inference at scale."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "ab-testing-experimentation": {
+          "label": "A/B Testing & Experimentation",
+          "subtopics": {
+            "experiment-design-setup": {
+              "label": "Experiment Design & Setup",
+              "concepts": [
+                {
+                  "slug": "randomization-and-control-groups",
+                  "title": "Randomization and control groups",
+                  "difficulty": "beginner",
+                  "hook": "Enables causal inference by balancing confounders."
+                },
+                {
+                  "slug": "treatment-and-control-selection",
+                  "title": "Treatment and control selection",
+                  "difficulty": "intermediate",
+                  "hook": "Control arm must be representative; placebo vs business-as-usual varies by context."
+                },
+                {
+                  "slug": "randomization-units-user-session-account",
+                  "title": "Randomization units (user, session, account)",
+                  "difficulty": "intermediate",
+                  "hook": "Affects power and statistical properties; interference may occur at wrong level."
+                },
+                {
+                  "slug": "pre-registration-and-redd-registered-experiment-design-document",
+                  "title": "Pre-registration and REDD (Registered Experiment Design Document)",
+                  "difficulty": "intermediate",
+                  "hook": "Reduces p-hacking and HARKing; best practice in rigorous organizations."
+                }
+              ]
+            },
+            "online-experiment-mechanics": {
+              "label": "Online Experiment Mechanics",
+              "concepts": [
+                {
+                  "slug": "velocity-sample-size-per-day",
+                  "title": "Velocity (sample size per day)",
+                  "difficulty": "intermediate",
+                  "hook": "How quickly you accumulate samples determines time-to-decision."
+                },
+                {
+                  "slug": "duration-and-seasonal-bias",
+                  "title": "Duration and seasonal bias",
+                  "difficulty": "intermediate",
+                  "hook": "Running experiments over full weeks avoids day-of-week effects; seasons matter for retention."
+                },
+                {
+                  "slug": "holdout-and-holdback-rates",
+                  "title": "Holdout and holdback rates",
+                  "difficulty": "intermediate",
+                  "hook": "Controlling what fraction of traffic enters treatment; necessary for ramp-ups."
+                },
+                {
+                  "slug": "instrumentation-and-logging",
+                  "title": "Instrumentation and logging",
+                  "difficulty": "intermediate",
+                  "hook": "Garbage in, garbage out; log quality determines metric reliability."
+                }
+              ]
+            },
+            "metrics-guardrails": {
+              "label": "Metrics & Guardrails",
+              "concepts": [
+                {
+                  "slug": "primary-vs-secondary-metrics",
+                  "title": "Primary vs secondary metrics",
+                  "difficulty": "intermediate",
+                  "hook": "Primary metric drives decision; secondaries catch side effects."
+                },
+                {
+                  "slug": "guardrail-metrics",
+                  "title": "Guardrail metrics",
+                  "difficulty": "intermediate",
+                  "hook": "Flag if experiment harms critical business outcomes (e.g., latency, revenue)."
+                },
+                {
+                  "slug": "metric-construction-ratios-counts-timing",
+                  "title": "Metric construction (ratios, counts, timing)",
+                  "difficulty": "intermediate",
+                  "hook": "Ratio metrics (CTR, conversion rate) have different variance properties than counts."
+                },
+                {
+                  "slug": "variance-reduction-techniques-cuped-stratification",
+                  "title": "Variance reduction techniques (CUPED, stratification)",
+                  "difficulty": "advanced",
+                  "hook": "Reduces variance of metric estimate; accelerates power without more users."
+                }
+              ]
+            },
+            "statistical-analysis-decisions": {
+              "label": "Statistical Analysis & Decisions",
+              "concepts": [
+                {
+                  "slug": "sequential-testing-and-peek-penalties",
+                  "title": "Sequential testing and peek penalties",
+                  "difficulty": "advanced",
+                  "hook": "Stopping early inflates Type I error; corrections needed or use truly sequential methods."
+                },
+                {
+                  "slug": "confidence-intervals-vs-bayesian-posterior",
+                  "title": "Confidence intervals vs Bayesian posterior",
+                  "difficulty": "intermediate",
+                  "hook": "CI: binary decision at boundary; Bayesian: posterior distribution of effect."
+                },
+                {
+                  "slug": "effect-size-estimation-and-practical-significance",
+                  "title": "Effect size estimation and practical significance",
+                  "difficulty": "intermediate",
+                  "hook": "Statistical significance != business impact; estimate effect size separately."
+                },
+                {
+                  "slug": "multiple-arms-and-multi-armed-bandit-mab",
+                  "title": "Multiple arms and multi-armed bandit (MAB)",
+                  "difficulty": "advanced",
+                  "hook": "Testing many variants; MAB trades exploration-exploitation for faster learning."
+                }
+              ]
+            },
+            "common-pitfalls-validity-threats": {
+              "label": "Common Pitfalls & Validity Threats",
+              "concepts": [
+                {
+                  "slug": "novelty-effects-and-long-term-impact",
+                  "title": "Novelty effects and long-term impact",
+                  "difficulty": "intermediate",
+                  "hook": "Short experiment may not capture habituation or withdrawal effects."
+                },
+                {
+                  "slug": "interference-and-network-effects",
+                  "title": "Interference and network effects",
+                  "difficulty": "intermediate",
+                  "hook": "When treatment affects untreated users (e.g., recommendation network); violates independence."
+                },
+                {
+                  "slug": "survivorship-bias",
+                  "title": "Survivorship bias",
+                  "difficulty": "intermediate",
+                  "hook": "If treatment causes users to churn, survivor cohorts differ; use ITT (intention-to-treat)."
+                },
+                {
+                  "slug": "simpsons-paradox",
+                  "title": "Simpson's paradox",
+                  "difficulty": "intermediate",
+                  "hook": "Aggregated effect reverses when stratified; understand confounders."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "probability-bayesian-thinking": {
+          "label": "Probability & Bayesian Thinking",
+          "subtopics": {
+            "probabilistic-modeling": {
+              "label": "Probabilistic Modeling",
+              "concepts": [
+                {
+                  "slug": "joint-marginal-and-conditional-distributions",
+                  "title": "Joint, marginal, and conditional distributions",
+                  "difficulty": "intermediate",
+                  "hook": "Foundation for graphical models and probabilistic inference."
+                },
+                {
+                  "slug": "independence-and-conditional-independence",
+                  "title": "Independence and conditional independence",
+                  "difficulty": "intermediate",
+                  "hook": "Enables factorization and dimensionality reduction."
+                },
+                {
+                  "slug": "graphical-models-and-d-separation",
+                  "title": "Graphical models and d-separation",
+                  "difficulty": "advanced",
+                  "hook": "Encode conditional independencies; critical for understanding causal assumptions in DAGs."
+                }
+              ]
+            },
+            "bayes-in-practice": {
+              "label": "Bayes in Practice",
+              "concepts": [
+                {
+                  "slug": "prior-selection-and-sensitivity-analysis",
+                  "title": "Prior selection and sensitivity analysis",
+                  "difficulty": "advanced",
+                  "hook": "\"Objective\" vs \"subjective\" priors; robustness to prior choice matters."
+                },
+                {
+                  "slug": "empirical-bayes",
+                  "title": "Empirical Bayes",
+                  "difficulty": "advanced",
+                  "hook": "Estimate hyperpriors from data; shrinks estimates toward global mean."
+                },
+                {
+                  "slug": "hierarchical-models",
+                  "title": "Hierarchical models",
+                  "difficulty": "advanced",
+                  "hook": "Pool information across groups; improves small-sample estimates."
+                },
+                {
+                  "slug": "model-comparison-and-cross-validation",
+                  "title": "Model comparison and cross-validation",
+                  "difficulty": "intermediate",
+                  "hook": "AIC, BIC, LOO-CV; trade-offs in model selection."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "classical-machine-learning": {
+          "label": "Classical Machine Learning",
+          "subtopics": {
+            "regression": {
+              "label": "Regression",
+              "concepts": [
+                {
+                  "slug": "linear-regression-ols",
+                  "title": "Linear regression (OLS)",
+                  "difficulty": "beginner",
+                  "hook": "Baseline supervised learning; understand bias-variance tradeoff."
+                },
+                {
+                  "slug": "assumptions-of-linear-regression-linearity-homoscedasticity-normality-independen",
+                  "title": "Assumptions of linear regression (linearity, homoscedasticity, normality, independence)",
+                  "difficulty": "intermediate",
+                  "hook": "Violations affect inference; use diagnostics."
+                },
+                {
+                  "slug": "regularization-ridge-lasso-elastic-net",
+                  "title": "Regularization (Ridge, Lasso, Elastic Net)",
+                  "difficulty": "intermediate",
+                  "hook": "Prevents overfitting; Lasso performs feature selection."
+                },
+                {
+                  "slug": "logistic-regression",
+                  "title": "Logistic regression",
+                  "difficulty": "intermediate",
+                  "hook": "Binary classification; log-odds interpretation is key."
+                },
+                {
+                  "slug": "polynomial-and-spline-regression",
+                  "title": "Polynomial and spline regression",
+                  "difficulty": "intermediate",
+                  "hook": "Capture nonlinearity; basis expansion approach."
+                },
+                {
+                  "slug": "generalized-linear-models-glm",
+                  "title": "Generalized Linear Models (GLM)",
+                  "difficulty": "intermediate",
+                  "hook": "Extends linear regression to non-normal outcomes."
+                }
+              ]
+            },
+            "classification": {
+              "label": "Classification",
+              "concepts": [
+                {
+                  "slug": "classification-metrics-precision-recall-f1-auc-specificity",
+                  "title": "Classification metrics (precision, recall, F1, AUC, specificity)",
+                  "difficulty": "intermediate",
+                  "hook": "Different metrics suit different business goals; understand tradeoffs."
+                },
+                {
+                  "slug": "confusion-matrix-and-threshold-selection",
+                  "title": "Confusion matrix and threshold selection",
+                  "difficulty": "intermediate",
+                  "hook": "ROC curves show threshold tradeoffs; choose threshold based on cost."
+                },
+                {
+                  "slug": "imbalanced-classification",
+                  "title": "Imbalanced classification",
+                  "difficulty": "intermediate",
+                  "hook": "Accuracy is misleading; use appropriate metrics and resampling."
+                },
+                {
+                  "slug": "naive-bayes",
+                  "title": "Naive Bayes",
+                  "difficulty": "intermediate",
+                  "hook": "Assumes feature independence; surprisingly effective despite strong assumption."
+                },
+                {
+                  "slug": "decision-trees",
+                  "title": "Decision trees",
+                  "difficulty": "intermediate",
+                  "hook": "Interpretable; prone to overfitting without pruning."
+                },
+                {
+                  "slug": "random-forests",
+                  "title": "Random forests",
+                  "difficulty": "intermediate",
+                  "hook": "Ensemble of trees; reduces variance via bagging."
+                },
+                {
+                  "slug": "gradient-boosting-xgboost-lightgbm",
+                  "title": "Gradient Boosting (XGBoost, LightGBM)",
+                  "difficulty": "intermediate",
+                  "hook": "Sequential tree building; strong baseline for tabular data."
+                },
+                {
+                  "slug": "support-vector-machines-svm",
+                  "title": "Support Vector Machines (SVM)",
+                  "difficulty": "intermediate",
+                  "hook": "Max-margin classifier; kernel trick enables nonlinear boundaries."
+                },
+                {
+                  "slug": "k-nearest-neighbors-knn",
+                  "title": "K-Nearest Neighbors (KNN)",
+                  "difficulty": "beginner",
+                  "hook": "Simple baseline; sensitive to scaling and curse of dimensionality."
+                }
+              ]
+            },
+            "clustering": {
+              "label": "Clustering",
+              "concepts": [
+                {
+                  "slug": "k-means-and-initialization",
+                  "title": "K-means and initialization",
+                  "difficulty": "intermediate",
+                  "hook": "Minimizes within-cluster variance; k-means++ improves initialization."
+                },
+                {
+                  "slug": "hierarchical-clustering",
+                  "title": "Hierarchical clustering",
+                  "difficulty": "intermediate",
+                  "hook": "Produces dendrograms; interpretable but computationally expensive."
+                },
+                {
+                  "slug": "dbscan",
+                  "title": "DBSCAN",
+                  "difficulty": "intermediate",
+                  "hook": "Density-based; handles non-convex clusters and noise."
+                },
+                {
+                  "slug": "gaussian-mixture-models-gmm",
+                  "title": "Gaussian Mixture Models (GMM)",
+                  "difficulty": "intermediate",
+                  "hook": "Probabilistic clustering; EM algorithm fits the model."
+                },
+                {
+                  "slug": "dimensionality-reduction-for-clustering",
+                  "title": "Dimensionality reduction for clustering",
+                  "difficulty": "intermediate",
+                  "hook": "Curse of dimensionality; reduce d before clustering."
+                }
+              ]
+            },
+            "dimensionality-reduction": {
+              "label": "Dimensionality Reduction",
+              "concepts": [
+                {
+                  "slug": "principal-component-analysis-pca",
+                  "title": "Principal Component Analysis (PCA)",
+                  "difficulty": "intermediate",
+                  "hook": "Orthogonal linear combination of features; maximizes variance."
+                },
+                {
+                  "slug": "t-sne-and-umap",
+                  "title": "t-SNE and UMAP",
+                  "difficulty": "intermediate",
+                  "hook": "Nonlinear manifold learning; useful for visualization."
+                },
+                {
+                  "slug": "feature-selection-vs-feature-extraction",
+                  "title": "Feature selection vs feature extraction",
+                  "difficulty": "intermediate",
+                  "hook": "Selection preserves interpretability; extraction creates new features."
+                },
+                {
+                  "slug": "variance-explained-and-scree-plots",
+                  "title": "Variance explained and scree plots",
+                  "difficulty": "beginner",
+                  "hook": "How many components to keep; elbow method is heuristic."
+                }
+              ]
+            },
+            "evaluation-validation": {
+              "label": "Evaluation & Validation",
+              "concepts": [
+                {
+                  "slug": "trainvalidationtest-splits",
+                  "title": "Train/validation/test splits",
+                  "difficulty": "beginner",
+                  "hook": "Train learns parameters; validation tunes hyperparameters; test estimates generalization."
+                },
+                {
+                  "slug": "cross-validation-k-fold-stratified",
+                  "title": "Cross-validation (k-fold, stratified)",
+                  "difficulty": "intermediate",
+                  "hook": "More stable estimates than single holdout; stratification for imbalanced data."
+                },
+                {
+                  "slug": "learning-curves",
+                  "title": "Learning curves",
+                  "difficulty": "intermediate",
+                  "hook": "Diagnose bias (high training error) vs variance (gap between train and test)."
+                },
+                {
+                  "slug": "hyperparameter-tuning-grid-search-random-search-bayesian-optimization",
+                  "title": "Hyperparameter tuning (grid search, random search, Bayesian optimization)",
+                  "difficulty": "intermediate",
+                  "hook": "Random search often beats grid; Bayesian methods are sample-efficient."
+                },
+                {
+                  "slug": "overfitting-underfitting-and-regularization",
+                  "title": "Overfitting, underfitting, and regularization",
+                  "difficulty": "beginner",
+                  "hook": "Classic bias-variance tradeoff visualized in learning curves."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "causal-inference": {
+          "label": "Causal Inference",
+          "subtopics": {
+            "causal-graphical-models": {
+              "label": "Causal Graphical Models",
+              "concepts": [
+                {
+                  "slug": "dags-directed-acyclic-graphs-and-causal-assumptions",
+                  "title": "DAGs (Directed Acyclic Graphs) and causal assumptions",
+                  "difficulty": "advanced",
+                  "hook": "Visually encode causal structure; enables identification of estimands."
+                },
+                {
+                  "slug": "confounders-colliders-mediators",
+                  "title": "Confounders, colliders, mediators",
+                  "difficulty": "advanced",
+                  "hook": "Types of nodes with different blocking and conditioning implications."
+                },
+                {
+                  "slug": "backdoor-criterion",
+                  "title": "Backdoor criterion",
+                  "difficulty": "advanced",
+                  "hook": "Conditions for valid adjustment sets that block confounding paths."
+                },
+                {
+                  "slug": "frontdoor-criterion",
+                  "title": "Frontdoor criterion",
+                  "difficulty": "advanced",
+                  "hook": "Identifies causal effect when confounder unmeasured but mediator observed."
+                }
+              ]
+            },
+            "causal-effect-estimation": {
+              "label": "Causal Effect Estimation",
+              "concepts": [
+                {
+                  "slug": "randomized-experiments-as-gold-standard",
+                  "title": "Randomized experiments as gold standard",
+                  "difficulty": "intermediate",
+                  "hook": "RCTs eliminate confounding; but often infeasible."
+                },
+                {
+                  "slug": "matching-and-propensity-scores",
+                  "title": "Matching and propensity scores",
+                  "difficulty": "advanced",
+                  "hook": "Match treated and control units on observed confounders; reduces model dependence."
+                },
+                {
+                  "slug": "difference-in-differences",
+                  "title": "Difference-in-differences",
+                  "difficulty": "advanced",
+                  "hook": "Compares trends; eliminates constant unobserved confounders."
+                },
+                {
+                  "slug": "instrumental-variables-iv",
+                  "title": "Instrumental variables (IV)",
+                  "difficulty": "advanced",
+                  "hook": "Uses exogenous variation to identify causal effects despite endogeneity."
+                },
+                {
+                  "slug": "regression-discontinuity",
+                  "title": "Regression discontinuity",
+                  "difficulty": "advanced",
+                  "hook": "Exploits cutoff in assignment; quasi-experimental design."
+                }
+              ]
+            },
+            "causal-inference-in-observational-data": {
+              "label": "Causal Inference in Observational Data",
+              "concepts": [
+                {
+                  "slug": "unconfoundedness-and-sutva-assumptions",
+                  "title": "Unconfoundedness and SUTVA assumptions",
+                  "difficulty": "advanced",
+                  "hook": "Strong assumptions; rarely fully hold in practice."
+                },
+                {
+                  "slug": "sensitivity-analysis-for-hidden-bias",
+                  "title": "Sensitivity analysis for hidden bias",
+                  "difficulty": "advanced",
+                  "hook": "How robust are conclusions to violations of unconfoundedness?"
+                },
+                {
+                  "slug": "mediation-analysis",
+                  "title": "Mediation analysis",
+                  "difficulty": "advanced",
+                  "hook": "Decompose total effect into direct and indirect paths."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "product-business-sense": {
+          "label": "Product & Business Sense",
+          "subtopics": {
+            "metrics-kpis": {
+              "label": "Metrics & KPIs",
+              "concepts": [
+                {
+                  "slug": "defining-success-metrics-and-north-star",
+                  "title": "Defining success metrics and north star",
+                  "difficulty": "beginner",
+                  "hook": "Align metrics with business goals; avoid unintended consequences."
+                },
+                {
+                  "slug": "actionable-metrics-vs-vanity-metrics",
+                  "title": "Actionable metrics vs vanity metrics",
+                  "difficulty": "beginner",
+                  "hook": "Actionable: you can influence it and it correlates to business value."
+                },
+                {
+                  "slug": "leading-vs-lagging-indicators",
+                  "title": "Leading vs lagging indicators",
+                  "difficulty": "intermediate",
+                  "hook": "Leading (e.g., engagement) predicts lagging (e.g., retention); use for early signals."
+                },
+                {
+                  "slug": "cohort-analysis-and-retention-curves",
+                  "title": "Cohort analysis and retention curves",
+                  "difficulty": "intermediate",
+                  "hook": "Track user cohorts over time; detect user lifecycle patterns."
+                }
+              ]
+            },
+            "business-context-decision-making": {
+              "label": "Business Context & Decision-Making",
+              "concepts": [
+                {
+                  "slug": "cost-benefit-analysis-and-roi",
+                  "title": "Cost-benefit analysis and ROI",
+                  "difficulty": "beginner",
+                  "hook": "Tradeoff: cost of running experiment vs value of information."
+                },
+                {
+                  "slug": "opportunity-sizing",
+                  "title": "Opportunity sizing",
+                  "difficulty": "intermediate",
+                  "hook": "How many users/dollars affected? Prioritize high-impact opportunities."
+                },
+                {
+                  "slug": "stakeholder-alignment-and-communication",
+                  "title": "Stakeholder alignment and communication",
+                  "difficulty": "beginner",
+                  "hook": "Frame results for product, engineering, and exec audiences differently."
+                },
+                {
+                  "slug": "data-driven-decision-culture",
+                  "title": "Data-driven decision culture",
+                  "difficulty": "beginner",
+                  "hook": "Testing and experimentation become operational norms."
+                }
+              ]
+            },
+            "product-analytics": {
+              "label": "Product Analytics",
+              "concepts": [
+                {
+                  "slug": "funnel-analysis",
+                  "title": "Funnel analysis",
+                  "difficulty": "beginner",
+                  "hook": "Track user drop-off at each step; identify bottlenecks."
+                },
+                {
+                  "slug": "feature-adoption-and-engagement-metrics",
+                  "title": "Feature adoption and engagement metrics",
+                  "difficulty": "intermediate",
+                  "hook": "DAU, MAU, feature-level engagement guide product roadmap."
+                },
+                {
+                  "slug": "churn-prediction-and-retention-modeling",
+                  "title": "Churn prediction and retention modeling",
+                  "difficulty": "intermediate",
+                  "hook": "Identify at-risk users; test interventions."
+                },
+                {
+                  "slug": "network-effects-and-viral-loops",
+                  "title": "Network effects and viral loops",
+                  "difficulty": "advanced",
+                  "hook": "Measure how users drive adoption of other users."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "sql-data-manipulation": {
+          "label": "SQL & Data Manipulation",
+          "subtopics": {
+            "sql-fundamentals": {
+              "label": "SQL Fundamentals",
+              "concepts": [
+                {
+                  "slug": "select-where-group-by-having",
+                  "title": "SELECT, WHERE, GROUP BY, HAVING",
+                  "difficulty": "beginner",
+                  "hook": "Core query building blocks."
+                },
+                {
+                  "slug": "aggregation-functions-count-sum-avg-max",
+                  "title": "Aggregation functions (COUNT, SUM, AVG, MAX)",
+                  "difficulty": "beginner",
+                  "hook": "Summarize data across groups."
+                },
+                {
+                  "slug": "joins-inner-left-right-full-outer",
+                  "title": "Joins (INNER, LEFT, RIGHT, FULL OUTER)",
+                  "difficulty": "intermediate",
+                  "hook": "Combine tables; understand join types and cardinality."
+                },
+                {
+                  "slug": "subqueries-and-ctes-with-clauses",
+                  "title": "Subqueries and CTEs (WITH clauses)",
+                  "difficulty": "intermediate",
+                  "hook": "Modularize logic; improve readability."
+                },
+                {
+                  "slug": "window-functions-rownumber-rank-lag-lead",
+                  "title": "Window functions (ROW_NUMBER, RANK, LAG, LEAD)",
+                  "difficulty": "intermediate",
+                  "hook": "Compute running totals, ranks, and neighbor operations without aggregation."
+                }
+              ]
+            },
+            "advanced-sql": {
+              "label": "Advanced SQL",
+              "concepts": [
+                {
+                  "slug": "recursive-ctes",
+                  "title": "Recursive CTEs",
+                  "difficulty": "advanced",
+                  "hook": "Traverse hierarchical structures (e.g., org charts, trees)."
+                },
+                {
+                  "slug": "set-operations-union-intersect-except",
+                  "title": "Set operations (UNION, INTERSECT, EXCEPT)",
+                  "difficulty": "intermediate",
+                  "hook": "Combine multiple result sets."
+                },
+                {
+                  "slug": "case-statements-for-conditional-logic",
+                  "title": "CASE statements for conditional logic",
+                  "difficulty": "intermediate",
+                  "hook": "Branch within queries; enables metric definitions."
+                },
+                {
+                  "slug": "partitioning-and-ordered-analytics",
+                  "title": "Partitioning and ordered analytics",
+                  "difficulty": "intermediate",
+                  "hook": "Compute aggregates within partitions; essential for funnel and cohort analysis."
+                }
+              ]
+            },
+            "query-optimization-performance": {
+              "label": "Query Optimization & Performance",
+              "concepts": [
+                {
+                  "slug": "index-strategies",
+                  "title": "Index strategies",
+                  "difficulty": "intermediate",
+                  "hook": "Speed up WHERE and JOIN conditions; tradeoff: write speed."
+                },
+                {
+                  "slug": "query-execution-plans",
+                  "title": "Query execution plans",
+                  "difficulty": "advanced",
+                  "hook": "Understand how database executes queries; identify bottlenecks."
+                },
+                {
+                  "slug": "avoiding-common-pitfalls-n1-queries-missing-joins",
+                  "title": "Avoiding common pitfalls (N+1 queries, missing JOINs)",
+                  "difficulty": "intermediate",
+                  "hook": "Write efficient queries that don't explode data or compute."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "statistics-in-production": {
+          "label": "Statistics in Production",
+          "subtopics": {
+            "monitoring-observability": {
+              "label": "Monitoring & Observability",
+              "concepts": [
+                {
+                  "slug": "guardrail-metrics-and-alert-thresholds",
+                  "title": "Guardrail metrics and alert thresholds",
+                  "difficulty": "intermediate",
+                  "hook": "Detect performance degradation; avoid false alarms."
+                },
+                {
+                  "slug": "seasonality-and-deseasonalization",
+                  "title": "Seasonality and deseasonalization",
+                  "difficulty": "intermediate",
+                  "hook": "Remove seasonal patterns for cleaner signals; use deseasonalized metrics."
+                },
+                {
+                  "slug": "anomaly-detection",
+                  "title": "Anomaly detection",
+                  "difficulty": "intermediate",
+                  "hook": "Detect unusual behavior in metrics; statistical or algorithmic approaches."
+                },
+                {
+                  "slug": "dashboards-and-real-time-reporting",
+                  "title": "Dashboards and real-time reporting",
+                  "difficulty": "beginner",
+                  "hook": "Visualization; enable rapid decisions."
+                }
+              ]
+            },
+            "data-quality": {
+              "label": "Data Quality",
+              "concepts": [
+                {
+                  "slug": "data-validation-and-schema-checks",
+                  "title": "Data validation and schema checks",
+                  "difficulty": "intermediate",
+                  "hook": "Catch upstream errors; prevent bad data flowing downstream."
+                },
+                {
+                  "slug": "missing-data-and-imputation",
+                  "title": "Missing data and imputation",
+                  "difficulty": "intermediate",
+                  "hook": "MCAR, MAR, MNAR; listwise deletion vs imputation varies in bias."
+                },
+                {
+                  "slug": "outlier-detection",
+                  "title": "Outlier detection",
+                  "difficulty": "intermediate",
+                  "hook": "Statistical (z-score, IQR) vs domain (business rule) approaches."
+                },
+                {
+                  "slug": "data-lineage-and-versioning",
+                  "title": "Data lineage and versioning",
+                  "difficulty": "intermediate",
+                  "hook": "Track how data flows; reproduce results."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        }
+      }
+    },
+    "ml-engineer": {
+      "label": "ML ENGINEER",
+      "topics": {
+        "classical-machine-learning-shared-with-ds-deeper-focus": {
+          "label": "Classical Machine Learning (Shared with DS, deeper focus)",
+          "subtopics": {
+            "tree-based-methods": {
+              "label": "Tree-Based Methods",
+              "concepts": [
+                {
+                  "slug": "decision-tree-construction-information-gain-gini-impurity",
+                  "title": "Decision tree construction (Information Gain, Gini impurity)",
+                  "difficulty": "intermediate",
+                  "hook": "Understand splitting criteria and why different metrics rank features differently."
+                },
+                {
+                  "slug": "tree-depth-and-pruning-strategies",
+                  "title": "Tree depth and pruning strategies",
+                  "difficulty": "intermediate",
+                  "hook": "Manage model complexity; cost-complexity pruning is principled."
+                },
+                {
+                  "slug": "random-forest-bagging-and-oob-error",
+                  "title": "Random forest: bagging and OOB error",
+                  "difficulty": "intermediate",
+                  "hook": "Bootstrap aggregation reduces variance; OOB provides free validation."
+                },
+                {
+                  "slug": "gradient-boosting-mechanics-loss-gradient-residuals",
+                  "title": "Gradient boosting mechanics (loss, gradient, residuals)",
+                  "difficulty": "intermediate",
+                  "hook": "Sequential residual learning; why gradient boosting works."
+                },
+                {
+                  "slug": "lightgbm-and-xgboost-tuning",
+                  "title": "LightGBM and XGBoost tuning",
+                  "difficulty": "intermediate",
+                  "hook": "Leaf-wise vs level-wise growth; learning rate, max depth, subsample tradeoffs."
+                },
+                {
+                  "slug": "shap-and-feature-importance",
+                  "title": "SHAP and feature importance",
+                  "difficulty": "intermediate",
+                  "hook": "Explain predictions; distinguish feature importance from selection."
+                }
+              ]
+            },
+            "neural-network-fundamentals": {
+              "label": "Neural Network Fundamentals",
+              "concepts": [
+                {
+                  "slug": "perceptron-and-multi-layer-perceptron-mlp",
+                  "title": "Perceptron and multi-layer perceptron (MLP)",
+                  "difficulty": "intermediate",
+                  "hook": "Single hidden layer universal approximator; deep networks reduce neurons needed."
+                },
+                {
+                  "slug": "activation-functions-relu-tanh-sigmoid-swish",
+                  "title": "Activation functions (ReLU, tanh, sigmoid, Swish)",
+                  "difficulty": "intermediate",
+                  "hook": "Nonlinearity enables learning complex functions; ReLU dominance due to computational efficiency."
+                },
+                {
+                  "slug": "loss-functions-mse-cross-entropy-focal-loss",
+                  "title": "Loss functions (MSE, cross-entropy, focal loss)",
+                  "difficulty": "intermediate",
+                  "hook": "Different losses suit different tasks; know why softmax + cross-entropy preferred over softmax + MSE."
+                },
+                {
+                  "slug": "backpropagation-and-gradient-computation",
+                  "title": "Backpropagation and gradient computation",
+                  "difficulty": "intermediate",
+                  "hook": "Chain rule through layers; computational graph."
+                },
+                {
+                  "slug": "initialization-strategies-he-xavier",
+                  "title": "Initialization strategies (He, Xavier)",
+                  "difficulty": "intermediate",
+                  "hook": "Poor initialization causes vanishing/exploding gradients; variance of activations matters."
+                },
+                {
+                  "slug": "learning-rates-and-schedules-cosine-annealing-warm-restarts",
+                  "title": "Learning rates and schedules (cosine annealing, warm restarts)",
+                  "difficulty": "intermediate",
+                  "hook": "Learning rate is most important hyperparameter; schedules improve convergence."
+                },
+                {
+                  "slug": "optimization-algorithms-sgd-momentum-adam-adamw",
+                  "title": "Optimization algorithms (SGD, Momentum, Adam, AdamW)",
+                  "difficulty": "intermediate",
+                  "hook": "SGD + momentum is still strong; Adam adaptive learning rates help with sparse gradients; AdamW decouples weight decay."
+                },
+                {
+                  "slug": "gradient-clipping-and-numerical-stability",
+                  "title": "Gradient clipping and numerical stability",
+                  "difficulty": "intermediate",
+                  "hook": "Prevent exploding gradients; especially important in RNNs."
+                }
+              ]
+            },
+            "regularization-generalization": {
+              "label": "Regularization & Generalization",
+              "concepts": [
+                {
+                  "slug": "dropout-and-batch-normalization",
+                  "title": "Dropout and batch normalization",
+                  "difficulty": "intermediate",
+                  "hook": "Dropout: stochastic regularization; BN: reduces internal covariate shift and acts as regularizer."
+                },
+                {
+                  "slug": "l1-and-l2-regularization",
+                  "title": "L1 and L2 regularization",
+                  "difficulty": "intermediate",
+                  "hook": "L2 penalizes all weights; L1 induces sparsity."
+                },
+                {
+                  "slug": "early-stopping",
+                  "title": "Early stopping",
+                  "difficulty": "beginner",
+                  "hook": "Simple and effective; use validation set to detect overfitting."
+                },
+                {
+                  "slug": "data-augmentation",
+                  "title": "Data augmentation",
+                  "difficulty": "intermediate",
+                  "hook": "Increases effective training set; task-specific (image rotation, text substitution)."
+                },
+                {
+                  "slug": "mixup-and-cutmix",
+                  "title": "Mixup and CutMix",
+                  "difficulty": "intermediate",
+                  "hook": "Novel augmentations; train on interpolated examples."
+                },
+                {
+                  "slug": "label-smoothing",
+                  "title": "Label smoothing",
+                  "difficulty": "intermediate",
+                  "hook": "Soften targets; improves generalization and calibration."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "deep-learning-architectures": {
+          "label": "Deep Learning Architectures",
+          "subtopics": {
+            "convolutional-networks-cnns": {
+              "label": "Convolutional Networks (CNNs)",
+              "concepts": [
+                {
+                  "slug": "convolution-operation-and-receptive-fields",
+                  "title": "Convolution operation and receptive fields",
+                  "difficulty": "intermediate",
+                  "hook": "Spatial locality and weight sharing; receptive field determines what context layer sees."
+                },
+                {
+                  "slug": "pooling-and-spatial-downsampling",
+                  "title": "Pooling and spatial downsampling",
+                  "difficulty": "intermediate",
+                  "hook": "Max pooling vs average pooling; destroys some spatial structure."
+                },
+                {
+                  "slug": "common-architectures-resnet-vgg-inception",
+                  "title": "Common architectures (ResNet, VGG, Inception)",
+                  "difficulty": "intermediate",
+                  "hook": "ResNets' skip connections enable deep training; understand motivation."
+                },
+                {
+                  "slug": "transfer-learning-and-fine-tuning",
+                  "title": "Transfer learning and fine-tuning",
+                  "difficulty": "intermediate",
+                  "hook": "Pre-trained weights accelerate learning; layer freezing vs full fine-tune tradeoff."
+                },
+                {
+                  "slug": "1x1-convolutions-and-depthwise-separable-convolutions",
+                  "title": "1x1 convolutions and depthwise separable convolutions",
+                  "difficulty": "intermediate",
+                  "hook": "Dimensionality reduction and efficient mobile networks."
+                },
+                {
+                  "slug": "normalization-layers-batchnorm-layernorm-groupnorm-instancenorm",
+                  "title": "Normalization layers (BatchNorm, LayerNorm, GroupNorm, InstanceNorm)",
+                  "difficulty": "intermediate",
+                  "hook": "Different norms suit different scenarios; LayerNorm better for RNNs and transformers."
+                }
+              ]
+            },
+            "recurrent-networks-rnnslstms": {
+              "label": "Recurrent Networks (RNNs/LSTMs)",
+              "concepts": [
+                {
+                  "slug": "rnn-fundamentals-and-backprop-through-time-bptt",
+                  "title": "RNN fundamentals and backprop through time (BPTT)",
+                  "difficulty": "intermediate",
+                  "hook": "Unroll over time; gradients flow backward through sequences."
+                },
+                {
+                  "slug": "vanishingexploding-gradient-problem",
+                  "title": "Vanishing/exploding gradient problem",
+                  "difficulty": "intermediate",
+                  "hook": "BPTT gradient magnitude shrinks or explodes with sequence length."
+                },
+                {
+                  "slug": "lstm-and-gru-gates",
+                  "title": "LSTM and GRU gates",
+                  "difficulty": "intermediate",
+                  "hook": "Gate mechanisms solve gradient flow; forget gate prevents vanishing, input gate selective updates."
+                },
+                {
+                  "slug": "bidirectional-rnns",
+                  "title": "Bidirectional RNNs",
+                  "difficulty": "intermediate",
+                  "hook": "Condition on future context; why unidirectional for language modeling."
+                },
+                {
+                  "slug": "sequence-to-sequence-and-attention",
+                  "title": "Sequence-to-sequence and attention",
+                  "difficulty": "intermediate",
+                  "hook": "Encoder-decoder for variable-length outputs; attention learns alignment."
+                }
+              ]
+            },
+            "transformers-attention": {
+              "label": "Transformers & Attention",
+              "concepts": [
+                {
+                  "slug": "scaled-dot-product-attention",
+                  "title": "Scaled dot-product attention",
+                  "difficulty": "intermediate",
+                  "hook": "Why scaling by sqrt(d): stabilizes gradients; prevents softmax saturation."
+                },
+                {
+                  "slug": "multi-head-attention",
+                  "title": "Multi-head attention",
+                  "difficulty": "intermediate",
+                  "hook": "Different representation subspaces; interpretable as different \"roles\" or query types."
+                },
+                {
+                  "slug": "positional-encodings-and-rotary-position-embeddings-rope",
+                  "title": "Positional encodings and rotary position embeddings (RoPE)",
+                  "difficulty": "intermediate",
+                  "hook": "Transformers are permutation-invariant; add position info; RoPE scales to longer sequences."
+                },
+                {
+                  "slug": "self-attention-and-its-computational-complexity",
+                  "title": "Self-attention and its computational complexity",
+                  "difficulty": "intermediate",
+                  "hook": "O(n^2) complexity; critical bottleneck for long sequences."
+                },
+                {
+                  "slug": "causality-and-causal-masking",
+                  "title": "Causality and causal masking",
+                  "difficulty": "intermediate",
+                  "hook": "Language models mask future tokens; enables autoregressive generation."
+                },
+                {
+                  "slug": "layer-normalization-placement-and-residual-connections",
+                  "title": "Layer normalization placement and residual connections",
+                  "difficulty": "intermediate",
+                  "hook": "Pre-LN vs post-LN; architectures differ in stability."
+                },
+                {
+                  "slug": "vision-transformers-vit",
+                  "title": "Vision transformers (ViT)",
+                  "difficulty": "intermediate",
+                  "hook": "Patch embedding + transformer encoder; matches CNNs with more compute."
+                }
+              ]
+            },
+            "generative-models": {
+              "label": "Generative Models",
+              "concepts": [
+                {
+                  "slug": "autoencoders-and-vae",
+                  "title": "Autoencoders and VAE",
+                  "difficulty": "intermediate",
+                  "hook": "Unsupervised dimensionality reduction; VAE adds probabilistic interpretation."
+                },
+                {
+                  "slug": "diffusion-models-forward-and-reverse-process",
+                  "title": "Diffusion models (forward and reverse process)",
+                  "difficulty": "advanced",
+                  "hook": "Iterative denoising; state-of-the-art for image generation."
+                },
+                {
+                  "slug": "denoising-score-matching",
+                  "title": "Denoising score matching",
+                  "difficulty": "advanced",
+                  "hook": "Learn score function for reverse diffusion; enables stable training."
+                },
+                {
+                  "slug": "gans-discriminator-generator-adversarial-loss",
+                  "title": "GANs (discriminator, generator, adversarial loss)",
+                  "difficulty": "intermediate",
+                  "hook": "Generator fooling discriminator; notoriously unstable."
+                },
+                {
+                  "slug": "wasserstein-gan-and-gradient-penalty",
+                  "title": "Wasserstein GAN and gradient penalty",
+                  "difficulty": "advanced",
+                  "hook": "Improves training stability; addresses mode collapse."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "training-pipelines-infrastructure": {
+          "label": "Training Pipelines & Infrastructure",
+          "subtopics": {
+            "data-pipeline": {
+              "label": "Data Pipeline",
+              "concepts": [
+                {
+                  "slug": "data-loading-and-preprocessing-at-scale",
+                  "title": "Data loading and preprocessing at scale",
+                  "difficulty": "intermediate",
+                  "hook": "Bottleneck for training; parallelization and prefetching matter."
+                },
+                {
+                  "slug": "shuffling-and-batching-strategies",
+                  "title": "Shuffling and batching strategies",
+                  "difficulty": "intermediate",
+                  "hook": "Shuffling for unbiased gradients; batch size affects learning dynamics."
+                },
+                {
+                  "slug": "data-normalization-z-score-min-max",
+                  "title": "Data normalization (z-score, min-max)",
+                  "difficulty": "beginner",
+                  "hook": "Standardize features; impacts learning rate effectiveness."
+                },
+                {
+                  "slug": "imbalanced-data-and-oversamplingundersampling",
+                  "title": "Imbalanced data and oversampling/undersampling",
+                  "difficulty": "intermediate",
+                  "hook": "Class weights vs resampling; weighted loss more efficient."
+                },
+                {
+                  "slug": "image-augmentation-pipelines-torchvision-albumentations",
+                  "title": "Image augmentation pipelines (torchvision, albumentations)",
+                  "difficulty": "intermediate",
+                  "hook": "Online augmentation improves generalization; computational cost."
+                }
+              ]
+            },
+            "training-mechanics": {
+              "label": "Training Mechanics",
+              "concepts": [
+                {
+                  "slug": "loss-curves-and-convergence-diagnostics",
+                  "title": "Loss curves and convergence diagnostics",
+                  "difficulty": "intermediate",
+                  "hook": "Training loss plateau suggests learning rate too low; loss spike suggests too high."
+                },
+                {
+                  "slug": "gradient-accumulation",
+                  "title": "Gradient accumulation",
+                  "difficulty": "intermediate",
+                  "hook": "Simulate larger batches with memory constraints; effective batch size = gradient_steps * batch_size."
+                },
+                {
+                  "slug": "mixed-precision-training-fp16-bfloat16",
+                  "title": "Mixed precision training (fp16, bfloat16)",
+                  "difficulty": "intermediate",
+                  "hook": "Reduce memory; maintain accuracy with loss scaling."
+                },
+                {
+                  "slug": "checkpointing-and-recovery",
+                  "title": "Checkpointing and recovery",
+                  "difficulty": "beginner",
+                  "hook": "Save model state; resume from checkpoints; track best model."
+                },
+                {
+                  "slug": "validation-strategy-and-metric-selection",
+                  "title": "Validation strategy and metric selection",
+                  "difficulty": "intermediate",
+                  "hook": "Validation frequency; which metric to monitor for early stopping."
+                }
+              ]
+            },
+            "distributed-training": {
+              "label": "Distributed Training",
+              "concepts": [
+                {
+                  "slug": "data-parallelism-ddp",
+                  "title": "Data parallelism (DDP)",
+                  "difficulty": "intermediate",
+                  "hook": "Replicate model across GPUs; each GPU processes different batch; synchronize gradients."
+                },
+                {
+                  "slug": "gradient-synchronization-and-all-reduce",
+                  "title": "Gradient synchronization and all-reduce",
+                  "difficulty": "intermediate",
+                  "hook": "Ring all-reduce reduces communication overhead."
+                },
+                {
+                  "slug": "tensor-parallelism-and-model-sharding",
+                  "title": "Tensor parallelism and model sharding",
+                  "difficulty": "advanced",
+                  "hook": "Split model across devices; each device computes different parts of layers."
+                },
+                {
+                  "slug": "pipeline-parallelism-and-micro-batching",
+                  "title": "Pipeline parallelism and micro-batching",
+                  "difficulty": "advanced",
+                  "hook": "Temporal pipeline; GPUs at different stages process different mini-batches."
+                },
+                {
+                  "slug": "distributed-sampling-and-epoch-synchronization",
+                  "title": "Distributed sampling and epoch synchronization",
+                  "difficulty": "intermediate",
+                  "hook": "Ensure no data duplication across workers; synchronize epoch boundaries."
+                }
+              ]
+            },
+            "hyperparameter-tuning": {
+              "label": "Hyperparameter Tuning",
+              "concepts": [
+                {
+                  "slug": "grid-search-random-search-bayesian-optimization",
+                  "title": "Grid search, random search, Bayesian optimization",
+                  "difficulty": "intermediate",
+                  "hook": "Grid: exhaustive but expensive; Random: baseline; Bayesian: sample-efficient."
+                },
+                {
+                  "slug": "learning-rate-schedules-constant-step-decay-cosine-annealing-warm-restarts",
+                  "title": "Learning rate schedules (constant, step decay, cosine annealing, warm restarts)",
+                  "difficulty": "intermediate",
+                  "hook": "Cosine annealing and warm restarts outperform constant schedules."
+                },
+                {
+                  "slug": "momentum-and-weight-decay-interaction",
+                  "title": "Momentum and weight decay interaction",
+                  "difficulty": "advanced",
+                  "hook": "Weight decay != L2 regularization in Adam; AdamW decouples them."
+                },
+                {
+                  "slug": "batch-size-effects-on-generalization",
+                  "title": "Batch size effects on generalization",
+                  "difficulty": "intermediate",
+                  "hook": "Larger batches: noisier gradients can improve generalization; but convergence plateaus."
+                },
+                {
+                  "slug": "population-based-training-pbt",
+                  "title": "Population-based training (PBT)",
+                  "difficulty": "advanced",
+                  "hook": "Dynamically adjust hyperparameters during training; parallel population of trials."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "model-evaluation-diagnostics": {
+          "label": "Model Evaluation & Diagnostics",
+          "subtopics": {
+            "evaluation-metrics": {
+              "label": "Evaluation Metrics",
+              "concepts": [
+                {
+                  "slug": "classification-metrics-accuracy-precision-recall-f1-auc-roc-auc-pr",
+                  "title": "Classification metrics (accuracy, precision, recall, F1, AUC-ROC, AUC-PR)",
+                  "difficulty": "intermediate",
+                  "hook": "Know when to use each; ROC vs PR tradeoff."
+                },
+                {
+                  "slug": "regression-metrics-mae-mse-rmse-r-squared-quantile-loss",
+                  "title": "Regression metrics (MAE, MSE, RMSE, R-squared, quantile loss)",
+                  "difficulty": "intermediate",
+                  "hook": "RMSE emphasizes outliers; MAE robust; quantile loss for asymmetric cost."
+                },
+                {
+                  "slug": "ranking-metrics-ndcg-map-mrr",
+                  "title": "Ranking metrics (NDCG, MAP, MRR)",
+                  "difficulty": "intermediate",
+                  "hook": "Position-aware; used in recommender and search systems."
+                },
+                {
+                  "slug": "calibration-and-brier-score",
+                  "title": "Calibration and Brier score",
+                  "difficulty": "intermediate",
+                  "hook": "Model confidence matches true probability; separate from accuracy."
+                }
+              ]
+            },
+            "error-analysis": {
+              "label": "Error Analysis",
+              "concepts": [
+                {
+                  "slug": "confusion-matrix-and-per-class-performance",
+                  "title": "Confusion matrix and per-class performance",
+                  "difficulty": "intermediate",
+                  "hook": "Identify which classes are confused; guides data collection."
+                },
+                {
+                  "slug": "residual-analysis-in-regression",
+                  "title": "Residual analysis in regression",
+                  "difficulty": "intermediate",
+                  "hook": "Plots reveal heteroscedasticity, nonlinearity, outliers."
+                },
+                {
+                  "slug": "learning-curves-and-bias-variance-decomposition",
+                  "title": "Learning curves and bias-variance decomposition",
+                  "difficulty": "intermediate",
+                  "hook": "Diagnose if you need more data (variance) or simpler model (bias)."
+                },
+                {
+                  "slug": "out-of-distribution-ood-detection",
+                  "title": "Out-of-distribution (OOD) detection",
+                  "difficulty": "advanced",
+                  "hook": "Identify when test data differs from training; calibration methods."
+                }
+              ]
+            },
+            "robustness-adversarial": {
+              "label": "Robustness & Adversarial",
+              "concepts": [
+                {
+                  "slug": "adversarial-examples-and-adversarial-robustness",
+                  "title": "Adversarial examples and adversarial robustness",
+                  "difficulty": "advanced",
+                  "hook": "Small perturbations fool models; certified defenses exist."
+                },
+                {
+                  "slug": "data-poisoning-and-model-backdoors",
+                  "title": "Data poisoning and model backdoors",
+                  "difficulty": "advanced",
+                  "hook": "Malicious training data corrupts models; defenses include anomaly detection."
+                },
+                {
+                  "slug": "model-stealing-and-intellectual-property",
+                  "title": "Model stealing and intellectual property",
+                  "difficulty": "advanced",
+                  "hook": "Extracting model via API queries; mitigations: query throttling, output quantization."
+                },
+                {
+                  "slug": "fairness-metrics-demographic-parity-equalized-odds-calibration",
+                  "title": "Fairness metrics (demographic parity, equalized odds, calibration)",
+                  "difficulty": "intermediate",
+                  "hook": "Different fairness notions suit different contexts."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "feature-engineering-selection": {
+          "label": "Feature Engineering & Selection",
+          "subtopics": {
+            "feature-creation": {
+              "label": "Feature Creation",
+              "concepts": [
+                {
+                  "slug": "domain-specific-feature-engineering",
+                  "title": "Domain-specific feature engineering",
+                  "difficulty": "intermediate",
+                  "hook": "Task knowledge drives feature creation; often beats automatic feature learning."
+                },
+                {
+                  "slug": "polynomial-and-interaction-features",
+                  "title": "Polynomial and interaction features",
+                  "difficulty": "intermediate",
+                  "hook": "Capture nonlinearity and interactions; exponential growth with polynomial degree."
+                },
+                {
+                  "slug": "embedding-based-features",
+                  "title": "Embedding-based features",
+                  "difficulty": "intermediate",
+                  "hook": "Learn dense representations from categorical data; reduces sparsity."
+                },
+                {
+                  "slug": "temporal-features-lag-rolling-window-seasonal-decomposition",
+                  "title": "Temporal features (lag, rolling window, seasonal decomposition)",
+                  "difficulty": "intermediate",
+                  "hook": "Time-series specific; encode temporal patterns."
+                }
+              ]
+            },
+            "feature-selection": {
+              "label": "Feature Selection",
+              "concepts": [
+                {
+                  "slug": "filter-methods-correlation-mutual-information-statistical-tests",
+                  "title": "Filter methods (correlation, mutual information, statistical tests)",
+                  "difficulty": "intermediate",
+                  "hook": "Fast, model-agnostic; may miss interactions."
+                },
+                {
+                  "slug": "wrapper-methods-forwardbackward-selection-rfe",
+                  "title": "Wrapper methods (forward/backward selection, RFE)",
+                  "difficulty": "intermediate",
+                  "hook": "Model-dependent; computationally expensive but captures interactions."
+                },
+                {
+                  "slug": "embedded-methods-feature-importance-from-tree-models-l1-regularization",
+                  "title": "Embedded methods (feature importance from tree models, L1 regularization)",
+                  "difficulty": "intermediate",
+                  "hook": "Efficient; coupled to model training."
+                },
+                {
+                  "slug": "multicollinearity-and-correlation-cleanup",
+                  "title": "Multicollinearity and correlation cleanup",
+                  "difficulty": "intermediate",
+                  "hook": "High correlation inflates variance in linear models; remove redundant features."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "model-deployment-serving": {
+          "label": "Model Deployment & Serving",
+          "subtopics": {
+            "model-serialization-format": {
+              "label": "Model Serialization & Format",
+              "concepts": [
+                {
+                  "slug": "model-checkpoints-and-state-dicts",
+                  "title": "Model checkpoints and state dicts",
+                  "difficulty": "beginner",
+                  "hook": "Save weights and architecture; torch.save, pickle, ONNX."
+                },
+                {
+                  "slug": "onnx-format-and-cross-framework-compatibility",
+                  "title": "ONNX format and cross-framework compatibility",
+                  "difficulty": "intermediate",
+                  "hook": "Standardized format; enables framework-agnostic serving."
+                },
+                {
+                  "slug": "tensorflow-savedmodel-and-pytorch-torchscript",
+                  "title": "TensorFlow SavedModel and PyTorch TorchScript",
+                  "difficulty": "intermediate",
+                  "hook": "Serialized models with computation graphs; enable optimizations."
+                },
+                {
+                  "slug": "quantization-for-storage-and-inference-speedup",
+                  "title": "Quantization for storage and inference speedup",
+                  "difficulty": "intermediate",
+                  "hook": "INT8, bfloat16; tradeoff: accuracy vs speed and memory."
+                }
+              ]
+            },
+            "model-serving-patterns": {
+              "label": "Model Serving Patterns",
+              "concepts": [
+                {
+                  "slug": "batch-inference-vs-online-real-time-inference",
+                  "title": "Batch inference vs online (real-time) inference",
+                  "difficulty": "intermediate",
+                  "hook": "Batch: high throughput, high latency; online: low latency, throughput constraints."
+                },
+                {
+                  "slug": "rest-apis-and-grpc-for-model-endpoints",
+                  "title": "REST APIs and gRPC for model endpoints",
+                  "difficulty": "intermediate",
+                  "hook": "REST: JSON; gRPC: binary, streaming; gRPC faster."
+                },
+                {
+                  "slug": "model-versioning-and-ab-testing-in-production",
+                  "title": "Model versioning and A/B testing in production",
+                  "difficulty": "intermediate",
+                  "hook": "Shadow traffic, canary rollouts; compare model versions."
+                },
+                {
+                  "slug": "caching-and-memoization",
+                  "title": "Caching and memoization",
+                  "difficulty": "intermediate",
+                  "hook": "Cache predictions for repeat queries; TTL tradeoff."
+                }
+              ]
+            },
+            "serving-frameworks": {
+              "label": "Serving Frameworks",
+              "concepts": [
+                {
+                  "slug": "tensorflow-serving-torchserve-seldon-core-bentoml",
+                  "title": "TensorFlow Serving, TorchServe, Seldon Core, BentoML",
+                  "difficulty": "intermediate",
+                  "hook": "Deployment platforms; differ in model formats, scaling, monitoring."
+                },
+                {
+                  "slug": "container-orchestration-docker-kubernetes",
+                  "title": "Container orchestration (Docker, Kubernetes)",
+                  "difficulty": "intermediate",
+                  "hook": "Package model + dependencies; orchestrate scaling and updates."
+                },
+                {
+                  "slug": "load-balancing-and-horizontal-scaling",
+                  "title": "Load balancing and horizontal scaling",
+                  "difficulty": "intermediate",
+                  "hook": "Distribute requests across replicas; autoscaling on latency or QPS."
+                },
+                {
+                  "slug": "cold-start-and-model-loading-time",
+                  "title": "Cold start and model loading time",
+                  "difficulty": "intermediate",
+                  "hook": "Minimize latency when spawning new replicas; preload models or use fast deserialization."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "model-monitoring-mlops": {
+          "label": "Model Monitoring & MLOps",
+          "subtopics": {
+            "production-monitoring": {
+              "label": "Production Monitoring",
+              "concepts": [
+                {
+                  "slug": "latency-throughput-error-rates",
+                  "title": "Latency, throughput, error rates",
+                  "difficulty": "beginner",
+                  "hook": "SLOs: p99 latency < Xms, uptime > 99.9%."
+                },
+                {
+                  "slug": "prediction-drift-and-label-shift",
+                  "title": "Prediction drift and label shift",
+                  "difficulty": "advanced",
+                  "hook": "Model input distribution changes (drift) or output distribution changes (label shift)."
+                },
+                {
+                  "slug": "model-performance-degradation-accuracy-drop-calibration-shift",
+                  "title": "Model performance degradation (accuracy drop, calibration shift)",
+                  "difficulty": "intermediate",
+                  "hook": "Compare predictions against held-out validation set."
+                },
+                {
+                  "slug": "resource-utilization-gpu-memory-cpu-io",
+                  "title": "Resource utilization (GPU memory, CPU, I/O)",
+                  "difficulty": "intermediate",
+                  "hook": "Detect inefficiencies; predict capacity needs."
+                }
+              ]
+            },
+            "data-quality-monitoring": {
+              "label": "Data Quality Monitoring",
+              "concepts": [
+                {
+                  "slug": "feature-distribution-monitoring",
+                  "title": "Feature distribution monitoring",
+                  "difficulty": "intermediate",
+                  "hook": "Alert if feature mean/std deviate from training; causes model degradation."
+                },
+                {
+                  "slug": "missing-value-and-anomaly-monitoring",
+                  "title": "Missing value and anomaly monitoring",
+                  "difficulty": "intermediate",
+                  "hook": "Incomplete or corrupted features cause errors."
+                },
+                {
+                  "slug": "data-freshness",
+                  "title": "Data freshness",
+                  "difficulty": "beginner",
+                  "hook": "Ensure data pipeline hasn't stalled; outdated data degrades predictions."
+                },
+                {
+                  "slug": "schema-drift-and-pipeline-monitoring",
+                  "title": "Schema drift and pipeline monitoring",
+                  "difficulty": "intermediate",
+                  "hook": "Upstream changes break downstream; version data schemas."
+                }
+              ]
+            },
+            "retraining-model-refresh": {
+              "label": "Retraining & Model Refresh",
+              "concepts": [
+                {
+                  "slug": "retraining-triggers-periodic-drift-based-performance-based",
+                  "title": "Retraining triggers (periodic, drift-based, performance-based)",
+                  "difficulty": "intermediate",
+                  "hook": "When to update model? Cost vs benefit; detect degradation."
+                },
+                {
+                  "slug": "online-learning-and-incremental-updates",
+                  "title": "Online learning and incremental updates",
+                  "difficulty": "advanced",
+                  "hook": "Update model with new data without full retraining; works for some models."
+                },
+                {
+                  "slug": "experiment-tracking-and-model-registry",
+                  "title": "Experiment tracking and model registry",
+                  "difficulty": "beginner",
+                  "hook": "MLflow, Weights & Biases; track experiments, models, parameters."
+                },
+                {
+                  "slug": "reproducibility-and-versioning",
+                  "title": "Reproducibility and versioning",
+                  "difficulty": "beginner",
+                  "hook": "Track code, data, seeds; reproduce results."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "feature-stores-data-management": {
+          "label": "Feature Stores & Data Management",
+          "subtopics": {
+            "feature-store-design": {
+              "label": "Feature Store Design",
+              "concepts": [
+                {
+                  "slug": "feature-definitions-and-computation",
+                  "title": "Feature definitions and computation",
+                  "difficulty": "advanced",
+                  "hook": "Centralized feature library; compute once, reuse everywhere."
+                },
+                {
+                  "slug": "online-vs-offline-feature-stores",
+                  "title": "Online vs offline feature stores",
+                  "difficulty": "advanced",
+                  "hook": "Offline for training; online for low-latency serving."
+                },
+                {
+                  "slug": "feature-freshness-and-staleness-slos",
+                  "title": "Feature freshness and staleness SLOs",
+                  "difficulty": "advanced",
+                  "hook": "How up-to-date features must be; varies by use case."
+                },
+                {
+                  "slug": "point-in-time-correctness-and-data-leakage-prevention",
+                  "title": "Point-in-time correctness and data leakage prevention",
+                  "difficulty": "advanced",
+                  "hook": "Training features must use only data available at prediction time."
+                }
+              ]
+            },
+            "data-warehousing-etl": {
+              "label": "Data Warehousing & ETL",
+              "concepts": [
+                {
+                  "slug": "data-warehouse-architecture-star-schema-factdimension-tables",
+                  "title": "Data warehouse architecture (star schema, fact/dimension tables)",
+                  "difficulty": "intermediate",
+                  "hook": "Organized storage for analytics and training data."
+                },
+                {
+                  "slug": "etl-vs-elt",
+                  "title": "ETL vs ELT",
+                  "difficulty": "intermediate",
+                  "hook": "Transform before or after loading; ELT more flexible with cloud databases."
+                },
+                {
+                  "slug": "incremental-and-full-refresh-logic",
+                  "title": "Incremental and full refresh logic",
+                  "difficulty": "intermediate",
+                  "hook": "Full refresh: simple, expensive; incremental: efficient, complex."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        }
+      }
+    },
+    "ai-llm-engineer": {
+      "label": "AI / LLM ENGINEER",
+      "topics": {
+        "transformer-foundations-deep-dive": {
+          "label": "Transformer Foundations (Deep Dive)",
+          "subtopics": {
+            "attention-mechanisms": {
+              "label": "Attention Mechanisms",
+              "concepts": [
+                {
+                  "slug": "scaled-dot-product-attention-derivation",
+                  "title": "Scaled dot-product attention derivation",
+                  "difficulty": "advanced",
+                  "hook": "Query-key-value projection; why sqrt(d) normalization."
+                },
+                {
+                  "slug": "multi-head-attention-and-head-roles",
+                  "title": "Multi-head attention and head roles",
+                  "difficulty": "intermediate",
+                  "hook": "Different heads learn different attention patterns; interpretability."
+                },
+                {
+                  "slug": "cross-attention-vs-self-attention",
+                  "title": "Cross-attention vs self-attention",
+                  "difficulty": "intermediate",
+                  "hook": "Self: within sequence; cross: between encoder and decoder outputs."
+                },
+                {
+                  "slug": "grouped-query-attention-gqa-and-multi-query-attention-mqa",
+                  "title": "Grouped-query attention (GQA) and multi-query attention (MQA)",
+                  "difficulty": "advanced",
+                  "hook": "KV heads < Q heads; reduces KV cache size in inference."
+                },
+                {
+                  "slug": "efficient-attention-flashattention-flashattention-2-flashattention-3",
+                  "title": "Efficient attention (FlashAttention, FlashAttention-2, FlashAttention-3)",
+                  "difficulty": "advanced",
+                  "hook": "Hardware-aware IO-optimal attention; 2-3x faster on H100."
+                },
+                {
+                  "slug": "sparse-attention-patterns-local-strided-longformer-pattern",
+                  "title": "Sparse attention patterns (local, strided, longformer pattern)",
+                  "difficulty": "advanced",
+                  "hook": "Reduce O(n^2) to O(n) for specific patterns; tradeoff: limited receptive field."
+                }
+              ]
+            },
+            "positional-encodings": {
+              "label": "Positional Encodings",
+              "concepts": [
+                {
+                  "slug": "absolute-positional-encodings-sinusoidal",
+                  "title": "Absolute positional encodings (sinusoidal)",
+                  "difficulty": "intermediate",
+                  "hook": "Encode position; length generalization limited."
+                },
+                {
+                  "slug": "rotary-position-embeddings-rope",
+                  "title": "Rotary position embeddings (RoPE)",
+                  "difficulty": "intermediate",
+                  "hook": "Rotate query-key vectors; better length extrapolation than sinusoidal."
+                },
+                {
+                  "slug": "relative-position-embeddings-alibi",
+                  "title": "Relative position embeddings (ALiBi)",
+                  "difficulty": "intermediate",
+                  "hook": "Bias attention by relative distance; enables extreme length generalization."
+                },
+                {
+                  "slug": "rope-interpolation-and-extrapolation",
+                  "title": "RoPE interpolation and extrapolation",
+                  "difficulty": "advanced",
+                  "hook": "Extend context length post-training; interpolate or truncate embeddings."
+                }
+              ]
+            },
+            "kv-cache-memory": {
+              "label": "KV Cache & Memory",
+              "concepts": [
+                {
+                  "slug": "kv-cache-in-autoregressive-generation",
+                  "title": "KV cache in autoregressive generation",
+                  "difficulty": "intermediate",
+                  "hook": "Store past K and V to avoid recomputation; but consumes GPU memory."
+                },
+                {
+                  "slug": "paged-attention-vllms-pagedattention",
+                  "title": "Paged attention (vLLM's PagedAttention)",
+                  "difficulty": "advanced",
+                  "hook": "Treat KV cache as virtual memory; pages reduce fragmentation."
+                },
+                {
+                  "slug": "kv-cache-quantization-and-compression",
+                  "title": "KV cache quantization and compression",
+                  "difficulty": "advanced",
+                  "hook": "Store KV in INT4 or INT8; reduces memory at quantization cost."
+                },
+                {
+                  "slug": "kv-cache-eviction-policies-and-memory-limits",
+                  "title": "KV cache eviction policies and memory limits",
+                  "difficulty": "advanced",
+                  "hook": "Determine which past tokens to drop when memory full."
+                }
+              ]
+            },
+            "generalization-beyond-training-context": {
+              "label": "Generalization Beyond Training Context",
+              "concepts": [
+                {
+                  "slug": "extrapolation-on-longer-sequences-post-training",
+                  "title": "Extrapolation on longer sequences post-training",
+                  "difficulty": "advanced",
+                  "hook": "Models train on 2K-4K tokens; serve 32K+; RoPE interpolation helps."
+                },
+                {
+                  "slug": "ring-attention-and-paged-attention-for-long-context",
+                  "title": "Ring attention and paged attention for long context",
+                  "difficulty": "advanced",
+                  "hook": "Enable serving long contexts without quadratic memory."
+                },
+                {
+                  "slug": "continued-pre-training-on-longer-sequences",
+                  "title": "Continued pre-training on longer sequences",
+                  "difficulty": "advanced",
+                  "hook": "Fine-tune attention for longer contexts; improves but slow."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "large-language-model-architectures": {
+          "label": "Large Language Model Architectures",
+          "subtopics": {
+            "decoder-only-models-causal": {
+              "label": "Decoder-Only Models (Causal)",
+              "concepts": [
+                {
+                  "slug": "causal-masking-and-autoregressive-generation",
+                  "title": "Causal masking and autoregressive generation",
+                  "difficulty": "intermediate",
+                  "hook": "Mask future tokens; generate left-to-right."
+                },
+                {
+                  "slug": "decoder-only-vs-encoder-decoder-tradeoff",
+                  "title": "Decoder-only vs encoder-decoder tradeoff",
+                  "difficulty": "intermediate",
+                  "hook": "Decoder-only: simpler, more parameter-efficient for generation; encoder-decoder: enables bidirectional context."
+                },
+                {
+                  "slug": "gpt-llama-mistral-qwen-architectures",
+                  "title": "GPT, Llama, Mistral, Qwen architectures",
+                  "difficulty": "intermediate",
+                  "hook": "Most modern LLMs are decoder-only; architectural choices vary (normalization, activation, attention type)."
+                }
+              ]
+            },
+            "encoder-decoder-hybrid-models": {
+              "label": "Encoder-Decoder & Hybrid Models",
+              "concepts": [
+                {
+                  "slug": "encoder-decoder-architecture-and-cross-attention",
+                  "title": "Encoder-decoder architecture and cross-attention",
+                  "difficulty": "intermediate",
+                  "hook": "Encoder processes input; decoder generates output conditioned on encoder."
+                },
+                {
+                  "slug": "t5-and-bart-models",
+                  "title": "T5 and BART models",
+                  "difficulty": "intermediate",
+                  "hook": "Encoder-decoder for seq2seq; effective for translation, summarization."
+                },
+                {
+                  "slug": "mixture-of-experts-moe",
+                  "title": "Mixture of Experts (MoE)",
+                  "difficulty": "advanced",
+                  "hook": "Conditional computation; route tokens to expert subsets; sparse activation."
+                },
+                {
+                  "slug": "jamba-and-hybrid-ssm-transformer-models",
+                  "title": "Jamba and hybrid SSM-Transformer models",
+                  "difficulty": "advanced",
+                  "hook": "Combine attention layers with Mamba SSM layers; trade-offs in scaling and inference."
+                }
+              ]
+            },
+            "model-scaling-laws": {
+              "label": "Model Scaling Laws",
+              "concepts": [
+                {
+                  "slug": "scaling-laws-for-loss-and-compute",
+                  "title": "Scaling laws for loss and compute",
+                  "difficulty": "advanced",
+                  "hook": "Loss ~ 1/N^alpha; predictable improvements with more data/compute."
+                },
+                {
+                  "slug": "optimal-batch-sizes-and-datacompute-tradeoff",
+                  "title": "Optimal batch sizes and data/compute tradeoff",
+                  "difficulty": "advanced",
+                  "hook": "Chinchilla scaling: equal budget to compute and data."
+                },
+                {
+                  "slug": "inference-scaling-and-test-time-compute-o1-reasoning-models",
+                  "title": "Inference-scaling and test-time compute (o1, reasoning models)",
+                  "difficulty": "advanced",
+                  "hook": "More test-time steps improve reasoning; o3 sets benchmarks."
+                },
+                {
+                  "slug": "frontier-model-performance-gpt-4-claude-37-gemini-3",
+                  "title": "Frontier model performance (GPT-4, Claude 3.7, Gemini 3)",
+                  "difficulty": "intermediate",
+                  "hook": "Understand where state-of-the-art sits; performance gaps on benchmarks."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "embeddings-retrieval": {
+          "label": "Embeddings & Retrieval",
+          "subtopics": {
+            "embedding-models": {
+              "label": "Embedding Models",
+              "concepts": [
+                {
+                  "slug": "dense-embeddings-and-contrastive-learning",
+                  "title": "Dense embeddings and contrastive learning",
+                  "difficulty": "intermediate",
+                  "hook": "Embedding models trained to maximize similarity of relevant pairs."
+                },
+                {
+                  "slug": "mteb-benchmark-and-evaluation",
+                  "title": "MTEB benchmark and evaluation",
+                  "difficulty": "intermediate",
+                  "hook": "Standard benchmark for embedding models across retrieval, clustering, classification."
+                },
+                {
+                  "slug": "leading-embedding-models-bge-m3-e5-voyage-cohere-openai-text-embedding-3",
+                  "title": "Leading embedding models (BGE-M3, E5, Voyage, Cohere, OpenAI text-embedding-3)",
+                  "difficulty": "intermediate",
+                  "hook": "Know performance and cost tradeoff; multilingual vs English-only."
+                },
+                {
+                  "slug": "multilingual-and-cross-lingual-embeddings",
+                  "title": "Multilingual and cross-lingual embeddings",
+                  "difficulty": "intermediate",
+                  "hook": "BGE-M3 supports 100+ languages; enables global retrieval."
+                },
+                {
+                  "slug": "specialized-embeddings-medical-code-domain-specific",
+                  "title": "Specialized embeddings (medical, code, domain-specific)",
+                  "difficulty": "intermediate",
+                  "hook": "Domain-tuned models often beat general models; tradeoff: training cost."
+                }
+              ]
+            },
+            "vector-databases": {
+              "label": "Vector Databases",
+              "concepts": [
+                {
+                  "slug": "vector-database-landscape-pinecone-qdrant-weaviate-milvus-pgvector-lancedb",
+                  "title": "Vector database landscape (Pinecone, Qdrant, Weaviate, Milvus, pgvector, LanceDB)",
+                  "difficulty": "intermediate",
+                  "hook": "Know use cases: managed (Pinecone) vs open-source; Qdrant best OSS speed."
+                },
+                {
+                  "slug": "exact-vs-approximate-nearest-neighbor-search-hnsw-ivf",
+                  "title": "Exact vs approximate nearest neighbor search (HNSW, IVF)",
+                  "difficulty": "intermediate",
+                  "hook": "Exact: slow but accurate; approx: fast, some recall loss."
+                },
+                {
+                  "slug": "hybrid-search-dense-sparsebm25",
+                  "title": "Hybrid search (dense + sparse/BM25)",
+                  "difficulty": "intermediate",
+                  "hook": "Combine semantic and keyword search; Qdrant, Weaviate, Milvus support native hybrid."
+                },
+                {
+                  "slug": "vector-database-selection-criteria-scale-latency-cost",
+                  "title": "Vector database selection criteria (scale, latency, cost)",
+                  "difficulty": "intermediate",
+                  "hook": "pgvector: < 10M vectors, existing Postgres; Qdrant: open-source speed; Pinecone: managed ease."
+                },
+                {
+                  "slug": "indexing-strategies-and-performance-tuning",
+                  "title": "Indexing strategies and performance tuning",
+                  "difficulty": "advanced",
+                  "hook": "HNSW parameter tuning (M, ef); IVF cluster count; tradeoffs in speed/recall."
+                }
+              ]
+            },
+            "retrieval-augmented-generation-rag": {
+              "label": "Retrieval-Augmented Generation (RAG)",
+              "concepts": [
+                {
+                  "slug": "rag-pipeline-architecture-retriever-ranker-reader",
+                  "title": "RAG pipeline architecture (retriever, ranker, reader)",
+                  "difficulty": "intermediate",
+                  "hook": "Retrieve docs → rank → feed to LLM."
+                },
+                {
+                  "slug": "retriever-design-bm25-dense-hybrid-multi-hop",
+                  "title": "Retriever design (BM25, dense, hybrid, multi-hop)",
+                  "difficulty": "intermediate",
+                  "hook": "Dense: semantic; BM25: keyword; hybrid: best of both; multi-hop: chain retrievals."
+                },
+                {
+                  "slug": "chunk-size-and-overlap-in-document-splitting",
+                  "title": "Chunk size and overlap in document splitting",
+                  "difficulty": "intermediate",
+                  "hook": "Small chunks: precise but risk losing context; large: contextual but noisy retrieval."
+                },
+                {
+                  "slug": "re-ranking-and-cross-encoder-models",
+                  "title": "Re-ranking and cross-encoder models",
+                  "difficulty": "intermediate",
+                  "hook": "Second-pass ranking improves final retrieval quality; expensive but worth it for top-k."
+                },
+                {
+                  "slug": "query-expansion-and-rewriting",
+                  "title": "Query expansion and rewriting",
+                  "difficulty": "intermediate",
+                  "hook": "Reformulate query to improve retrieval; LLM-based expansion."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "prompt-engineering-in-context-learning": {
+          "label": "Prompt Engineering & In-Context Learning",
+          "subtopics": {
+            "prompt-design": {
+              "label": "Prompt Design",
+              "concepts": [
+                {
+                  "slug": "few-shot-vs-zero-shot-prompting",
+                  "title": "Few-shot vs zero-shot prompting",
+                  "difficulty": "beginner",
+                  "hook": "Examples improve performance; cost-quality tradeoff."
+                },
+                {
+                  "slug": "chain-of-thought-prompting",
+                  "title": "Chain-of-thought prompting",
+                  "difficulty": "intermediate",
+                  "hook": "Ask model to reason step-by-step; improves complex reasoning."
+                },
+                {
+                  "slug": "instruction-following-and-task-formatting",
+                  "title": "Instruction following and task formatting",
+                  "difficulty": "beginner",
+                  "hook": "Clear instructions improve responses; format matters."
+                },
+                {
+                  "slug": "system-prompts-and-model-steering",
+                  "title": "System prompts and model steering",
+                  "difficulty": "beginner",
+                  "hook": "System role sets behavior; guides model outputs."
+                }
+              ]
+            },
+            "advanced-prompting-techniques": {
+              "label": "Advanced Prompting Techniques",
+              "concepts": [
+                {
+                  "slug": "tree-of-thoughts-and-graph-of-thoughts",
+                  "title": "Tree-of-Thoughts and graph-of-thoughts",
+                  "difficulty": "advanced",
+                  "hook": "Explore multiple reasoning paths; cost vs accuracy."
+                },
+                {
+                  "slug": "self-consistency-and-majority-voting",
+                  "title": "Self-consistency and majority voting",
+                  "difficulty": "advanced",
+                  "hook": "Sample multiple outputs; vote on answer; reduces variance."
+                },
+                {
+                  "slug": "prompt-optimization-and-automated-prompt-learning",
+                  "title": "Prompt optimization and automated prompt learning",
+                  "difficulty": "advanced",
+                  "hook": "Gradient-free methods optimize prompts for tasks."
+                }
+              ]
+            },
+            "in-context-learning-mechanics": {
+              "label": "In-Context Learning Mechanics",
+              "concepts": [
+                {
+                  "slug": "why-icl-works-gradient-descent-interpretation",
+                  "title": "Why ICL works (gradient descent interpretation)",
+                  "difficulty": "advanced",
+                  "hook": "Implicit task understanding; not explicit learning but implicit optimization."
+                },
+                {
+                  "slug": "scaling-laws-for-in-context-learning",
+                  "title": "Scaling laws for in-context learning",
+                  "difficulty": "advanced",
+                  "hook": "More examples improve accuracy; plateaus exist."
+                },
+                {
+                  "slug": "context-order-and-recency-bias",
+                  "title": "Context order and recency bias",
+                  "difficulty": "intermediate",
+                  "hook": "Order of examples affects performance; recent examples weighted more."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "fine-tuning-alignment": {
+          "label": "Fine-Tuning & Alignment",
+          "subtopics": {
+            "fine-tuning-approaches": {
+              "label": "Fine-Tuning Approaches",
+              "concepts": [
+                {
+                  "slug": "supervised-fine-tuning-sft-on-instruction-data",
+                  "title": "Supervised fine-tuning (SFT) on instruction data",
+                  "difficulty": "intermediate",
+                  "hook": "Teach model to follow instructions; improves instruction-following."
+                },
+                {
+                  "slug": "parameter-efficient-fine-tuning-lora-qlora-llama-adapter",
+                  "title": "Parameter-efficient fine-tuning (LoRA, QLoRA, LLaMA-Adapter)",
+                  "difficulty": "intermediate",
+                  "hook": "LoRA: low-rank updates; QLoRA: 4-bit + LoRA; fits on single GPU."
+                },
+                {
+                  "slug": "domain-specific-fine-tuning",
+                  "title": "Domain-specific fine-tuning",
+                  "difficulty": "intermediate",
+                  "hook": "Adapt to domain (medical, legal, code); improves in-domain performance."
+                },
+                {
+                  "slug": "continued-pre-training-on-domain-data",
+                  "title": "Continued pre-training on domain data",
+                  "difficulty": "intermediate",
+                  "hook": "Add domain tokens to vocab; pre-train on domain corpus."
+                }
+              ]
+            },
+            "alignment-rlhf": {
+              "label": "Alignment & RLHF",
+              "concepts": [
+                {
+                  "slug": "reinforcement-learning-from-human-feedback-rlhf",
+                  "title": "Reinforcement learning from human feedback (RLHF)",
+                  "difficulty": "intermediate",
+                  "hook": "Reward model trained on human preferences; policy optimized against reward."
+                },
+                {
+                  "slug": "reward-modeling-and-preference-data",
+                  "title": "Reward modeling and preference data",
+                  "difficulty": "advanced",
+                  "hook": "Collect pairwise comparisons; train reward model; must generalize."
+                },
+                {
+                  "slug": "policy-optimization-reinforce-ppo",
+                  "title": "Policy optimization (REINFORCE, PPO)",
+                  "difficulty": "advanced",
+                  "hook": "PPO staple; on-policy; clipped objective prevents instability."
+                },
+                {
+                  "slug": "kl-divergence-constraint-and-reference-model",
+                  "title": "KL divergence constraint and reference model",
+                  "difficulty": "intermediate",
+                  "hook": "Prevent policy drifting too far from SFT model; reference model in loss."
+                }
+              ]
+            },
+            "modern-preference-optimization": {
+              "label": "Modern Preference Optimization",
+              "concepts": [
+                {
+                  "slug": "direct-preference-optimization-dpo",
+                  "title": "Direct Preference Optimization (DPO)",
+                  "difficulty": "intermediate",
+                  "hook": "Skip reward model; optimize pairwise loss directly."
+                },
+                {
+                  "slug": "simpo-orpo-kto-post-dpo-landscape",
+                  "title": "SimPO, ORPO, KTO post-DPO landscape",
+                  "difficulty": "advanced",
+                  "hook": "SimPO: remove reference model; ORPO: merge SFT; KTO: handle unpaired data."
+                },
+                {
+                  "slug": "grpo-group-relative-policy-optimization",
+                  "title": "GRPO (Group Relative Policy Optimization)",
+                  "difficulty": "advanced",
+                  "hook": "Online RL; sample groups, compute advantages within groups."
+                },
+                {
+                  "slug": "iterative-improvement-dpo-new-data-dpo",
+                  "title": "Iterative improvement (DPO → new data → DPO)",
+                  "difficulty": "advanced",
+                  "hook": "Self-play improves model; iterative rounds push capabilities."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "serving-infrastructure-inference-optimization": {
+          "label": "Serving Infrastructure & Inference Optimization",
+          "subtopics": {
+            "inference-engines": {
+              "label": "Inference Engines",
+              "concepts": [
+                {
+                  "slug": "vllm-paged-attention-continuous-batching",
+                  "title": "vLLM (paged attention, continuous batching)",
+                  "difficulty": "intermediate",
+                  "hook": "Production standard; PagedAttention reduces KV cache fragmentation; continuous batching high throughput."
+                },
+                {
+                  "slug": "tensorrt-llm-nvidias-compiled-inference",
+                  "title": "TensorRT-LLM (NVIDIA's compiled inference)",
+                  "difficulty": "intermediate",
+                  "hook": "Maximum performance on NVIDIA GPUs; 28-min compilation cost; best for stable models."
+                },
+                {
+                  "slug": "sglang-and-radixattention",
+                  "title": "SGLang and RadixAttention",
+                  "difficulty": "intermediate",
+                  "hook": "Shared prefix optimization; ideal for multi-turn and structured generation."
+                },
+                {
+                  "slug": "ollama-for-local-inference",
+                  "title": "Ollama for local inference",
+                  "difficulty": "beginner",
+                  "hook": "Simplified model serving; good for prototyping on CPU/GPU."
+                },
+                {
+                  "slug": "other-frameworks-mlc-llm-lm-studio-llamacpp",
+                  "title": "Other frameworks: MLC LLM, LM Studio, llama.cpp",
+                  "difficulty": "intermediate",
+                  "hook": "Lightweight/portable options; tradeoffs in performance."
+                }
+              ]
+            },
+            "inference-optimization-techniques": {
+              "label": "Inference Optimization Techniques",
+              "concepts": [
+                {
+                  "slug": "token-batching-and-dynamic-batching",
+                  "title": "Token batching and dynamic batching",
+                  "difficulty": "intermediate",
+                  "hook": "Batch requests; balance latency and throughput."
+                },
+                {
+                  "slug": "speculative-decoding",
+                  "title": "Speculative decoding",
+                  "difficulty": "advanced",
+                  "hook": "Draft model generates tokens; verify with large model; amortizes large model cost."
+                },
+                {
+                  "slug": "prompt-caching-and-kv-cache-reuse",
+                  "title": "Prompt caching and KV cache reuse",
+                  "difficulty": "intermediate",
+                  "hook": "Cache prompt embeddings/KV for repeated queries; reduces latency and cost."
+                },
+                {
+                  "slug": "beam-search-vs-greedy-decoding",
+                  "title": "Beam search vs greedy decoding",
+                  "difficulty": "intermediate",
+                  "hook": "Greedy: fast, high variance; beam: slower, better quality."
+                },
+                {
+                  "slug": "structured-generation-and-constrained-decoding",
+                  "title": "Structured generation and constrained decoding",
+                  "difficulty": "intermediate",
+                  "hook": "Enforce output format (JSON, regex); reduces invalid outputs."
+                }
+              ]
+            },
+            "quantization-compression": {
+              "label": "Quantization & Compression",
+              "concepts": [
+                {
+                  "slug": "post-training-quantization-ptq-vs-quantization-aware-training-qat",
+                  "title": "Post-training quantization (PTQ) vs quantization-aware training (QAT)",
+                  "difficulty": "intermediate",
+                  "hook": "PTQ: no retraining; QAT: slight accuracy loss but better."
+                },
+                {
+                  "slug": "int8-and-int4-quantization",
+                  "title": "INT8 and INT4 quantization",
+                  "difficulty": "intermediate",
+                  "hook": "INT8: minimal overhead; INT4: 75% memory reduction but accuracy risk."
+                },
+                {
+                  "slug": "bfloat16-and-mixed-precision",
+                  "title": "Bfloat16 and mixed precision",
+                  "difficulty": "intermediate",
+                  "hook": "Bfloat16 faster than float32 on modern GPUs; reduced precision doesn't hurt much."
+                },
+                {
+                  "slug": "gptq-awq-gguf-quantization-formats",
+                  "title": "GPTQ, AWQ, GGUF quantization formats",
+                  "difficulty": "advanced",
+                  "hook": "Post-training quantization specific formats; tradeoff inference speed vs model size."
+                },
+                {
+                  "slug": "quantization-aware-training-with-learned-scaling",
+                  "title": "Quantization-aware training with learned scaling",
+                  "difficulty": "advanced",
+                  "hook": "Quantization scales learned during training; better accuracy."
+                }
+              ]
+            },
+            "distributed-serving": {
+              "label": "Distributed Serving",
+              "concepts": [
+                {
+                  "slug": "data-parallelism-for-inference",
+                  "title": "Data parallelism for inference",
+                  "difficulty": "intermediate",
+                  "hook": "Replicate model; each GPU processes different request; synchronization minimal."
+                },
+                {
+                  "slug": "tensor-parallelism-tp",
+                  "title": "Tensor parallelism (TP)",
+                  "difficulty": "advanced",
+                  "hook": "Split layers across devices; each device computes part of matmul; reduces latency per token."
+                },
+                {
+                  "slug": "pipeline-parallelism-pp",
+                  "title": "Pipeline parallelism (PP)",
+                  "difficulty": "advanced",
+                  "hook": "Split model layers across devices; temporal pipeline; reduces per-device memory."
+                },
+                {
+                  "slug": "unified-serving-frameworks-vllm-distributed-tensorrt-llm-multi-gpu",
+                  "title": "Unified serving frameworks (vLLM distributed, TensorRT-LLM multi-GPU)",
+                  "difficulty": "intermediate",
+                  "hook": "TP is standard for LLMs; PP less common."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "multi-modal-models-vision-language-models": {
+          "label": "Multi-Modal Models & Vision-Language Models",
+          "subtopics": {
+            "vision-language-architecture": {
+              "label": "Vision-Language Architecture",
+              "concepts": [
+                {
+                  "slug": "image-encoding-and-patch-embeddings",
+                  "title": "Image encoding and patch embeddings",
+                  "difficulty": "intermediate",
+                  "hook": "ViT-style patch encoding; project images to token space."
+                },
+                {
+                  "slug": "visual-language-alignment-clip-align",
+                  "title": "Visual-language alignment (CLIP, ALIGN)",
+                  "difficulty": "intermediate",
+                  "hook": "Contrastive learning of image-text pairs; enables zero-shot classification."
+                },
+                {
+                  "slug": "token-interleaving-and-mixed-modality",
+                  "title": "Token interleaving and mixed modality",
+                  "difficulty": "intermediate",
+                  "hook": "Interleave image and text tokens; enables cross-modal reasoning."
+                },
+                {
+                  "slug": "document-understanding-and-ocr-free-approaches",
+                  "title": "Document understanding and OCR-free approaches",
+                  "difficulty": "intermediate",
+                  "hook": "Models like GPT-4V and Claude 3.5 handle documents natively."
+                }
+              ]
+            },
+            "multi-modal-models": {
+              "label": "Multi-Modal Models",
+              "concepts": [
+                {
+                  "slug": "gpt-4o-claude-35-gemini-3-qwen-vl-models",
+                  "title": "GPT-4o, Claude 3.5, Gemini 3, Qwen VL models",
+                  "difficulty": "intermediate",
+                  "hook": "Understand images, text, video; differences in modality support."
+                },
+                {
+                  "slug": "video-understanding-and-long-video-models",
+                  "title": "Video understanding and long-video models",
+                  "difficulty": "advanced",
+                  "hook": "Temporal understanding; sample frames vs dense processing."
+                },
+                {
+                  "slug": "audio-and-speech-models",
+                  "title": "Audio and speech models",
+                  "difficulty": "intermediate",
+                  "hook": "Whisper for speech-to-text; Gemini 3 handles audio natively."
+                }
+              ]
+            },
+            "multi-modal-reasoning": {
+              "label": "Multi-Modal Reasoning",
+              "concepts": [
+                {
+                  "slug": "chain-of-thought-with-visual-reasoning",
+                  "title": "Chain-of-thought with visual reasoning",
+                  "difficulty": "intermediate",
+                  "hook": "Explain reasoning over images; improves accuracy."
+                },
+                {
+                  "slug": "visual-question-answering-vqa",
+                  "title": "Visual question answering (VQA)",
+                  "difficulty": "intermediate",
+                  "hook": "Answer questions about images; benchmark for visual understanding."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "agents-tool-use": {
+          "label": "Agents & Tool Use",
+          "subtopics": {
+            "agent-frameworks-architectures": {
+              "label": "Agent Frameworks & Architectures",
+              "concepts": [
+                {
+                  "slug": "langgraph-graph-based-stateful-agents",
+                  "title": "LangGraph (graph-based, stateful agents)",
+                  "difficulty": "intermediate",
+                  "hook": "Define agents as graphs; checkpointing and observability; enterprise standard."
+                },
+                {
+                  "slug": "crewai-role-based-crews",
+                  "title": "CrewAI (role-based crews)",
+                  "difficulty": "intermediate",
+                  "hook": "Simple DSL; 20 lines to start; lower learning curve."
+                },
+                {
+                  "slug": "openai-agents-sdk-handoff-pattern",
+                  "title": "OpenAI Agents SDK (handoff pattern)",
+                  "difficulty": "intermediate",
+                  "hook": "Explicit agent-to-agent handoffs; model-locked to OpenAI."
+                },
+                {
+                  "slug": "anthropic-agent-sdk",
+                  "title": "Anthropic Agent SDK",
+                  "difficulty": "intermediate",
+                  "hook": "Deep Claude integration; safety-focused; lighter on orchestration than LangGraph."
+                },
+                {
+                  "slug": "autogenag2-in-maintenance-mode",
+                  "title": "AutoGen/AG2 in maintenance mode",
+                  "difficulty": "beginner",
+                  "hook": "Legacy; limited future development."
+                }
+              ]
+            },
+            "tool-use-function-calling": {
+              "label": "Tool Use & Function Calling",
+              "concepts": [
+                {
+                  "slug": "function-calling-tool-use-patterns",
+                  "title": "Function calling / tool use patterns",
+                  "difficulty": "intermediate",
+                  "hook": "Model calls tools; execute and feed back results."
+                },
+                {
+                  "slug": "tool-definition-and-validation",
+                  "title": "Tool definition and validation",
+                  "difficulty": "intermediate",
+                  "hook": "JSON schema; parameter validation; error handling."
+                },
+                {
+                  "slug": "parallel-tool-execution",
+                  "title": "Parallel tool execution",
+                  "difficulty": "intermediate",
+                  "hook": "Call multiple tools in one turn; efficiency."
+                },
+                {
+                  "slug": "tool-composition-and-chaining",
+                  "title": "Tool composition and chaining",
+                  "difficulty": "intermediate",
+                  "hook": "Use output of one tool as input to another."
+                }
+              ]
+            },
+            "agent-design-patterns": {
+              "label": "Agent Design Patterns",
+              "concepts": [
+                {
+                  "slug": "react-reasoning-acting",
+                  "title": "ReAct (Reasoning + Acting)",
+                  "difficulty": "intermediate",
+                  "hook": "Think, then act; observe results; loop."
+                },
+                {
+                  "slug": "hierarchical-agents-and-delegation",
+                  "title": "Hierarchical agents and delegation",
+                  "difficulty": "advanced",
+                  "hook": "Agents managing sub-agents; delegation for complex tasks."
+                },
+                {
+                  "slug": "self-correction-and-error-handling",
+                  "title": "Self-correction and error handling",
+                  "difficulty": "intermediate",
+                  "hook": "Detect errors; retry or replan."
+                },
+                {
+                  "slug": "agent-evaluation-and-reliability",
+                  "title": "Agent evaluation and reliability",
+                  "difficulty": "advanced",
+                  "hook": "Metrics for agent success; tradeoff: cost vs quality."
+                }
+              ]
+            },
+            "emerging-standards": {
+              "label": "Emerging Standards",
+              "concepts": [
+                {
+                  "slug": "model-context-protocol-mcp",
+                  "title": "Model Context Protocol (MCP)",
+                  "difficulty": "intermediate",
+                  "hook": "Standardize agent-tool communication; Anthropic contributes to Linux Foundation."
+                },
+                {
+                  "slug": "agent-to-agent-protocol-a2a",
+                  "title": "Agent-to-Agent Protocol (A2A)",
+                  "difficulty": "intermediate",
+                  "hook": "Enable agents to discover and communicate with other agents."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "evaluation-benchmarking": {
+          "label": "Evaluation & Benchmarking",
+          "subtopics": {
+            "llm-benchmarks": {
+              "label": "LLM Benchmarks",
+              "concepts": [
+                {
+                  "slug": "standard-benchmarks-mmlu-gsm8k-humaneval-arc",
+                  "title": "Standard benchmarks (MMLU, GSM8K, HumanEval, ARC)",
+                  "difficulty": "intermediate",
+                  "hook": "Know what they measure; limitations."
+                },
+                {
+                  "slug": "long-context-benchmarks-longbench-infinitebench",
+                  "title": "Long-context benchmarks (LongBench, InfiniteBench)",
+                  "difficulty": "intermediate",
+                  "hook": "Evaluate context window capability."
+                },
+                {
+                  "slug": "reasoning-benchmarks-math-codeforces",
+                  "title": "Reasoning benchmarks (MATH, Codeforces)",
+                  "difficulty": "intermediate",
+                  "hook": "Hard tasks; discriminate capabilities."
+                },
+                {
+                  "slug": "leaderboards-open-llm-leaderboard-lmsys",
+                  "title": "Leaderboards (Open LLM Leaderboard, LMSYS)",
+                  "difficulty": "beginner",
+                  "hook": "Track progress; understand limitations of rankings."
+                }
+              ]
+            },
+            "evaluation-frameworks": {
+              "label": "Evaluation Frameworks",
+              "concepts": [
+                {
+                  "slug": "ragas-for-rag-evaluation",
+                  "title": "Ragas for RAG evaluation",
+                  "difficulty": "intermediate",
+                  "hook": "Retrieval, answer relevance, groundedness, context precision."
+                },
+                {
+                  "slug": "deepeval-50-metrics-pytest-integration",
+                  "title": "DeepEval (50+ metrics, pytest integration)",
+                  "difficulty": "intermediate",
+                  "hook": "Comprehensive open-source eval framework."
+                },
+                {
+                  "slug": "langfuse-for-observability-and-tracing",
+                  "title": "Langfuse for observability and tracing",
+                  "difficulty": "intermediate",
+                  "hook": "Track latency, cost, errors; vendor-agnostic."
+                },
+                {
+                  "slug": "braintrust-for-full-lifecycle-evaluation",
+                  "title": "Braintrust for full lifecycle evaluation",
+                  "difficulty": "intermediate",
+                  "hook": "Eval, monitoring, release gates; competitive with DeepEval."
+                },
+                {
+                  "slug": "arize-phoenix-for-agent-evaluation",
+                  "title": "Arize Phoenix for agent evaluation",
+                  "difficulty": "intermediate",
+                  "hook": "Multi-step tracing; assess agent decision-making."
+                }
+              ]
+            },
+            "custom-evaluation": {
+              "label": "Custom Evaluation",
+              "concepts": [
+                {
+                  "slug": "manual-evaluation-and-annotation",
+                  "title": "Manual evaluation and annotation",
+                  "difficulty": "beginner",
+                  "hook": "Gold standard; expensive but ground truth."
+                },
+                {
+                  "slug": "llm-as-judge-evaluation",
+                  "title": "LLM-as-judge evaluation",
+                  "difficulty": "intermediate",
+                  "hook": "Use LLM to score outputs; bias risk; cheaper than manual."
+                },
+                {
+                  "slug": "user-based-evaluation-and-feedback-loops",
+                  "title": "User-based evaluation and feedback loops",
+                  "difficulty": "intermediate",
+                  "hook": "Online evaluation; real performance metrics."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "production-systems-mlops-for-llms": {
+          "label": "Production Systems & MLOps for LLMs",
+          "subtopics": {
+            "serving-architecture": {
+              "label": "Serving Architecture",
+              "concepts": [
+                {
+                  "slug": "load-balancing-and-autoscaling-for-llm-endpoints",
+                  "title": "Load balancing and autoscaling for LLM endpoints",
+                  "difficulty": "intermediate",
+                  "hook": "Balance across replicas; scale on latency/QPS."
+                },
+                {
+                  "slug": "model-versioning-and-canary-rollouts",
+                  "title": "Model versioning and canary rollouts",
+                  "difficulty": "intermediate",
+                  "hook": "Shadow traffic, gradual rollouts; compare versions."
+                },
+                {
+                  "slug": "cost-management-prompt-caching-batching-model-selection",
+                  "title": "Cost management (prompt caching, batching, model selection)",
+                  "difficulty": "intermediate",
+                  "hook": "Optimize $ per request; tradeoff latency vs cost."
+                },
+                {
+                  "slug": "multi-model-serving-and-model-router",
+                  "title": "Multi-model serving and model router",
+                  "difficulty": "advanced",
+                  "hook": "Route requests to appropriate model based on size, cost, latency."
+                }
+              ]
+            },
+            "monitoring-observability": {
+              "label": "Monitoring & Observability",
+              "concepts": [
+                {
+                  "slug": "latency-throughput-error-rates-cost",
+                  "title": "Latency, throughput, error rates, cost",
+                  "difficulty": "beginner",
+                  "hook": "SLOs: p99 latency, error rate < X%."
+                },
+                {
+                  "slug": "token-usage-and-cost-tracking",
+                  "title": "Token usage and cost tracking",
+                  "difficulty": "intermediate",
+                  "hook": "Count input/output tokens; track spend."
+                },
+                {
+                  "slug": "quality-metrics-bleu-rouge-exact-match",
+                  "title": "Quality metrics (BLEU, ROUGE, exact match)",
+                  "difficulty": "intermediate",
+                  "hook": "Monitor outputs against baselines."
+                },
+                {
+                  "slug": "user-feedback-and-logging",
+                  "title": "User feedback and logging",
+                  "difficulty": "beginner",
+                  "hook": "Collect thumbs up/down; track user satisfaction."
+                }
+              ]
+            },
+            "drift-degradation": {
+              "label": "Drift & Degradation",
+              "concepts": [
+                {
+                  "slug": "model-output-drift-quality-change",
+                  "title": "Model output drift (quality change)",
+                  "difficulty": "intermediate",
+                  "hook": "Compare outputs to baseline; detect degradation."
+                },
+                {
+                  "slug": "distribution-shift-in-inputs",
+                  "title": "Distribution shift in inputs",
+                  "difficulty": "intermediate",
+                  "hook": "User queries change; model may not generalize."
+                },
+                {
+                  "slug": "retraining-triggers-and-refresh-cadence",
+                  "title": "Retraining triggers and refresh cadence",
+                  "difficulty": "intermediate",
+                  "hook": "When to fine-tune with new data? Cost vs benefit."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "cutting-edge-topics-2025-2026": {
+          "label": "Cutting-Edge Topics (2025-2026)",
+          "subtopics": {
+            "long-context-efficient-attention": {
+              "label": "Long Context & Efficient Attention",
+              "concepts": [
+                {
+                  "slug": "mamba-3-and-state-space-models-ssms",
+                  "title": "Mamba-3 and state-space models (SSMs)",
+                  "difficulty": "advanced",
+                  "hook": "Linear-time sequence modeling; 64K-128K context with low cost."
+                },
+                {
+                  "slug": "hybrid-architectures-jamba-zamba2",
+                  "title": "Hybrid architectures (Jamba, Zamba2)",
+                  "difficulty": "advanced",
+                  "hook": "Combine attention + SSM; best-of-both tradeoff."
+                },
+                {
+                  "slug": "context-length-extrapolation-techniques",
+                  "title": "Context length extrapolation techniques",
+                  "difficulty": "advanced",
+                  "hook": "Extend beyond training context (RoPE interpolation, continued pretraining)."
+                },
+                {
+                  "slug": "ring-attention-and-distributed-long-context",
+                  "title": "Ring attention and distributed long-context",
+                  "difficulty": "advanced",
+                  "hook": "Enable training/serving of extremely long contexts."
+                }
+              ]
+            },
+            "test-time-compute-reasoning": {
+              "label": "Test-Time Compute & Reasoning",
+              "concepts": [
+                {
+                  "slug": "openai-o3-and-o-series-reasoning-models",
+                  "title": "OpenAI o3 and o-series reasoning models",
+                  "difficulty": "advanced",
+                  "hook": "Allocate compute at inference time; solve harder problems."
+                },
+                {
+                  "slug": "extended-thinking-and-chain-of-thought-variants",
+                  "title": "Extended thinking and chain-of-thought variants",
+                  "difficulty": "intermediate",
+                  "hook": "More thinking tokens improve reasoning."
+                },
+                {
+                  "slug": "inference-time-scaling-laws",
+                  "title": "Inference-time scaling laws",
+                  "difficulty": "advanced",
+                  "hook": "More test-time steps → better performance; economics vary."
+                },
+                {
+                  "slug": "deepseek-r1-and-open-reasoning-models",
+                  "title": "DeepSeek-R1 and open reasoning models",
+                  "difficulty": "advanced",
+                  "hook": "Open-source reasoning; scaling laws for open models."
+                }
+              ]
+            },
+            "emerging-model-families": {
+              "label": "Emerging Model Families",
+              "concepts": [
+                {
+                  "slug": "qwen-35-omni-and-other-state-of-the-art",
+                  "title": "Qwen 3.5 Omni and other state-of-the-art",
+                  "difficulty": "intermediate",
+                  "hook": "Latest frontier models; compare on benchmarks."
+                },
+                {
+                  "slug": "open-vs-closed-model-tradeoffs-control-privacy-cost-perf",
+                  "title": "Open vs closed model tradeoffs (control, privacy, cost, perf)",
+                  "difficulty": "beginner",
+                  "hook": "Know when each makes sense."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        }
+      }
+    },
+    "research-leaning": {
+      "label": "RESEARCH-LEANING",
+      "topics": {
+        "transformer-theory-internals": {
+          "label": "Transformer Theory & Internals",
+          "subtopics": {
+            "theoretical-foundations": {
+              "label": "Theoretical Foundations",
+              "concepts": [
+                {
+                  "slug": "universal-approximation-of-transformers",
+                  "title": "Universal approximation of transformers",
+                  "difficulty": "advanced",
+                  "hook": "Capacity to express any function; attention enables this."
+                },
+                {
+                  "slug": "attention-as-kernel-method",
+                  "title": "Attention as kernel method",
+                  "difficulty": "advanced",
+                  "hook": "Formal connection to kernel machines; interpretability."
+                },
+                {
+                  "slug": "implicit-regularization-in-transformers",
+                  "title": "Implicit regularization in transformers",
+                  "difficulty": "advanced",
+                  "hook": "SGD trajectory; why transformers generalize without explicit regularization."
+                },
+                {
+                  "slug": "theoretical-analysis-of-softmax-bottleneck",
+                  "title": "Theoretical analysis of softmax bottleneck",
+                  "difficulty": "advanced",
+                  "hook": "Rank of softmax output limited; architectural implications."
+                }
+              ]
+            },
+            "attention-variants-analysis": {
+              "label": "Attention Variants & Analysis",
+              "concepts": [
+                {
+                  "slug": "linear-attention-and-kernel-methods",
+                  "title": "Linear attention and kernel methods",
+                  "difficulty": "advanced",
+                  "hook": "Replace softmax with kernel; linear complexity but rank limitation."
+                },
+                {
+                  "slug": "efficient-attention-sparse-local",
+                  "title": "Efficient attention (sparse, local)",
+                  "difficulty": "advanced",
+                  "hook": "Approximations; bounds on approximation error."
+                },
+                {
+                  "slug": "attention-head-specialization",
+                  "title": "Attention head specialization",
+                  "difficulty": "advanced",
+                  "hook": "Different heads do different jobs (position, syntax, semantics); interpretability."
+                }
+              ]
+            },
+            "gradient-flow-training": {
+              "label": "Gradient Flow & Training",
+              "concepts": [
+                {
+                  "slug": "gradient-flow-in-deep-transformers",
+                  "title": "Gradient flow in deep transformers",
+                  "difficulty": "advanced",
+                  "hook": "Layer norm and residuals enable stable gradients."
+                },
+                {
+                  "slug": "explodingvanishing-gradient-analysis",
+                  "title": "Exploding/vanishing gradient analysis",
+                  "difficulty": "advanced",
+                  "hook": "When do gradients blow up or shrink?"
+                },
+                {
+                  "slug": "normalization-layers-layernorm-rmsnorm-prenorm",
+                  "title": "Normalization layers (LayerNorm, RMSNorm, PreNorm)",
+                  "difficulty": "advanced",
+                  "hook": "Impact on gradient flow and trainability."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "optimization-learning-theory": {
+          "label": "Optimization & Learning Theory",
+          "subtopics": {
+            "optimization-algorithms": {
+              "label": "Optimization Algorithms",
+              "concepts": [
+                {
+                  "slug": "sgd-convergence-analysis-convex-and-non-convex",
+                  "title": "SGD convergence analysis (convex and non-convex)",
+                  "difficulty": "advanced",
+                  "hook": "Convergence rates; when does SGD work?"
+                },
+                {
+                  "slug": "adam-convergence-and-limitations",
+                  "title": "Adam convergence and limitations",
+                  "difficulty": "advanced",
+                  "hook": "Adaptive learning rates; non-convergence in some settings."
+                },
+                {
+                  "slug": "sharpness-vs-flatness-of-minima",
+                  "title": "Sharpness vs flatness of minima",
+                  "difficulty": "advanced",
+                  "hook": "Flat minima generalize better; SAM (Sharpness-Aware Minimization)."
+                },
+                {
+                  "slug": "second-order-optimization-and-hessian-free-methods",
+                  "title": "Second-order optimization and Hessian-free methods",
+                  "difficulty": "advanced",
+                  "hook": "Natural gradient, Newton methods; expensive but fewer iterations."
+                }
+              ]
+            },
+            "learning-theory": {
+              "label": "Learning Theory",
+              "concepts": [
+                {
+                  "slug": "vc-dimension-and-rademacher-complexity",
+                  "title": "VC dimension and Rademacher complexity",
+                  "difficulty": "advanced",
+                  "hook": "Capacity measures; generalization bounds."
+                },
+                {
+                  "slug": "pac-learning-framework",
+                  "title": "PAC learning framework",
+                  "difficulty": "advanced",
+                  "hook": "Probably approximately correct; formal learning theory."
+                },
+                {
+                  "slug": "implicit-regularization-of-sgd",
+                  "title": "Implicit regularization of SGD",
+                  "difficulty": "advanced",
+                  "hook": "SGD acts as regularizer; converges to minimum norm solution."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "scaling-laws-emergent-abilities": {
+          "label": "Scaling Laws & Emergent Abilities",
+          "subtopics": {
+            "scaling-laws": {
+              "label": "Scaling Laws",
+              "concepts": [
+                {
+                  "slug": "compute-optimal-scaling-chinchilla-llama-paper-scaling-laws",
+                  "title": "Compute optimal scaling (Chinchilla, LLaMA paper scaling laws)",
+                  "difficulty": "advanced",
+                  "hook": "Optimal allocation of training compute between data and model size."
+                },
+                {
+                  "slug": "loss-scaling-laws-and-extrapolation",
+                  "title": "Loss scaling laws and extrapolation",
+                  "difficulty": "advanced",
+                  "hook": "Predict loss at different scales; smooth relationships."
+                },
+                {
+                  "slug": "downstream-scaling-laws",
+                  "title": "Downstream scaling laws",
+                  "difficulty": "advanced",
+                  "hook": "How do improvements on pre-training loss translate to downstream tasks?"
+                },
+                {
+                  "slug": "scaling-laws-for-long-context",
+                  "title": "Scaling laws for long context",
+                  "difficulty": "advanced",
+                  "hook": "Does efficiency/quality scale linearly or worse with context length?"
+                }
+              ]
+            },
+            "emergence-capability-jumps": {
+              "label": "Emergence & Capability Jumps",
+              "concepts": [
+                {
+                  "slug": "in-context-learning-as-emergence",
+                  "title": "In-context learning as emergence",
+                  "difficulty": "advanced",
+                  "hook": "Sudden acquisition of ICL ability; why does it emerge?"
+                },
+                {
+                  "slug": "grokking-phenomenon",
+                  "title": "Grokking phenomenon",
+                  "difficulty": "advanced",
+                  "hook": "Long training before generalization; mechanism unclear."
+                },
+                {
+                  "slug": "superposition-and-interpretability-crisis",
+                  "title": "Superposition and interpretability crisis",
+                  "difficulty": "advanced",
+                  "hook": "Features in superposition; individual neurons not interpretable."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "mechanistic-interpretability": {
+          "label": "Mechanistic Interpretability",
+          "subtopics": {
+            "probing-attribution": {
+              "label": "Probing & Attribution",
+              "concepts": [
+                {
+                  "slug": "activation-patching-and-causal-tracing",
+                  "title": "Activation patching and causal tracing",
+                  "difficulty": "advanced",
+                  "hook": "Which components cause outputs; tracing attention flow."
+                },
+                {
+                  "slug": "layer-wise-relevance-propagation",
+                  "title": "Layer-wise relevance propagation",
+                  "difficulty": "advanced",
+                  "hook": "Decompose predictions into feature contributions."
+                },
+                {
+                  "slug": "attention-head-interpretability",
+                  "title": "Attention head interpretability",
+                  "difficulty": "advanced",
+                  "hook": "What do attention patterns tell us? Limitations and risks."
+                }
+              ]
+            },
+            "circuits-mechanistic-explanation": {
+              "label": "Circuits & Mechanistic Explanation",
+              "concepts": [
+                {
+                  "slug": "neuron-and-circuit-level-analysis",
+                  "title": "Neuron and circuit level analysis",
+                  "difficulty": "advanced",
+                  "hook": "Individual neuron computation; circuits of neurons."
+                },
+                {
+                  "slug": "sae-sparse-autoencoders-and-superposition-disentanglement",
+                  "title": "SAE (Sparse Autoencoders) and superposition disentanglement",
+                  "difficulty": "advanced",
+                  "hook": "Decompose superposition into interpretable features."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "recent-architectures-techniques": {
+          "label": "Recent Architectures & Techniques",
+          "subtopics": {
+            "post-transformer-research": {
+              "label": "Post-Transformer Research",
+              "concepts": [
+                {
+                  "slug": "mamba-and-state-space-models-ssms",
+                  "title": "Mamba and state-space models (SSMs)",
+                  "difficulty": "advanced",
+                  "hook": "Selective SSM; linear complexity with strong performance."
+                },
+                {
+                  "slug": "jamba-and-hybrid-architectures",
+                  "title": "Jamba and hybrid architectures",
+                  "difficulty": "advanced",
+                  "hook": "Mix attention and SSM; what's the right composition?"
+                },
+                {
+                  "slug": "vision-transformer-improvements-and-efficiency",
+                  "title": "Vision transformer improvements and efficiency",
+                  "difficulty": "advanced",
+                  "hook": "Patches, efficient tokens, hierarchical designs."
+                }
+              ]
+            },
+            "training-alignment-research": {
+              "label": "Training & Alignment Research",
+              "concepts": [
+                {
+                  "slug": "constitutional-ai-and-scalable-oversight",
+                  "title": "Constitutional AI and scalable oversight",
+                  "difficulty": "advanced",
+                  "hook": "Self-improving with principles; beyond RLHF."
+                },
+                {
+                  "slug": "representation-alignment-across-models",
+                  "title": "Representation alignment across models",
+                  "difficulty": "advanced",
+                  "hook": "When do different models learn similar features?"
+                },
+                {
+                  "slug": "inverse-scaling-and-capability-collapse",
+                  "title": "Inverse scaling and capability collapse",
+                  "difficulty": "advanced",
+                  "hook": "When do larger models perform worse?"
+                }
+              ]
+            },
+            "multimodal-reasoning-research": {
+              "label": "Multimodal & Reasoning Research",
+              "concepts": [
+                {
+                  "slug": "multimodal-fusion-architectures",
+                  "title": "Multimodal fusion architectures",
+                  "difficulty": "advanced",
+                  "hook": "How to fuse vision, language, audio; what fusion works?"
+                },
+                {
+                  "slug": "chain-of-thought-in-theory",
+                  "title": "Chain-of-thought in theory",
+                  "difficulty": "advanced",
+                  "hook": "Why does step-by-step reasoning work? Capacity arguments."
+                },
+                {
+                  "slug": "test-time-compute-research",
+                  "title": "Test-time compute research",
+                  "difficulty": "advanced",
+                  "hook": "Optimal allocation of compute at test vs train time."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        }
+      }
+    },
+    "verticals": {
+      "label": "Verticals",
+      "topics": {
+        "computer-vision": {
+          "label": "Computer Vision",
+          "subtopics": {
+            "image-classification-detection": {
+              "label": "Image Classification & Detection",
+              "concepts": [
+                {
+                  "slug": "cnn-architectures-resnet-efficientnet-vision-transformers",
+                  "title": "CNN architectures (ResNet, EfficientNet, Vision Transformers)",
+                  "difficulty": "intermediate",
+                  "hook": "Know tradeoffs: accuracy, latency, size."
+                },
+                {
+                  "slug": "object-detection-yolo-faster-r-cnn-retinanet",
+                  "title": "Object detection (YOLO, Faster R-CNN, RetinaNet)",
+                  "difficulty": "intermediate",
+                  "hook": "Bounding boxes; speed vs accuracy tradeoff."
+                },
+                {
+                  "slug": "data-augmentation-for-vision-autoaugment-randaugment",
+                  "title": "Data augmentation for vision (AutoAugment, RandAugment)",
+                  "difficulty": "intermediate",
+                  "hook": "Proven to improve robustness and generalization."
+                }
+              ]
+            },
+            "segmentation-dense-prediction": {
+              "label": "Segmentation & Dense Prediction",
+              "concepts": [
+                {
+                  "slug": "semantic-segmentation-fcn-u-net-deeplab",
+                  "title": "Semantic segmentation (FCN, U-Net, DeepLab)",
+                  "difficulty": "intermediate",
+                  "hook": "Per-pixel classification; downsampling + upsampling."
+                },
+                {
+                  "slug": "instance-segmentation-mask-r-cnn-detr",
+                  "title": "Instance segmentation (Mask R-CNN, DETR)",
+                  "difficulty": "intermediate",
+                  "hook": "Per-object + per-pixel; more complex than semantic."
+                }
+              ]
+            },
+            "vision-language-multimodal": {
+              "label": "Vision-Language & Multimodal",
+              "concepts": [
+                {
+                  "slug": "clip-and-vision-language-pre-training",
+                  "title": "CLIP and vision-language pre-training",
+                  "difficulty": "intermediate",
+                  "hook": "Contrastive learning; zero-shot capabilities."
+                },
+                {
+                  "slug": "visual-question-answering-vqa",
+                  "title": "Visual question answering (VQA)",
+                  "difficulty": "intermediate",
+                  "hook": "Understand images + answer questions."
+                },
+                {
+                  "slug": "document-understanding-and-ocr",
+                  "title": "Document understanding and OCR",
+                  "difficulty": "intermediate",
+                  "hook": "Extract text and structure from documents."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "recommender-systems": {
+          "label": "Recommender Systems",
+          "subtopics": {
+            "retrieval-ranking": {
+              "label": "Retrieval & Ranking",
+              "concepts": [
+                {
+                  "slug": "collaborative-filtering-user-user-item-item-matrix-factorization",
+                  "title": "Collaborative filtering (user-user, item-item, matrix factorization)",
+                  "difficulty": "intermediate",
+                  "hook": "Recommend based on user history."
+                },
+                {
+                  "slug": "content-based-filtering-and-features",
+                  "title": "Content-based filtering and features",
+                  "difficulty": "intermediate",
+                  "hook": "Recommend based on item features."
+                },
+                {
+                  "slug": "learning-to-rank-and-ranking-models",
+                  "title": "Learning-to-rank and ranking models",
+                  "difficulty": "intermediate",
+                  "hook": "Pairwise, listwise objectives."
+                },
+                {
+                  "slug": "two-tower-and-dual-encoder-models",
+                  "title": "Two-tower and dual-encoder models",
+                  "difficulty": "intermediate",
+                  "hook": "Efficient large-scale retrieval."
+                }
+              ]
+            },
+            "advanced-topics": {
+              "label": "Advanced Topics",
+              "concepts": [
+                {
+                  "slug": "temporal-dynamics-and-time-aware-recommendations",
+                  "title": "Temporal dynamics and time-aware recommendations",
+                  "difficulty": "advanced",
+                  "hook": "Users' preferences change; incorporate time."
+                },
+                {
+                  "slug": "cold-start-problem-and-exploration-exploitation",
+                  "title": "Cold-start problem and exploration-exploitation",
+                  "difficulty": "advanced",
+                  "hook": "New users/items; tradeoff exploration vs exploitation."
+                },
+                {
+                  "slug": "embedding-based-retrieval-at-scale",
+                  "title": "Embedding-based retrieval at scale",
+                  "difficulty": "advanced",
+                  "hook": "Efficient nearest-neighbor search in huge item catalogs."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "time-series-forecasting": {
+          "label": "Time Series & Forecasting",
+          "subtopics": {
+            "classical-methods": {
+              "label": "Classical Methods",
+              "concepts": [
+                {
+                  "slug": "arima-and-exponential-smoothing",
+                  "title": "ARIMA and exponential smoothing",
+                  "difficulty": "intermediate",
+                  "hook": "Stationary models; decomposition into trend/seasonality."
+                },
+                {
+                  "slug": "seasonality-and-trend-decomposition",
+                  "title": "Seasonality and trend decomposition",
+                  "difficulty": "intermediate",
+                  "hook": "Separate components; often easier to model separately."
+                }
+              ]
+            },
+            "deep-learning-for-time-series": {
+              "label": "Deep Learning for Time Series",
+              "concepts": [
+                {
+                  "slug": "lstmgru-for-sequential-modeling",
+                  "title": "LSTM/GRU for sequential modeling",
+                  "difficulty": "intermediate",
+                  "hook": "RNNs handle variable-length sequences."
+                },
+                {
+                  "slug": "transformers-for-time-series",
+                  "title": "Transformers for time series",
+                  "difficulty": "intermediate",
+                  "hook": "Attention enables long-range dependencies."
+                },
+                {
+                  "slug": "temporal-convolutional-networks-tcn",
+                  "title": "Temporal convolutional networks (TCN)",
+                  "difficulty": "intermediate",
+                  "hook": "Causal convolutions; parallel computation."
+                }
+              ]
+            },
+            "forecasting-uncertainty": {
+              "label": "Forecasting & Uncertainty",
+              "concepts": [
+                {
+                  "slug": "point-forecasts-and-confidence-intervals",
+                  "title": "Point forecasts and confidence intervals",
+                  "difficulty": "intermediate",
+                  "hook": "Quantile regression for intervals."
+                },
+                {
+                  "slug": "probabilistic-forecasting",
+                  "title": "Probabilistic forecasting",
+                  "difficulty": "intermediate",
+                  "hook": "Model full distribution; necessary for planning."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        },
+        "speech-recognition-audio": {
+          "label": "Speech Recognition & Audio",
+          "subtopics": {
+            "audio-representation": {
+              "label": "Audio Representation",
+              "concepts": [
+                {
+                  "slug": "mel-spectrogram-and-time-frequency-features",
+                  "title": "Mel-spectrogram and time-frequency features",
+                  "difficulty": "intermediate",
+                  "hook": "Transform audio into visual-like representation."
+                },
+                {
+                  "slug": "audio-augmentation-techniques",
+                  "title": "Audio augmentation techniques",
+                  "difficulty": "intermediate",
+                  "hook": "SpecAugment, mix-up."
+                }
+              ]
+            },
+            "speech-models": {
+              "label": "Speech Models",
+              "concepts": [
+                {
+                  "slug": "asr-automatic-speech-recognition",
+                  "title": "ASR (Automatic Speech Recognition)",
+                  "difficulty": "intermediate",
+                  "hook": "Convert speech to text; CTC or attention-based."
+                },
+                {
+                  "slug": "whisper-and-large-speech-models",
+                  "title": "Whisper and large speech models",
+                  "difficulty": "intermediate",
+                  "hook": "Robust, multilingual speech recognition."
+                },
+                {
+                  "slug": "speaker-recognition-and-speaker-embeddings",
+                  "title": "Speaker recognition and speaker embeddings",
+                  "difficulty": "intermediate",
+                  "hook": "Identify speakers; similarity-based."
+                }
+              ]
+            }
+          },
+          "concepts": []
+        }
+      }
+    }
+  }
+}

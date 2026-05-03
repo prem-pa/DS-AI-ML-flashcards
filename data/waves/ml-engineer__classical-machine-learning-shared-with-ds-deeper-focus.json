@@ -1,0 +1,956 @@
+[
+  {
+    "slug": "decision-tree-construction-information-gain-gini-impurity",
+    "title": "Decision tree construction (Information Gain, Gini impurity)",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "difficulty": "intermediate",
+    "tags": [
+      "trees",
+      "splitting-criteria",
+      "feature-selection",
+      "entropy",
+      "impurity"
+    ],
+    "aliases": [
+      "tree splitting",
+      "feature selection in trees",
+      "information theory"
+    ],
+    "wikilinks": [
+      "entropy-information-theory",
+      "gini-impurity-vs-entropy",
+      "optimal-binary-splits",
+      "id3-c45-cart"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/tree.html",
+        "label": "scikit-learn Tree docs"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Decision_tree_learning",
+        "label": "Wikipedia Decision Trees"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nDecision trees recursively partition the feature space by selecting splits that maximally reduce impurity. Two common splitting criteria are Information Gain (based on entropy) and Gini impurity. Information Gain measures the reduction in entropy after a split, while Gini measures the probability of misclassification if you randomly labeled a sample according to the class distribution.\n\n## Detail\n\n**Information Gain (Entropy-based):**\n- Entropy: H(S) = -Σ p_i * log2(p_i)\n- Information Gain = H(parent) - (weighted_sum of H(children))\n- Favors balanced splits; higher computational cost due to logarithm\n\n**Gini Impurity:**\n- Gini(S) = 1 - Σ p_i²\n- Computationally simpler (no logarithm); slightly less aggressive than entropy\n- CART algorithm uses Gini by default\n\n**Engineering considerations:**\n- For large datasets with many classes, Gini is faster (no log computation)\n- Information Gain may rank features differently; choose based on domain knowledge\n- Splitting cost scales with feature cardinality; categorical features need encoding or special handling\n- In parallel tree construction (XGBoost), exact splits are approximated via histograms for memory efficiency\n\n**sklearn/xgboost defaults:**\n- sklearn Decision Tree: criterion='gini' by default\n- XGBoost: uses second-order derivatives for splitting\n\n```python\nfrom sklearn.tree import DecisionTreeClassifier\ndt = DecisionTreeClassifier(criterion='entropy', max_depth=5)\ndt.fit(X_train, y_train)\n```\n\n## Common gotchas / interview framings\n- Information Gain biases toward high-cardinality features (gain ratio is an alternative)\n- Splitting is greedy; does not guarantee global optimality\n- Ties in impurity reduction can lead to non-deterministic splits (random_state needed)\n- Histogram-based approximations in XGBoost/LightGBM trade exact splits for speed/memory",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is Gini impurity and how does it differ from entropy for tree splitting?",
+        "back": "Gini impurity = 1 - Σ(p_i²) measures probability of misclassification. Entropy = -Σ(p_i * log2(p_i)) measures information content. Gini is faster (no log) and slightly less aggressive; both are used in practice. CART uses Gini; ID3/C4.5 use entropy."
+      },
+      {
+        "type": "flip",
+        "front": "Why might histogram-based splitting in XGBoost/LightGBM be preferred over exact splits for large datasets?",
+        "back": "Histogram binning reduces memory footprint and speeds up split search. Exact splits require storing all feature values; histograms use O(bins) space instead of O(rows). Trade-off: slightly lower impurity reduction vs. major speed/memory gains, especially critical for distributed training."
+      },
+      {
+        "type": "mcq",
+        "front": "Which splitting criterion does scikit-learn's DecisionTreeClassifier use by default?",
+        "back": "CART algorithm uses Gini. Entropy can be set via criterion='entropy' parameter.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Entropy",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Gini impurity",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Information gain ratio",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Chi-square",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "mcq",
+        "front": "Information Gain biases toward features with high cardinality. What is the standard solution?",
+        "back": "Gain ratio divides information gain by the entropy of the split itself, penalizing high-cardinality features.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Use Gini instead",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Gain ratio (normalize by split info)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Reduce cardinality via encoding",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "All of the above",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "In XGBoost/LightGBM, why is the split search cost nearly independent of the number of training rows?",
+        "back": "Histogram-based splitting: build histograms once (O(rows * bins)), then scan histograms for best split (O(bins²)). Contrast with exact splitting (O(rows * sort + rows * features)). This enables efficient distributed training on high-volume data."
+      }
+    ]
+  },
+  {
+    "slug": "tree-depth-and-pruning-strategies",
+    "title": "Tree depth and pruning strategies",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "difficulty": "intermediate",
+    "tags": [
+      "regularization",
+      "overfitting",
+      "cost-complexity",
+      "depth-control",
+      "model-complexity"
+    ],
+    "aliases": [
+      "tree regularization",
+      "cost-complexity pruning",
+      "maxdepth tuning"
+    ],
+    "wikilinks": [
+      "regularization-principles",
+      "bias-variance-tradeoff",
+      "validation-strategies",
+      "hyperparameter-tuning"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/tree.html#minimal-cost-complexity-pruning",
+        "label": "sklearn Minimal Cost-Complexity Pruning"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Pruning_(decision_trees)",
+        "label": "Wikipedia Pruning"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nUnconstrained trees overfit. Pruning removes splits that don't reduce error enough to justify the added complexity. Cost-complexity pruning uses a principled tradeoff: error_rate(T) + α * |leaves(T)|, where α controls depth vs. accuracy.\n\n## Detail\n\n**Pre-pruning (early stopping):**\n- Stop splitting when impurity reduction < threshold\n- Fast but suboptimal (greedy decisions prevent future good splits)\n\n**Post-pruning (cost-complexity):**\n- Grow full tree, then recursively remove splits\n- Cost-complexity parameter α: from 0 (full tree) to ∞ (single node)\n- Use cross-validation to find optimal α\n\n**Max depth control:**\n- Simple hyperparameter: limits tree height\n- Parallel and distributed systems prefer shallow trees (lower communication overhead, better cache locality)\n- XGBoost/LightGBM default max_depth=6; deep trees require careful tuning\n\n**Engineering considerations:**\n- **Memory**: Full tree with depth d, n_features can use O(2^d) nodes in worst case\n- **GPU inference**: Shallow trees fit in GPU memory/cache better\n- **Distributed training**: Deeper trees = more iterations, communication overhead grows\n- **Online learning**: Cannot post-prune; use max_depth, min_samples_leaf\n\n**In XGBoost/LightGBM:**\n- Leaf-wise growth (LightGBM) can create very deep, unbalanced trees → require strict max_depth\n- Level-wise growth (XGBoost default) is more balanced but may stop early\n\n```python\nfrom sklearn.tree import DecisionTreeClassifier\nfrom sklearn.model_selection import cross_val_score\n\ndt = DecisionTreeClassifier(random_state=42)\npath = dt.cost_complexity_pruning_path(X_train, y_train)\nalpha_values = path.ccp_alphas\n\nfor alpha in alpha_values:\n    dt_pruned = DecisionTreeClassifier(ccp_alpha=alpha, random_state=42)\n    scores = cross_val_score(dt_pruned, X_train, y_train, cv=5)\n```\n\n## Common gotchas / interview framings\n- Pre-pruning with greedy threshold can miss optimal trees\n- Cost-complexity pruning requires enough validation data to tune α reliably\n- Depth limits interact with feature count and sample size; no universal optimal value\n- GPU/TPU inference: very deep trees may not fit in memory; shallow high-width trees preferred",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is cost-complexity pruning and how does it differ from max_depth limiting?",
+        "back": "Cost-complexity pruning uses error_rate + α * |leaves| to prune after full tree growth; principled, requires CV to tune α. Max_depth is a simple constraint preventing growth. Cost-complexity is more flexible but slower; max_depth is faster and preferred in production where simplicity matters."
+      },
+      {
+        "type": "flip",
+        "front": "Why are shallow trees preferred in distributed and GPU-based systems?",
+        "back": "Shallow trees: (1) lower communication overhead in distributed training, (2) better GPU cache locality, (3) faster inference, (4) easier to parallelize split search. Deep trees require more synchronization and memory per node."
+      },
+      {
+        "type": "mcq",
+        "front": "scikit-learn's post-pruning method uses which cost-complexity criterion?",
+        "back": "Minimal cost-complexity pruning (ccp_alpha) uses the formula: Error(T) + ccp_alpha * num_leaves(T).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "error_rate + α * depth",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "error_rate + α * number_of_leaves",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "entropy + α * num_nodes",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "gini + α * max_depth",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why might leaf-wise tree growth (LightGBM) require stricter max_depth control than level-wise (XGBoost)?",
+        "back": "Leaf-wise recursively splits the best leaf, creating very deep, unbalanced trees. Without max_depth limit, can grow extremely deep. Level-wise grows balanced trees, limiting natural depth, so less prone to overfitting from depth alone."
+      },
+      {
+        "type": "mcq",
+        "front": "In online learning (streaming data), which pruning strategy is feasible?",
+        "back": "Post-pruning requires seeing the full tree first; online learning must decide splits immediately. Use max_depth, min_samples_leaf, or min_impurity_decrease.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Cost-complexity post-pruning",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Pre-pruning with depth/leaf limits",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Re-growing from scratch each batch",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "No pruning possible",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "random-forest-bagging-and-oob-error",
+    "title": "Random forest: bagging and OOB error",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "difficulty": "intermediate",
+    "tags": [
+      "ensemble",
+      "bagging",
+      "bootstrap",
+      "variance-reduction",
+      "oob-validation"
+    ],
+    "aliases": [
+      "bootstrap aggregation",
+      "out-of-bag error",
+      "ensemble trees"
+    ],
+    "wikilinks": [
+      "ensemble-methods",
+      "bootstrap-sampling",
+      "variance-reduction",
+      "feature-subsampling"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/ensemble.html#forests",
+        "label": "sklearn Random Forest"
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Random_forest",
+        "label": "Wikipedia Random Forest"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nRandom forests reduce variance by training many deep trees on bootstrap samples and averaging predictions. OOB error estimates generalization without a separate validation set: ~1/3 of rows are excluded from each tree and used for validation.\n\n## Detail\n\n**Bootstrap Aggregation (Bagging):**\n- Sample rows with replacement n_samples = n rows\n- On average, each bootstrap contains ~63.2% unique rows; ~36.8% are out-of-bag (OOB)\n- Train independent trees on each bootstrap\n- Aggregate via majority vote (classification) or mean (regression)\n\n**OOB Error Estimation:**\n- For each sample, predict using only trees where it was OOB\n- Average OOB predictions = unbiased generalization estimate\n- Free validation; no need for separate holdout set\n- Variance is higher than cross-validation but unbiased\n\n**Feature Subsampling:**\n- sqrt(n_features) for classification, n_features/3 for regression\n- Decorrelates trees; increases stability and generalization\n- Reduces computational cost per tree\n\n**Engineering considerations:**\n- **Parallelization**: Trees are independent → embarrassingly parallel\n- **Memory**: n_trees * tree_size; 100-1000 trees typical; large datasets → reduced max_depth\n- **Warm-start**: sklearn supports iterative tree addition (useful for online scenarios)\n- **GPU acceleration**: Tree training parallelizable, but Random Forest sequential aggregation bottleneck\n- **Feature importance**: Mean decrease in impurity (MDI) or OOB permutation importance\n\n```python\nfrom sklearn.ensemble import RandomForestClassifier\n\nrf = RandomForestClassifier(\n    n_estimators=100,\n    max_depth=15,\n    max_samples=0.632,\n    oob_score=True,\n    n_jobs=-1\n)\nrf.fit(X_train, y_train)\nprint(f\"OOB score: {rf.oob_score_}\")\n```\n\n## Common gotchas / interview framings\n- OOB error estimate has higher variance than CV; don't rely solely for hyperparameter tuning\n- Feature importance via MDI can be biased toward high-cardinality features (use permutation importance)\n- Warm-start reduces variance incrementally; useful for adaptive ensemble sizing\n- Max_depth in Random Forest is not a bottleneck (unlike single trees); default is unlimited\n- Correlated features: feature subsampling helps, but redundant features still reduce performance",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What fraction of rows are out-of-bag in a bootstrap sample of size n?",
+        "back": "Approximately 36.8% (1 - (1 - 1/n)^n ≈ 1 - 1/e ≈ 0.368). Useful for free validation without holdout set."
+      },
+      {
+        "type": "flip",
+        "front": "Why does random forest feature subsampling improve generalization?",
+        "back": "Subsampling decorrelates trees. If one feature is very strong, all trees use it, leading to correlated predictions. Forcing feature diversity reduces correlation, lowering ensemble variance. sqrt(n_features) for classification is a principled choice."
+      },
+      {
+        "type": "mcq",
+        "front": "In scikit-learn's RandomForestClassifier, what is the default max_depth?",
+        "back": "Unlike single Decision Trees, Random Forests allow unlimited depth by default. Variance is controlled via ensemble averaging and feature subsampling, not depth limits.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "6",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "10",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "None (unlimited)",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "sqrt(n_samples)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does OOB error relate to cross-validation? Can it replace CV?",
+        "back": "OOB is an unbiased estimator like CV but with higher variance (no aggregation across folds). Good for quick estimates, but higher variance makes it risky for hyperparameter tuning. Typically use both: OOB for quick checks, CV for final validation."
+      },
+      {
+        "type": "mcq",
+        "front": "Which is more reliable for feature importance in Random Forest: Mean Decrease Impurity (MDI) or Permutation Importance?",
+        "back": "MDI biases toward high-cardinality features. Permutation importance uses OOB samples to measure actual prediction change when a feature is shuffled.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "MDI (faster)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Permutation (less biased)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Both equally",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Neither",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "gradient-boosting-mechanics-loss-gradient-residuals",
+    "title": "Gradient boosting mechanics (loss, gradient, residuals)",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "difficulty": "intermediate",
+    "tags": [
+      "boosting",
+      "gradient-descent",
+      "loss-functions",
+      "residuals",
+      "sequential-learning"
+    ],
+    "aliases": [
+      "boosting algorithm",
+      "sequential tree fitting",
+      "functional gradient descent"
+    ],
+    "wikilinks": [
+      "loss-functions-mse-cross-entropy-focal-loss",
+      "optimization-algorithms-sgd-momentum-adam-adamw",
+      "second-order-methods"
+    ],
+    "sources": [
+      {
+        "url": "https://scikit-learn.org/stable/modules/ensemble.html#gradient-boosting",
+        "label": "sklearn Gradient Boosting"
+      },
+      {
+        "url": "https://arxiv.org/abs/1603.02754",
+        "label": "XGBoost Paper"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nGradient boosting sequentially fits weak learners (usually shallow trees) to residuals of the previous model. Each tree reduces loss by moving in the negative gradient direction. Mathematically: F_t = F_{t-1} + α * argmin_h Σ L(y_i, F_{t-1}(x_i) + h(x_i)).\n\n## Detail\n\n**Loss and Gradients:**\n- Regression (L2 loss): residual = y - F(x); gradient = -(y - F(x))\n- Classification (log loss): gradient = -(y - σ(F(x)))\n- Custom losses: gradient defines update direction, second derivative (hessian) optimizes step size\n\n**Residuals vs. Gradients:**\n- For squared loss, gradient = residual; tree fits residuals directly\n- For non-squared losses, tree fits gradient (or gradient + Newton step with hessian)\n\n**Second-order optimization (XGBoost/LightGBM):**\n- Use both first (gradient) and second (hessian) derivatives for split scoring\n- Hessian weights gradients by confidence: high-loss samples weighted more\n- Enables faster convergence and better handling of imbalanced data\n\n**Shrinkage (learning rate):**\n- F_t = F_{t-1} + η * h_t, where η ∈ (0, 1)\n- Slows learning, reduces overfitting, improves generalization\n- Typical range: 0.01–0.1; lower requires more trees\n\n**Engineering considerations:**\n- **Memory**: Store F_{t-1} predictions during tree fitting; for large n, can be bottleneck\n- **Distributed training**: Gradient/hessian computation parallelizable; tree fitting sequential\n- **GPU acceleration**: Gradient computation and histogram building on GPU; tree construction on GPU challenging\n- **Batch vs. online**: GBM inherently batch (needs full dataset for loss). Online GBM uses stochastic gradients.\n- **Early stopping**: Monitor validation loss; stop if no improvement for N rounds\n\n```python\nfrom sklearn.ensemble import GradientBoostingClassifier\n\ngb = GradientBoostingClassifier(\n    loss='log_loss',\n    learning_rate=0.1,\n    n_estimators=100,\n    max_depth=5,\n    validation_fraction=0.1,\n    n_iter_no_change=10\n)\ngb.fit(X_train, y_train)\n```\n\n## Common gotchas / interview framings\n- Learning rate and n_estimators are not independent; smaller learning rate requires more trees\n- Gradients measure average direction; for imbalanced data, hessians (weights) matter more\n- Gradient computation is data-intensive (read all predictions); distributed systems must minimize communication\n- Early stopping on validation loss is critical; without it, GBM will overfit aggressively\n- Second-order methods (Newton) faster but require hessian computation; first-order (gradient) more flexible",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "In gradient boosting, what is the relationship between loss gradients and residuals?",
+        "back": "For squared loss, gradient = negative residual. For other losses (log, hinge), gradient ≠ residual. XGBoost/LightGBM use gradients + hessians for weighted fitting, not raw residuals."
+      },
+      {
+        "type": "flip",
+        "front": "Why does XGBoost use second-order (hessian) information, not just first-order (gradient)?",
+        "back": "Hessians weight gradient updates: high-loss samples get more weight. Enables Newton-like steps for faster convergence, better handling of class imbalance, and more stable optimization vs. pure gradient descent."
+      },
+      {
+        "type": "mcq",
+        "front": "In distributed gradient boosting, which step is the main bottleneck?",
+        "back": "Computing gradients requires reading all predictions from the previous model across workers. Tree construction is sequential anyway. With efficient hardware (GPU), gradient computation is the sync point.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Gradient/hessian computation",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "Tree construction",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Prediction aggregation",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Data loading",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How do learning rate and number of trees interact in gradient boosting?",
+        "back": "η and n_estimators are inversely related. Small η requires more trees for same total update magnitude. Typical: η=0.1 with 100-500 trees, or η=0.01 with 1000+ trees. Lower learning rate = more stable generalization but longer training."
+      },
+      {
+        "type": "mcq",
+        "front": "Why is early stopping crucial in gradient boosting?",
+        "back": "GBM fits sequentially; without early stopping, training loss always decreases, but validation loss rises after the optimal stopping point. Early stopping monitors validation loss to detect this inflection.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "To save computation",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "To prevent overfitting via validation monitoring",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "To speed up distributed training",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "To reduce memory usage",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "lightgbm-and-xgboost-tuning",
+    "title": "LightGBM and XGBoost tuning",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "difficulty": "intermediate",
+    "tags": [
+      "hyperparameter-tuning",
+      "tree-growth",
+      "memory-efficiency",
+      "gpu-acceleration",
+      "distributed-training"
+    ],
+    "aliases": [
+      "boosting-tuning",
+      "leaf-wise-vs-level-wise",
+      "histogram-based-splitting"
+    ],
+    "wikilinks": [
+      "gradient-boosting-mechanics-loss-gradient-residuals",
+      "xgboost-gpu-acceleration",
+      "lightgbm-distributed-training"
+    ],
+    "sources": [
+      {
+        "url": "https://apxml.com/posts/xgboost-vs-lightgbm-vs-catboost",
+        "label": "XGBoost vs LightGBM vs CatBoost"
+      },
+      {
+        "url": "https://medium.com/@rajkiranrao205/xgboost-vs-lightgbm-vs-catboost-a-practical-comparison-with-coffee-cats-code-5fab396ed39d",
+        "label": "Medium: Practical Comparison"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nXGBoost and LightGBM are production-grade gradient boosting libraries. Key difference: XGBoost grows trees level-wise (balanced), LightGBM grows leaf-wise (unbalanced but depth-optimized). LightGBM is ~7x faster; XGBoost more tunable. CatBoost excels with categorical features.\n\n## Detail\n\n**Tree growth strategies:**\n- **XGBoost (level-wise)**: Grows all nodes at depth d before depth d+1. Balanced trees, naturally stable, but may stop early\n- **LightGBM (leaf-wise)**: Grows best leaf at any depth. Converges faster, deeper trees, requires max_depth control to prevent overfitting\n\n**Histogram-based approximation:**\n- Both use binning to reduce split search cost from O(rows) to O(bins)\n- XGBoost: max_bin=256 (default)\n- LightGBM: max_bin=255, often leaves=31\n- Trade-off: coarser histograms (fewer bins) = faster but lower accuracy\n\n**Key hyperparameters:**\n- `learning_rate` (eta): 0.01–0.3; smaller = more stable, needs more trees\n- `n_estimators`: 100–1000; monitor early stopping\n- `max_depth`: XGBoost default 6, LightGBM default unlimited (must set)\n- `subsample`: 0.5–1.0; row subsampling reduces overfitting\n- `colsample_bytree`: 0.5–1.0; feature subsampling per tree\n- `min_child_weight` (XGBoost) / `min_data_in_leaf` (LightGBM): minimum samples to split; larger = more conservative\n- `lambda` (L2) / `alpha` (L1): regularization; default 1.0\n\n**GPU acceleration:**\n- XGBoost: gpu_hist device='gpu'; computes histograms on GPU\n- LightGBM: device_type='gpu'; similar, but fewer optimizations\n- Speedup: 10–50x for large datasets; overhead for small data\n\n**Distributed training:**\n- XGBoost: xgboost.distributed.run or Spark integration\n- LightGBM: Spark ML, Dask, native distributed training\n- LightGBM typically 2x faster in distributed settings\n\n**Engineering considerations:**\n- **Memory**: LightGBM uses less (leaf-wise, less sync overhead)\n- **Categorical features**: CatBoost native support; XGBoost/LightGBM need encoding (target encoding or one-hot)\n- **Feature importance**: Use SHAP for stability; feature_importance_ is biased\n- **Imbalanced data**: scale_pos_weight (XGBoost) or is_unbalance (LightGBM)\n\n```python\nimport xgboost as xgb\nimport lightgbm as lgb\n\n# XGBoost\nxgb_model = xgb.XGBClassifier(\n    learning_rate=0.1,\n    n_estimators=100,\n    max_depth=6,\n    subsample=0.8,\n    colsample_bytree=0.8,\n    tree_method='hist',\n    device='gpu',\n)\n\n# LightGBM\nlgb_model = lgb.LGBMClassifier(\n    learning_rate=0.1,\n    n_estimators=100,\n    max_depth=5,\n    num_leaves=31,\n    subsample=0.8,\n    colsample_bytree=0.8,\n    device_type='gpu',\n)\n```\n\n## Common gotchas / interview framings\n- LightGBM max_depth=unlimited default → will overfit massively; always set explicitly\n- Leaf-wise trees appear smaller on paper but can be deeper; compare via tree depth metric\n- GPU training is not always faster: data transfer overhead matters; typically beneficial for n_rows > 100k\n- Distributed training: LightGBM favors AllReduce (better for wide trees); XGBoost favors RDD (more flexible)\n- Feature importance via split count is biased; use permutation or SHAP",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key difference between XGBoost's level-wise and LightGBM's leaf-wise tree growth?",
+        "back": "Level-wise: grows all nodes at depth d before d+1. Balanced, stable, but slower. Leaf-wise: grows the best leaf at any depth. Faster convergence, deeper trees, requires max_depth control. LightGBM ~7x faster but needs careful tuning."
+      },
+      {
+        "type": "mcq",
+        "front": "In LightGBM, why is max_depth critical even though it seems less emphasized than in XGBoost?",
+        "back": "Leaf-wise recursively splits the best leaf, bypassing depth constraints. Unlimited max_depth = extremely deep, overfit trees. Always set max_depth explicitly in LightGBM.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Leaf-wise growth can create very deep, unbalanced trees without it",
+            "correct": true
+          },
+          {
+            "key": "b",
+            "text": "It controls memory usage",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "It's not critical; LightGBM handles depth automatically",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "It interacts with learning_rate",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "When is GPU acceleration beneficial in XGBoost/LightGBM, and when is it not?",
+        "back": "Beneficial: n_rows > 100k, many trees, small max_depth (few histograms per tree). Not beneficial: small datasets (data transfer overhead dominates), very deep trees (less GPU parallelism). Typical speedup: 10–50x on large tabular data."
+      },
+      {
+        "type": "mcq",
+        "front": "In distributed gradient boosting (LightGBM on Spark), which operation requires all-reduce synchronization?",
+        "back": "Each worker computes local histograms, then all-reduce aggregates them globally. This is the main synchronization point in distributed training.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Tree splitting",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Gradient/hessian computation",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Prediction on validation set",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Feature engineering",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why is feature importance via split count biased in tree ensembles?",
+        "back": "High-cardinality features naturally have more splits. Importance should measure prediction impact, not usage frequency. Permutation importance (shuffle feature, measure error increase) or SHAP (average marginal contribution) are more reliable."
+      }
+    ]
+  },
+  {
+    "slug": "shap-and-feature-importance",
+    "title": "SHAP and feature importance",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "difficulty": "intermediate",
+    "tags": [
+      "interpretability",
+      "explainability",
+      "feature-importance",
+      "shapley-values",
+      "model-agnostic"
+    ],
+    "aliases": [
+      "shapley-additive-explanations",
+      "permutation-importance",
+      "tree-shap"
+    ],
+    "wikilinks": [
+      "interpretable-ml",
+      "game-theory-shapley",
+      "feature-selection-vs-importance"
+    ],
+    "sources": [
+      {
+        "url": "https://github.com/slundberg/shap",
+        "label": "SHAP GitHub"
+      },
+      {
+        "url": "https://arxiv.org/abs/1705.07874",
+        "label": "SHAP Paper (Lundberg & Lee)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nSHAP (SHapley Additive exPlanations) assigns each feature a value indicating its contribution to pushing the prediction away from the base value. Based on game theory: Shapley values fairly distribute the prediction among features.\n\n## Detail\n\n**Shapley Value concept:**\n- Coalition game: each feature is a 'player'; prediction is the 'payoff'\n- Shapley value: average marginal contribution across all orderings of features\n- Fair allocation: satisfies efficiency, symmetry, null player, additivity axioms\n- Computation: O(2^n_features) for exact values (intractable for high-dim)\n\n**TreeSHAP (fast for tree models):**\n- Polynomial-time algorithm O(n_trees * n_features) for trees\n- Exactly computes Shapley values by traversing tree structure\n- Available in xgboost.explain, lightgbm, sklearn\n\n**SHAP approximations:**\n- Kernel SHAP: model-agnostic, samples feature coalitions\n- Permutation SHAP: samples permutation orders\n- Gradient SHAP: uses model gradients (fast for neural networks)\n- DeepSHAP: combines Integrated Gradients + SHAP\n\n**Interpretation:**\n- SHAP value > 0: pushes prediction up (toward positive class)\n- SHAP value < 0: pushes prediction down\n- |SHAP value|: magnitude of impact\n- Base value: average model output; prediction = base_value + Σ SHAP_i\n\n**vs. other importance measures:**\n- **Permutation importance**: Measures error increase when feature is shuffled; biased by feature correlation\n- **MDI (Mean Decrease Impurity)**: Counts split frequency; biased toward high-cardinality features\n- **SHAP**: Model-agnostic, theoretically justified, computationally expensive\n\n**Engineering considerations:**\n- **Computational cost**: TreeSHAP is fast for tree models. Kernel/Permutation SHAP slow for large n or complex models\n- **Feature interactions**: SHAP captures interactions implicitly; Interaction SHAP values available but expensive\n- **Baseline selection**: Base value choice affects interpretation; typically use training mean\n- **Local vs. global**: Individual SHAP values (local); mean |SHAP| across dataset (global feature importance)\n- **Distributed computation**: SHAP values independent per sample; parallelizable\n\n```python\nimport shap\nimport xgboost as xgb\n\nmodel = xgb.XGBClassifier().fit(X_train, y_train)\nexplainer = shap.TreeExplainer(model)\nshap_values = explainer.shap_values(X_test)\n\nshap.summary_plot(shap_values, X_test, plot_type='bar')\nshap.force_plot(explainer.expected_value, shap_values[0], X_test.iloc[0])\n```\n\n## Common gotchas / interview framings\n- SHAP is not causal; correlation vs. causation applies\n- TreeSHAP fast for trees; Kernel/Permutation SHAP slow; choose algorithm based on model type\n- Feature correlation: if features correlated, SHAP values can be counterintuitive (allocation depends on ordering)\n- Baseline value choice matters: change it, SHAP values change; select consistently\n- Imbalanced classes: SHAP base value is class-agnostic; consider stratified baseline",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key advantage of SHAP over permutation importance and MDI?",
+        "back": "SHAP satisfies Shapley value axioms (efficiency, symmetry, null player): theoretically justified fair allocation of prediction to features. Permutation importance biased by feature correlation; MDI biased toward high-cardinality features."
+      },
+      {
+        "type": "mcq",
+        "front": "What is the computational complexity of TreeSHAP for tree models?",
+        "back": "TreeSHAP exploits tree structure to compute Shapley values efficiently. Can be computed in polynomial time by traversing paths in the tree ensemble.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "O(2^n_features) exponential",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "O(n_trees * n_features) polynomial",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "O(n_samples * n_features)",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "O(n_trees^2)",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why can SHAP values be counterintuitive when features are highly correlated?",
+        "back": "Shapley values depend on ordering of features in coalitions. Correlated features share credit based on marginal contribution within coalitions, not on correlation strength. Swapping correlated features' order can swap their SHAP value signs."
+      },
+      {
+        "type": "mcq",
+        "front": "Which SHAP approximation is most suitable for fast GPU-accelerated deep neural networks?",
+        "back": "Gradient SHAP uses model gradients, fast on GPU. TreeSHAP requires trees; Kernel/Permutation SHAP require many model evaluations.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "TreeSHAP",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Kernel SHAP",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "Gradient SHAP / DeepSHAP",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "Permutation SHAP",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How do you interpret SHAP values quantitatively in a binary classification task?",
+        "back": "prediction = base_value + Σ SHAP_i. Base value is average model output (e.g., 0.5 for balanced dataset). Positive SHAP_i pushes toward class 1; negative toward class 0. |SHAP_i| indicates magnitude of impact."
+      }
+    ]
+  },
+  {
+    "slug": "data-augmentation",
+    "title": "Data augmentation",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "difficulty": "intermediate",
+    "tags": [
+      "training-data-expansion",
+      "robustness",
+      "task-specific-transforms",
+      "synthetic-data"
+    ],
+    "aliases": [
+      "synthetic-data-generation",
+      "domain-specific-augmentation",
+      "augmentation-policies"
+    ],
+    "wikilinks": [
+      "mixup-and-cutmix",
+      "label-smoothing",
+      "dropout-and-batch-normalization"
+    ],
+    "sources": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Data_augmentation",
+        "label": "Wikipedia Data Augmentation"
+      },
+      {
+        "url": "https://github.com/albumentations-team/albumentations",
+        "label": "Albumentations Library"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nData augmentation: apply task-preserving transformations (rotations, crops, brightness changes) to training data, creating synthetic examples. Increases effective dataset size, improves robustness to variations, reduces overfitting.\n\n## Detail\n\n**Image augmentation:**\n- Geometric: rotation, scaling, translation, shear, flip\n- Photometric: brightness, contrast, saturation, hue shifts\n- Mixup, CutMix: blend/mix images\n- RandAugment: randomly select from predefined ops, apply sequentially\n\n**Text augmentation:**\n- Synonym replacement, random insertion, random swap, random deletion (EDA)\n- Backtranslation: translate to another language and back\n- Token masking: mask/replace tokens (used in BERT pretraining)\n- Paraphrase generation\n\n**Tabular augmentation:**\n- Feature engineering / synthetic features\n- SMOTE (Synthetic Minority Over-sampling): interpolate minority class samples\n- Noise injection: add Gaussian noise to features\n- Mixup: interpolate feature vectors\n\n**Online vs. offline:**\n- Online: apply transforms each epoch → different views, unlimited effective data\n- Offline: pre-computed augmented samples, stored → fixed augmented dataset\n- Online preferred: lower memory, more variation\n\n**AutoAugment & RandAugment:**\n- AutoAugment: search policy space to find best augmentation ops\n- RandAugment: simplified version; search magnitude + probability\n- TrivialAugment: even simpler; random magnitude per op\n\n**Engineering considerations:**\n- **Computational cost**: Online augmentation adds CPU/GPU overhead each epoch\n- **Memory**: Pre-computed augmentation increases dataset size\n- **Batch normalization**: Can undo some augmentation effects (normalize away variations)\n- **Class imbalance**: SMOTE for minority class; careful not to overfit\n- **Domain knowledge**: Task-specific augmentation (medical imaging ≠ natural images)\n\n```python\nfrom albumentations import Compose, Rotate, GaussNoise, Normalize\nimport albumentations as A\n\ntransform = Compose([\n    A.Rotate(limit=30, p=0.8),\n    A.GaussNoise(p=0.2),\n    A.Normalize(),\n])\n\n# SMOTE for tabular imbalanced data\nfrom imblearn.over_sampling import SMOTE\nsmote = SMOTE()\nX_resampled, y_resampled = smote.fit_resample(X_train, y_train)\n```\n\n## Common gotchas / interview framings\n- Augmentation must preserve labels; overly aggressive transforms invalidate annotations\n- Test set: augmentation typically not used (evaluate on clean data for calibration)\n- SMOTE creates interpolated synthetic samples; can cause data leakage if not done within CV\n- Augmentation and batch norm interaction: strong augmentation with batch norm can hurt (norm changes per batch)\n- Domain mismatch: augmentation valid only if it represents real variations in deployment data",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "Why is online data augmentation preferred over offline (pre-computed) augmentation?",
+        "back": "Online: apply transforms each epoch → different augmented views of same sample, unlimited effective data, lower memory. Offline: fixed augmented dataset stored → less variation, higher memory, but faster (no on-the-fly computation)."
+      },
+      {
+        "type": "flip",
+        "front": "How does SMOTE help with imbalanced classification, and what is a key pitfall?",
+        "back": "SMOTE oversamples minority class by interpolating between nearest neighbors → balances class distribution. Pitfall: if done before train/test split, creates data leakage (synthetic samples can appear in test). Use within CV pipeline only."
+      },
+      {
+        "type": "mcq",
+        "front": "What is RandAugment and how does it differ from AutoAugment?",
+        "back": "AutoAugment: search space is large (operation selection + magnitude). RandAugment: randomly pick operations, search magnitude M and probability p (2D search, faster).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Same thing",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "RandAugment simplified: search magnitude + probability; AutoAugment searches full policy space",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "RandAugment requires manual tuning; AutoAugment automatic",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Both automated; RandAugment faster",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why should data augmentation be task-preserving, and how does this constraint affect design?",
+        "back": "Augmentation must not change ground truth label. Rotations okay for natural images (label invariant); rotation ≠ okay for digit recognition (6 → 9). Domain knowledge required: understand what variations are valid for your task."
+      },
+      {
+        "type": "mcq",
+        "front": "Should you apply augmentation to test/validation sets?",
+        "back": "Augmentation is a training technique. Test/val sets evaluate on realistic, clean examples to get unbiased generalization estimates. Augmentation in eval introduces artificial noise.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Always, to be consistent",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Never; evaluate on clean data for calibration and stability",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Only for classification, not regression",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Depends on dataset size",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "mixup-and-cutmix",
+    "title": "Mixup and CutMix",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "difficulty": "intermediate",
+    "tags": [
+      "data-augmentation",
+      "training-regularization",
+      "label-mixing",
+      "spatial-operations"
+    ],
+    "aliases": [
+      "sample-interpolation",
+      "spatial-cutmix",
+      "soft-label-mixing"
+    ],
+    "wikilinks": [
+      "data-augmentation",
+      "label-smoothing",
+      "training-robustness"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1710.09412",
+        "label": "Mixup Paper (Zhang et al.)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1905.04412",
+        "label": "CutMix Paper (Yun et al.)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nMixup: train on convex combinations of image pairs and their labels (soft interpolation). CutMix: mix spatial regions of images, label proportionally. Both improve generalization by encouraging linear behavior between examples and robustness to occlusion.\n\n## Detail\n\n**Mixup:**\n- x̃ = λ * x_i + (1 - λ) * x_j (blend two images)\n- ỹ = λ * y_i + (1 - λ) * y_j (soft labels)\n- λ ~ Beta(α, α), where α ∈ [0, ∞)\n- α small: λ ≈ 0 or 1 (near original samples)\n- α large: λ ≈ 0.5 (strong mixing)\n\n**Benefits of Mixup:**\n- Encourages model to learn linear interpolation between decision boundaries\n- Improves generalization by smoothing loss landscape\n- Implicit regularization: reduces overfitting\n- Works well with other losses (cross-entropy + Mixup effective)\n\n**CutMix:**\n- Replace rectangular region of image_i with region from image_j\n- Label proportional to area: y = (Area_retained / Total_area) * y_i + (Area_pasted / Total_area) * y_j\n- Spatial operation: preserves local structure better than Mixup\n- More realistic augmentation than Mixup (humans recognize occluded objects)\n\n**Cutmix implementation:**\n- Random box region in image_i\n- Crop corresponding region from image_j\n- Paste j's region into i's box\n- Compute λ = (H * W - H_box * W_box) / (H * W)\n\n**Comparison (Mixup vs. CutMix):**\n- Mixup: global blend, enforces linearity\n- CutMix: local spatial mix, more interpretable, empirically better for vision\n- Both: soft label mixing → regularization\n- CutMix better for object detection/localization (spatial information retained)\n\n**Interaction with other techniques:**\n- Label smoothing + Mixup: both soften targets (can compound)\n- Batch norm: Mixup works well (each sample still contributes independently)\n- Dropout: orthogonal techniques (can combine)\n\n**Engineering considerations:**\n- **Mixup α**: α=1 typical (uniform Beta); higher α more aggressive mixing\n- **CutMix box size**: fully random or constrained to reasonable range\n- **Probability**: apply Mixup/CutMix with p ∈ [0.5, 1.0] per batch\n- **Computational cost**: negligible (just interpolation/blending)\n- **Distributed training**: independent per-sample mixing; no synchronization needed\n- **Online learning**: Mixup/CutMix applied each epoch; compatible with streaming\n\n```python\nimport torch\nimport torch.nn.functional as F\n\ndef mixup(x, y, alpha=1.0):\n    batch_size = x.size(0)\n    index = torch.randperm(batch_size)\n    mixed_x = torch.zeros_like(x)\n    mixed_y = torch.zeros_like(y)\n    \n    lam = np.random.beta(alpha, alpha)\n    \n    for i in range(batch_size):\n        mixed_x[i] = lam * x[i] + (1 - lam) * x[index[i]]\n        mixed_y[i] = lam * y[i] + (1 - lam) * y[index[i]]\n    \n    return mixed_x, mixed_y\n\ndef cutmix(x, y, alpha=1.0):\n    batch_size = x.size(0)\n    index = torch.randperm(batch_size)\n    lam = np.random.beta(alpha, alpha)\n    \n    H, W = x.size(2), x.size(3)\n    cut_ratio = np.sqrt(1.0 - lam)\n    cut_h = int(H * cut_ratio)\n    cut_w = int(W * cut_ratio)\n    \n    # Random box\n    cx = np.random.randint(0, W)\n    cy = np.random.randint(0, H)\n    \n    bbx1 = np.clip(cx - cut_w // 2, 0, W)\n    bby1 = np.clip(cy - cut_h // 2, 0, H)\n    bbx2 = np.clip(cx + cut_w // 2, 0, W)\n    bby2 = np.clip(cy + cut_h // 2, 0, H)\n    \n    x[:, :, bby1:bby2, bbx1:bbx2] = x[index, :, bby1:bby2, bbx1:bbx2]\n    lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (H * W))\n    \n    mixed_y = lam * y + (1 - lam) * y[index]\n    return x, mixed_y\n```\n\n## Common gotchas / interview framings\n- Mixup assumes data lies on manifold; works well for images, less for sparse/tabular\n- CutMix requires spatial structure (images); doesn't apply directly to text/tabular\n- Label mixing causes soft targets; loss must handle soft labels (cross-entropy does)\n- Strong Mixup/CutMix can hurt clean accuracy; balance via probability p\n- Mixup α=1 (uniform Beta) is standard; different α for different tasks\n- Combination with label smoothing: both soften targets, can be redundant but often used together",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What is the key difference between Mixup and CutMix?",
+        "back": "Mixup: blend entire images (convex combination) → soft targets. CutMix: paste rectangular region → spatially localized mixing. CutMix better preserves spatial information; empirically superior for vision tasks."
+      },
+      {
+        "type": "mcq",
+        "front": "In Mixup, if λ ~ Beta(α, α), what happens as α → ∞?",
+        "back": "Beta(α, α) is symmetric. As α → ∞, distribution concentrates at 0.5. As α → 0, concentrates at edges (0, 1).",
+        "choices": [
+          {
+            "key": "a",
+            "text": "λ becomes 0 (minimal mixing)",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "λ becomes 1 (full original)",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "λ concentrates near 0.5 (maximum mixing)",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "λ uniformly distributed",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "Why does CutMix work better than Mixup for object detection/localization tasks?",
+        "back": "CutMix preserves spatial information: objects remain localized in pasted region. Mixup blends globally, destroying bounding box information. For detection, locality matters; CutMix more realistic (occlusion)."
+      },
+      {
+        "type": "flip",
+        "front": "Can you combine Mixup with label smoothing? Are they redundant?",
+        "back": "Both soften targets, so partially redundant. Label smoothing: all classes get small mass. Mixup: two classes get λ and (1-λ). Empirically, using both can help; slight redundancy is acceptable."
+      },
+      {
+        "type": "mcq",
+        "front": "In CutMix, how is the label adjusted when mixing two images?",
+        "back": "CutMix: region from image_i remains (area A), region from image_j pasted (area 1-A). Label: A*y_i + (1-A)*y_j.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Both labels fully preserved",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Proportional to area: λ=(retained_area / total_area)",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Average of labels",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Only one label used",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "label-smoothing",
+    "title": "Label smoothing",
+    "track": "ml-engineer",
+    "topic": "classical-machine-learning-shared-with-ds-deeper-focus",
+    "difficulty": "intermediate",
+    "tags": [
+      "soft-targets",
+      "regularization",
+      "calibration",
+      "cross-entropy",
+      "confidence-penalty"
+    ],
+    "aliases": [
+      "soft-label-mixing",
+      "target-smoothing",
+      "confidence-reduction"
+    ],
+    "wikilinks": [
+      "loss-functions-mse-cross-entropy-focal-loss",
+      "mixup-and-cutmix"
+    ],
+    "sources": [
+      {
+        "url": "https://arxiv.org/abs/1512.00567",
+        "label": "Rethinking Generalization (Zhang et al.)"
+      },
+      {
+        "url": "https://arxiv.org/abs/1906.02629",
+        "label": "Bag of Tricks (He et al.)"
+      }
+    ],
+    "explainer_md": "## Intuition\n\nLabel smoothing: replace one-hot labels with soft targets. Instead of y=1 for true class (0 for others), use y=(1-ε)/(n_classes) for non-true classes, and y=(1-ε) + ε/(n_classes) for true class. Prevents overconfidence, improves calibration.\n\n## Detail\n\n**Hard vs. soft labels:**\n- Hard: y = [0, 1, 0, 0] (one-hot, true class=1)\n- Soft: y = [0.01, 0.97, 0.01, 0.01] (ε=0.03, distributed uniformly)\n\n**Formulation:**\n- ỹ_i = {(ε / n_classes) if i ≠ true_class; (1 - ε) + (ε / n_classes) if i = true_class}\n- ε ∈ [0, 1], typically 0.01–0.1\n- ε=0: hard labels; ε=1: uniform (all classes equal)\n\n**Benefits:**\n- **Reduces overconfidence**: model learns to assign probability mass to incorrect classes\n- **Improves calibration**: predicted probabilities closer to true likelihoods\n- **Regularization effect**: penalizes large logits; acts as implicit L2 on outputs\n- **Better generalization**: soft targets reduce overfitting\n\n**Mathematical interpretation:**\n- With soft targets, cross-entropy becomes: L = -Σ ỹ_i * log(p_i)\n- Gradient includes contribution from non-true classes → prevents overfit-to-hard-labels\n- Equivalent to cross-entropy + regularization on logits\n\n**Interaction with other techniques:**\n- Mixup + label smoothing: both soften targets (can be redundant but often combined)\n- Dropout + label smoothing: orthogonal\n- Knowledge distillation: teacher's soft outputs → similar effect to label smoothing\n\n**Engineering considerations:**\n- **ε value**: task-dependent; 0.1 common for ImageNet, smaller for smaller datasets\n- **Number of classes**: with many classes, uniform mass spreads thin; ε=0.1 less aggressive than ε=0.1 in binary\n- **Class imbalance**: label smoothing may hurt minority class (assigns mass away)\n- **KL divergence metric**: label smoothing reduces KL between predicted and true distribution\n- **Calibration**: label smoothing improves Expected Calibration Error (ECE)\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass LabelSmoothingLoss(nn.Module):\n    def __init__(self, num_classes, smoothing=0.1):\n        super().__init__()\n        self.num_classes = num_classes\n        self.smoothing = smoothing\n        self.confidence = 1.0 - smoothing\n    \n    def forward(self, logits, labels):\n        log_probs = torch.log_softmax(logits, dim=1)\n        \n        # Soft target: high confidence on true class, uniform on others\n        with torch.no_grad():\n            true_dist = torch.zeros_like(log_probs)\n            true_dist.fill_(self.smoothing / (self.num_classes - 1))\n            true_dist.scatter_(1, labels.unsqueeze(1), self.confidence)\n        \n        return torch.mean(torch.sum(-true_dist * log_probs, dim=1))\n\n# Usage\ncriterion = LabelSmoothingLoss(num_classes=10, smoothing=0.1)\noutput = model(input)\nloss = criterion(output, target)\n```\n\n## Common gotchas / interview framings\n- Label smoothing ≠ soft labels from distillation; label smoothing uniform, distillation teacher-specific\n- ε too large: model learns to ignore labels (uniform distribution); typical ε=0.1\n- With class imbalance: label smoothing may hurt minority class (assigns mass away proportionally)\n- Calibration: label smoothing improves calibration but may reduce accuracy (tradeoff)\n- Not always beneficial: very noisy labels benefit; high-quality labels may not need smoothing\n- Interaction with dropout: both regularize; redundant but often combined",
+    "cards": [
+      {
+        "type": "flip",
+        "front": "What does label smoothing do, and why does it improve generalization?",
+        "back": "Replace one-hot with soft targets: uniform mass on non-true classes, high mass on true. Prevents overconfidence by penalizing large logits for incorrect classes. Implicit L2 regularization → better generalization and calibration."
+      },
+      {
+        "type": "mcq",
+        "front": "If label smoothing ε=0.1 and n_classes=10, what is the probability assigned to the true class?",
+        "back": "True class: (1 - ε) + ε/n_classes = 0.9 + 0.01 = 0.91. Others: ε/(n_classes - 1) = 0.01/9 ≈ 0.0011 each. Sum = 0.91 + 9*0.0011 = 1.0.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "0.9",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "0.91",
+            "correct": false
+          },
+          {
+            "key": "c",
+            "text": "0.919",
+            "correct": true
+          },
+          {
+            "key": "d",
+            "text": "1.0 - 0.1/9",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "type": "flip",
+        "front": "How does label smoothing interact with calibration, and what is the tradeoff?",
+        "back": "Label smoothing reduces confidence → improves calibration (predicted probs closer to true likelihoods). Tradeoff: may reduce accuracy (model less confident). Use when calibration matters (e.g., medical diagnosis); skip when accuracy is only metric."
+      },
+      {
+        "type": "flip",
+        "front": "Why might label smoothing hurt performance on datasets with many classes?",
+        "back": "With large n_classes, uniform smoothing spreads mass thin over non-true classes. Fixed ε becomes less aggressive relative to class count. May need smaller ε for large n_classes, or adaptive ε based on class count."
+      },
+      {
+        "type": "mcq",
+        "front": "What is the difference between label smoothing and knowledge distillation?",
+        "back": "Label smoothing: uniform mass on non-true classes. Distillation: teacher model generates soft targets (class-specific, contains more info). Different mechanisms, similar effect on regularization.",
+        "choices": [
+          {
+            "key": "a",
+            "text": "Same thing",
+            "correct": false
+          },
+          {
+            "key": "b",
+            "text": "Label smoothing: uniform targets; Distillation: teacher-specific soft targets",
+            "correct": true
+          },
+          {
+            "key": "c",
+            "text": "Distillation faster",
+            "correct": false
+          },
+          {
+            "key": "d",
+            "text": "Label smoothing only for classification",
+            "correct": false
+          }
+        ]
+      }
+    ]
+  }
+]

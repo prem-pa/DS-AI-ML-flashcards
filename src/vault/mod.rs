@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use crate::cli::Cli;
-use crate::{db, util};
+use crate::util;
 
 pub mod lint;
 pub mod parse;
@@ -16,10 +16,8 @@ pub struct SyncReport {
 
 pub fn sync(cli: &Cli) -> Result<SyncReport> {
     let vault = util::vault_path(cli)?;
-    let db_path = util::db_path(cli)?;
-    let mut conn = db::open(&db_path)?;
-    eprintln!("opened DB at {}", db_path.display());
-    eprintln!("vault root:    {}", vault.display());
+    let mut conn = util::open_db(cli)?;
+    eprintln!("vault root: {}", vault.display());
 
     let report = sync::sync_vault(&mut conn, &vault)?;
     eprintln!(

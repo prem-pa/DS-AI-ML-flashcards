@@ -15,9 +15,14 @@ pub struct Cli {
     pub vault: Option<PathBuf>,
 
     /// Path to the SQLite scheduling DB.
-    /// Defaults to ~/Library/Application Support/flashcards/flashcards.db on macOS.
+    /// If set, bypasses the profile system entirely.
     #[arg(long, global = true)]
     pub db: Option<PathBuf>,
+
+    /// Profile slug. Defaults to FLASHCARDS_PROFILE env var, then the last-used
+    /// profile. If none of those resolve, an interactive picker launches.
+    #[arg(long, global = true, env = "FLASHCARDS_PROFILE")]
+    pub profile: Option<String>,
 
     #[command(subcommand)]
     pub cmd: Option<Cmd>,
@@ -66,22 +71,23 @@ pub enum ResetScope {
 
 impl Cli {
     pub fn run(mut self) -> Result<()> {
-        let cmd = self.cmd.take().unwrap_or(Cmd::Review);
+        let cmd = self.cmd.take();
         match cmd {
-            Cmd::Review => ui::run_review(&self),
-            Cmd::Browse => ui::run_browse(&self),
-            Cmd::Sync => {
+            None => ui::run_menu(&self),
+            Some(Cmd::Review) => ui::run_review(&self),
+            Some(Cmd::Browse) => ui::run_browse(&self),
+            Some(Cmd::Sync) => {
                 let _ = vault::sync(&self)?;
                 Ok(())
             }
-            Cmd::Lint { dry_run } => vault::lint_cli(&self, dry_run),
-            Cmd::Stats => ui::run_stats(&self),
-            Cmd::Reset {
+            Some(Cmd::Lint { dry_run }) => vault::lint_cli(&self, dry_run),
+            Some(Cmd::Stats) => ui::run_stats(&self),
+            Some(Cmd::Reset {
                 scope,
                 track,
                 topic,
                 yes,
-            } => reset::run(&self, scope, track.as_deref(), topic.as_deref(), yes),
+            }) => reset::run(&self, scope, track.as_deref(), topic.as_deref(), yes),
         }
     }
 }

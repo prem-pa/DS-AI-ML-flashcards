@@ -2,6 +2,10 @@
 **/*.rs.bk
 Cargo.lock
 
+# Local cargo config — typically used to point target-dir off a cloud-synced
+# project root; absolute paths are user-specific so we don't track it.
+.cargo/
+
 # SQLite (DB lives in ~/Library/Application Support/flashcards/, but local dev artifacts may land here)
 *.db
 *.db-journal

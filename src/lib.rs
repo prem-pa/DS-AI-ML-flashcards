@@ -4,6 +4,7 @@
 
 pub mod cli;
 pub mod db;
+pub mod profile;
 pub mod render;
 pub mod reset;
 pub mod sched;

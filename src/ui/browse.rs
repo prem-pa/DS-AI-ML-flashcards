@@ -15,15 +15,28 @@ use crate::render;
 use super::term::TermGuard;
 
 pub fn run(conn: &Connection, cli: &Cli) -> Result<()> {
+    run_with_term(conn, cli, None)
+}
+
+pub fn run_with_term(
+    conn: &Connection,
+    cli: &Cli,
+    held_term: Option<&mut TermGuard>,
+) -> Result<()> {
     let cards = db::fetch_all(conn, 10_000)?;
     if cards.is_empty() {
         println!("No cards in DB. Run `flashcards sync` first.");
         return Ok(());
     }
-    let mut tg = TermGuard::enter()?;
-    let res = run_loop(&mut tg, conn, cli, cards);
-    drop(tg);
-    res
+    match held_term {
+        Some(tg) => run_loop(tg, conn, cli, cards),
+        None => {
+            let mut tg = TermGuard::enter()?;
+            let r = run_loop(&mut tg, conn, cli, cards);
+            drop(tg);
+            r
+        }
+    }
 }
 
 #[derive(Default)]

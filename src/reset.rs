@@ -7,7 +7,7 @@ use rusqlite::{params, Connection};
 use std::io::{self, Write};
 
 use crate::cli::{Cli, ResetScope};
-use crate::{db, util};
+use crate::util;
 
 pub fn run(
     cli: &Cli,
@@ -16,8 +16,7 @@ pub fn run(
     topic: Option<&str>,
     yes: bool,
 ) -> Result<()> {
-    let db_path = util::db_path(cli)?;
-    let mut conn = db::open(&db_path)?;
+    let mut conn = util::open_db(cli)?;
 
     // Filter clause + params reused by both COUNT and the writes.
     let (where_clause, scope_label) = build_filter_label(track, topic);

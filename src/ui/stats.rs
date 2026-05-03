@@ -10,11 +10,20 @@ use rusqlite::Connection;
 use super::term::TermGuard;
 
 pub fn run(conn: &Connection) -> Result<()> {
+    run_with_term(conn, None)
+}
+
+pub fn run_with_term(conn: &Connection, held_term: Option<&mut TermGuard>) -> Result<()> {
     let snapshot = compute(conn)?;
-    let mut tg = TermGuard::enter()?;
-    let res = run_loop(&mut tg, &snapshot);
-    drop(tg);
-    res
+    match held_term {
+        Some(tg) => run_loop(tg, &snapshot),
+        None => {
+            let mut tg = TermGuard::enter()?;
+            let r = run_loop(&mut tg, &snapshot);
+            drop(tg);
+            r
+        }
+    }
 }
 
 fn run_loop(tg: &mut TermGuard, snap: &Snapshot) -> Result<()> {

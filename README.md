@@ -18,22 +18,29 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --defaul
 Then from the project root:
 
 ```sh
-cargo build --release
+cargo build --release      # binary lands at target/release/flashcards
 ```
 
-The binary lands at `~/.cache/flashcards-target/release/flashcards` (the `.cargo/config.toml` redirects `target/` outside the Drive-synced project dir to avoid sync corruption).
-
-Optionally symlink it onto your PATH:
+If your project lives on a cloud-synced drive (Google Drive, iCloud, Dropbox), point the build out of the synced dir to avoid corrupted incremental artifacts:
 
 ```sh
-ln -s ~/.cache/flashcards-target/release/flashcards ~/.local/bin/flashcards
+export CARGO_TARGET_DIR="$HOME/.cache/flashcards-target"
+cargo build --release      # now at $CARGO_TARGET_DIR/release/flashcards
+```
+
+(or write the same `target-dir` line into a local `.cargo/config.toml`; it's gitignored.)
+
+Optionally symlink the binary onto your PATH:
+
+```sh
+ln -s "$CARGO_TARGET_DIR/release/flashcards" ~/.local/bin/flashcards
 ```
 
 ## Usage
 
 ```sh
-flashcards            # default: review due cards
-flashcards review     # same
+flashcards            # main menu (continue / review / pick topic / browse / stats / switch profile)
+flashcards review     # skip the menu; jump straight into the due queue
 flashcards browse     # split-pane card browser with fuzzy search
 flashcards stats      # streak, grade distribution, leeches, weakest topics
 flashcards sync       # re-index the vault into the DB without launching the TUI
@@ -41,9 +48,51 @@ flashcards lint       # stamp missing UUIDs, flag near-duplicate front text
 flashcards reset      # zero out scheduling state (with confirmation)
 ```
 
-Both `--vault <PATH>` and `--db <PATH>` are global overrides; defaults are `./vault` and `~/Library/Application Support/flashcards/flashcards.db` (macOS) / `$XDG_DATA_HOME/flashcards/flashcards.db` (Linux).
+Global flags:
 
-The DB intentionally lives **outside** the Google-Drive-synced project dir — SQLite + cloud sync corrupts incremental writes.
+- `--vault <PATH>` — override the vault root (default `./vault`)
+- `--profile <SLUG>` — pick a specific profile; creates one with that slug if it doesn't exist
+- `--db <PATH>` — bypass the profile system entirely and use a single SQLite file
+- `FLASHCARDS_PROFILE=<slug>` — same as `--profile` via env var
+
+If you don't pass any of the above, the app resolves a profile in this order: env var → last-used profile → interactive picker.
+
+Per-profile DBs live at `~/Library/Application Support/flashcards/profiles/<slug>.db` (macOS) / `$XDG_DATA_HOME/flashcards/profiles/<slug>.db` (Linux). They are **outside** the Google-Drive-synced project dir on purpose — SQLite + cloud sync corrupts incremental writes.
+
+### Profiles
+
+Each profile gets its own DB file, so two people sharing the same Obsidian vault can keep their FSRS state isolated. The first time you run `flashcards`, you land in the picker:
+
+- existing profiles are listed by `display_name` + slug + last-active time
+- press `n` to create a new one — the create screen shows 8 quirky username suggestions (`drowsy-otter-42`, `zesty-axolotl-19`, ...); press `r` to reroll, `1`-`8` to use a suggestion, or just type a custom name
+- press `d` on a profile to delete its DB
+- the most-recently-used profile is remembered in `~/Library/Application Support/flashcards/last_profile.txt`, so subsequent launches go straight to the menu
+
+The pool of generated names is huge (~80 adjectives × ~80 nouns × 100 numeric suffixes ≈ 700k+ combinations), so collisions across profiles are unlikely.
+
+### Main menu
+
+Launching `flashcards` (no subcommand) opens a menu with:
+
+| Key | Action                                                                 |
+|-----|------------------------------------------------------------------------|
+| `c` | Continue last session — reuses the previous session's track/topic/difficulty scope |
+| `d` | Review all due — global queue, no scope                                |
+| `t` | Pick topic / difficulty — three-stage picker (track → topic → difficulty) |
+| `b` | Browse cards                                                            |
+| `s` | Stats                                                                   |
+| `p` | Switch profile (relaunches the picker)                                  |
+| `q` | Quit                                                                    |
+
+### Topic / difficulty picker
+
+Selecting `t` from the menu opens a breadcrumb-style picker:
+
+1. **Track** — `data-scientist`, `ml-engineer`, `ai-llm-engineer`, `research-leaning`, `verticals`, or "all tracks"
+2. **Topic** — topics within the chosen track, with card counts
+3. **Difficulty** — `all`, `beginner (1-2)`, `intermediate (3)`, or `advanced (4-5)`. Maps to the `difficulty:` field in each note's frontmatter.
+
+`Esc` walks back up a stage; `q` exits to the menu.
 
 ### Review key bindings
 
@@ -184,5 +233,6 @@ Tech stack:
 - Phase 1 (KB content) — done. 406 notes / 1786 cards across 37 topic-areas.
 - Phase 2 (Rust TUI v1) — done. review, browse, sync, lint, all green tests.
 - Phase 3 (polish) — done. stats screen, fuzzy search, math-unicode, syntect code blocks, edit-in-`$EDITOR`.
+- Phase 4 (multi-profile) — done. per-profile DBs, quirky-name suggester, main menu, sessions table, "continue last session", topic/difficulty picker.
 
-Open it in Obsidian for graph view + backlinks, or run `flashcards` for the review queue.
+Open it in Obsidian for graph view + backlinks, or run `flashcards` for the menu.

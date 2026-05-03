@@ -15,6 +15,7 @@ use syntect::highlighting::{Style as SynStyle, ThemeSet};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
+mod markdown;
 mod math;
 
 pub use math::prettify_math;
@@ -53,9 +54,10 @@ pub fn render(text: &str) -> Text<'static> {
             return;
         }
         let joined = buf.join("\n");
-        let pretty = prettify_math(&joined);
-        for ln in pretty.split('\n') {
-            out.push(Line::from(Span::raw(ln.to_string())));
+        // markdown::render also runs prettify_math on each text run, so we
+        // route everything through it instead of emitting raw lines.
+        for line in markdown::render(&joined) {
+            out.push(line);
         }
         buf.clear();
     };

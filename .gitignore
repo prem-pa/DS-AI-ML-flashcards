@@ -6,6 +6,10 @@ Cargo.lock
 # project root; absolute paths are user-specific so we don't track it.
 .cargo/
 
+# Obsidian sometimes drops its config at the project root if the dir is opened
+# as a vault directly; the real one lives at vault/.obsidian/ and is tracked.
+/.obsidian/
+
 # SQLite (DB lives in ~/Library/Application Support/flashcards/, but local dev artifacts may land here)
 *.db
 *.db-journal

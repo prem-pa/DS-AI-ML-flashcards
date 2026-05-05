@@ -136,12 +136,21 @@ pub fn sync_vault(conn: &mut Connection, vault_root: &Path) -> Result<SyncReport
         suspended_cards += n;
     }
 
-    // Suspend cards that came in with an empty front. Some research-agent
-    // outputs in early waves omitted the question stem; those cards aren't
-    // useful to review until the data is repaired. Idempotent across syncs.
+    // Auto-suspend cards we know are unreviewable, regardless of content_hash:
+    //  - empty front: no question at all (143 cards from early agent waves)
+    //  - flip + empty back: space-reveal shows nothing (66 cards)
+    //  - mcq + no choice marked correct: nothing to auto-grade against (64 cards)
+    // Idempotent across syncs; never un-suspends.
     let bad_suspended = tx.execute(
         "UPDATE cards SET suspended = 1, updated_at = ?1
-         WHERE suspended = 0 AND TRIM(front) = ''",
+         WHERE suspended = 0
+           AND (
+                TRIM(front) = ''
+             OR (type = 'flip' AND TRIM(back) = '')
+             OR (type = 'mcq'
+                 AND (choices_json IS NULL
+                      OR choices_json NOT LIKE '%\"correct\":true%'))
+           )",
         params![now],
     )?;
     suspended_cards += bad_suspended;

@@ -21,6 +21,7 @@ pub enum Action {
     PickTopic,
     Browse,
     Stats,
+    LlmSettings,
     SwitchProfile,
     Quit,
 }
@@ -61,6 +62,7 @@ pub fn run(tg: &mut TermGuard, conn: &Connection, profile_display: &str) -> Resu
             KeyCode::Char('b') | KeyCode::Char('4') => return Ok(Action::Browse),
             KeyCode::Char('s') | KeyCode::Char('5') => return Ok(Action::Stats),
             KeyCode::Char('p') | KeyCode::Char('6') => return Ok(Action::SwitchProfile),
+            KeyCode::Char('l') => return Ok(Action::LlmSettings),
             KeyCode::Char('m') => {
                 db::set_mcq_only(conn, !prefs.mcq_only)?;
                 // re-loop: redraw with updated counts
@@ -209,6 +211,27 @@ fn draw(
         ),
         Span::styled(
             format!("  (currently {})", if prefs.mcq_only { "on" } else { "off" }),
+            Style::default().fg(Color::DarkGray),
+        ),
+    ]));
+    let llm_status = if prefs.llm_enabled {
+        let m = if prefs.llm_model.is_empty() {
+            db::DEFAULT_LLM_MODEL.to_string()
+        } else {
+            prefs.llm_model.clone()
+        };
+        format!("on · {}", m)
+    } else {
+        "off".to_string()
+    };
+    lines.push(Line::from(vec![
+        Span::styled("  l) ", Style::default().fg(Color::DarkGray)),
+        Span::styled(
+            "llm assist",
+            Style::default().add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(
+            format!("            ({})", llm_status),
             Style::default().fg(Color::DarkGray),
         ),
     ]));

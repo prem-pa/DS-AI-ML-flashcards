@@ -6,6 +6,8 @@ use std::path::Path;
 const MIGRATIONS: &[(i32, &str)] = &[
     (1, include_str!("migrations/0001_init.sql")),
     (2, include_str!("migrations/0002_profiles_sessions.sql")),
+    (3, include_str!("migrations/0003_llm.sql")),
+    (4, include_str!("migrations/0004_explanation_pick_key.sql")),
 ];
 
 pub fn open(path: &Path) -> Result<Connection> {
@@ -248,30 +250,217 @@ pub struct Scope {
     pub kind: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Prefs {
     pub mcq_only: bool,
+    pub llm_enabled: bool,
+    pub llm_model: String,        // "" if unset; default "phi4-mini"
+    pub llm_endpoint: String,     // "" if unset; default "http://localhost:11434"
+}
+
+pub const DEFAULT_LLM_MODEL: &str = "phi4-mini";
+pub const DEFAULT_LLM_ENDPOINT: &str = "http://localhost:11434";
+
+fn read_meta(conn: &Connection, key: &str) -> Result<Option<String>> {
+    Ok(conn
+        .query_row(
+            "SELECT value FROM profile_meta WHERE key = ?1",
+            params![key],
+            |r| r.get::<_, String>(0),
+        )
+        .optional()?)
+}
+
+fn write_meta(conn: &Connection, key: &str, value: &str) -> Result<()> {
+    conn.execute(
+        "INSERT INTO profile_meta(key, value) VALUES (?1, ?2)
+         ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        params![key, value],
+    )?;
+    Ok(())
 }
 
 pub fn load_prefs(conn: &Connection) -> Result<Prefs> {
-    let v: Option<String> = conn
-        .query_row(
-            "SELECT value FROM profile_meta WHERE key='mcq_only'",
-            [],
-            |r| r.get(0),
-        )
-        .optional()?;
+    let mcq = read_meta(conn, "mcq_only")?;
+    let enabled = read_meta(conn, "llm_enabled")?;
+    let model = read_meta(conn, "llm_model")?;
+    let endpoint = read_meta(conn, "llm_endpoint")?;
     Ok(Prefs {
-        mcq_only: matches!(v.as_deref(), Some("1") | Some("true")),
+        mcq_only: matches!(mcq.as_deref(), Some("1") | Some("true")),
+        llm_enabled: matches!(enabled.as_deref(), Some("1") | Some("true")),
+        llm_model: model.unwrap_or_default(),
+        llm_endpoint: endpoint.unwrap_or_default(),
     })
 }
 
 pub fn set_mcq_only(conn: &Connection, on: bool) -> Result<()> {
+    write_meta(conn, "mcq_only", if on { "1" } else { "0" })
+}
+
+pub fn set_llm_enabled(conn: &Connection, on: bool) -> Result<()> {
+    write_meta(conn, "llm_enabled", if on { "1" } else { "0" })
+}
+
+pub fn set_llm_model(conn: &Connection, model: &str) -> Result<()> {
+    write_meta(conn, "llm_model", model)
+}
+
+pub fn set_llm_endpoint(conn: &Connection, endpoint: &str) -> Result<()> {
+    write_meta(conn, "llm_endpoint", endpoint)
+}
+
+/// Return the configured model with the default substituted in if unset.
+pub fn effective_model(prefs: &Prefs) -> String {
+    if prefs.llm_model.is_empty() {
+        DEFAULT_LLM_MODEL.to_string()
+    } else {
+        prefs.llm_model.clone()
+    }
+}
+
+pub fn effective_endpoint(prefs: &Prefs) -> String {
+    if prefs.llm_endpoint.is_empty() {
+        DEFAULT_LLM_ENDPOINT.to_string()
+    } else {
+        prefs.llm_endpoint.clone()
+    }
+}
+
+// ---------- explanation cache ----------
+
+#[derive(Debug, Clone)]
+pub struct CachedExplanation {
+    pub body: String,
+    pub model: String,
+    pub generated_at: i64,
+}
+
+/// Sentinel for the "no pick yet / on-demand" cache slot.
+pub const PRE_PICK_KEY: &str = "_";
+/// Sentinel for hint cache slot (LLM hint without revealing the answer).
+pub const HINT_KEY: &str = "_hint_";
+
+pub fn fetch_cached_explanation(
+    conn: &Connection,
+    card_id: &str,
+    picked_key: &str,
+    model: &str,
+    content_hash: &str,
+) -> Result<Option<CachedExplanation>> {
+    let row = conn
+        .query_row(
+            "SELECT body, model, generated_at FROM card_explanations
+             WHERE card_id = ?1 AND picked_key = ?2 AND model = ?3 AND content_hash = ?4",
+            params![card_id, picked_key, model, content_hash],
+            |r| {
+                Ok(CachedExplanation {
+                    body: r.get(0)?,
+                    model: r.get(1)?,
+                    generated_at: r.get(2)?,
+                })
+            },
+        )
+        .optional()?;
+    Ok(row)
+}
+
+pub fn upsert_explanation(
+    conn: &Connection,
+    card_id: &str,
+    picked_key: &str,
+    model: &str,
+    content_hash: &str,
+    body: &str,
+) -> Result<()> {
+    let now = chrono::Utc::now().timestamp();
     conn.execute(
-        "INSERT INTO profile_meta(key, value) VALUES ('mcq_only', ?1)
-         ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-        params![if on { "1" } else { "0" }],
+        "INSERT INTO card_explanations(card_id, picked_key, model, content_hash, body, generated_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+         ON CONFLICT(card_id, picked_key) DO UPDATE SET
+           model=excluded.model,
+           content_hash=excluded.content_hash,
+           body=excluded.body,
+           generated_at=excluded.generated_at",
+        params![card_id, picked_key, model, content_hash, body, now],
     )?;
+    Ok(())
+}
+
+pub fn card_content_hash(card: &CardView) -> String {
+    let choices_json = serde_json::to_string(&card.choices).unwrap_or_default();
+    let mat = format!("{}\u{1f}{}\u{1f}{}\u{1f}{}", card.kind, card.front, card.back, choices_json);
+    blake3::hash(mat.as_bytes()).to_hex().to_string()
+}
+
+// ---------- chat messages ----------
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ChatRole {
+    System,
+    User,
+    Assistant,
+}
+
+impl ChatRole {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ChatRole::System => "system",
+            ChatRole::User => "user",
+            ChatRole::Assistant => "assistant",
+        }
+    }
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "system" => ChatRole::System,
+            "user" => ChatRole::User,
+            _ => ChatRole::Assistant,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ChatMessage {
+    pub id: i64,
+    pub role: ChatRole,
+    pub content: String,
+    pub sent_at: i64,
+}
+
+pub fn fetch_chat(conn: &Connection, card_id: &str) -> Result<Vec<ChatMessage>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, role, content, sent_at FROM chat_messages
+         WHERE card_id = ?1 ORDER BY id ASC",
+    )?;
+    let rows = stmt.query_map(params![card_id], |r| {
+        let role: String = r.get(1)?;
+        Ok(ChatMessage {
+            id: r.get(0)?,
+            role: ChatRole::from_str(&role),
+            content: r.get(2)?,
+            sent_at: r.get(3)?,
+        })
+    })?;
+    Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
+}
+
+pub fn append_chat(
+    conn: &Connection,
+    card_id: &str,
+    role: ChatRole,
+    content: &str,
+    model: Option<&str>,
+) -> Result<i64> {
+    let now = chrono::Utc::now().timestamp();
+    conn.execute(
+        "INSERT INTO chat_messages(card_id, role, content, sent_at, model)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![card_id, role.as_str(), content, now, model],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn clear_chat(conn: &Connection, card_id: &str) -> Result<()> {
+    conn.execute("DELETE FROM chat_messages WHERE card_id = ?1", params![card_id])?;
     Ok(())
 }
 

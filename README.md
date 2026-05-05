@@ -82,10 +82,37 @@ Launching `flashcards` (no subcommand) opens a menu with:
 | `b` | Browse cards                                                            |
 | `s` | Stats                                                                   |
 | `m` | Toggle **mcq-only** — global per-profile filter; when on, every queue, count, and picker only sees auto-graded MCQ cards |
+| `l` | **LLM assist** — open the settings sub-screen (toggle, model, endpoint) |
 | `p` | Switch profile (relaunches the picker)                                  |
 | `q` | Quit                                                                    |
 
 The `mcq-only` state shows in the header (`mcq-only: ON` / `mcq-only: off`), persists in `profile_meta`, and applies everywhere — `due`/`active` counts on the menu, browse list, topic-picker counts (topics and difficulties with no MCQs are hidden), and review queue. Flip cards aren't deleted, just filtered out while the toggle is on.
+
+### LLM assist (Ollama)
+
+Optional per-profile feature that uses a local LLM to (a) explain MCQ answers and (b) chat about flip cards. **Localhost only** — points at your Ollama install at `http://localhost:11434`.
+
+Setup:
+
+```sh
+brew install ollama        # or your platform's install
+ollama serve &             # start the daemon
+ollama pull phi4-mini      # ~3.5 GB; recommended default
+```
+
+Then in the app: open the menu → press `l` → toggle to **on**. The settings screen lets you pick from `phi4-mini` (default), `llama3.2` (3B, faster), `gemma3` (4B, 128k context), `llama3.2:1b` (weakest), or type a custom model. Press `p` on that screen to probe — it confirms whether Ollama is reachable and whether the chosen model is installed.
+
+What it does:
+
+- **MCQ cards** — the moment a card is shown, the app fires an Ollama call in the background (worker thread, no blocking) to generate an option-agnostic explanation: which option is correct + why each wrong option is wrong. The response streams into a side panel on the right while you think; once you pick, the panel highlights your option (green if right, red if wrong). Cached on disk per `(card_id, model, content_hash)` so revisits are instant. Edits to the card or model invalidate the cache.
+
+- **Flip cards** — press `c` after revealing the answer to open a multi-turn chat overlay. The card's question, reference answer, and top-5 wikilink-resolved neighbor concepts (`## Intuition` excerpt of each) are seeded as system context. Conversations persist across sessions in `chat_messages` per card; type `:clear` to wipe history for the current card.
+
+What it doesn't do:
+
+- No auto-pulling of models. If a model isn't installed, the probe message tells you which `ollama pull` command to run.
+- No remote endpoints, no cloud APIs.
+- No vector retrieval. Context comes from your KB's existing wikilink graph + tags + the card's `back` field as ground truth.
 
 ### Topic / difficulty picker
 

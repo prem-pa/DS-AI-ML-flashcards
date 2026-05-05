@@ -6,7 +6,10 @@ use crate::db::Scope;
 use crate::{db, profile, util, vault};
 
 mod browse;
+mod chat;
 mod edit;
+mod llm_panel;
+mod llm_settings;
 mod menu;
 mod picker;
 mod review;
@@ -51,6 +54,9 @@ pub fn run_menu(cli: &Cli) -> Result<()> {
             }
             menu::Action::Stats => {
                 stats::run_with_term(&conn, Some(&mut tg))?;
+            }
+            menu::Action::LlmSettings => {
+                llm_settings::run(&mut tg, &conn)?;
             }
             menu::Action::SwitchProfile => {
                 drop(tg);

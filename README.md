@@ -102,17 +102,22 @@ ollama pull phi4-mini      # ~3.5 GB; recommended default
 
 Then in the app: open the menu → press `l` → toggle to **on**. The settings screen lets you pick from `phi4-mini` (default), `llama3.2` (3B, faster), `gemma3` (4B, 128k context), `llama3.2:1b` (weakest), or type a custom model. Press `p` on that screen to probe — it confirms whether Ollama is reachable and whether the chosen model is installed.
 
-What it does:
+The LLM is **never invoked unprompted** — it only runs in response to a key you press. There are four trigger paths:
 
-- **MCQ cards** — the moment a card is shown, the app fires an Ollama call in the background (worker thread, no blocking) to generate an option-agnostic explanation: which option is correct + why each wrong option is wrong. The response streams into a side panel on the right while you think; once you pick, the panel highlights your option (green if right, red if wrong). Cached on disk per `(card_id, model, content_hash)` so revisits are instant. Edits to the card or model invalidate the cache.
+- **MCQ pick** (`a`/`b`/`c`/`d`/`e`) — fires a pick-aware explanation: confirms your pick if right, or contrasts it against the correct option if wrong. The response streams into a side panel; the picked option is highlighted green/red in the choices area. Cached per `(card_id, picked_key, model, content_hash)` so re-visits are instant.
 
-- **Flip cards** — press `c` after revealing the answer to open a multi-turn chat overlay. The card's question, reference answer, and top-5 wikilink-resolved neighbor concepts (`## Intuition` excerpt of each) are seeded as system context. Conversations persist across sessions in `chat_messages` per card; type `:clear` to wipe history for the current card.
+- **`?` reveal** — on an MCQ you haven't picked yet, this **grades the card as Again** (a lapse, in FSRS terms) and reveals the explanation. After you've picked, `?` is just a re-fetch.
+
+- **`h` hint** — works on both flip and MCQ. The hint prompt explicitly forbids spoilers; the card's reference answer is *not* passed to the model so it can't accidentally leak. Cached separately under a `_hint_` slot.
+
+- **`c` chat** — multi-turn chat overlay. On flip cards: any time after revealing the answer. On MCQ cards: only after picking (so it doesn't conflict with picking option C). The chat is seeded with a visible primer ("you picked X — correct is Y; what would you like to talk more about?") so the model has full context for follow-ups. Conversations persist per card in `chat_messages`; type `:clear` to wipe.
 
 What it doesn't do:
 
+- No background pre-fetching. The model is silent until you press a key.
 - No auto-pulling of models. If a model isn't installed, the probe message tells you which `ollama pull` command to run.
 - No remote endpoints, no cloud APIs.
-- No vector retrieval. Context comes from your KB's existing wikilink graph + tags + the card's `back` field as ground truth.
+- No vector retrieval. Context comes from your KB's existing wikilink graph + tags + the card's `back` field as ground truth (except for hints, which deliberately omit the back).
 
 ### Topic / difficulty picker
 
@@ -126,14 +131,27 @@ Selecting `t` from the menu opens a breadcrumb-style picker:
 
 ### Review key bindings
 
-| Card type | State    | Keys                                          |
-|-----------|----------|-----------------------------------------------|
-| flip      | hidden   | `space` / `enter` / `f` reveal                |
-| flip      | revealed | `1` again, `2` hard, `3` good, `4` easy       |
-| mcq       | unpicked | `a`–`d` (or whichever keys the choices use)   |
-| mcq       | picked   | `space` / `enter` / `n` advance               |
-| any       | any      | `e` open concept's `.md` in `$EDITOR` then re-sync |
-| any       | any      | `q` / `Esc` quit                              |
+| Card type | State            | Keys                                                          |
+|-----------|------------------|---------------------------------------------------------------|
+| flip      | hidden           | `space` / `enter` / `f` reveal                                |
+| flip      | revealed         | `1` again, `2` hard, `3` good, `4` easy                       |
+| mcq       | unpicked         | `a`–`e` (whichever keys the choices use)                      |
+| mcq       | picked / revealed| `space` / `enter` advance to next card                        |
+| any       | any              | `n` next card without grading · `p` previous card             |
+| any       | any              | `e` open concept's `.md` in `$EDITOR` (re-syncs on return)    |
+| any       | any              | `q` / `Esc` quit                                              |
+
+If LLM assist is **on** (see below), additional keys are active during review:
+
+| Card type | State              | Keys                                                              |
+|-----------|--------------------|-------------------------------------------------------------------|
+| any       | any                | `h` ask the model for a **hint** (no spoilers; reference answer is hidden from the prompt) |
+| mcq       | unpicked           | `?` reveal explanation **and grade the card as Again** (counts as a lapse) |
+| mcq       | picked / revealed  | `?` re-fetch a pick-aware explanation                             |
+| flip      | revealed           | `c` open multi-turn chat about this card                          |
+| mcq       | picked             | `c` open multi-turn chat about this card and your pick            |
+
+Chat is seeded with a visible primer summarizing the question, your pick (when MCQ), and the verdict, so you can ask follow-ups like *"why is option B wrong?"* without restating context. Type `:clear` inside chat to wipe history for the current card. `:q` exits.
 
 ### Browse key bindings
 
